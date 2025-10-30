@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Commercial Cleaning Contracts - Virginia{% endblock %}
+
+{% block og_title %}Commercial Cleaning Opportunities in Virginia{% endblock %}
+{% block og_description %}Discover private sector cleaning contracts for dental offices, law firms, real estate companies, gyms, hotels, and more in Virginia.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Virginia Commercial Cleaning Opportunities</h1>
+        <p class="lead">Connect with Private Sector Clients in Hampton Roads & Beyond</p>
+        <p class="fs-5">Dental offices, law firms, medical practices, fitness centers, hotels, and more!</p>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Filter Commercial Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Business Type:</label>
+                            <select class="form-select" id="businessTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="medical">Medical/Dental</option>
+                                <option value="legal">Legal Services</option>
+                                <option value="real-estate">Real Estate</option>
+                                <option value="fitness">Fitness Centers</option>
+                                <option value="hospitality">Hotels/Lodging</option>
+                                <option value="education">Education Centers</option>
+                                <option value="office">Office Spaces</option>
+                                <option value="healthcare">Healthcare/Nursing</option>
+                                <option value="childcare">Childcare</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Location:</label>
+                            <select class="form-select" id="locationFilter">
+                                <option value="">All Locations</option>
+                                <option value="Hampton">Hampton</option>
+                                <option value="Suffolk">Suffolk</option>
+                                <option value="Virginia Beach">Virginia Beach</option>
+                                <option value="Newport News">Newport News</option>
+                                <option value="Williamsburg">Williamsburg</option>
+                                <option value="Norfolk">Norfolk</option>
+                                <option value="Chesapeake">Chesapeake</option>
+                                <option value="Portsmouth">Portsmouth</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Size:</label>
+                            <select class="form-select" id="sizeFilter">
+                                <option value="">All Sizes</option>
+                                <option value="small">Small (Under 5,000 sq ft)</option>
+                                <option value="medium">Medium (5,000-15,000 sq ft)</option>
+                                <option value="large">Large (15,000+ sq ft)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Frequency:</label>
+                            <select class="form-select" id="frequencyFilter">
+                                <option value="">All Frequencies</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="bi-weekly">Bi-weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="one-time">One-time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()">Clear All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commercial Opportunities Section -->
+<div class="container my-5">
+    <div class="row" id="commercial-opportunities">
+        {% for opportunity in opportunities %}
+        <div class="col-md-6 col-lg-4 mb-4 opportunity-card" 
+             data-type="{{ opportunity.business_type }}" 
+             data-location="{{ opportunity.location }}" 
+             data-size="{{ opportunity.size }}"
+             data-frequency="{{ opportunity.frequency }}">
+            <div class="card h-100 contract-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-primary">{{ opportunity.business_type | title }}</h6>
+                    <span class="badge bg-success">{{ opportunity.frequency | title }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ opportunity.business_name }}</h5>
+                        <span class="city-badge">{{ opportunity.location }}</span>
+                    </div>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ opportunity.address }}</h6>
+                    <p class="card-text">{{ opportunity.description }}</p>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Est. Monthly Value:</small><br>
+                            <strong class="text-success">${{ opportunity.monthly_value }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Square Footage:</small><br>
+                            <strong>{{ opportunity.square_footage | comma }} sq ft</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <small class="text-muted">Services Needed:</small><br>
+                            <small>{{ opportunity.services_needed }}</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Contact:</small><br>
+                            <small>{{ opportunity.contact_type }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <small class="text-muted">Special Requirements:</small><br>
+                        <small class="text-info">{{ opportunity.special_requirements }}</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <button class="btn btn-primary btn-sm" onclick="requestContact('{{ opportunity.id }}', '{{ opportunity.business_name }}')">
+                        Request Contact Info
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="shareCommercialOpportunity('{{ opportunity.business_name | safe }}', '{{ opportunity.description[:150] | safe }}...', '{{ opportunity.location }}', '${{ opportunity.monthly_value }}', '{{ opportunity.business_type }}')">
+                        <i class="fas fa-share-alt"></i> Share
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Business Types Overview -->
+<div class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Commercial Cleaning Opportunities by Sector</h2>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                        <h5>Medical & Dental</h5>
+                        <p>Dental offices, doctor's offices, medical practices, urgent care centers</p>
+                        <ul class="list-unstyled small">
+                            <li>• High-frequency cleaning</li>
+                            <li>• Specialized sanitization</li>
+                            <li>• HIPAA compliance required</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-dumbbell fa-3x text-success mb-3"></i>
+                        <h5>Fitness & Wellness</h5>
+                        <p>Gyms, fitness centers, yoga studios, wellness centers</p>
+                        <ul class="list-unstyled small">
+                            <li>• Locker room cleaning</li>
+                            <li>• Equipment sanitization</li>
+                            <li>• High-traffic areas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-balance-scale fa-3x text-warning mb-3"></i>
+                        <h5>Legal & Professional</h5>
+                        <p>Law offices, accounting firms, consulting companies</p>
+                        <ul class="list-unstyled small">
+                            <li>• Professional appearance</li>
+                            <li>• Confidentiality important</li>
+                            <li>• Flexible scheduling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-home fa-3x text-info mb-3"></i>
+                        <h5>Real Estate & Property</h5>
+                        <p>Real estate offices, property management companies, leasing offices</p>
+                        <ul class="list-unstyled small">
+                            <li>• Move-out cleaning</li>
+                            <li>• Show-ready maintenance</li>
+                            <li>• Variable scheduling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-hotel fa-3x text-secondary mb-3"></i>
+                        <h5>Hospitality</h5>
+                        <p>Hotels, motels, bed & breakfasts, extended stay facilities</p>
+                        <ul class="list-unstyled small">
+                            <li>• Daily housekeeping</li>
+                            <li>• Deep cleaning services</li>
+                            <li>• 24/7 availability</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-graduation-cap fa-3x text-danger mb-3"></i>
+                        <h5>Education & Childcare</h5>
+                        <p>Private schools, daycare centers, tutoring centers, training facilities</p>
+                        <ul class="list-unstyled small">
+                            <li>• Child-safe products</li>
+                            <li>• After-hours cleaning</li>
+                            <li>• Background checks required</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section text-center">
+    <div class="container">
+        <h3>Ready to Connect with Commercial Clients?</h3>
+        <p class="lead">Register to receive notifications about new commercial cleaning opportunities.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Commercial Leads</a>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const businessType = document.getElementById('businessTypeFilter').value;
+    const location = document.getElementById('locationFilter').value;
+    const size = document.getElementById('sizeFilter').value;
+    const frequency = document.getElementById('frequencyFilter').value;
+    
+    const cards = document.querySelectorAll('.opportunity-card');
+    
+    cards.forEach(card => {
+        let show = true;
+        
+        if (businessType && card.dataset.type !== businessType) show = false;
+        if (location && card.dataset.location !== location) show = false;
+        if (size && card.dataset.size !== size) show = false;
+        if (frequency && card.dataset.frequency !== frequency) show = false;
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('businessTypeFilter').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('sizeFilter').value = '';
+    document.getElementById('frequencyFilter').value = '';
+    
+    const cards = document.querySelectorAll('.opportunity-card');
+    cards.forEach(card => {
+        card.style.display = 'block';
+    });
+}
+
+function requestContact(opportunityId, businessName) {
+    // Show modal or redirect to contact request form
+    if (confirm(`Request contact information for ${businessName}?\n\nThis will count towards your lead quota.`)) {
+        // In a real implementation, this would make an API call
+        fetch('/request-commercial-contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                opportunity_id: opportunityId,
+                business_name: businessName
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(`Contact information sent to your email!\n\nRemaining free leads: ${result.remaining_leads}`);
+                if (result.remaining_leads === 0) {
+                    if (confirm('You\'ve used all your free leads. Upgrade to premium for unlimited access?')) {
+                        window.location.href = '/payment';
+                    }
+                }
+            } else {
+                alert(result.message || 'Error requesting contact information.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error requesting contact information. Please try again.');
+        });
+    }
+}
+
+function shareCommercialOpportunity(businessName, description, location, value, type) {
+    const shareData = {
+        title: `${businessName} - Commercial Cleaning Opportunity`,
+        text: `${description}\n\nLocation: ${location}\nValue: ${value}/month\nType: ${type}\n\nVia VA Contract Hub`,
+        url: window.location.href
+    };
+    
+    // Try native sharing first (mobile devices)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        navigator.share(shareData)
+            .then(() => console.log('Opportunity shared successfully'))
+            .catch((error) => {
+                console.log('Error sharing:', error);
+                fallbackShareCommercial(shareData);
+            });
+    } else {
+        // Fallback to custom share modal
+        fallbackShareCommercial(shareData);
+    }
+}
+
+function fallbackShareCommercial(shareData) {
+    // Create share modal (similar to contracts.html)
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Share Commercial Opportunity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Share Link:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="shareCommercialUrl" value="${shareData.url}" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyToClipboardCommercial('shareCommercialUrl')">Copy</button>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <a href="mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\\n\\n' + shareData.url)}" 
+                               class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-envelope"></i><br>Email
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}" 
+                               target="_blank" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fab fa-twitter"></i><br>Twitter
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareData.url)}" 
+                               target="_blank" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fab fa-linkedin"></i><br>LinkedIn
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Clean up modal after hiding
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function copyToClipboardCommercial(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showToastCommercial('Link copied to clipboard!', 'success');
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        showToastCommercial('Failed to copy link', 'error');
+    }
+}
+
+function showToastCommercial(message, type) {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Add to page
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Clean up after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toastContainer.removeChild(toast);
+    });
+}
+</script>
+
+<style>
+.cta-section {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: white;
+    padding: 3rem 0;
+}
+</style>
+
+{% endblock %}

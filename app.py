@@ -9,6 +9,15 @@ from datetime import datetime, date
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Custom Jinja filters
+@app.template_filter('comma')
+def comma_filter(value):
+    """Add comma separators to numbers"""
+    try:
+        return "{:,}".format(int(value))
+    except (ValueError, TypeError):
+        return value
+
 # Email configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -141,6 +150,23 @@ def init_db():
                       naics_code TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
+        # Create commercial opportunities table
+        c.execute('''CREATE TABLE IF NOT EXISTS commercial_opportunities
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      business_name TEXT NOT NULL,
+                      business_type TEXT NOT NULL,
+                      address TEXT,
+                      location TEXT,
+                      square_footage INTEGER,
+                      monthly_value INTEGER,
+                      frequency TEXT,
+                      services_needed TEXT,
+                      special_requirements TEXT,
+                      contact_type TEXT,
+                      description TEXT,
+                      size TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
         conn.commit()
         
         # Add sample Virginia contracts
@@ -164,6 +190,39 @@ def init_db():
                              VALUES (?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
             conn.commit()
         
+        # Add sample commercial opportunities
+        sample_commercial = [
+            ('Coastal Dental Group', 'medical', '1234 Hampton Blvd', 'Hampton', 4500, 2800, 'daily', 'General cleaning, sanitization, medical waste disposal', 'HIPAA compliance required, medical-grade disinfectants', 'Office Manager', 'Busy dental practice with 6 operatories requiring daily deep cleaning and sanitization', 'small'),
+            ('Hampton Family Fitness', 'fitness', '567 Fitness Way', 'Hampton', 12000, 4200, 'daily', 'Locker rooms, equipment cleaning, floor mopping', 'Early morning access (5 AM), equipment sanitization', 'Facility Manager', 'Full-service gym with locker rooms, pool area, and cardio/weight equipment', 'medium'),
+            ('Suffolk Legal Associates', 'legal', '890 Professional Dr', 'Suffolk', 6500, 1800, 'weekly', 'Office cleaning, conference rooms, reception area', 'Confidentiality agreement required, after-hours preferred', 'Managing Partner', 'Law firm specializing in real estate and business law with 12 attorneys', 'medium'),
+            ('Oceanfront Medical Center', 'medical', '456 Shore Dr', 'Virginia Beach', 8500, 5200, 'daily', 'Patient rooms, waiting areas, surgical suite cleaning', 'Medical waste handling, infection control protocols', 'Facility Director', 'Urgent care facility with surgical capabilities and imaging department', 'medium'),
+            ('Beach Fitness & Wellness', 'fitness', '789 Atlantic Ave', 'Virginia Beach', 15000, 6800, 'daily', 'Gym equipment, locker rooms, pool deck, yoga studios', '24/7 access facility, specialized floor care for pool area', 'General Manager', 'Premier fitness facility with pool, spa, and group fitness studios', 'large'),
+            ('Newport News Orthodontics', 'medical', '321 Dental Plaza', 'Newport News', 3200, 2200, 'daily', 'Operatories, sterilization areas, waiting room', 'Specialized dental equipment cleaning, child-friendly environment', 'Practice Administrator', 'Pediatric and adult orthodontics practice with digital imaging', 'small'),
+            ('Colonial Fitness Center', 'fitness', '654 Colonial Way', 'Williamsburg', 8500, 3800, 'daily', 'Cardio areas, free weights, locker rooms', 'Historic district location, early morning cleaning preferred', 'Assistant Manager', 'Community fitness center near Colonial Williamsburg with senior programs', 'medium'),
+            ('Tidewater Property Management', 'real-estate', '987 Business Park Dr', 'Norfolk', 5500, 1600, 'weekly', 'Offices, conference rooms, break rooms', 'Flexible scheduling for client meetings, document confidentiality', 'Office Coordinator', 'Property management company overseeing 200+ rental properties', 'medium'),
+            ('Hampton Roads Hotel', 'hospitality', '147 Hotel Circle', 'Hampton', 25000, 8500, 'daily', 'Guest rooms, lobby, conference facilities, restaurant', '24/7 operation, rapid room turnover, event space cleaning', 'Housekeeping Supervisor', 'Full-service hotel with 120 rooms, restaurant, and meeting facilities', 'large'),
+            ('Bright Beginnings Daycare', 'childcare', '258 Kiddie Lane', 'Suffolk', 4800, 2400, 'daily', 'Classrooms, play areas, kitchen, bathrooms', 'Child-safe products only, background check required, naptime cleaning', 'Center Director', 'Licensed daycare for ages 6 weeks to 5 years with 85 children enrolled', 'small'),
+            ('Virginia Beach Tutoring Center', 'education', '369 Learning St', 'Virginia Beach', 3500, 1200, 'weekly', 'Tutoring rooms, computer lab, reception area', 'After-hours cleaning preferred, technology equipment care', 'Academic Director', 'Private tutoring center serving K-12 students with STEM focus', 'small'),
+            ('Chesapeake Family Medicine', 'medical', '741 Health Dr', 'Chesapeake', 7200, 4800, 'daily', 'Exam rooms, lab area, waiting room, administrative offices', 'Medical waste protocols, patient privacy considerations', 'Office Manager', 'Family practice with on-site lab and minor surgery capabilities', 'medium'),
+            ('The Fitness Edge', 'fitness', '852 Workout Way', 'Norfolk', 10000, 4500, 'daily', 'Weight room, cardio area, group fitness studios, locker rooms', 'CrossFit equipment, specialized rubber flooring, shower facilities', 'Operations Manager', 'CrossFit affiliate with personal training and nutrition counseling', 'medium'),
+            ('Portsmouth Pediatric Dentistry', 'medical', '963 Kids Dental Ct', 'Portsmouth', 2800, 1800, 'daily', 'Pediatric operatories, play area, consultation rooms', 'Child-friendly cleaning products, colorful environment maintenance', 'Dental Hygienist Supervisor', 'Pediatric dental practice with themed treatment rooms and arcade', 'small'),
+            ('Williamsburg Extended Stay', 'hospitality', '159 Extended Way', 'Williamsburg', 18000, 6200, 'weekly', 'Studio apartments, common areas, laundry facility', 'Extended stay guests, kitchen cleaning, weekly deep clean', 'Property Manager', 'Extended stay hotel with kitchenettes for business travelers', 'large'),
+            ('Elite Real Estate Group', 'real-estate', '357 Realty Row', 'Virginia Beach', 4200, 1400, 'bi-weekly', 'Open office space, private offices, conference room', 'Staging area cleaning, model home prep as needed', 'Sales Manager', 'High-end real estate brokerage specializing in luxury coastal properties', 'small'),
+            ('Suffolk Senior Living', 'healthcare', '486 Senior Blvd', 'Suffolk', 35000, 12000, 'daily', 'Resident rooms, dining hall, activity areas, medical wing', 'Healthcare regulations compliance, infection control, dignified service', 'Administrator', 'Assisted living facility with 65 residents and memory care unit', 'large'),
+            ('Hampton Shared Workspace', 'office', '753 Cowork St', 'Hampton', 8000, 2200, 'daily', 'Open workspace, private offices, meeting rooms, kitchen', 'Flexible membership space, technology cleaning, phone booth sanitization', 'Community Manager', 'Modern coworking space for entrepreneurs and remote workers', 'medium'),
+            ('Little Learners Academy', 'childcare', '624 Academy Ave', 'Newport News', 6200, 3100, 'daily', 'Infant rooms, toddler areas, preschool classrooms, playground equipment', 'State licensing requirements, outdoor equipment cleaning, meal prep areas', 'Assistant Director', 'Full-service daycare and preschool with infant care and after-school programs', 'medium'),
+            ('Norfolk Wellness Center', 'medical', '795 Wellness Way', 'Norfolk', 9500, 5800, 'daily', 'Treatment rooms, hydrotherapy pool, rehabilitation gym, offices', 'Medical equipment cleaning, pool chemical balance, physical therapy equipment', 'Clinical Coordinator', 'Comprehensive rehabilitation center with pool therapy and sports medicine', 'medium')
+        ]
+        
+        # Check if commercial opportunities already exist
+        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
+        if c.fetchone()[0] == 0:
+            c.executemany('''INSERT INTO commercial_opportunities 
+                             (business_name, business_type, address, location, square_footage, monthly_value, 
+                              frequency, services_needed, special_requirements, contact_type, description, size)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', sample_commercial)
+            conn.commit()
+        
         conn.close()
         print("Database initialized successfully")
         
@@ -176,10 +235,43 @@ def index():
     try:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 10')
+        
+        # Get government contracts
+        c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
         contracts = c.fetchall()
+        
+        # Get commercial opportunities  
+        c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
+        commercial_rows = c.fetchall()
+        
+        # Convert commercial rows to objects for easier template access
+        commercial_opportunities = []
+        for row in commercial_rows:
+            commercial_opportunities.append({
+                'id': row[0],
+                'business_name': row[1],
+                'business_type': row[2],
+                'address': row[3],
+                'location': row[4],
+                'square_footage': row[5],
+                'monthly_value': row[6],
+                'frequency': row[7],
+                'services_needed': row[8],
+                'special_requirements': row[9],
+                'contact_type': row[10],
+                'description': row[11],
+                'size': row[12]
+            })
+        
+        # Get total commercial count
+        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
+        commercial_count = c.fetchone()[0]
+        
         conn.close()
-        return render_template('index.html', contracts=contracts)
+        return render_template('index.html', 
+                             contracts=contracts, 
+                             commercial_opportunities=commercial_opportunities,
+                             commercial_count=commercial_count)
     except Exception as e:
         # If database doesn't exist, try to initialize it
         if "no such table" in str(e).lower():
@@ -187,10 +279,29 @@ def index():
                 init_db()
                 conn = get_db_connection()
                 c = conn.cursor()
-                c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 10')
+                c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
                 contracts = c.fetchall()
+                c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
+                commercial_rows = c.fetchall()
+                
+                commercial_opportunities = []
+                for row in commercial_rows:
+                    commercial_opportunities.append({
+                        'id': row[0], 'business_name': row[1], 'business_type': row[2],
+                        'address': row[3], 'location': row[4], 'square_footage': row[5],
+                        'monthly_value': row[6], 'frequency': row[7], 'services_needed': row[8],
+                        'special_requirements': row[9], 'contact_type': row[10], 
+                        'description': row[11], 'size': row[12]
+                    })
+                
+                c.execute('SELECT COUNT(*) FROM commercial_opportunities')
+                commercial_count = c.fetchone()[0]
+                
                 conn.close()
-                return render_template('index.html', contracts=contracts)
+                return render_template('index.html', 
+                                     contracts=contracts, 
+                                     commercial_opportunities=commercial_opportunities,
+                                     commercial_count=commercial_count)
             except Exception as e2:
                 return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
         return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p>"
@@ -273,6 +384,58 @@ def contracts():
     conn.close()
     
     return render_template('contracts.html', contracts=all_contracts, locations=locations, current_filter=location_filter)
+
+@app.route('/commercial-contracts')
+def commercial_contracts():
+    """Commercial cleaning opportunities page"""
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC')
+    opportunities = []
+    
+    for row in c.fetchall():
+        opportunities.append({
+            'id': row[0],
+            'business_name': row[1],
+            'business_type': row[2],
+            'address': row[3],
+            'location': row[4],
+            'square_footage': row[5],
+            'monthly_value': row[6],
+            'frequency': row[7],
+            'services_needed': row[8],
+            'special_requirements': row[9],
+            'contact_type': row[10],
+            'description': row[11],
+            'size': row[12]
+        })
+    
+    conn.close()
+    return render_template('commercial_contracts.html', opportunities=opportunities)
+
+@app.route('/request-commercial-contact', methods=['POST'])
+def request_commercial_contact():
+    """Handle commercial contact requests"""
+    try:
+        data = request.get_json()
+        opportunity_id = data.get('opportunity_id')
+        business_name = data.get('business_name')
+        
+        # In a real implementation, you would:
+        # 1. Check user's remaining free leads
+        # 2. Provide actual contact information
+        # 3. Update user's lead count
+        # 4. Send email with contact details
+        
+        # For demo purposes, simulate the response
+        return {
+            'success': True,
+            'message': f'Contact information for {business_name} sent to your email!',
+            'remaining_leads': 2  # Simulate remaining leads
+        }
+        
+    except Exception as e:
+        return {'success': False, 'message': str(e)}, 500
 
 @app.route('/leads')
 def leads():
