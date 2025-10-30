@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="Are You Missing Million-Dollar Government Contracts?">
+    <meta property="og:description" content="Virginia cleaning companies are leaving $2.8M+ on the table every year. Take our 2-minute assessment to discover your biggest obstacles and unlock your potential.">
+    <meta property="og:image" content="{{ url_for('static', filename='images/contract-assessment-preview.jpg', _external=True) }}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.url }}">
+    <meta property="twitter:title" content="Government Contract Assessment - Find Your Million-Dollar Opportunities">
+    <meta property="twitter:description" content="Virginia cleaning companies are missing $2.8M+ annually. Free 2-minute assessment reveals your biggest obstacles.">
+    <meta property="twitter:image" content="{{ url_for('static', filename='images/contract-assessment-preview.jpg', _external=True) }}">
+    
+    <title>Are You Missing Million-Dollar Government Contracts? - Virginia Cleaning Contracts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 4rem 0;
+        }
+        .pain-point {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .scenario-card {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .cta-section {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            padding: 3rem 0;
+        }
+        .survey-step {
+            display: none;
+        }
+        .survey-step.active {
+            display: block;
+        }
+        .progress-bar-custom {
+            height: 8px;
+            background: linear-gradient(90deg, #198754, #20c997);
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Are You Missing Out on Million-Dollar Government Contracts?</h1>
+            <p class="lead fs-3">Virginia cleaning companies are leaving $2.8M+ on the table every year</p>
+            <p class="fs-5">Take our 2-minute assessment to discover your biggest obstacles</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-light btn-lg" onclick="startSurvey()">
+                    Find My Biggest Pain Point →
+                </button>
+                <button class="btn btn-outline-light" onclick="shareLandingPage()">
+                    <i class="fas fa-share-alt"></i> Share This Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pain Points Section -->
+    <div class="container my-5">
+        <h2 class="text-center mb-5">Which of These Painful Scenarios Sounds Familiar?</h2>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="scenario-card text-center">
+                    <h4 class="text-danger">😤 "I Never Know About Opportunities"</h4>
+                    <p><strong>Lost Revenue:</strong> $500K+ annually</p>
+                    <p>You find out about contracts AFTER the deadline passes. Your competitors always seem to know first.</p>
+                    <small class="text-muted">73% of contractors miss opportunities due to poor information flow</small>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="scenario-card text-center">
+                    <h4 class="text-danger">😫 "Proposals Take Forever"</h4>
+                    <p><strong>Time Wasted:</strong> 40+ hours per proposal</p>
+                    <p>You spend weeks writing proposals, only to lose to competitors with better presentation.</p>
+                    <small class="text-muted">68% of contractors struggle with proposal writing</small>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="scenario-card text-center">
+                    <h4 class="text-danger">😭 "I Don't Know Where to Start"</h4>
+                    <p><strong>Opportunity Cost:</strong> $1M+ in accessible contracts</p>
+                    <p>Government contracting feels overwhelming. You stick to small private jobs instead of big opportunities.</p>
+                    <small class="text-muted">81% of small contractors avoid government work due to complexity</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Survey Section -->
+    <div class="container my-5" id="survey-section" style="display: none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Virginia Government Contracts Assessment</h3>
+                        <div class="progress mt-2">
+                            <div class="progress-bar progress-bar-custom" id="progress-bar" style="width: 16.67%"></div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="pain-point-survey">
+                            <!-- Step 1: Business Info -->
+                            <div class="survey-step active" id="step-1">
+                                <h4>Step 1: Tell us about your business</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">What's your company's annual revenue?</label>
+                                    <select class="form-select" name="annual_revenue" required>
+                                        <option value="">Select range</option>
+                                        <option value="under-100k">Under $100K</option>
+                                        <option value="100k-500k">$100K - $500K</option>
+                                        <option value="500k-1m">$500K - $1M</option>
+                                        <option value="1m-5m">$1M - $5M</option>
+                                        <option value="over-5m">Over $5M</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">How many employees do you have?</label>
+                                    <select class="form-select" name="employees" required>
+                                        <option value="">Select range</option>
+                                        <option value="1-5">1-5 employees</option>
+                                        <option value="6-20">6-20 employees</option>
+                                        <option value="21-50">21-50 employees</option>
+                                        <option value="51-100">51-100 employees</option>
+                                        <option value="over-100">Over 100 employees</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Government Contract Experience -->
+                            <div class="survey-step" id="step-2">
+                                <h4>Step 2: Government Contract Experience</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">Have you ever bid on government contracts?</label>
+                                    <select class="form-select" name="gov_experience" required>
+                                        <option value="">Select option</option>
+                                        <option value="never">Never - it seems too complicated</option>
+                                        <option value="tried-failed">Tried a few times but didn't win</option>
+                                        <option value="occasional">Win occasionally but inconsistently</option>
+                                        <option value="regular">Regular government contractor</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">What's your biggest challenge with government contracts?</label>
+                                    <select class="form-select" name="biggest_challenge" required>
+                                        <option value="">Select your biggest challenge</option>
+                                        <option value="finding-opportunities">Finding opportunities in time</option>
+                                        <option value="proposal-writing">Writing competitive proposals</option>
+                                        <option value="understanding-requirements">Understanding requirements and regulations</option>
+                                        <option value="pricing-strategy">Pricing strategy and cost analysis</option>
+                                        <option value="certification-requirements">Getting required certifications</option>
+                                        <option value="competition">Too much competition from big companies</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Information Sources -->
+                            <div class="survey-step" id="step-3">
+                                <h4>Step 3: How do you currently find opportunities?</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">Where do you typically find contract opportunities?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="info_sources" value="sam-gov">
+                                        <label class="form-check-label">SAM.gov (government portal)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="info_sources" value="networking">
+                                        <label class="form-check-label">Networking and word of mouth</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="info_sources" value="websites">
+                                        <label class="form-check-label">City/county websites</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="info_sources" value="nowhere">
+                                        <label class="form-check-label">I don't actively look for government contracts</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">How often do you miss opportunities because you found out too late?</label>
+                                    <select class="form-select" name="missed_opportunities" required>
+                                        <option value="">Select frequency</option>
+                                        <option value="never">Never - I'm always on top of it</option>
+                                        <option value="rarely">Rarely - maybe once a year</option>
+                                        <option value="sometimes">Sometimes - a few times per year</option>
+                                        <option value="often">Often - monthly</option>
+                                        <option value="constantly">Constantly - I'm always behind</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Financial Impact -->
+                            <div class="survey-step" id="step-4">
+                                <h4>Step 4: Financial Impact Assessment</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">What's the largest government contract you've won?</label>
+                                    <select class="form-select" name="largest_contract" required>
+                                        <option value="">Select range</option>
+                                        <option value="none">Never won a government contract</option>
+                                        <option value="under-25k">Under $25K</option>
+                                        <option value="25k-100k">$25K - $100K</option>
+                                        <option value="100k-500k">$100K - $500K</option>
+                                        <option value="500k-1m">$500K - $1M</option>
+                                        <option value="over-1m">Over $1M</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">How much additional revenue could government contracts add to your business annually?</label>
+                                    <select class="form-select" name="revenue_potential" required>
+                                        <option value="">Select potential</option>
+                                        <option value="50k-100k">$50K - $100K</option>
+                                        <option value="100k-500k">$100K - $500K</option>
+                                        <option value="500k-1m">$500K - $1M</option>
+                                        <option value="1m-5m">$1M - $5M</option>
+                                        <option value="over-5m">Over $5M</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 5: Support Needs -->
+                            <div class="survey-step" id="step-5">
+                                <h4>Step 5: What support do you need most?</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">Which would help your business most?</label>
+                                    <select class="form-select" name="most_needed_support" required>
+                                        <option value="">Select your top priority</option>
+                                        <option value="early-notifications">Early notifications about new opportunities</option>
+                                        <option value="proposal-help">Help writing competitive proposals</option>
+                                        <option value="pricing-guidance">Pricing guidance and cost analysis</option>
+                                        <option value="certification-help">Help getting required certifications</option>
+                                        <option value="process-guidance">Step-by-step process guidance</option>
+                                        <option value="market-intelligence">Market intelligence and competitor analysis</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Would you pay for professional proposal writing assistance?</label>
+                                    <select class="form-select" name="proposal_support_interest" required>
+                                        <option value="">Select option</option>
+                                        <option value="definitely">Definitely - proposals are my biggest weakness</option>
+                                        <option value="probably">Probably - if the price is right</option>
+                                        <option value="maybe">Maybe - depends on the service</option>
+                                        <option value="unlikely">Unlikely - I prefer to do it myself</option>
+                                        <option value="never">Never - I don't need help</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 6: Contact Information -->
+                            <div class="survey-step" id="step-6">
+                                <h4>Step 6: Get Your Personalized Results</h4>
+                                <p class="text-success"><strong>Almost done!</strong> Get your customized action plan and start receiving million-dollar opportunities.</p>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name *</label>
+                                    <input type="text" class="form-control" name="company_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Your Name *</label>
+                                    <input type="text" class="form-control" name="contact_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" name="phone">
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h5>🎁 Special Offer: First 3 Contract Leads FREE!</h5>
+                                    <p class="mb-0">Get your first 3 high-value contract opportunities at no cost. After that, continue receiving unlimited leads for just $25/month.</p>
+                                </div>
+                            </div>
+
+                            <!-- Navigation Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" id="prev-btn" onclick="previousStep()" style="display: none;">
+                                    ← Previous
+                                </button>
+                                <button type="button" class="btn btn-primary" id="next-btn" onclick="nextStep()">
+                                    Next →
+                                </button>
+                                <button type="submit" class="btn btn-success" id="submit-btn" style="display: none;">
+                                    Get My Free Leads →
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-section text-center">
+        <div class="container">
+            <h2 class="display-5 fw-bold">Stop Missing Million-Dollar Opportunities</h2>
+            <p class="lead">Join 500+ Virginia contractors getting early access to government contracts</p>
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-4 mb-3">
+                    <div class="bg-white text-dark p-3 rounded">
+                        <h4>🚀 First 3 Leads FREE</h4>
+                        <p class="mb-0">No risk, no commitment</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="bg-white text-dark p-3 rounded">
+                        <h4>⚡ Early Notifications</h4>
+                        <p class="mb-0">Know before competitors</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="bg-white text-dark p-3 rounded">
+                        <h4>📝 Proposal Support</h4>
+                        <p class="mb-0">Professional writing help</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-light btn-lg mt-3" onclick="startSurvey()">
+                Start My Assessment →
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        const totalSteps = 6;
+
+        function startSurvey() {
+            document.getElementById('survey-section').style.display = 'block';
+            document.getElementById('survey-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateProgress() {
+            const progressPercent = (currentStep / totalSteps) * 100;
+            document.getElementById('progress-bar').style.width = progressPercent + '%';
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.survey-step').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show current step
+            document.getElementById('step-' + step).classList.add('active');
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').style.display = step > 1 ? 'block' : 'none';
+            document.getElementById('next-btn').style.display = step < totalSteps ? 'block' : 'none';
+            document.getElementById('submit-btn').style.display = step === totalSteps ? 'block' : 'none';
+            
+            updateProgress();
+        }
+
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function validateCurrentStep() {
+            const currentStepEl = document.getElementById('step-' + currentStep);
+            const requiredFields = currentStepEl.querySelectorAll('[required]');
+            
+            for (let field of requiredFields) {
+                if (!field.value) {
+                    field.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Handle form submission
+        document.getElementById('pain-point-survey').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (validateCurrentStep()) {
+                // Collect form data
+                const formData = new FormData(this);
+                const data = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    if (data[key]) {
+                        if (Array.isArray(data[key])) {
+                            data[key].push(value);
+                        } else {
+                            data[key] = [data[key], value];
+                        }
+                    } else {
+                        data[key] = value;
+                    }
+                }
+                
+                // Submit to backend
+                fetch('/submit-survey', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        window.location.href = '/survey-results';
+                    } else {
+                        alert('Error submitting survey. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting survey. Please try again.');
+                });
+            }
+        });
+
+        function shareLandingPage() {
+            const shareData = {
+                title: 'Government Contract Assessment - Find Your Million-Dollar Opportunities',
+                text: 'Virginia cleaning companies are missing out on $2.8M+ annually in government contracts. Take this 2-minute assessment to discover your biggest obstacles and unlock your potential.',
+                url: window.location.href
+            };
+            
+            // Try native sharing first (mobile devices)
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                navigator.share(shareData)
+                    .then(() => console.log('Assessment shared successfully'))
+                    .catch((error) => {
+                        console.log('Error sharing:', error);
+                        fallbackShareLanding(shareData);
+                    });
+            } else {
+                // Fallback to custom share modal
+                fallbackShareLanding(shareData);
+            }
+        }
+
+        function fallbackShareLanding(shareData) {
+            // Create share modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Share Government Contract Assessment</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Share Link:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="shareLandingUrl" value="${shareData.url}" readonly>
+                                    <button class="btn btn-outline-secondary" onclick="copyToClipboardLanding('shareLandingUrl')">Copy</button>
+                                </div>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <a href="mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\\n\\n' + shareData.url)}" 
+                                       class="btn btn-outline-primary w-100 mb-2">
+                                        <i class="fas fa-envelope"></i><br>Email
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}" 
+                                       target="_blank" class="btn btn-outline-info w-100 mb-2">
+                                        <i class="fab fa-twitter"></i><br>Twitter
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareData.url)}" 
+                                       target="_blank" class="btn btn-outline-primary w-100 mb-2">
+                                        <i class="fab fa-linkedin"></i><br>LinkedIn
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}" 
+                                       target="_blank" class="btn btn-outline-primary w-100">
+                                        <i class="fab fa-facebook"></i><br>Facebook
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" 
+                                       target="_blank" class="btn btn-outline-success w-100">
+                                        <i class="fab fa-whatsapp"></i><br>WhatsApp
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    <button onclick="copyLandingText('${shareData.title}', '${shareData.text}', '${shareData.url}')" 
+                                            class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-copy"></i><br>Copy Text
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // Clean up modal after hiding
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function copyToClipboardLanding(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            element.setSelectionRange(0, 99999);
+            
+            try {
+                document.execCommand('copy');
+                showToastLanding('Link copied to clipboard!', 'success');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                showToastLanding('Failed to copy link', 'error');
+            }
+        }
+
+        function copyLandingText(title, text, url) {
+            const fullText = `${title}\\n\\n${text}\\n\\n${url}`;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(fullText).then(() => {
+                    showToastLanding('Assessment details copied to clipboard!', 'success');
+                }).catch(() => {
+                    fallbackCopyLandingText(fullText);
+                });
+            } else {
+                fallbackCopyLandingText(fullText);
+            }
+        }
+
+        function fallbackCopyLandingText(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToastLanding('Assessment details copied to clipboard!', 'success');
+            } catch (err) {
+                showToastLanding('Failed to copy text', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showToastLanding(message, type) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-\${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">\${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            // Add to page
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+            
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            // Clean up after hiding
+            toast.addEventListener('hidden.bs.toast', () => {
+                toastContainer.removeChild(toast);
+            });
+        }
+    </script>
+</body>
+</html>

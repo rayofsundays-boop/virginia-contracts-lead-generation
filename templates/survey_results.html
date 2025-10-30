@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Personalized Results - Virginia Government Contracts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .results-hero {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            padding: 3rem 0;
+        }
+        .pain-point-result {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .action-plan-item {
+            background: #d1ecf1;
+            border-left: 4px solid #0dcaf0;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+        .pricing-card {
+            border: 2px solid #198754;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .pricing-card.featured {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            transform: scale(1.05);
+        }
+        .free-badge {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Results Hero -->
+    <div class="results-hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Your Personalized Assessment Results</h1>
+            <p class="lead fs-4">Here's what's holding you back from million-dollar contracts</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- Pain Point Analysis -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="pain-point-result">
+                    <h3>🎯 Your #1 Pain Point: <span id="primary-pain-point">Finding Opportunities Early</span></h3>
+                    <p id="pain-point-description">Based on your responses, you're missing out on opportunities because you find out too late. This is costing you an estimated <strong>$300K - $800K annually</strong> in lost revenue.</p>
+                    
+                    <h5>Why This Hurts Your Business:</h5>
+                    <ul id="impact-list">
+                        <li>You're always playing catch-up while competitors get early access</li>
+                        <li>Rush proposals lead to lower win rates and pricing mistakes</li>
+                        <li>You miss the relationship-building phase that wins contracts</li>
+                    </ul>
+                </div>
+
+                <!-- Personalized Action Plan -->
+                <div class="mt-4">
+                    <h3>📋 Your Personalized Action Plan</h3>
+                    <div id="action-plan">
+                        <div class="action-plan-item">
+                            <h5>Step 1: Get Early Access to Virginia Opportunities</h5>
+                            <p>Receive notifications 15-30 days before public posting for Hampton, Suffolk, Virginia Beach, Newport News, and Williamsburg contracts.</p>
+                        </div>
+                        <div class="action-plan-item">
+                            <h5>Step 2: Focus on Your Sweet Spot</h5>
+                            <p>Based on your company size and experience, target contracts in the $100K - $500K range with 90% higher win probability.</p>
+                        </div>
+                        <div class="action-plan-item">
+                            <h5>Step 3: Leverage Professional Proposal Support</h5>
+                            <p>Use our proposal writing service to increase your win rate from 15% to 45% industry average.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Projection -->
+                <div class="mt-4 p-4 bg-light rounded">
+                    <h4>💰 Your Revenue Projection</h4>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h5 class="text-danger">Current State</h5>
+                            <p class="fs-4">$<span id="current-revenue">150K</span>/year</p>
+                            <small>Government contracts</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-warning">With Our System</h5>
+                            <p class="fs-4">$<span id="projected-revenue">750K</span>/year</p>
+                            <small>Potential increase</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-success">Net Gain</h5>
+                            <p class="fs-4">+$<span id="net-gain">600K</span>/year</p>
+                            <small>Additional revenue</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Sidebar -->
+            <div class="col-lg-4">
+                <div class="pricing-card featured">
+                    <div class="free-badge">First 3 FREE!</div>
+                    <h3>Virginia Contract Leads</h3>
+                    <div class="mt-3">
+                        <span class="fs-1 fw-bold">$25</span>
+                        <span class="fs-5">/month</span>
+                    </div>
+                    <p class="mt-3">After your 3 free contract leads</p>
+                    
+                    <ul class="list-unstyled mt-4">
+                        <li>✅ Early notifications (15-30 days ahead)</li>
+                        <li>✅ 5 Virginia cities covered</li>
+                        <li>✅ Detailed contract requirements</li>
+                        <li>✅ Competitor analysis</li>
+                        <li>✅ Pricing guidance</li>
+                        <li>✅ Email & SMS alerts</li>
+                    </ul>
+                    
+                    <button class="btn btn-light btn-lg w-100 mt-4" onclick="startFreeTrial()">
+                        Start Free Trial →
+                    </button>
+                    <small class="d-block mt-2">No credit card required for free leads</small>
+                </div>
+
+                <!-- Proposal Support Add-on -->
+                <div class="mt-4 p-3 border rounded">
+                    <h5>📝 Proposal Writing Support</h5>
+                    <p><strong>$500/proposal</strong></p>
+                    <ul class="small">
+                        <li>Professional proposal writing</li>
+                        <li>Cost analysis and pricing</li>
+                        <li>Compliance review</li>
+                        <li>45% average win rate</li>
+                    </ul>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="proposal-support">
+                        <label class="form-check-label" for="proposal-support">
+                            Add proposal support
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">🎁 Claim Your 3 FREE Contract Leads</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="registration-form">
+                            <input type="hidden" name="survey_data" id="survey-data">
+                            <input type="hidden" name="lead_source" value="landing-survey">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Company Name *</label>
+                                    <input type="text" class="form-control" name="company_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Contact Name *</label>
+                                    <input type="text" class="form-control" name="contact_name" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" name="phone">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">State</label>
+                                    <select class="form-select" name="state">
+                                        <option value="">Select State</option>
+                                        <option value="VA" selected>Virginia</option>
+                                        <option value="NC">North Carolina</option>
+                                        <option value="MD">Maryland</option>
+                                        <option value="DC">Washington DC</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Years of Experience</label>
+                                    <select class="form-select" name="experience_years">
+                                        <option value="">Select Experience</option>
+                                        <option value="1">1-2 years</option>
+                                        <option value="3">3-5 years</option>
+                                        <option value="6">6-10 years</option>
+                                        <option value="11">11-15 years</option>
+                                        <option value="16">15+ years</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Certifications & Licenses</label>
+                                <textarea class="form-control" name="certifications" rows="2" 
+                                    placeholder="List any relevant certifications, licenses, or qualifications"></textarea>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to receive email notifications about contract opportunities and understand that after 3 free leads, I'll be charged $25/month for continued access.
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    🚀 Get My 3 Free Contract Leads
+                                </button>
+                                <small class="text-muted text-center">
+                                    You'll receive your first contract opportunity within 24 hours
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get survey data from URL parameters or session storage
+        function loadSurveyResults() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const surveyData = JSON.parse(urlParams.get('data') || sessionStorage.getItem('surveyData') || '{}');
+            
+            // Personalize results based on survey data
+            personalizePage(surveyData);
+            
+            // Store data for form submission
+            document.getElementById('survey-data').value = JSON.stringify(surveyData);
+        }
+
+        function personalizePage(data) {
+            // Determine primary pain point
+            let primaryPain = "Finding Opportunities Early";
+            let description = "You're missing opportunities because you find out too late.";
+            let impact = [
+                "You're always playing catch-up while competitors get early access",
+                "Rush proposals lead to lower win rates and pricing mistakes",
+                "You miss the relationship-building phase that wins contracts"
+            ];
+
+            if (data.biggest_challenge === 'proposal-writing') {
+                primaryPain = "Writing Competitive Proposals";
+                description = "Your proposals aren't winning because they lack professional polish and competitive pricing strategy.";
+                impact = [
+                    "You spend 40+ hours per proposal with low win rates",
+                    "Competitors with better proposals win contracts you're qualified for",
+                    "You're leaving money on the table with poor pricing strategy"
+                ];
+            } else if (data.biggest_challenge === 'understanding-requirements') {
+                primaryPain = "Understanding Government Requirements";
+                description = "Complex regulations and requirements are preventing you from bidding confidently.";
+                impact = [
+                    "You avoid bidding on contracts you could win",
+                    "Compliance mistakes disqualify your proposals",
+                    "You waste time trying to decode government language"
+                ];
+            }
+
+            document.getElementById('primary-pain-point').textContent = primaryPain;
+            document.getElementById('pain-point-description').innerHTML = description + " This is costing you an estimated <strong>$300K - $800K annually</strong> in lost revenue.";
+            
+            const impactList = document.getElementById('impact-list');
+            impactList.innerHTML = impact.map(item => `<li>${item}</li>`).join('');
+
+            // Update revenue projections based on company size
+            let currentRev = "150K";
+            let projectedRev = "750K";
+            let netGain = "600K";
+
+            if (data.annual_revenue === '500k-1m') {
+                currentRev = "200K";
+                projectedRev = "1.2M";
+                netGain = "1M";
+            } else if (data.annual_revenue === '1m-5m') {
+                currentRev = "400K";
+                projectedRev = "2.5M";
+                netGain = "2.1M";
+            }
+
+            document.getElementById('current-revenue').textContent = currentRev;
+            document.getElementById('projected-revenue').textContent = projectedRev;
+            document.getElementById('net-gain').textContent = netGain;
+        }
+
+        function startFreeTrial() {
+            document.getElementById('registration-form').scrollIntoView({ behavior: 'smooth' });
+            document.querySelector('input[name="company_name"]').focus();
+        }
+
+        // Handle registration form submission
+        document.getElementById('registration-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Add proposal support if selected
+            data.proposal_support = document.getElementById('proposal-support').checked;
+            
+            fetch('/register-from-survey', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    window.location.href = '/confirmation?type=free-trial';
+                } else {
+                    alert('Error during registration. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error during registration. Please try again.');
+            });
+        });
+
+        // Load results when page loads
+        document.addEventListener('DOMContentLoaded', loadSurveyResults);
+    </script>
+</body>
+</html>

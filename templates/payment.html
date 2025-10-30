@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe - Virginia Government Contracts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .payment-hero {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            padding: 3rem 0;
+        }
+        .pricing-summary {
+            background: #f8f9fa;
+            border: 2px solid #198754;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+        .value-proposition {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+        }
+        .payment-form {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #198754;
+            font-size: 0.9rem;
+        }
+        .testimonial {
+            background: #e7f3ff;
+            border-left: 4px solid #0dcaf0;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Payment Hero -->
+    <div class="payment-hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Continue Your Success</h1>
+            <p class="lead fs-4">You've used your 3 free leads - time to unlock unlimited access!</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row">
+            <!-- Left Column - Value Proposition -->
+            <div class="col-lg-7">
+                <div class="value-proposition mb-4">
+                    <h3>🎯 You're Already Seeing Results!</h3>
+                    <p class="mb-1">Your 3 free contract leads have shown you the value of early access. Now it's time to scale up and capture every opportunity in Virginia.</p>
+                </div>
+
+                <!-- Success Stories -->
+                <h3>What Our Members Say</h3>
+                <div class="testimonial">
+                    <p><em>"In just 2 months, I won a $340,000 cleaning contract for Hampton City Hall. The early notification gave me 3 weeks to build relationships and craft the perfect proposal."</em></p>
+                    <strong>- Sarah M., Hampton Cleaning Services</strong>
+                </div>
+                
+                <div class="testimonial">
+                    <p><em>"I went from $200K to $1.2M in government contracts in one year. The proposal support service was worth every penny."</em></p>
+                    <strong>- Mike R., Suffolk Commercial Cleaning</strong>
+                </div>
+
+                <!-- ROI Calculator -->
+                <div class="mt-4 p-4 bg-light rounded">
+                    <h4>💰 Your Investment vs. Return</h4>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h5 class="text-primary">Monthly Cost</h5>
+                            <p class="fs-4">$25</p>
+                            <small>Less than 1 hour of labor</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-warning">Typical Win</h5>
+                            <p class="fs-4">$150K</p>
+                            <small>Average contract value</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="text-success">ROI</h5>
+                            <p class="fs-4">6,000%</p>
+                            <small>Return on investment</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What You Get -->
+                <div class="mt-4">
+                    <h4>🏆 Premium Member Benefits</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li>✅ Unlimited contract leads</li>
+                                <li>✅ 15-30 day early notifications</li>
+                                <li>✅ Competitor analysis</li>
+                                <li>✅ Win probability scoring</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li>✅ Proposal guidance</li>
+                                <li>✅ Pricing strategy tips</li>
+                                <li>✅ Email & SMS alerts</li>
+                                <li>✅ Cancel anytime</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Payment Form -->
+            <div class="col-lg-5">
+                <div class="pricing-summary mb-4">
+                    <h3 class="text-center">Virginia Contract Leads</h3>
+                    <div class="text-center my-3">
+                        <span class="display-4 fw-bold text-success">$25</span>
+                        <span class="fs-5">/month</span>
+                    </div>
+                    <p class="text-center text-muted">Billed monthly • Cancel anytime</p>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Coverage Areas:</strong> Hampton, Suffolk, Virginia Beach, Newport News, Williamsburg
+                        </small>
+                    </div>
+                </div>
+
+                <div class="payment-form">
+                    <form id="payment-form">
+                        <h4 class="mb-3">Payment Information</h4>
+                        
+                        <!-- Card Information -->
+                        <div class="mb-3">
+                            <label class="form-label">Card Number *</label>
+                            <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expiry Date *</label>
+                                <input type="text" class="form-control" id="expiry-date" placeholder="MM/YY" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CVV *</label>
+                                <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Cardholder Name *</label>
+                            <input type="text" class="form-control" id="cardholder-name" required>
+                        </div>
+
+                        <!-- Billing Address -->
+                        <h5 class="mt-4 mb-3">Billing Address</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Address Line 1 *</label>
+                            <input type="text" class="form-control" id="address-1" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="address-2">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" id="city" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">State *</label>
+                                <select class="form-select" id="billing-state" required>
+                                    <option value="">--</option>
+                                    <option value="VA" selected>VA</option>
+                                    <option value="NC">NC</option>
+                                    <option value="MD">MD</option>
+                                    <option value="DC">DC</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">ZIP *</label>
+                                <input type="text" class="form-control" id="zip" required>
+                            </div>
+                        </div>
+
+                        <!-- Add-ons -->
+                        <div class="mt-4 p-3 border rounded">
+                            <h5>Optional Add-On</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="proposal-support" value="500">
+                                <label class="form-check-label" for="proposal-support">
+                                    <strong>Proposal Writing Support (+$500/proposal)</strong><br>
+                                    <small class="text-muted">Professional proposal writing with 45% average win rate</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h5>Order Summary</h5>
+                            <div class="d-flex justify-content-between">
+                                <span>Monthly Subscription</span>
+                                <span>$25.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Proposal Support</span>
+                                <span id="proposal-cost">$0.00</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total Today</span>
+                                <span id="total-cost">$25.00</span>
+                            </div>
+                            <small class="text-muted">Next billing: <span id="next-billing-date"></span></small>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="terms-payment" required>
+                            <label class="form-check-label" for="terms-payment">
+                                I agree to the <a href="#" target="_blank">Terms of Service</a> and understand this is a recurring monthly subscription that I can cancel anytime.
+                            </label>
+                        </div>
+
+                        <!-- Security Info -->
+                        <div class="security-badge mt-3 mb-3">
+                            <span>🔒</span>
+                            <span>Secure 256-bit SSL encryption • We never store your card details</span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="submit-payment">
+                                🚀 Start Unlimited Access - $25/month
+                            </button>
+                            <small class="text-center text-muted">
+                                Cancel anytime • No setup fees • 100% satisfaction guarantee
+                            </small>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Money Back Guarantee -->
+                <div class="text-center mt-4 p-3 border rounded">
+                    <h5>💯 30-Day Money Back Guarantee</h5>
+                    <p class="mb-0 small">If you don't win a contract or see measurable results in 30 days, we'll refund your subscription fee completely.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Format card number input
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Format expiry date
+        document.getElementById('expiry-date').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // Update costs when proposal support is checked
+        document.getElementById('proposal-support').addEventListener('change', function() {
+            const proposalCost = this.checked ? 500 : 0;
+            const monthlyCost = 25;
+            const total = monthlyCost + proposalCost;
+            
+            document.getElementById('proposal-cost').textContent = `$${proposalCost.toFixed(2)}`;
+            document.getElementById('total-cost').textContent = `$${total.toFixed(2)}`;
+        });
+
+        // Set next billing date
+        const nextBilling = new Date();
+        nextBilling.setDate(nextBilling.getDate() + 30);
+        document.getElementById('next-billing-date').textContent = nextBilling.toLocaleDateString();
+
+        // Handle form submission
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submit-payment');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Processing...';
+            
+            // Collect form data
+            const formData = {
+                card_number: document.getElementById('card-number').value.replace(/\s/g, ''),
+                expiry_date: document.getElementById('expiry-date').value,
+                cvv: document.getElementById('cvv').value,
+                cardholder_name: document.getElementById('cardholder-name').value,
+                address_1: document.getElementById('address-1').value,
+                address_2: document.getElementById('address-2').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('billing-state').value,
+                zip: document.getElementById('zip').value,
+                proposal_support: document.getElementById('proposal-support').checked,
+                total_amount: document.getElementById('total-cost').textContent.replace('$', '')
+            };
+            
+            // In a real implementation, you would integrate with Stripe, PayPal, or another payment processor
+            // For this demo, we'll simulate a successful payment after 2 seconds
+            setTimeout(() => {
+                // Simulate successful payment
+                const success = Math.random() > 0.1; // 90% success rate for demo
+                
+                if (success) {
+                    // Store payment confirmation data
+                    sessionStorage.setItem('paymentData', JSON.stringify({
+                        ...formData,
+                        payment_id: 'pay_' + Math.random().toString(36).substr(2, 9),
+                        timestamp: new Date().toISOString()
+                    }));
+                    
+                    // Process the subscription
+                    fetch('/process-subscription', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            window.location.href = '/confirmation?type=payment';
+                        } else {
+                            alert('Payment processed but subscription setup failed. Please contact support.');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Payment processed but there was an error. Please contact support.');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                    });
+                } else {
+                    // Simulate payment failure
+                    alert('Payment failed. Please check your card details and try again.');
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                }
+            }, 2000);
+        });
+
+        // Auto-focus on first field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('card-number').focus();
+        });
+    </script>
+</body>
+</html>

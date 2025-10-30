@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation - Virginia Government Contracts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .confirmation-hero {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            padding: 4rem 0;
+        }
+        .success-icon {
+            font-size: 4rem;
+            color: #198754;
+        }
+        .next-steps {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+        .countdown {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .timeline-item {
+            border-left: 3px solid #198754;
+            padding-left: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: #198754;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Confirmation Hero -->
+    <div class="confirmation-hero text-center">
+        <div class="container">
+            <div class="success-icon">✅</div>
+            <h1 class="display-4 fw-bold mt-3" id="confirmation-title">Registration Successful!</h1>
+            <p class="lead fs-4" id="confirmation-subtitle">Your journey to million-dollar contracts starts now</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- Free Trial Confirmation -->
+        <div id="free-trial-confirmation" class="confirmation-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="countdown mb-4">
+                        <h3>🎁 Your First Contract Lead is Coming!</h3>
+                        <p class="mb-0">Expect your first Virginia government contract opportunity within <strong>24 hours</strong></p>
+                    </div>
+
+                    <div class="next-steps">
+                        <h3>What Happens Next?</h3>
+                        
+                        <div class="timeline-item">
+                            <h5>Within 24 Hours</h5>
+                            <p>You'll receive your <strong>first free contract lead</strong> via email. This will include full contract details, requirements, and our competitive analysis.</p>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h5>Next 2 Weeks</h5>
+                            <p>We'll send you <strong>2 more free leads</strong> that match your company profile and capabilities. Each lead includes proposal guidance and win probability analysis.</p>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h5>After 3 Free Leads</h5>
+                            <p>Continue receiving premium contract leads for just <strong>$25/month</strong>. Cancel anytime if you're not seeing value.</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <h5>💡 Pro Tip: Maximize Your Success</h5>
+                        <p class="mb-0">Create a dedicated folder in your email for "Contract Leads" and check it daily. Early preparation gives you a massive advantage over competitors who wait for public postings.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Confirmation -->
+        <div id="payment-confirmation" class="confirmation-section" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="mb-0">💳 Payment Confirmed</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="lead">Thank you for your subscription! Your payment has been processed.</p>
+                            
+                            <div class="row text-center mb-4">
+                                <div class="col-md-4">
+                                    <h5>Monthly Fee</h5>
+                                    <p class="fs-4 text-success">$25.00</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5>Next Billing</h5>
+                                    <p class="fs-4" id="next-billing-date">Loading...</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5>Status</h5>
+                                    <p class="fs-4 text-success">Active</p>
+                                </div>
+                            </div>
+
+                            <div class="next-steps">
+                                <h4>Your Premium Benefits Are Active</h4>
+                                <ul class="list-unstyled">
+                                    <li>✅ Unlimited contract leads for Virginia cities</li>
+                                    <li>✅ Early notifications (15-30 days ahead)</li>
+                                    <li>✅ Competitor analysis and win probability</li>
+                                    <li>✅ Proposal guidance and pricing strategy</li>
+                                    <li>✅ Priority email and SMS alerts</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Elements -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-8">
+                <!-- Contact Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>📧 Your Registration Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Company:</strong> <span id="company-name">Loading...</span></p>
+                                <p><strong>Contact:</strong> <span id="contact-name">Loading...</span></p>
+                                <p><strong>Email:</strong> <span id="email-address">Loading...</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Phone:</strong> <span id="phone-number">Loading...</span></p>
+                                <p><strong>State:</strong> <span id="state">Loading...</span></p>
+                                <p><strong>Experience:</strong> <span id="experience">Loading...</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Need to update your information? Email us at 
+                                <a href="mailto:info@eliteecoservices.com">info@eliteecoservices.com</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support and Resources -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4>🆘 Need Help?</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>📞 Contact Support</h5>
+                                <p>Email: <a href="mailto:info@eliteecoservices.com">info@eliteecoservices.com</a></p>
+                                <p>Response time: Within 4 hours</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>📚 Resources</h5>
+                                <ul class="list-unstyled">
+                                    <li><a href="/contracts">Browse All Contracts</a></li>
+                                    <li><a href="#" onclick="downloadGuide()">Government Contracting Guide (PDF)</a></li>
+                                    <li><a href="#" onclick="scheduleCall()">Schedule Strategy Call</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="/leads" class="btn btn-success btn-lg me-3">View Available Contracts</a>
+                    <a href="/" class="btn btn-outline-primary btn-lg">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function loadConfirmationData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const confirmationType = urlParams.get('type');
+            const sessionData = JSON.parse(sessionStorage.getItem('registrationData') || '{}');
+            
+            // Show appropriate confirmation section
+            if (confirmationType === 'payment') {
+                document.getElementById('free-trial-confirmation').style.display = 'none';
+                document.getElementById('payment-confirmation').style.display = 'block';
+                document.getElementById('confirmation-title').textContent = 'Payment Successful!';
+                document.getElementById('confirmation-subtitle').textContent = 'Your premium access is now active';
+                
+                // Set next billing date (30 days from now)
+                const nextBilling = new Date();
+                nextBilling.setDate(nextBilling.getDate() + 30);
+                document.getElementById('next-billing-date').textContent = nextBilling.toLocaleDateString();
+            }
+            
+            // Populate user data if available
+            if (sessionData.company_name) {
+                document.getElementById('company-name').textContent = sessionData.company_name;
+                document.getElementById('contact-name').textContent = sessionData.contact_name || 'Not provided';
+                document.getElementById('email-address').textContent = sessionData.email || 'Not provided';
+                document.getElementById('phone-number').textContent = sessionData.phone || 'Not provided';
+                document.getElementById('state').textContent = sessionData.state || 'Not provided';
+                
+                const experienceMap = {
+                    '1': '1-2 years',
+                    '3': '3-5 years',
+                    '6': '6-10 years',
+                    '11': '11-15 years',
+                    '16': '15+ years'
+                };
+                document.getElementById('experience').textContent = experienceMap[sessionData.experience_years] || 'Not provided';
+            }
+        }
+
+        function downloadGuide() {
+            // In a real implementation, this would trigger a PDF download
+            alert('Government Contracting Guide will be sent to your email within 1 hour.');
+        }
+
+        function scheduleCall() {
+            // In a real implementation, this would open a calendar booking system
+            alert('Please email info@eliteecoservices.com to schedule your strategy call.');
+        }
+
+        // Send confirmation email
+        function sendConfirmationEmail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const confirmationType = urlParams.get('type');
+            
+            fetch('/send-confirmation-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: confirmationType,
+                    userData: JSON.parse(sessionStorage.getItem('registrationData') || '{}')
+                })
+            })
+            .catch(error => {
+                console.error('Error sending confirmation email:', error);
+            });
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfirmationData();
+            sendConfirmationEmail();
+        });
+    </script>
+</body>
+</html>

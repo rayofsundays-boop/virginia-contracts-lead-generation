@@ -1,5 +1,7 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+import json
+import urllib.parse
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mail import Mail, Message
 import sqlite3
 from datetime import datetime, date
@@ -92,8 +94,39 @@ def init_db():
                       email TEXT NOT NULL,
                       phone TEXT,
                       state TEXT,
-                      experience_years INTEGER,
+                      experience_years TEXT,
                       certifications TEXT,
+                      registration_date TEXT,
+                      lead_source TEXT DEFAULT 'website',
+                      survey_responses TEXT,
+                      proposal_support BOOLEAN DEFAULT FALSE,
+                      free_leads_remaining INTEGER DEFAULT 3,
+                      subscription_status TEXT DEFAULT 'free_trial',
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create survey responses table
+        c.execute('''CREATE TABLE IF NOT EXISTS survey_responses
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      biggest_challenge TEXT,
+                      annual_revenue TEXT,
+                      company_size TEXT,
+                      contract_experience TEXT,
+                      main_focus TEXT,
+                      pain_point_scenario TEXT,
+                      submission_date TEXT,
+                      ip_address TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create subscriptions table
+        c.execute('''CREATE TABLE IF NOT EXISTS subscriptions
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      email TEXT NOT NULL,
+                      cardholder_name TEXT,
+                      total_amount TEXT,
+                      proposal_support BOOLEAN DEFAULT FALSE,
+                      subscription_date TEXT,
+                      status TEXT DEFAULT 'active',
+                      next_billing_date TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         # Create contracts table
@@ -249,6 +282,232 @@ def leads():
     all_leads = c.fetchall()
     conn.close()
     return render_template('leads.html', leads=all_leads)
+
+@app.route('/landing')
+def landing():
+    """Landing page with pain point survey"""
+    return render_template('landing.html')
+
+@app.route('/submit-survey', methods=['POST'])
+def submit_survey():
+    """Handle survey submission and redirect to results"""
+    try:
+        import json
+        
+        # Get survey data from request
+        survey_data = request.get_json()
+        
+        # Store survey data in database for analytics
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO survey_responses (
+                biggest_challenge, annual_revenue, company_size, 
+                contract_experience, main_focus, pain_point_scenario,
+                submission_date, ip_address
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            survey_data.get('biggest_challenge', ''),
+            survey_data.get('annual_revenue', ''),
+            survey_data.get('company_size', ''),
+            survey_data.get('contract_experience', ''),
+            survey_data.get('main_focus', ''),
+            survey_data.get('pain_point_scenario', ''),
+            datetime.now().isoformat(),
+            request.remote_addr
+        ))
+        conn.commit()
+        conn.close()
+        
+        # Redirect to results page with survey data
+        import urllib.parse
+        survey_json = json.dumps(survey_data)
+        encoded_data = urllib.parse.quote(survey_json)
+        
+        return {'success': True, 'redirect_url': f'/survey-results?data={encoded_data}'}
+        
+    except Exception as e:
+        print(f"Survey submission error: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/survey-results')
+def survey_results():
+    """Display personalized survey results"""
+    return render_template('survey_results.html')
+
+@app.route('/register-from-survey', methods=['POST'])
+def register_from_survey():
+    """Handle registration from survey results page"""
+    try:
+        import json
+        
+        data = request.get_json()
+        
+        # Extract survey data
+        survey_data = json.loads(data.get('survey_data', '{}'))
+        
+        # Prepare lead data
+        lead_data = {
+            'company_name': data.get('company_name'),
+            'contact_name': data.get('contact_name'),
+            'email': data.get('email'),
+            'phone': data.get('phone', ''),
+            'state': data.get('state', ''),
+            'experience_years': data.get('experience_years', ''),
+            'certifications': data.get('certifications', ''),
+            'proposal_support': data.get('proposal_support', False),
+            'lead_source': data.get('lead_source', 'survey'),
+            'survey_responses': json.dumps(survey_data)
+        }
+        
+        # Insert into database
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO leads (
+                company_name, contact_name, email, phone, state, 
+                experience_years, certifications, registration_date, 
+                lead_source, survey_responses, proposal_support,
+                free_leads_remaining
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            lead_data['company_name'],
+            lead_data['contact_name'], 
+            lead_data['email'],
+            lead_data['phone'],
+            lead_data['state'],
+            lead_data['experience_years'],
+            lead_data['certifications'],
+            datetime.now().isoformat(),
+            lead_data['lead_source'],
+            lead_data['survey_responses'],
+            lead_data['proposal_support'],
+            3  # Start with 3 free leads
+        ))
+        conn.commit()
+        conn.close()
+        
+        # Send notification email
+        send_lead_notification(lead_data)
+        
+        # Store registration data for confirmation page
+        import json
+        session_data = json.dumps(lead_data)
+        
+        return {'success': True, 'session_data': session_data}
+        
+    except Exception as e:
+        print(f"Registration error: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/payment')
+def payment():
+    """Payment page for subscription"""
+    return render_template('payment.html')
+
+@app.route('/process-subscription', methods=['POST'])
+def process_subscription():
+    """Process subscription payment"""
+    try:
+        import json
+        
+        payment_data = request.get_json()
+        
+        # In a real implementation, you would:
+        # 1. Process payment with Stripe/PayPal
+        # 2. Create subscription record
+        # 3. Update user's subscription status
+        
+        # For demo purposes, we'll simulate successful payment processing
+        
+        # Store subscription data
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO subscriptions (
+                email, cardholder_name, total_amount, 
+                proposal_support, subscription_date, status
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            'demo@example.com',  # In real app, get from session
+            payment_data.get('cardholder_name'),
+            payment_data.get('total_amount'),
+            payment_data.get('proposal_support', False),
+            datetime.now().isoformat(),
+            'active'
+        ))
+        conn.commit()
+        conn.close()
+        
+        return {'success': True, 'subscription_id': 'sub_demo_123456'}
+        
+    except Exception as e:
+        print(f"Subscription processing error: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/confirmation')
+def confirmation():
+    """Confirmation page for registration and payments"""
+    return render_template('confirmation.html')
+
+@app.route('/send-confirmation-email', methods=['POST'])
+def send_confirmation_email():
+    """Send confirmation email after registration or payment"""
+    try:
+        data = request.get_json()
+        confirmation_type = data.get('type', 'free-trial')
+        user_data = data.get('userData', {})
+        
+        # Send confirmation email
+        email = user_data.get('email')
+        if email:
+            if confirmation_type == 'payment':
+                subject = "Payment Confirmed - Virginia Contract Leads"
+                body = f"""
+Thank you for subscribing to Virginia Contract Leads!
+
+Your payment has been processed and your premium access is now active.
+
+You'll continue receiving unlimited contract opportunities for:
+- Hampton, VA
+- Suffolk, VA  
+- Virginia Beach, VA
+- Newport News, VA
+- Williamsburg, VA
+
+Next billing date: {(datetime.now().replace(day=datetime.now().day + 30)).strftime('%B %d, %Y')}
+
+Questions? Reply to this email or contact info@eliteecoservices.com
+
+Best regards,
+Virginia Contract Leads Team
+                """
+            else:
+                subject = "Welcome! Your 3 Free Contract Leads Are Coming"
+                body = f"""
+Welcome to Virginia Contract Leads, {user_data.get('contact_name', 'there')}!
+
+Your registration is confirmed and you'll receive your first contract opportunity within 24 hours.
+
+What to expect:
+- Lead #1: Within 24 hours
+- Lead #2: Within 1 week  
+- Lead #3: Within 2 weeks
+
+After your 3 free leads, continue unlimited access for just $25/month.
+
+Watch your inbox for opportunities!
+
+Best regards,
+Virginia Contract Leads Team
+info@eliteecoservices.com
+                """
+            
+            msg = Message(subject=subject, recipients=[email], body=body)
+            mail.send(msg)
+        
+        return {'success': True}
+        
+    except Exception as e:
+        print(f"Confirmation email error: {e}")
+        return {'success': False, 'error': str(e)}, 500
 
 # Initialize database for both local and production
 try:
