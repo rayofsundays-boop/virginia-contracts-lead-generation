@@ -6,6 +6,11 @@ from datetime import datetime, date
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Initialize database when app starts (for Gunicorn)
+@app.before_first_request
+def initialize_database():
+    init_db()
+
 # Database setup
 def get_db_connection():
     db_path = os.environ.get('DATABASE_URL', 'leads.db')
@@ -88,6 +93,14 @@ def index():
 @app.route('/test')
 def test():
     return "<h1>Flask Test Route Working!</h1><p>If you see this, Flask is running correctly.</p>"
+
+@app.route('/init-db')
+def manual_init_db():
+    try:
+        init_db()
+        return "<h1>Database Initialized!</h1><p>Tables created and sample data loaded.</p>"
+    except Exception as e:
+        return f"<h1>Database Error</h1><p>Error: {str(e)}</p>"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
