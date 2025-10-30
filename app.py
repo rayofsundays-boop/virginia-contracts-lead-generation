@@ -1,13 +1,21 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 from datetime import datetime, date
 
 app = Flask(__name__)
-app.secret_key = 'virginia-contracting-secret-key-2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
 # Database setup
+def get_db_connection():
+    db_path = os.environ.get('DATABASE_URL', 'leads.db')
+    # Handle PostgreSQL URL format if needed
+    if db_path.startswith('postgresql://'):
+        db_path = 'leads.db'  # Fallback to SQLite for now
+    return sqlite3.connect(db_path)
+
 def init_db():
-    conn = sqlite3.connect('leads.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     # Create leads table
@@ -62,7 +70,7 @@ def init_db():
 @app.route('/')
 def index():
     try:
-        conn = sqlite3.connect('leads.db')
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 10')
         contracts = c.fetchall()
@@ -86,7 +94,7 @@ def register():
         experience_years = request.form.get('experience_years', 0)
         certifications = request.form.get('certifications', '')
         
-        conn = sqlite3.connect('leads.db')
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('''INSERT INTO leads (company_name, contact_name, email, phone, 
                      state, experience_years, certifications)
@@ -104,7 +112,7 @@ def register():
 @app.route('/contracts')
 def contracts():
     location_filter = request.args.get('location', '')
-    conn = sqlite3.connect('leads.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     if location_filter:
@@ -117,7 +125,7 @@ def contracts():
     conn.close()
     
     # Get unique locations for filter dropdown
-    conn = sqlite3.connect('leads.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT DISTINCT location FROM contracts ORDER BY location')
     locations = [row[0] for row in c.fetchall()]
@@ -127,7 +135,7 @@ def contracts():
 
 @app.route('/leads')
 def leads():
-    conn = sqlite3.connect('leads.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT * FROM leads ORDER BY created_at DESC')
     all_leads = c.fetchall()
