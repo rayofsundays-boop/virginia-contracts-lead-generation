@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Virginia Government Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Register Your Company</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Register to receive notifications about new government contract opportunities in Virginia.</p>
+                    
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="company_name" class="form-label">Company Name *</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_name" class="form-label">Contact Name *</label>
+                                <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <select class="form-select" id="state" name="state">
+                                    <option value="">Select State</option>
+                                    <option value="VA">Virginia</option>
+                                    <option value="NC">North Carolina</option>
+                                    <option value="MD">Maryland</option>
+                                    <option value="DC">Washington DC</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="experience_years" class="form-label">Years of Experience</label>
+                                <select class="form-select" id="experience_years" name="experience_years">
+                                    <option value="0">Select Experience</option>
+                                    <option value="1">1-2 years</option>
+                                    <option value="3">3-5 years</option>
+                                    <option value="6">6-10 years</option>
+                                    <option value="11">11-15 years</option>
+                                    <option value="16">15+ years</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="certifications" class="form-label">Certifications & Licenses</label>
+                            <textarea class="form-control" id="certifications" name="certifications" rows="3" 
+                                placeholder="List any relevant certifications, licenses, or qualifications (e.g., CIMS, ISSA, bonding capacity, etc.)"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to receive email notifications about relevant contract opportunities *
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Register Company</button>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Benefits Section -->
+            <div class="mt-5">
+                <h4>Why Register?</h4>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <h6 class="mt-2">Early Notifications</h6>
+                            <p class="small text-muted">Get notified as soon as new contracts are posted</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-filter"></i>
+                            </div>
+                            <h6 class="mt-2">Filtered Opportunities</h6>
+                            <p class="small text-muted">Receive only contracts that match your capabilities</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h6 class="mt-2">Market Insights</h6>
+                            <p class="small text-muted">Access to market trends and bidding statistics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

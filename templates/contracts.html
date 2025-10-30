@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}All Contracts - Virginia Government Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>All Contract Opportunities</h2>
+        
+        <!-- Location Filter -->
+        <form method="GET" class="d-flex">
+            <select name="location" class="form-select me-2" onchange="this.form.submit()">
+                <option value="">All Locations</option>
+                {% for location in locations %}
+                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
+                        {{ location }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if current_filter %}
+                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if current_filter %}
+        <div class="alert alert-info">
+            Showing contracts for: <strong>{{ current_filter }}</strong>
+        </div>
+    {% endif %}
+
+    {% if contracts %}
+        <div class="row">
+            {% for contract in contracts %}
+            <div class="col-lg-6 mb-4">
+                <div class="card contract-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ contract[1] }}</h5>
+                            <span class="city-badge">{{ contract[3] }}</span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }}</h6>
+                        <p class="card-text">{{ contract[6] }}</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Contract Value:</small><br>
+                                <strong class="text-success">{{ contract[4] }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Deadline:</small><br>
+                                <strong class="deadline-normal">{{ contract[5] }}</strong>
+                            </div>
+                        </div>
+                        
+                        {% if contract[7] %}
+                        <div class="mb-2">
+                            <small class="text-muted">NAICS Code:</small>
+                            <span class="badge bg-secondary">{{ contract[7] }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <small class="text-muted">Posted: {{ contract[8] }}</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Apply Now</a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="navigator.share ? navigator.share({title: '{{ contract[1] }}', text: '{{ contract[6][:100] }}', url: window.location.href}) : alert('Share feature not supported')">
+                            Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="text-muted">Found {{ contracts|length }} contract{{ 's' if contracts|length != 1 else '' }}.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <h4>No contracts found</h4>
+            {% if current_filter %}
+                <p>No contracts found for {{ current_filter }}. <a href="{{ url_for('contracts') }}">View all contracts</a></p>
+            {% else %}
+                <p>No contract opportunities are currently available. Check back soon for updates.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Call to Action -->
+<div class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h3>Ready to Start Bidding?</h3>
+        <p class="lead">Register your company to receive notifications about new contract opportunities.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Register Now</a>
+    </div>
+</div>
+{% endblock %}

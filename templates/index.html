@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-4">Virginia Government Contracts</h1>
+                <p class="lead">Discover cleaning and maintenance contract opportunities across Hampton, Suffolk, Virginia Beach, Newport News, and Williamsburg.</p>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
+                <a href="{{ url_for('contracts') }}" class="btn btn-outline-light btn-lg ms-2">View All Contracts</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-3">
+            <h3 class="text-primary">{{ contracts|length }}</h3>
+            <p>Active Contracts</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="text-primary">5</h3>
+            <p>Virginia Cities</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="text-primary">$2M+</h3>
+            <p>Total Contract Value</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="text-primary">24/7</h3>
+            <p>Opportunity Updates</p>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Contracts -->
+<div class="container">
+    <h2 class="mb-4">Latest Contract Opportunities</h2>
+    
+    {% if contracts %}
+        <div class="row">
+            {% for contract in contracts %}
+            <div class="col-lg-6 mb-4">
+                <div class="card contract-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ contract[1] }}</h5>
+                            <span class="city-badge">{{ contract[3] }}</span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }}</h6>
+                        <p class="card-text">{{ contract[6][:100] }}{% if contract[6]|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Value:</small><br>
+                                <strong class="text-success">{{ contract[4] }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Deadline:</small><br>
+                                <strong class="deadline-normal">{{ contract[5] }}</strong>
+                            </div>
+                        </div>
+                        
+                        {% if contract[7] %}
+                        <div class="mt-2">
+                            <small class="text-muted">NAICS: {{ contract[7] }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg">View All Contracts</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No contracts available</h4>
+            <p>Check back soon for new government contract opportunities.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Featured Cities -->
+<div class="bg-light py-5 mt-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Virginia Cities</h2>
+        <div class="row">
+            <div class="col-md-2 text-center mb-3">
+                <div class="p-3">
+                    <h5>Hampton</h5>
+                    <p class="small text-muted">City contracts available</p>
+                </div>
+            </div>
+            <div class="col-md-2 text-center mb-3">
+                <div class="p-3">
+                    <h5>Suffolk</h5>
+                    <p class="small text-muted">Municipal opportunities</p>
+                </div>
+            </div>
+            <div class="col-md-3 text-center mb-3">
+                <div class="p-3">
+                    <h5>Virginia Beach</h5>
+                    <p class="small text-muted">Large-scale projects</p>
+                </div>
+            </div>
+            <div class="col-md-3 text-center mb-3">
+                <div class="p-3">
+                    <h5>Newport News</h5>
+                    <p class="small text-muted">Shipyard & city contracts</p>
+                </div>
+            </div>
+            <div class="col-md-2 text-center mb-3">
+                <div class="p-3">
+                    <h5>Williamsburg</h5>
+                    <p class="small text-muted">Historic preservation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
