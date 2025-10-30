@@ -6,11 +6,6 @@ from datetime import datetime, date
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
-# Initialize database when app starts (for Gunicorn)
-@app.before_first_request
-def initialize_database():
-    init_db()
-
 # Database setup
 def get_db_connection():
     db_path = os.environ.get('DATABASE_URL', 'leads.db')
@@ -88,6 +83,18 @@ def index():
         conn.close()
         return render_template('index.html', contracts=contracts)
     except Exception as e:
+        # If database doesn't exist, try to initialize it
+        if "no such table" in str(e).lower():
+            try:
+                init_db()
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 10')
+                contracts = c.fetchall()
+                conn.close()
+                return render_template('index.html', contracts=contracts)
+            except Exception as e2:
+                return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
         return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p>"
 
 @app.route('/test')
@@ -160,6 +167,12 @@ def leads():
     all_leads = c.fetchall()
     conn.close()
     return render_template('leads.html', leads=all_leads)
+
+# Initialize database for both local and production
+try:
+    init_db()
+except Exception as e:
+    print(f"Database initialization warning: {e}")
 
 if __name__ == '__main__':
     init_db()
