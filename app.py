@@ -1,10 +1,75 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_mail import Mail, Message
 import sqlite3
 from datetime import datetime, date
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
+
+# Email configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vacontracts.com')
+
+mail = Mail(app)
+
+def send_lead_notification(lead_data):
+    """Send email notification when a new lead registers"""
+    try:
+        company_name = lead_data.get('company_name', 'Unknown Company')
+        contact_name = lead_data.get('contact_name', 'Unknown Contact')
+        email = lead_data.get('email', 'No email provided')
+        phone = lead_data.get('phone', 'No phone provided')
+        state = lead_data.get('state', 'Not specified')
+        experience = lead_data.get('experience_years', 'Not specified')
+        certifications = lead_data.get('certifications', 'None listed')
+        
+        subject = f"New Lead: {company_name} - Virginia Government Contracts"
+        
+        body = f"""
+New lead registered for Virginia Government Contracts!
+
+COMPANY DETAILS:
+Company Name: {company_name}
+Contact Person: {contact_name}
+Email: {email}
+Phone: {phone}
+State: {state}
+Experience: {experience} years
+Certifications: {certifications}
+
+Registration Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+This lead is interested in government contract opportunities in Virginia cities:
+- Hampton
+- Suffolk  
+- Virginia Beach
+- Newport News
+- Williamsburg
+
+Follow up promptly to convert this lead!
+
+---
+Virginia Government Contracts Lead Generation System
+        """
+        
+        msg = Message(
+            subject=subject,
+            recipients=['info@eliteecoservices.com'],
+            body=body
+        )
+        
+        mail.send(msg)
+        print(f"Lead notification sent successfully for {company_name}")
+        return True
+        
+    except Exception as e:
+        print(f"Failed to send email notification: {e}")
+        return False
 
 # Database setup
 def get_db_connection():
@@ -120,6 +185,7 @@ def register():
         experience_years = request.form.get('experience_years', 0)
         certifications = request.form.get('certifications', '')
         
+        # Save to database
         conn = get_db_connection()
         c = conn.cursor()
         c.execute('''INSERT INTO leads (company_name, contact_name, email, phone, 
@@ -130,7 +196,23 @@ def register():
         conn.commit()
         conn.close()
         
-        flash('Registration successful! We\'ll send you contract opportunities.', 'success')
+        # Send email notification
+        lead_data = {
+            'company_name': company_name,
+            'contact_name': contact_name,
+            'email': email,
+            'phone': phone,
+            'state': state,
+            'experience_years': experience_years,
+            'certifications': certifications
+        }
+        
+        email_sent = send_lead_notification(lead_data)
+        if email_sent:
+            flash('Registration successful! We\'ll send you contract opportunities.', 'success')
+        else:
+            flash('Registration successful! We\'ll send you contract opportunities. (Email notification pending)', 'success')
+        
         return redirect(url_for('index'))
     
     return render_template('register.html')
