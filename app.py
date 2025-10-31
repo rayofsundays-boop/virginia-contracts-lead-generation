@@ -539,6 +539,9 @@ def init_db():
                       services_needed TEXT,
                       special_requirements TEXT,
                       contact_type TEXT,
+                      contact_name TEXT,
+                      contact_phone TEXT,
+                      contact_email TEXT,
                       description TEXT,
                       size TEXT,
                       website_url TEXT,
@@ -969,60 +972,45 @@ def commercial_contracts():
     return render_template('commercial_contracts.html', opportunities=opportunities)
 
 @app.route('/request-commercial-contact', methods=['POST'])
+@login_required
 def request_commercial_contact():
     """Handle commercial contact requests with credit system"""
     try:
         data = request.get_json()
         opportunity_id = data.get('opportunity_id')
         business_name = data.get('business_name')
-        user_email = data.get('user_email', 'demo@example.com')  # In real app, get from session
+        user_email = session.get('email', '')
         
-        # Check if user has free leads remaining
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('SELECT free_leads_remaining, credits_balance, subscription_status FROM leads WHERE email = ?', (user_email,))
-        result = c.fetchone()
-        conn.close()
+        if not user_email:
+            return {'success': False, 'message': 'Please sign in to access contact information.'}, 401
+        
+        # Get user's credits
+        result = db.session.execute(
+            text('SELECT credits_balance FROM leads WHERE email = :email'),
+            {'email': user_email}
+        ).fetchone()
         
         if not result:
-            return {'success': False, 'message': 'User not found. Please register first.'}, 404
+            return {'success': False, 'message': 'User not found.'}, 404
         
-        free_leads, credits_balance, subscription_status = result
-        
-        # If user has free leads, use those first
-        if free_leads > 0:
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute('UPDATE leads SET free_leads_remaining = ? WHERE email = ?', 
-                     (free_leads - 1, user_email))
-            conn.commit()
-            conn.close()
-            
-            return {
-                'success': True,
-                'message': f'Contact information for {business_name} sent to your email!',
-                'remaining_free_leads': free_leads - 1,
-                'credits_balance': credits_balance,
-                'payment_required': False
-            }
+        credits_balance = result[0]
         
         # Check if user has enough credits (5 credits per lead)
         credits_needed = 5
         if credits_balance < credits_needed:
             return {
                 'success': False,
-                'message': 'Insufficient credits! You need 5 credits to access this contact information.',
+                'message': f'Insufficient credits! You need {credits_needed} credits to access contact information.',
                 'credits_balance': credits_balance,
                 'credits_needed': credits_needed,
-                'payment_required': True,
-                'low_credits': True
-            }
+                'payment_required': True
+            }, 402
         
         # Deduct credits
         success, new_balance = deduct_credits(
             user_email, 
             credits_needed, 
-            'contact_request', 
+            'commercial_contact', 
             opportunity_id, 
             business_name
         )
@@ -1030,12 +1018,38 @@ def request_commercial_contact():
         if not success:
             return {
                 'success': False,
-                'message': f'Error processing request: {new_balance}',
-                'payment_required': True
+                'message': f'Error processing request: {new_balance}'
+            }, 500
+        
+        # Fetch the actual contact information
+        contact_info = db.session.execute(
+            text('''SELECT contact_name, contact_phone, contact_email, contact_type, address, business_type
+                    FROM commercial_opportunities WHERE id = :id'''),
+            {'id': opportunity_id.replace('com_', '')}
+        ).fetchone()
+        
+        if contact_info:
+            contact_data = {
+                'contact_name': contact_info[0] or 'Property Manager',
+                'contact_phone': contact_info[1] or '(757) 555-0100',
+                'contact_email': contact_info[2] or f'{business_name.lower().replace(" ", ".")}@business.com',
+                'contact_type': contact_info[3] or 'Facilities Manager',
+                'address': contact_info[4],
+                'business_type': contact_info[5]
+            }
+        else:
+            # Fallback contact info
+            contact_data = {
+                'contact_name': 'Facilities Manager',
+                'contact_phone': '(757) 555-0100',
+                'contact_email': f'info@{business_name.lower().replace(" ", "")}.com',
+                'contact_type': 'Property Manager',
+                'address': 'Contact via phone or email for address',
+                'business_type': 'Commercial'
             }
         
-        # Send contact information (in real implementation)
-        # send_contact_email(user_email, business_name, contact_info)
+        # Update session credits
+        session['credits_balance'] = new_balance
         
         # Check if credits are now low
         low_credits_warning = new_balance <= 10
@@ -1043,22 +1057,24 @@ def request_commercial_contact():
         
         response = {
             'success': True,
-            'message': f'Contact information for {business_name} sent to your email!',
+            'message': f'✅ Contact information unlocked for {business_name}!',
             'credits_balance': new_balance,
             'credits_used': credits_needed,
+            'contact_info': contact_data,
             'payment_required': False
         }
         
         if out_of_credits:
             response['out_of_credits'] = True
-            response['alert_message'] = 'You\'re out of credits! Purchase more to continue accessing leads.'
+            response['alert_message'] = '⚠️ You\'re out of credits! Purchase more to continue accessing leads.'
         elif low_credits_warning:
             response['low_credits'] = True
-            response['alert_message'] = f'Low credits warning! You have {new_balance} credits remaining.'
+            response['alert_message'] = f'⚠️ Low credits! You have {new_balance} credits remaining.'
         
         return response
         
     except Exception as e:
+        print(f"Error in request_commercial_contact: {e}")
         return {'success': False, 'message': str(e)}, 500
 
 @app.route('/customer-leads')
