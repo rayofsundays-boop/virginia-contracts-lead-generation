@@ -97,6 +97,115 @@
                 </div>
             </div>
             
+            <!-- Subscription Plans Section -->
+            <section class="mt-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-6 fw-bold mb-3">Choose Your Subscription Plan</h2>
+                    <p class="lead text-muted">Get instant access to all cleaning contract leads in Virginia</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Monthly Plan -->
+                    <div class="col-md-6">
+                        <div class="card shadow-lg border-primary h-100">
+                            <div class="card-header bg-primary text-white text-center py-4">
+                                <h3 class="mb-0">Monthly Plan</h3>
+                            </div>
+                            <div class="card-body text-center p-5">
+                                <div class="display-3 fw-bold text-primary mb-3">$99<small class="fs-4 text-muted">/month</small></div>
+                                
+                                <ul class="list-unstyled text-start my-4">
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> <strong>Unlimited</strong> commercial leads</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> <strong>Unlimited</strong> residential leads</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Full contact information</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Email notifications</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Bidding system access</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Priority support</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Cancel anytime</li>
+                                </ul>
+
+                                <div class="alert alert-info">
+                                    <small><strong>Flexible:</strong> No long-term commitment required</small>
+                                </div>
+
+                                <a href="{{ url_for('subscribe', plan_type='monthly') }}" class="btn btn-primary btn-lg w-100 mt-3">
+                                    <i class="fab fa-paypal me-2"></i>Subscribe Monthly
+                                </a>
+                                <p class="text-muted mt-2"><small>Secure payment via PayPal</small></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Annual Plan -->
+                    <div class="col-md-6">
+                        <div class="card shadow-lg border-success h-100 position-relative">
+                            <div class="position-absolute top-0 start-50 translate-middle">
+                                <span class="badge bg-warning text-dark px-4 py-2 fs-6">SAVE 20%</span>
+                            </div>
+                            <div class="card-header bg-success text-white text-center py-4">
+                                <h3 class="mb-0">Annual Plan</h3>
+                            </div>
+                            <div class="card-body text-center p-5">
+                                <div class="display-3 fw-bold text-success mb-3">$950<small class="fs-4 text-muted">/year</small></div>
+                                <p class="text-success fw-bold mb-4">Only $79/month - Save $238/year!</p>
+                                
+                                <ul class="list-unstyled text-start my-4">
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> <strong>Everything in Monthly</strong></li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> <strong>20% discount</strong> (2 months free)</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Priority lead access</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Dedicated account manager</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Annual contract bonus</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Ad-free experience</li>
+                                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Best value!</li>
+                                </ul>
+
+                                <div class="alert alert-success">
+                                    <small><strong>Most Popular:</strong> Serious contractors choose annual</small>
+                                </div>
+
+                                <a href="{{ url_for('subscribe', plan_type='annual') }}" class="btn btn-success btn-lg w-100 mt-3">
+                                    <i class="fab fa-paypal me-2"></i>Subscribe Annually
+                                </a>
+                                <p class="text-muted mt-2"><small>Secure payment via PayPal</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROI Section -->
+                <div class="mt-5 p-4 bg-light rounded">
+                    <h4 class="text-center mb-4">💰 Return on Investment</h4>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-4 text-success">1</div>
+                                <p class="text-muted mb-0">Contract needed to<br>pay for 35+ months</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-4 text-primary">$3,500</div>
+                                <p class="text-muted mb-0">Average commercial<br>contract value/month</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="display-4 text-warning">2-3</div>
+                                <p class="text-muted mb-0">Contracts most subscribers<br>land in first month</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PayPal Trust Badge -->
+                <div class="text-center mt-5">
+                    <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" 
+                         alt="PayPal" style="height: 50px;">
+                    <p class="text-muted mt-2">Secure payment processing by PayPal</p>
+                    <p class="text-muted"><small>All subscriptions can be cancelled anytime from your PayPal account</small></p>
+                </div>
+            </section>
+            
             <!-- Why Register Section -->
             <section class="mt-5 py-5 bg-light rounded-3 border">
                 <div class="text-center mb-5">

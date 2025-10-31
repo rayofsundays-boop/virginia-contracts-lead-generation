@@ -597,13 +597,19 @@ You've just taken the BIGGEST step toward dominating the Virginia cleaning contr
 
 ✅ STEP 3: Close Contracts & Grow Your Business
    → Each lead includes direct application links
-   → Full contact details after purchase
+   → Full contact details for subscribers
    → Ongoing support to help you win contracts
 
-💎 EXCLUSIVE PRICING:
-• 10 Credits = $25 (access 2 complete leads)
-• 20 Credits = $45 (access 4 complete leads) 
-• 30 Credits = $60 (access 6 complete leads)
+💎 SUBSCRIPTION PRICING:
+• Monthly Plan: $99/month - Unlimited lead access
+• Annual Plan: $950/year - Save 20% ($79/month equivalent)
+
+All subscriptions include:
+✓ Unlimited commercial leads
+✓ Unlimited residential leads
+✓ Full contact information
+✓ Email notifications
+✓ Priority support
 
 🔥 WHY OUR MEMBERS LOVE US:
 "I landed my first $120,000 government contract within 2 weeks!" - Sarah M., Hampton
@@ -611,14 +617,14 @@ You've just taken the BIGGEST step toward dominating the Virginia cleaning contr
 "The commercial leads alone pay for themselves. I'm now servicing 8 new clients!" - Mike T., Virginia Beach
 
 ⚡ READY TO GET STARTED?
-Log in now: https://your-app-url.render.com/signin
+Subscribe now: https://your-app-url.render.com/register
 
 Questions? Reply to this email - we're here to help you succeed!
 
 To your cleaning business success,
 The Virginia Contracts Team
 
-P.S. The best leads go FAST. Get in early to secure the most valuable opportunities!
+P.S. Just ONE contract pays for your entire year of subscription!
 
 ---
 Prefer not to receive these updates? [Unsubscribe](https://your-app-url.render.com/unsubscribe?email={email})
