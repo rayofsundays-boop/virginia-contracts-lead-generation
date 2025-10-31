@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
+import sqlite3  # Keep for backward compatibility with existing queries
 from datetime import datetime, date
 import threading
 import schedule
