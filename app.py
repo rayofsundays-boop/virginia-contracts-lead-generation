@@ -1261,6 +1261,77 @@ def db_status():
     except Exception as e:
         return f"<h1>Error checking database status</h1><pre>{e}</pre>"
 
+@app.route('/run-updates')
+def run_updates():
+    """Manually trigger data updates and show before/after counts.
+    Useful when leads aren't populating or after environment changes.
+    """
+    try:
+        html = "<h1>Manual Update Runner</h1>"
+        html += "<style>body{font-family:Arial;padding:20px;} .good{color:green;} .bad{color:red;} .warn{color:orange;}</style>"
+
+        # Environment checks
+        sam_key = os.environ.get('SAM_GOV_API_KEY', '')
+        html += "<h2>Environment</h2>"
+        html += f"<p>SAM_GOV_API_KEY: <span class='{'good' if sam_key else 'bad'}'>{'✅ SET (' + str(len(sam_key)) + ' chars)' if sam_key else '❌ NOT SET'}</span></p>"
+
+        # Before counts
+        html += "<h2>Before</h2>"
+        try:
+            fed_before = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).scalar() or 0
+            html += f"<p>Federal Contracts (before): <strong>{fed_before}</strong></p>"
+        except Exception as e:
+            html += f"<p>Federal Contracts (before): <span class='bad'>❌ Error: {e}</span></p>"
+            fed_before = None
+
+        try:
+            local_before = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
+            html += f"<p>Local Government Contracts (before): <strong>{local_before}</strong></p>"
+        except Exception as e:
+            html += f"<p>Local Government Contracts (before): <span class='bad'>❌ Error: {e}</span></p>"
+            local_before = None
+
+        # Run updates
+        html += "<h2>Running Updates...</h2>"
+        try:
+            update_federal_contracts_from_samgov()
+            html += "<p>📡 SAM.gov update: <span class='good'>Triggered</span></p>"
+        except Exception as e:
+            html += f"<p>📡 SAM.gov update: <span class='bad'>❌ Error: {e}</span></p>"
+
+        try:
+            update_local_gov_contracts()
+            html += "<p>🏛️ Local government update: <span class='good'>Triggered</span></p>"
+        except Exception as e:
+            html += f"<p>🏛️ Local government update: <span class='bad'>❌ Error: {e}</span></p>"
+
+        # After counts
+        html += "<h2>After</h2>"
+        try:
+            fed_after = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).scalar() or 0
+            delta_fed = (fed_after - fed_before) if (fed_before is not None) else 'N/A'
+            html += f"<p>Federal Contracts (after): <strong>{fed_after}</strong> (Δ {delta_fed})</p>"
+        except Exception as e:
+            html += f"<p>Federal Contracts (after): <span class='bad'>❌ Error: {e}</span></p>"
+
+        try:
+            local_after = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
+            delta_local = (local_after - local_before) if (local_before is not None) else 'N/A'
+            html += f"<p>Local Government Contracts (after): <strong>{local_after}</strong> (Δ {delta_local})</p>"
+        except Exception as e:
+            html += f"<p>Local Government Contracts (after): <span class='bad'>❌ Error: {e}</span></p>"
+
+        # Tips
+        html += "<h2>Notes</h2>"
+        if not sam_key:
+            html += "<p class='bad'>⚠️ SAM_GOV_API_KEY is missing. Add it in Render → Environment and redeploy.</p>"
+        html += "<p>If counts remain 0, open Render → Logs and share the last 50 lines with errors or warnings.</p>"
+        html += "<hr><p><a href='/db-status'>View DB Status</a> | <a href='/'>Back to Home</a></p>"
+
+        return html
+    except Exception as e:
+        return f"<h1>Error running updates</h1><pre>{e}</pre>"
+
 @app.route('/init-db')
 def manual_init_db():
     try:
