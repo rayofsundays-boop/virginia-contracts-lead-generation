@@ -443,6 +443,9 @@ def get_db_connection():
 def init_postgres_db():
     """Initialize PostgreSQL database with proper syntax"""
     try:
+        # Rollback any existing failed transaction
+        db.session.rollback()
+        
         # Create tables using PostgreSQL-compatible SQL
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS leads
                      (id SERIAL PRIMARY KEY,
@@ -469,6 +472,8 @@ def init_postgres_db():
                       sms_notifications BOOLEAN DEFAULT FALSE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
+        db.session.commit()
+        
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS contracts
                      (id SERIAL PRIMARY KEY,
                       title TEXT NOT NULL,
@@ -480,6 +485,8 @@ def init_postgres_db():
                       naics_code TEXT,
                       website_url TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS federal_contracts
                      (id SERIAL PRIMARY KEY,
@@ -496,6 +503,8 @@ def init_postgres_db():
                       set_aside TEXT,
                       posted_date DATE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS commercial_opportunities
                      (id SERIAL PRIMARY KEY,
