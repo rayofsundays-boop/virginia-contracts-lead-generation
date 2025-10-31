@@ -107,11 +107,10 @@ def stop_scheduler():
 def get_user_credits(email):
     """Get user's current credit balance"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('SELECT credits_balance FROM leads WHERE email = ?', (email,))
-        result = c.fetchone()
-        conn.close()
+        result = db.session.execute(
+            text('SELECT credits_balance FROM leads WHERE email = :email'),
+            {'email': email}
+        ).fetchone()
         return result[0] if result else 0
     except Exception as e:
         print(f"Error getting user credits: {e}")
@@ -120,12 +119,12 @@ def get_user_credits(email):
 def deduct_credits(email, credits_amount, action_type, opportunity_id=None, opportunity_name=None):
     """Deduct credits from user's balance and log usage"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
         # Get current balance
-        c.execute('SELECT credits_balance, credits_used FROM leads WHERE email = ?', (email,))
-        result = c.fetchone()
+        result = db.session.execute(
+            text('SELECT credits_balance, credits_used FROM leads WHERE email = :email'),
+            {'email': email}
+        ).fetchone()
+        
         if not result:
             return False, "User not found"
         
@@ -138,35 +137,52 @@ def deduct_credits(email, credits_amount, action_type, opportunity_id=None, oppo
         new_balance = current_balance - credits_amount
         new_total_used = total_used + credits_amount
         
-        c.execute('''UPDATE leads 
-                     SET credits_balance = ?, credits_used = ?, low_credits_alert_sent = ?
-                     WHERE email = ?''', 
-                  (new_balance, new_total_used, False if new_balance >= 10 else True, email))
+        db.session.execute(
+            text('''UPDATE leads 
+                    SET credits_balance = :new_balance, 
+                        credits_used = :new_total_used, 
+                        low_credits_alert_sent = :alert_sent
+                    WHERE email = :email'''),
+            {
+                'new_balance': new_balance,
+                'new_total_used': new_total_used,
+                'alert_sent': False if new_balance >= 10 else True,
+                'email': email
+            }
+        )
         
         # Log the credit usage
-        c.execute('''INSERT INTO credits_usage 
-                     (user_email, credits_used, action_type, opportunity_id, opportunity_name, usage_date)
-                     VALUES (?, ?, ?, ?, ?, ?)''',
-                  (email, credits_amount, action_type, opportunity_id, opportunity_name, datetime.now().isoformat()))
+        db.session.execute(
+            text('''INSERT INTO credits_usage 
+                    (user_email, credits_used, action_type, opportunity_id, opportunity_name, usage_date)
+                    VALUES (:email, :credits, :action_type, :opp_id, :opp_name, :usage_date)'''),
+            {
+                'email': email,
+                'credits': credits_amount,
+                'action_type': action_type,
+                'opp_id': opportunity_id,
+                'opp_name': opportunity_name,
+                'usage_date': datetime.now().isoformat()
+            }
+        )
         
-        conn.commit()
-        conn.close()
-        
+        db.session.commit()
         return True, new_balance
         
     except Exception as e:
         print(f"Error deducting credits: {e}")
+        db.session.rollback()
         return False, str(e)
 
 def add_credits(email, credits_amount, purchase_type, amount_paid, transaction_id=None):
     """Add credits to user's balance and log purchase"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
         # Get current balance
-        c.execute('SELECT credits_balance FROM leads WHERE email = ?', (email,))
-        result = c.fetchone()
+        result = db.session.execute(
+            text('SELECT credits_balance FROM leads WHERE email = :email'),
+            {'email': email}
+        ).fetchone()
+        
         if not result:
             return False, "User not found"
         
@@ -174,34 +190,50 @@ def add_credits(email, credits_amount, purchase_type, amount_paid, transaction_i
         new_balance = current_balance + credits_amount
         
         # Update user's credit balance
-        c.execute('''UPDATE leads 
-                     SET credits_balance = ?, last_credit_purchase_date = ?, low_credits_alert_sent = ?
-                     WHERE email = ?''', 
-                  (new_balance, datetime.now().isoformat(), False, email))
+        db.session.execute(
+            text('''UPDATE leads 
+                    SET credits_balance = :new_balance, 
+                        last_credit_purchase_date = :purchase_date, 
+                        low_credits_alert_sent = :alert_sent
+                    WHERE email = :email'''),
+            {
+                'new_balance': new_balance,
+                'purchase_date': datetime.now().isoformat(),
+                'alert_sent': False,
+                'email': email
+            }
+        )
         
         # Log the credit purchase
-        c.execute('''INSERT INTO credits_purchases 
-                     (user_email, credits_purchased, amount_paid, purchase_type, transaction_id, purchase_date)
-                     VALUES (?, ?, ?, ?, ?, ?)''',
-                  (email, credits_amount, amount_paid, purchase_type, transaction_id, datetime.now().isoformat()))
+        db.session.execute(
+            text('''INSERT INTO credits_purchases 
+                    (user_email, credits_purchased, amount_paid, purchase_type, transaction_id, purchase_date)
+                    VALUES (:email, :credits, :amount, :ptype, :trans_id, :pdate)'''),
+            {
+                'email': email,
+                'credits': credits_amount,
+                'amount': amount_paid,
+                'ptype': purchase_type,
+                'trans_id': transaction_id,
+                'pdate': datetime.now().isoformat()
+            }
+        )
         
-        conn.commit()
-        conn.close()
-        
+        db.session.commit()
         return True, new_balance
         
     except Exception as e:
         print(f"Error adding credits: {e}")
+        db.session.rollback()
         return False, str(e)
 
 def check_low_credits(email):
     """Check if user has low credits and hasn't been alerted"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('SELECT credits_balance, low_credits_alert_sent FROM leads WHERE email = ?', (email,))
-        result = c.fetchone()
-        conn.close()
+        result = db.session.execute(
+            text('SELECT credits_balance, low_credits_alert_sent FROM leads WHERE email = :email'),
+            {'email': email}
+        ).fetchone()
         
         if result:
             balance, alert_sent = result
