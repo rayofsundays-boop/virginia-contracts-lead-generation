@@ -4,5 +4,5 @@ gunicorn==21.2.0
 flask-mail==0.9.1
 schedule==1.2.1
 psycopg2-binary==2.9.9
-SQLAlchemy==2.0.23
+SQLAlchemy==2.0.36
 Flask-SQLAlchemy==3.1.1
