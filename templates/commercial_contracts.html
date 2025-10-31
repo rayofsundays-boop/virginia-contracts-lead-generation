@@ -6,6 +6,67 @@
 {% block og_description %}Discover private sector cleaning contracts for dental offices, law firms, real estate companies, gyms, hotels, and more in Virginia.{% endblock %}
 
 {% block content %}
+
+{% if show_upgrade_message %}
+<!-- Subscriber-Only Access Message -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4" style="font-size: 5rem; opacity: 0.2;">🔒</div>
+                    <h1 class="display-4 fw-bold mb-4">Exclusive Subscriber Content</h1>
+                    <p class="lead mb-4">Commercial cleaning leads are only available to our premium subscribers.</p>
+                    
+                    <div class="row g-4 my-5">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body">
+                                    <h3 class="text-primary mb-3">💼 What You Get</h3>
+                                    <ul class="text-start">
+                                        <li class="mb-2"><strong>Real Commercial Leads</strong> - Businesses actively looking for cleaners</li>
+                                        <li class="mb-2"><strong>Full Contact Details</strong> - Direct phone, email, and business name</li>
+                                        <li class="mb-2"><strong>Instant Email Alerts</strong> - Be the first to know about new leads</li>
+                                        <li class="mb-2"><strong>Residential Leads Too</strong> - Access homeowner requests as well</li>
+                                        <li class="mb-2"><strong>Bidding System</strong> - Submit proposals directly through platform</li>
+                                        <li class="mb-2"><strong>Monthly Value Info</strong> - Know the contract worth upfront</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-success">
+                                <div class="card-body">
+                                    <h3 class="text-success mb-3">📈 Hidden Perks</h3>
+                                    <ul class="text-start">
+                                        <li class="mb-2"><strong>Priority Access</strong> - Get leads before free users</li>
+                                        <li class="mb-2"><strong>No Ads</strong> - Ad-free browsing experience</li>
+                                        <li class="mb-2"><strong>Analytics Dashboard</strong> - Track your bids and wins</li>
+                                        <li class="mb-2"><strong>Exclusive Training</strong> - Contract bidding resources</li>
+                                        <li class="mb-2"><strong>Support Team</strong> - Priority customer support</li>
+                                        <li class="mb-2"><strong>Cost Savings</strong> - $25-50 per lead elsewhere, included here!</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-calculator me-2"></i>
+                        <strong>ROI Example:</strong> Just ONE commercial cleaning contract ($2,000-5,000/month) pays for your subscription for the entire year! Most subscribers land 3-5 contracts in their first month.
+                    </div>
+
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill mb-3">
+                        <i class="fas fa-rocket me-2"></i>Start Your Subscription
+                    </a>
+                    <br>
+                    <small class="text-muted">Already a subscriber? <a href="{{ url_for('signin') }}">Sign In</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
 <!-- Commercial Contracts Hero -->
 <div class="hero-section text-center">
     <div class="container">
@@ -611,4 +672,5 @@ function showToastCommercial(message, type) {
 }
 </style>
 
+{% endif %}
 {% endblock %}

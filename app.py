@@ -1367,31 +1367,65 @@ def federal_contracts():
 
 @app.route('/commercial-contracts')
 def commercial_contracts():
-    """Commercial cleaning opportunities page"""
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC')
-    opportunities = []
+    """Commercial cleaning opportunities page - Subscriber Only"""
+    # Check if user is logged in and has active subscription
+    user_email = session.get('user_email')
+    is_subscriber = False
     
-    for row in c.fetchall():
-        opportunities.append({
-            'id': row[0],
-            'business_name': row[1],
-            'business_type': row[2],
-            'address': row[3],
-            'location': row[4],
-            'square_footage': row[5],
-            'monthly_value': row[6],
-            'frequency': row[7],
-            'services_needed': row[8],
-            'special_requirements': row[9],
-            'contact_type': row[10],
-            'description': row[11],
-            'size': row[12]
-        })
+    if user_email:
+        try:
+            user = db.session.execute(
+                text('SELECT subscription_status FROM leads WHERE email = :email'),
+                {'email': user_email}
+            ).fetchone()
+            
+            if user and user[0] == 'paid':
+                is_subscriber = True
+        except Exception as e:
+            print(f"Error checking subscription: {str(e)}")
     
-    conn.close()
-    return render_template('commercial_contracts.html', opportunities=opportunities)
+    # If not a subscriber, show limited preview with upgrade message
+    if not is_subscriber:
+        return render_template('commercial_contracts.html', 
+                             opportunities=[], 
+                             is_subscriber=False,
+                             show_upgrade_message=True)
+    
+    # Load opportunities for subscribers
+    try:
+        opportunities = []
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC')
+        
+        for row in c.fetchall():
+            opportunities.append({
+                'id': row[0],
+                'business_name': row[1],
+                'business_type': row[2],
+                'address': row[3],
+                'location': row[4],
+                'square_footage': row[5],
+                'monthly_value': row[6],
+                'frequency': row[7],
+                'services_needed': row[8],
+                'special_requirements': row[9],
+                'contact_type': row[10],
+                'description': row[11],
+                'size': row[12]
+            })
+        
+        conn.close()
+        return render_template('commercial_contracts.html', 
+                             opportunities=opportunities,
+                             is_subscriber=True,
+                             show_upgrade_message=False)
+    except Exception as e:
+        flash(f'Error loading opportunities: {str(e)}', 'danger')
+        return render_template('commercial_contracts.html', 
+                             opportunities=[], 
+                             is_subscriber=is_subscriber,
+                             show_upgrade_message=not is_subscriber)
 
 @app.route('/request-commercial-contact', methods=['POST'])
 @login_required
