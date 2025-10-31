@@ -535,9 +535,12 @@ def init_postgres_db():
         print("PostgreSQL tables created successfully with sample data")
         return True
     except Exception as e:
-        print(f"Error creating PostgreSQL tables: {e}")
+        import traceback
+        error_msg = f"Error creating PostgreSQL tables: {e}\n{traceback.format_exc()}"
+        print(error_msg)
         db.session.rollback()
-        return False
+        # Return the error message instead of just False
+        return error_msg
 
 def init_db():
     try:
@@ -943,14 +946,14 @@ def index():
                 # Use PostgreSQL init if using PostgreSQL
                 if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
                     print("Using PostgreSQL initialization")
-                    success = init_postgres_db()
-                    if success:
+                    result = init_postgres_db()
+                    if result == True:
                         print("PostgreSQL init successful, redirecting...")
                         # Redirect with flag to prevent loop
                         return redirect(url_for('index', init_attempted='1'))
                     else:
-                        print("PostgreSQL init failed")
-                        return f"<h1>Database Setup Error</h1><p>Failed to initialize PostgreSQL tables.</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
+                        print(f"PostgreSQL init failed: {result}")
+                        return f"<h1>Database Setup Error</h1><p>Failed to initialize PostgreSQL tables.</p><pre>{result}</pre><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
                 else:
                     print("Using SQLite initialization")
                     init_db()
@@ -978,16 +981,17 @@ def manual_init_db():
     try:
         # Check if using PostgreSQL
         if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
-            success = init_postgres_db()
-            if success:
+            result = init_postgres_db()
+            if result == True:
                 return "<h1>PostgreSQL Database Initialized!</h1><p>Tables created successfully.</p><p><a href='/'>Go to Home</a></p>"
             else:
-                return "<h1>Database Error</h1><p>Failed to create tables. Check server logs.</p>"
+                return f"<h1>Database Error</h1><p>Failed to create tables.</p><pre>{result}</pre>"
         else:
             init_db()
             return "<h1>Database Initialized!</h1><p>Tables created and sample data loaded.</p><p><a href='/'>Go to Home</a></p>"
     except Exception as e:
-        return f"<h1>Database Error</h1><p>Error: {str(e)}</p>"
+        import traceback
+        return f"<h1>Database Error</h1><p>Error: {str(e)}</p><pre>{traceback.format_exc()}</pre>"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
