@@ -1203,6 +1203,60 @@ def home():
 def test():
     return "<h1>Flask Test Route Working!</h1><p>If you see this, Flask is running correctly.</p>"
 
+@app.route('/db-status')
+def db_status():
+    """Diagnostic route to check database status"""
+    try:
+        html = "<h1>Database Status Report</h1>"
+        html += "<style>body{font-family:Arial;padding:20px;} .good{color:green;} .bad{color:red;} .warn{color:orange;}</style>"
+        
+        # Check environment
+        html += "<h2>Environment Variables</h2>"
+        sam_key = os.environ.get('SAM_GOV_API_KEY', '')
+        html += f"<p>SAM_GOV_API_KEY: <span class='{'good' if sam_key else 'bad'}'>{'✅ SET (' + str(len(sam_key)) + ' chars)' if sam_key else '❌ NOT SET'}</span></p>"
+        html += f"<p>DATABASE_URL: <span class='good'>✅ {app.config['SQLALCHEMY_DATABASE_URI'][:50]}...</span></p>"
+        
+        # Check tables
+        html += "<h2>Database Tables</h2>"
+        try:
+            fed_count = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).scalar()
+            html += f"<p>Federal Contracts: <span class='{'good' if fed_count > 0 else 'warn'}'>{fed_count}</span></p>"
+        except Exception as e:
+            html += f"<p>Federal Contracts: <span class='bad'>❌ Error: {e}</span></p>"
+        
+        try:
+            local_count = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar()
+            html += f"<p>Local Government Contracts: <span class='{'good' if local_count > 0 else 'warn'}'>{local_count}</span></p>"
+        except Exception as e:
+            html += f"<p>Local Government Contracts: <span class='bad'>❌ Error: {e}</span></p>"
+        
+        try:
+            comm_count = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar()
+            html += f"<p>Commercial Opportunities: <span class='{'good' if comm_count > 0 else 'warn'}'>{comm_count}</span></p>"
+        except Exception as e:
+            html += f"<p>Commercial Opportunities: <span class='bad'>❌ Error: {e}</span></p>"
+        
+        try:
+            user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar()
+            html += f"<p>Registered Users: <span class='good'>{user_count}</span></p>"
+        except Exception as e:
+            html += f"<p>Registered Users: <span class='bad'>❌ Error: {e}</span></p>"
+        
+        # Recommendations
+        html += "<h2>Recommendations</h2>"
+        if not sam_key:
+            html += "<p class='bad'>⚠️ SAM_GOV_API_KEY is missing. Get one from <a href='https://open.gsa.gov/api/sam-gov-entity-api/' target='_blank'>SAM.gov API Portal</a></p>"
+        if fed_count == 0:
+            html += "<p class='warn'>⚠️ No federal contracts. Visit <a href='/init-db'>/init-db</a> to initialize or wait for scheduled update at 2 AM.</p>"
+        if local_count == 0:
+            html += "<p class='warn'>⚠️ No local contracts. Scraper runs at 3 AM daily or on /init-db.</p>"
+        
+        html += "<hr><p><a href='/'>← Back to Home</a> | <a href='/init-db'>Force Database Init</a></p>"
+        
+        return html
+    except Exception as e:
+        return f"<h1>Error checking database status</h1><pre>{e}</pre>"
+
 @app.route('/init-db')
 def manual_init_db():
     try:
