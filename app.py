@@ -57,8 +57,10 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vac
 
 mail = Mail(app)
 
-# Initialize lead generator for automated updates
-lead_generator = LeadGenerator('leads.db')
+# Initialize lead generator for automated updates (only if using SQLite)
+lead_generator = None
+if not DATABASE_URL or 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
+    lead_generator = LeadGenerator('leads.db')
 
 # Global variables for scheduling
 scheduler_thread = None
@@ -76,7 +78,13 @@ def login_required(f):
 
 def run_daily_updates():
     """Background thread function for daily updates"""
-    global scheduler_running
+    global scheduler_running, lead_generator
+    
+    # Only run if lead_generator is available
+    if not lead_generator:
+        print("⚠️ Lead generator not available (PostgreSQL mode)")
+        return
+        
     while scheduler_running:
         try:
             # Check if it's time for daily update (run at 6 AM daily)
