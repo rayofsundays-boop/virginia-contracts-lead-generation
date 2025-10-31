@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Local Government Contracts - Virginia Government Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Local, City and State Government Contracts</h2>
+        
+        <!-- Location Filter -->
+        <form method="GET" class="d-flex">
+            <select name="location" class="form-select me-2" onchange="this.form.submit()">
+                <option value="">All Locations</option>
+                {% for location in locations %}
+                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
+                        {{ location }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if current_filter %}
+                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if current_filter %}
+        <div class="alert alert-info">
+            Showing contracts for: <strong>{{ current_filter }}</strong>
+        </div>
+    {% endif %}
+
+    {% if contracts %}
+        <div class="row">
+            {% for contract in contracts %}
+            <div class="col-lg-6 mb-4">
+                <div class="card contract-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ contract[1] }}</h5>
+                            <span class="city-badge">{{ contract[3] }}</span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }}</h6>
+                        <p class="card-text">{{ contract[6] }}</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Contract Value:</small><br>
+                                <strong class="text-success">{{ contract[4] }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Deadline:</small><br>
+                                <strong class="deadline-normal">{{ contract[5] }}</strong>
+                            </div>
+                        </div>
+                        
+                        {% if contract[7] %}
+                        <div class="mb-2">
+                            <small class="text-muted">NAICS Code:</small>
+                            <span class="badge bg-secondary">{{ contract[7] }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <small class="text-muted">Posted: {{ contract[8] }}</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        {% if contract[9] %}
+                            <a href="{{ contract[9] }}" target="_blank" 
+                               class="btn btn-success btn-sm external-link-btn" 
+                               title="Click to visit the official application website"
+                               rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt"></i> Apply Directly
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm"
+                           title="Register to get notified about similar opportunities">
+                           <i class="fas fa-bell"></i> Get Notified
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:150] | safe }}...', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')"
+                                title="Share this contract opportunity">
+                            <i class="fas fa-share-alt"></i> Share
+                        </button>
+                        <div class="text-end mt-2">
+                            <small class="text-muted">Access Cost:</small><br>
+                            <strong class="text-warning">5 Credits</strong><br>
+                            <small class="text-success">($2.50)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="text-muted">Found {{ contracts|length }} contract{{ 's' if contracts|length != 1 else '' }}.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <h4>No contracts found</h4>
+            {% if current_filter %}
+                <p>No contracts found for {{ current_filter }}. <a href="{{ url_for('contracts') }}">View all contracts</a></p>
+            {% else %}
+                <p>No contract opportunities are currently available. Check back soon for updates.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Call to Action -->
+<div class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h3>Ready to Start Bidding?</h3>
+        <p class="lead">Register your company to receive notifications about new contract opportunities.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Register Now</a>
+    </div>
+</div>
+
+<script>
+function shareContract(title, description, agency, value, deadline) {
+    const shareData = {
+        title: `${title} - Virginia Contract Opportunity`,
+        text: `${description}\n\nAgency: ${agency}\nValue: ${value}\nDeadline: ${deadline}\n\nVia VA Contract Hub`,
+        url: window.location.href
+    };
+    
+    // Try native sharing first (mobile devices)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        navigator.share(shareData)
+            .then(() => console.log('Contract shared successfully'))
+            .catch((error) => {
+                console.log('Error sharing:', error);
+                fallbackShare(shareData);
+            });
+    } else {
+        // Fallback to custom share modal
+        fallbackShare(shareData);
+    }
+}
+
+function fallbackShare(shareData) {
+    // Create share modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Share Contract Opportunity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Share Link:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="shareUrl" value="${shareData.url}" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyToClipboard('shareUrl')">Copy</button>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <a href="mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\\n\\n' + shareData.url)}" 
+                               class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-envelope"></i><br>Email
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}" 
+                               target="_blank" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fab fa-twitter"></i><br>Twitter
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareData.url)}" 
+                               target="_blank" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fab fa-linkedin"></i><br>LinkedIn
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}" 
+                               target="_blank" class="btn btn-outline-primary w-100">
+                                <i class="fab fa-facebook"></i><br>Facebook
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" 
+                               target="_blank" class="btn btn-outline-success w-100">
+                                <i class="fab fa-whatsapp"></i><br>WhatsApp
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <button onclick="copyShareText('${shareData.title}', '${shareData.text}', '${shareData.url}')" 
+                                    class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-copy"></i><br>Copy Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Clean up modal after hiding
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard!', 'success');
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        showToast('Failed to copy link', 'error');
+    }
+}
+
+function copyShareText(title, text, url) {
+    const fullText = `${title}\n\n${text}\n\n${url}`;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(fullText).then(() => {
+            showToast('Contract details copied to clipboard!', 'success');
+        }).catch(() => {
+            fallbackCopyText(fullText);
+        });
+    } else {
+        fallbackCopyText(fullText);
+    }
+}
+
+function fallbackCopyText(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Contract details copied to clipboard!', 'success');
+    } catch (err) {
+        showToast('Failed to copy text', 'error');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showToast(message, type) {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Add to page
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Clean up after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toastContainer.removeChild(toast);
+    });
+}
+</script>
+
+{% endblock %}

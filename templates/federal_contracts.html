@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Federal Contracts - SAM.gov Opportunities{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Federal Government Contracts</h2>
+            <p class="text-muted">Opportunities from SAM.gov</p>
+        </div>
+        
+        <!-- Filters -->
+        <form method="GET" class="d-flex gap-2">
+            <select name="department" class="form-select" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                {% for department in departments %}
+                    <option value="{{ department }}" {% if department == current_department %}selected{% endif %}>
+                        {{ department }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <select name="set_aside" class="form-select" onchange="this.form.submit()">
+                <option value="">All Set-Asides</option>
+                {% for set_aside in set_asides %}
+                    <option value="{{ set_aside }}" {% if set_aside == current_set_aside %}selected{% endif %}>
+                        {{ set_aside }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            {% if current_department or current_set_aside %}
+                <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if current_department or current_set_aside %}
+        <div class="alert alert-info">
+            Filters applied:
+            {% if current_department %}<strong>Department:</strong> {{ current_department }}{% endif %}
+            {% if current_set_aside %}{% if current_department %} | {% endif %}<strong>Set-Aside:</strong> {{ current_set_aside }}{% endif %}
+        </div>
+    {% endif %}
+
+    {% if contracts %}
+        <div class="row">
+            {% for contract in contracts %}
+            <div class="col-lg-6 mb-4">
+                <div class="card contract-card h-100 border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ contract[1] }}</h5>
+                            <span class="badge bg-primary">Federal</span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }} - {{ contract[3] }}</h6>
+                        
+                        {% if contract[11] %}
+                        <div class="mb-3">
+                            <span class="badge bg-info">{{ contract[11] }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <p class="card-text">{{ contract[7] }}</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <small class="text-muted">Location:</small><br>
+                                <strong>{{ contract[4] }}</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Contract Value:</small><br>
+                                <strong class="text-success">{{ contract[5] }}</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Deadline:</small><br>
+                                <strong class="text-danger">{{ contract[6] }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">NAICS Code:</small>
+                                <span class="badge bg-secondary">{{ contract[8] }}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Notice ID:</small><br>
+                                <code class="small">{{ contract[10] }}</code>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ contract[9] }}" target="_blank" class="btn btn-success">
+                                <i class="fas fa-external-link-alt me-2"></i>Quick Apply on SAM.gov
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Posted: {{ contract[12] }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            No federal contracts found matching your criteria. Try adjusting your filters.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.contract-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.contract-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

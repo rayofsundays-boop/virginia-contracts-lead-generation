@@ -526,6 +526,23 @@ def init_db():
                       website_url TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
+        # Create federal contracts table for SAM.gov opportunities
+        c.execute('''CREATE TABLE IF NOT EXISTS federal_contracts
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      title TEXT NOT NULL,
+                      agency TEXT NOT NULL,
+                      department TEXT,
+                      location TEXT,
+                      value TEXT,
+                      deadline DATE,
+                      description TEXT,
+                      naics_code TEXT,
+                      sam_gov_url TEXT NOT NULL,
+                      notice_id TEXT UNIQUE,
+                      set_aside TEXT,
+                      posted_date DATE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
         # Create commercial opportunities table
         c.execute('''CREATE TABLE IF NOT EXISTS commercial_opportunities
                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -612,6 +629,27 @@ def init_db():
         if c.fetchone()[0] == 0:
             c.executemany('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
+            conn.commit()
+        
+        # Add sample federal contracts from SAM.gov
+        sample_federal_contracts = [
+            ('Custodial Services - VA Medical Center', 'Department of Veterans Affairs', 'Veterans Health Administration', 'Hampton, VA', '$2,500,000', '2025-12-15', 'Comprehensive custodial services for 500,000 sq ft VA Medical Center including patient care areas, administrative offices, and surgical suites. SDVOSB set-aside.', '561720', 'https://sam.gov/opp/12345/view', 'VA-25-12345', 'Service-Disabled Veteran-Owned Small Business', '2025-10-01'),
+            ('Janitorial Services - Naval Station Norfolk', 'Department of Defense', 'U.S. Navy', 'Norfolk, VA', '$5,000,000', '2025-12-20', 'Full-service janitorial and custodial services for multiple buildings at Naval Station Norfolk. Security clearance required. 5-year IDIQ contract.', '561720', 'https://sam.gov/opp/23456/view', 'DOD-N-23456', 'Small Business', '2025-10-05'),
+            ('Facility Maintenance - NASA Langley', 'National Aeronautics and Space Administration', 'Langley Research Center', 'Hampton, VA', '$1,800,000', '2025-11-30', 'Facility maintenance and custodial services for research laboratories, wind tunnels, and administrative buildings.', '561720', 'https://sam.gov/opp/34567/view', 'NASA-LRC-34567', 'HUBZone', '2025-09-28'),
+            ('Environmental Services - Fort Eustis', 'Department of Defense', 'U.S. Army', 'Newport News, VA', '$3,200,000', '2025-12-10', 'Environmental services including cleaning, waste management, and facility maintenance for Army base facilities.', '561720', 'https://sam.gov/opp/45678/view', 'ARMY-FE-45678', 'Unrestricted', '2025-10-10'),
+            ('Custodial Services - Coast Guard Base', 'Department of Homeland Security', 'U.S. Coast Guard', 'Portsmouth, VA', '$950,000', '2025-11-25', 'Daily custodial services for Coast Guard facilities including administrative buildings, barracks, and training facilities.', '561720', 'https://sam.gov/opp/56789/view', 'DHS-CG-56789', 'Small Business', '2025-10-03'),
+            ('Hospital Environmental Services - Naval Medical Center', 'Department of Defense', 'Navy Medicine', 'Portsmouth, VA', '$4,500,000', '2025-12-30', 'Comprehensive environmental services for 400-bed Naval Medical Center including operating rooms, patient floors, and support areas. Infection control protocols required.', '561720', 'https://sam.gov/opp/67890/view', 'DOD-NMC-67890', 'Women-Owned Small Business', '2025-10-15'),
+            ('Building Maintenance - Federal Courthouse', 'General Services Administration', 'Public Buildings Service', 'Norfolk, VA', '$1,200,000', '2025-11-20', 'Daily building maintenance and custodial services for U.S. District Court including courtrooms, judges chambers, and public areas.', '561720', 'https://sam.gov/opp/78901/view', 'GSA-PBS-78901', 'Unrestricted', '2025-09-30'),
+            ('Grounds and Facility Maintenance - Colonial NHP', 'Department of Interior', 'National Park Service', 'Yorktown, VA', '$850,000', '2025-12-05', 'Grounds keeping, facility maintenance, and custodial services for Colonial National Historical Park visitor centers and historic structures.', '561730', 'https://sam.gov/opp/89012/view', 'DOI-NPS-89012', 'Small Business', '2025-10-08'),
+            ('Janitorial Services - IRS Service Center', 'Department of Treasury', 'Internal Revenue Service', 'Richmond, VA', '$2,800,000', '2025-12-18', 'Comprehensive janitorial services for 750,000 sq ft IRS processing center. Security clearance and background checks required.', '561720', 'https://sam.gov/opp/90123/view', 'TREAS-IRS-90123', 'Unrestricted', '2025-10-12'),
+            ('Custodial Services - FBI Field Office', 'Department of Justice', 'Federal Bureau of Investigation', 'Norfolk, VA', '$1,500,000', '2025-12-22', 'Specialized custodial services for FBI field office. Top Secret clearance required. Secure area cleaning protocols.', '561720', 'https://sam.gov/opp/01234/view', 'DOJ-FBI-01234', 'Small Business', '2025-10-20'),
+        ]
+        
+        # Check if federal contracts already exist
+        c.execute('SELECT COUNT(*) FROM federal_contracts')
+        if c.fetchone()[0] == 0:
+            c.executemany('''INSERT INTO federal_contracts (title, agency, department, location, value, deadline, description, naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', sample_federal_contracts)
             conn.commit()
         
         # Add sample commercial opportunities - 100+ Commercial Leads
@@ -942,6 +980,51 @@ def contracts():
     conn.close()
     
     return render_template('contracts.html', contracts=all_contracts, locations=locations, current_filter=location_filter)
+
+@app.route('/federal-contracts')
+def federal_contracts():
+    """Federal contracts from SAM.gov"""
+    department_filter = request.args.get('department', '')
+    set_aside_filter = request.args.get('set_aside', '')
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    query = 'SELECT * FROM federal_contracts WHERE 1=1'
+    params = []
+    
+    if department_filter:
+        query += ' AND department LIKE ?'
+        params.append(f'%{department_filter}%')
+    
+    if set_aside_filter:
+        query += ' AND set_aside LIKE ?'
+        params.append(f'%{set_aside_filter}%')
+    
+    query += ' ORDER BY deadline ASC'
+    
+    if params:
+        c.execute(query, params)
+    else:
+        c.execute(query)
+    
+    all_federal_contracts = c.fetchall()
+    
+    # Get unique departments and set-asides for filters
+    c.execute('SELECT DISTINCT department FROM federal_contracts ORDER BY department')
+    departments = [row[0] for row in c.fetchall()]
+    
+    c.execute('SELECT DISTINCT set_aside FROM federal_contracts ORDER BY set_aside')
+    set_asides = [row[0] for row in c.fetchall()]
+    
+    conn.close()
+    
+    return render_template('federal_contracts.html', 
+                          contracts=all_federal_contracts, 
+                          departments=departments,
+                          set_asides=set_asides,
+                          current_department=department_filter,
+                          current_set_aside=set_aside_filter)
 
 @app.route('/commercial-contracts')
 def commercial_contracts():
@@ -1618,11 +1701,6 @@ def payment():
 def credits():
     """Credits purchase page"""
     return render_template('credits.html')
-
-@app.route('/signin')
-def signin():
-    """Sign in page for registered users"""
-    return render_template('signin.html')
 
 @app.route('/terms')
 def terms():
