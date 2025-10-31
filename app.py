@@ -510,15 +510,15 @@ def init_postgres_db():
         # Check if data already exists
         existing_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).fetchone()[0]
         if existing_contracts == 0:
-            # Insert sample contracts
+            # Insert sample contracts (using proper date format)
             db.session.execute(text('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
                 VALUES 
-                ('Janitorial Services - City Hall Complex', 'Hampton City Government', 'Hampton, VA', '$45,000', '2025-12-15', 'Daily cleaning and maintenance services for City Hall and administrative buildings', '561720', 'https://www.hampton.gov/bids'),
-                ('Medical Facility Cleaning Services', 'Virginia Beach Health Department', 'Virginia Beach, VA', '$78,000', '2025-11-30', 'Specialized cleaning services for medical facilities requiring infection control protocols', '561720', 'https://www.vbgov.com/government/departments/purchasing'),
-                ('School Facility Maintenance Contract', 'Suffolk Public Schools', 'Suffolk, VA', '$125,000', '2026-01-20', 'Comprehensive cleaning and maintenance for 12 elementary schools', '561720', 'https://www.suffolkva.us/bids'),
-                ('Parks and Recreation Facilities', 'Newport News Parks Department', 'Newport News, VA', '$34,500', '2025-12-01', 'Cleaning services for community centers, sports facilities, and restrooms', '561720', 'https://www.nnva.gov/bids'),
-                ('Library System Cleaning Services', 'Williamsburg Regional Library', 'Williamsburg, VA', '$28,000', '2026-02-15', 'Evening and weekend cleaning services for 4 library branches', '561720', 'https://www.wrl.org/about-wrl/bids'),
-                ('Municipal Building Janitorial Services', 'Chesapeake City Government', 'Chesapeake, VA', '$52,000', '2025-11-25', 'Daily janitorial services for municipal offices and public spaces', '561720', 'https://www.cityofchesapeake.net/government/bids')
+                ('Janitorial Services - City Hall Complex', 'Hampton City Government', 'Hampton, VA', '$45,000', DATE '2025-12-15', 'Daily cleaning and maintenance services for City Hall and administrative buildings', '561720', 'https://www.hampton.gov/bids'),
+                ('Medical Facility Cleaning Services', 'Virginia Beach Health Department', 'Virginia Beach, VA', '$78,000', DATE '2025-11-30', 'Specialized cleaning services for medical facilities requiring infection control protocols', '561720', 'https://www.vbgov.com/government/departments/purchasing'),
+                ('School Facility Maintenance Contract', 'Suffolk Public Schools', 'Suffolk, VA', '$125,000', DATE '2026-01-20', 'Comprehensive cleaning and maintenance for 12 elementary schools', '561720', 'https://www.suffolkva.us/bids'),
+                ('Parks and Recreation Facilities', 'Newport News Parks Department', 'Newport News, VA', '$34,500', DATE '2025-12-01', 'Cleaning services for community centers, sports facilities, and restrooms', '561720', 'https://www.nnva.gov/bids'),
+                ('Library System Cleaning Services', 'Williamsburg Regional Library', 'Williamsburg, VA', '$28,000', DATE '2026-02-15', 'Evening and weekend cleaning services for 4 library branches', '561720', 'https://www.wrl.org/about-wrl/bids'),
+                ('Municipal Building Janitorial Services', 'Chesapeake City Government', 'Chesapeake, VA', '$52,000', DATE '2025-11-25', 'Daily janitorial services for municipal offices and public spaces', '561720', 'https://www.cityofchesapeake.net/government/bids')
             '''))
             
             # Insert sample commercial opportunities
@@ -930,27 +930,39 @@ def index():
                              commercial_opportunities=commercial_opportunities,
                              commercial_count=commercial_count)
     except Exception as e:
+        # Log the full error
+        import traceback
+        print(f"Index route error: {e}")
+        print(traceback.format_exc())
+        
         error_str = str(e).lower()
         # Check for missing tables in both SQLite and PostgreSQL
         if ("no such table" in error_str or "does not exist" in error_str or "relation" in error_str) and init_attempted == '0':
             try:
+                print("Attempting database initialization...")
                 # Use PostgreSQL init if using PostgreSQL
                 if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+                    print("Using PostgreSQL initialization")
                     success = init_postgres_db()
                     if success:
+                        print("PostgreSQL init successful, redirecting...")
                         # Redirect with flag to prevent loop
                         return redirect(url_for('index', init_attempted='1'))
+                    else:
+                        print("PostgreSQL init failed")
+                        return f"<h1>Database Setup Error</h1><p>Failed to initialize PostgreSQL tables.</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
                 else:
+                    print("Using SQLite initialization")
                     init_db()
                     return redirect(url_for('index', init_attempted='1'))
             except Exception as e2:
-                return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
+                print(f"Initialization error: {e2}")
+                print(traceback.format_exc())
+                return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Original error: {str(e)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
         
-        # If init was already attempted or different error, show with empty data
-        return render_template('index.html', 
-                             contracts=[], 
-                             commercial_opportunities=[],
-                             commercial_count=0)
+        # If init was already attempted or different error, show error details
+        print(f"Rendering with empty data. Init attempted: {init_attempted}")
+        return f"<h1>Error Loading Homepage</h1><p>Error: {str(e)}</p><p>Init attempted: {init_attempted}</p><p><a href='/init-db'>Initialize Database</a></p><p><a href='/?init_attempted=0'>Retry</a></p>"
 
 @app.route('/home')
 def home():
