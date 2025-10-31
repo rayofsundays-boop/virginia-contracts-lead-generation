@@ -231,23 +231,24 @@ def update_federal_contracts_from_samgov():
         
         # Use SQLAlchemy for database operations
         with app.app_context():
-            # Clean up old contracts (older than 90 days)
+            # Clean up old contracts (older than 90 days) - PostgreSQL syntax
             db.session.execute(text('''
                 DELETE FROM federal_contracts 
-                WHERE posted_date < DATE('now', '-90 days')
+                WHERE posted_date < CURRENT_DATE - INTERVAL '90 days'
             '''))
             
-            # Insert new contracts
+            # Insert new contracts with PostgreSQL ON CONFLICT
             new_count = 0
             for contract in contracts:
                 try:
                     db.session.execute(text('''
-                        INSERT OR IGNORE INTO federal_contracts 
+                        INSERT INTO federal_contracts 
                         (title, agency, department, location, value, deadline, description, 
                          naics_code, sam_gov_url, notice_id, set_aside, posted_date)
                         VALUES (:title, :agency, :department, :location, :value, :deadline, 
                                 :description, :naics_code, :sam_gov_url, :notice_id, 
                                 :set_aside, :posted_date)
+                        ON CONFLICT (notice_id) DO NOTHING
                     '''), contract)
                     new_count += 1
                 except Exception as e:
@@ -275,10 +276,10 @@ def update_local_gov_contracts():
         
         # Use SQLAlchemy for database operations
         with app.app_context():
-            # Clean up old contracts (older than 120 days)
+            # Clean up old contracts (older than 120 days) - PostgreSQL syntax
             db.session.execute(text('''
                 DELETE FROM contracts 
-                WHERE created_at < DATE('now', '-120 days')
+                WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '120 days'
             '''))
             
             # Insert new contracts
