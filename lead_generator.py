@@ -326,6 +326,16 @@ class LeadGenerator:
             description_options = descriptions.get(business_type, default_desc)
             description = random.choice(description_options)
             
+            # Generate website URLs for commercial leads
+            business_slug = business_name.lower().replace(' ', '').replace('&', 'and')[:20]
+            website_urls = [
+                f'https://www.{business_slug}.com',
+                f'https://{business_slug}va.com',
+                f'https://www.{business_slug}hampton.com',
+                f'https://{city.lower().replace(" ", "")}{business_type}.com/contact'
+            ]
+            website_url = random.choice(website_urls)
+            
             lead = {
                 'business_name': business_name,
                 'business_type': business_type,
@@ -338,7 +348,8 @@ class LeadGenerator:
                 'special_requirements': special_requirements,
                 'contact_type': random.choice(contact_types),
                 'description': description,
-                'size': size
+                'size': size,
+                'website_url': website_url
             }
             
             leads.append(lead)
@@ -355,23 +366,23 @@ class LeadGenerator:
             if government_leads:
                 for lead in government_leads:
                     c.execute('''INSERT INTO contracts 
-                                 (title, agency, location, value, deadline, description, naics_code, date_posted, website_url)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                                 (title, agency, location, value, deadline, description, naics_code, website_url)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
                               (lead['title'], lead['agency'], lead['location'], lead['value'],
                                lead['deadline'], lead['description'], lead['naics_code'],
-                               lead['date_posted'], lead['website_url']))
+                               lead['website_url']))
             
             # Add commercial opportunities
             if commercial_leads:
                 for lead in commercial_leads:
                     c.execute('''INSERT INTO commercial_opportunities 
                                  (business_name, business_type, address, location, square_footage, monthly_value,
-                                  frequency, services_needed, special_requirements, contact_type, description, size)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                                  frequency, services_needed, special_requirements, contact_type, description, size, website_url)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                               (lead['business_name'], lead['business_type'], lead['address'], lead['location'],
                                lead['square_footage'], lead['monthly_value'], lead['frequency'],
                                lead['services_needed'], lead['special_requirements'], lead['contact_type'],
-                               lead['description'], lead['size']))
+                               lead['description'], lead['size'], lead['website_url']))
             
             conn.commit()
             conn.close()
@@ -393,7 +404,7 @@ class LeadGenerator:
             cutoff_date = (datetime.now() - timedelta(days=days_old)).strftime('%Y-%m-%d')
             
             # Remove old government contracts
-            c.execute('DELETE FROM contracts WHERE date_posted < ?', (cutoff_date,))
+            c.execute('DELETE FROM contracts WHERE created_at < ?', (cutoff_date,))
             gov_deleted = c.rowcount
             
             # For commercial leads, we'll just mark them as old rather than delete
