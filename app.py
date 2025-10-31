@@ -518,25 +518,27 @@ def init_postgres_db():
         # Check if data already exists
         existing_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).fetchone()[0]
         if existing_contracts == 0:
-            # Insert sample contracts (using proper date format)
-            db.session.execute(text('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
+            # Insert sample contracts using parameterized queries
+            db.session.execute(text("""
+                INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
                 VALUES 
-                ('Janitorial Services - City Hall Complex', 'Hampton City Government', 'Hampton, VA', '$45,000', DATE '2025-12-15', 'Daily cleaning and maintenance services for City Hall and administrative buildings', '561720', 'https://www.hampton.gov/bids'),
-                ('Medical Facility Cleaning Services', 'Virginia Beach Health Department', 'Virginia Beach, VA', '$78,000', DATE '2025-11-30', 'Specialized cleaning services for medical facilities requiring infection control protocols', '561720', 'https://www.vbgov.com/government/departments/purchasing'),
-                ('School Facility Maintenance Contract', 'Suffolk Public Schools', 'Suffolk, VA', '$125,000', DATE '2026-01-20', 'Comprehensive cleaning and maintenance for 12 elementary schools', '561720', 'https://www.suffolkva.us/bids'),
-                ('Parks and Recreation Facilities', 'Newport News Parks Department', 'Newport News, VA', '$34,500', DATE '2025-12-01', 'Cleaning services for community centers, sports facilities, and restrooms', '561720', 'https://www.nnva.gov/bids'),
-                ('Library System Cleaning Services', 'Williamsburg Regional Library', 'Williamsburg, VA', '$28,000', DATE '2026-02-15', 'Evening and weekend cleaning services for 4 library branches', '561720', 'https://www.wrl.org/about-wrl/bids'),
-                ('Municipal Building Janitorial Services', 'Chesapeake City Government', 'Chesapeake, VA', '$52,000', DATE '2025-11-25', 'Daily janitorial services for municipal offices and public spaces', '561720', 'https://www.cityofchesapeake.net/government/bids')
-            '''))
+                ('Janitorial Services - City Hall Complex', 'Hampton City Government', 'Hampton, VA', '$45,000', '2025-12-15', 'Daily cleaning and maintenance services for City Hall and administrative buildings', '561720', 'https://www.hampton.gov/bids'),
+                ('Medical Facility Cleaning Services', 'Virginia Beach Health Department', 'Virginia Beach, VA', '$78,000', '2025-11-30', 'Specialized cleaning services for medical facilities requiring infection control protocols', '561720', 'https://www.vbgov.com/government/departments/purchasing'),
+                ('School Facility Maintenance Contract', 'Suffolk Public Schools', 'Suffolk, VA', '$125,000', '2026-01-20', 'Comprehensive cleaning and maintenance for 12 elementary schools', '561720', 'https://www.suffolkva.us/bids'),
+                ('Parks and Recreation Facilities', 'Newport News Parks Department', 'Newport News, VA', '$34,500', '2025-12-01', 'Cleaning services for community centers, sports facilities, and restrooms', '561720', 'https://www.nnva.gov/bids'),
+                ('Library System Cleaning Services', 'Williamsburg Regional Library', 'Williamsburg, VA', '$28,000', '2026-02-15', 'Evening and weekend cleaning services for 4 library branches', '561720', 'https://www.wrl.org/about-wrl/bids'),
+                ('Municipal Building Janitorial Services', 'Chesapeake City Government', 'Chesapeake, VA', '$52,000', '2025-11-25', 'Daily janitorial services for municipal offices and public spaces', '561720', 'https://www.cityofchesapeake.net/government/bids')
+            """))
             
             # Insert sample commercial opportunities
-            db.session.execute(text('''INSERT INTO commercial_opportunities 
+            db.session.execute(text("""
+                INSERT INTO commercial_opportunities 
                 (business_name, business_type, address, location, square_footage, monthly_value, frequency, services_needed, special_requirements, contact_type, description, size)
                 VALUES
                 ('Hampton Marina Resort', 'hospitality', '456 Marina Dr', 'Hampton', 15000, 5200, 'daily', 'Guest rooms, lobby, restaurants, pool area', 'Marina resort with boat docks and waterfront dining', 'Property Manager', '120-room waterfront resort with marina and restaurant', 'medium'),
                 ('Suffolk Medical Center', 'medical', '789 Medical Plaza', 'Suffolk', 32000, 8500, 'daily', 'Patient rooms, exam rooms, surgical suites', 'Healthcare facility requiring infection control standards', 'Facilities Director', '80-bed medical center with outpatient services', 'large'),
                 ('Virginia Beach Tech Campus', 'office', '321 Innovation Way', 'Virginia Beach', 45000, 9200, 'weekly', 'Open office spaces, conference rooms, cafeteria', 'Modern tech campus with multiple buildings', 'Facility Operations Manager', 'Technology company campus with 500+ employees', 'large')
-            '''))
+            """))
             
             db.session.commit()
         
