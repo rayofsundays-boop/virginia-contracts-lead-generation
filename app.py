@@ -260,6 +260,55 @@ def update_federal_contracts_from_samgov():
     except Exception as e:
         print(f"❌ Error updating federal contracts: {e}")
 
+def update_local_gov_contracts():
+    """Fetch and update local government contracts from Virginia city websites"""
+    try:
+        print("🏛️  Fetching real local government contracts from Virginia cities...")
+        from local_gov_scraper import VirginiaLocalGovScraper
+        
+        scraper = VirginiaLocalGovScraper()
+        contracts = scraper.fetch_all_local_contracts()
+        
+        if not contracts:
+            print("⚠️  No new local contracts found.")
+            return
+        
+        # Use SQLAlchemy for database operations
+        with app.app_context():
+            # Clean up old contracts (older than 120 days)
+            db.session.execute(text('''
+                DELETE FROM contracts 
+                WHERE created_at < DATE('now', '-120 days')
+            '''))
+            
+            # Insert new contracts
+            new_count = 0
+            for contract in contracts:
+                try:
+                    # Check if contract already exists (by title and agency)
+                    existing = db.session.execute(text('''
+                        SELECT COUNT(*) FROM contracts 
+                        WHERE title = :title AND agency = :agency
+                    '''), {'title': contract['title'], 'agency': contract['agency']}).fetchone()
+                    
+                    if existing[0] == 0:
+                        db.session.execute(text('''
+                            INSERT INTO contracts 
+                            (title, agency, location, value, deadline, description, naics_code, website_url)
+                            VALUES (:title, :agency, :location, :value, :deadline, :description, 
+                                    :naics_code, :website_url)
+                        '''), contract)
+                        new_count += 1
+                except Exception as e:
+                    print(f"⚠️  Error inserting contract {contract.get('title')}: {e}")
+                    continue
+            
+            db.session.commit()
+            print(f"✅ Updated {new_count} real local government contracts from Virginia cities")
+            
+    except Exception as e:
+        print(f"❌ Error updating local government contracts: {e}")
+
 def schedule_samgov_updates():
     """Run SAM.gov updates daily at 2 AM"""
     schedule.every().day.at("02:00").do(update_federal_contracts_from_samgov)
@@ -270,17 +319,38 @@ def schedule_samgov_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
+def schedule_local_gov_updates():
+    """Run local government updates daily at 3 AM"""
+    schedule.every().day.at("03:00").do(update_local_gov_contracts)
+    
+    print("⏰ Local Government scheduler started - will update city/county contracts daily at 3 AM")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 # Start SAM.gov scheduler in background thread
 samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
 samgov_scheduler_thread.start()
+
+# Start Local Government scheduler in background thread
+localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
+localgov_scheduler_thread.start()
 
 # Run initial update on startup (in background to not block app startup)
 def initial_samgov_fetch():
     time.sleep(5)  # Wait 5 seconds for app to fully start
     update_federal_contracts_from_samgov()
 
+def initial_localgov_fetch():
+    time.sleep(10)  # Wait 10 seconds, after SAM.gov
+    update_local_gov_contracts()
+
 initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
 initial_fetch_thread.start()
+
+localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
+localgov_fetch_thread.start()
 
 
 def run_daily_updates():
