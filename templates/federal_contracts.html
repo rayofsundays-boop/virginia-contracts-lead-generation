@@ -2,59 +2,113 @@
 
 {% block title %}Federal Contracts - SAM.gov Opportunities{% endblock %}
 
-{% block content %}
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2>Federal Government Contracts</h2>
-            <p class="text-muted">Opportunities from SAM.gov</p>
-        </div>
-        
-        <!-- Filters -->
-        <form method="GET" class="d-flex gap-2">
-            <select name="department" class="form-select" onchange="this.form.submit()">
-                <option value="">All Departments</option>
-                {% for department in departments %}
-                    <option value="{{ department }}" {% if department == current_department %}selected{% endif %}>
-                        {{ department }}
-                    </option>
-                {% endfor %}
-            </select>
-            
-            <select name="set_aside" class="form-select" onchange="this.form.submit()">
-                <option value="">All Set-Asides</option>
-                {% for set_aside in set_asides %}
-                    <option value="{{ set_aside }}" {% if set_aside == current_set_aside %}selected{% endif %}>
-                        {{ set_aside }}
-                    </option>
-                {% endfor %}
-            </select>
-            
-            {% if current_department or current_set_aside %}
-                <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-secondary">Clear</a>
-            {% endif %}
-        </form>
-    </div>
+{% block og_title %}Federal Government Cleaning Contracts from SAM.gov{% endblock %}
+{% block og_description %}Discover federal government cleaning contracts from SAM.gov including VA Medical Centers, Naval facilities, and federal buildings across Virginia.{% endblock %}
 
-    {% if current_department or current_set_aside %}
+{% block content %}
+<!-- Federal Contracts Hero -->
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Federal Government Contracts</h1>
+        <p class="lead fs-4">SAM.gov opportunities for cleaning and janitorial services</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-flag-usa"></i><br>
+                            <strong>10+</strong> Federal Contracts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-coins"></i><br>
+                            <strong>5 Credits</strong> per lead
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="badge bg-success text-white p-3 fs-6 w-100">
+                            <i class="fas fa-dollar-sign"></i><br>
+                            <strong>$2.50</strong> per lead
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Filter Federal Contracts</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Department:</label>
+                            <select name="department" class="form-select">
+                                <option value="">All Departments</option>
+                                {% for department in departments %}
+                                    <option value="{{ department }}" {% if department == current_department %}selected{% endif %}>
+                                        {{ department }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Set-Aside:</label>
+                            <select name="set_aside" class="form-select">
+                                <option value="">All Set-Asides</option>
+                                {% for set_aside in set_asides %}
+                                    <option value="{{ set_aside }}" {% if set_aside == current_set_aside %}selected{% endif %}>
+                                        {{ set_aside }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
+                            {% if current_department or current_set_aside %}
+                                <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-secondary">Clear All</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_department or current_set_aside %}
+    <div class="container mt-3">
         <div class="alert alert-info">
             Filters applied:
             {% if current_department %}<strong>Department:</strong> {{ current_department }}{% endif %}
             {% if current_set_aside %}{% if current_department %} | {% endif %}<strong>Set-Aside:</strong> {{ current_set_aside }}{% endif %}
         </div>
-    {% endif %}
+    </div>
+{% endif %}
 
+<!-- Federal Contracts Section -->
+<div class="container my-5">
     {% if contracts %}
         <div class="row">
             {% for contract in contracts %}
-            <div class="col-lg-6 mb-4">
-                <div class="card contract-card h-100 border-primary">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 contract-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-primary">{{ contract[2] }}</h6>
+                        <span class="badge bg-primary">Federal</span>
+                    </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title">{{ contract[1] }}</h5>
-                            <span class="badge bg-primary">Federal</span>
                         </div>
-                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }} - {{ contract[3] }}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ contract[3] }}</h6>
                         
                         {% if contract[11] %}
                         <div class="mb-3">
@@ -64,44 +118,59 @@
                         
                         <p class="card-text">{{ contract[7] }}</p>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-4">
+                        <div class="row">
+                            <div class="col-6">
                                 <small class="text-muted">Location:</small><br>
                                 <strong>{{ contract[4] }}</strong>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-6">
                                 <small class="text-muted">Contract Value:</small><br>
                                 <strong class="text-success">{{ contract[5] }}</strong>
                             </div>
-                            <div class="col-md-4">
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-6">
                                 <small class="text-muted">Deadline:</small><br>
                                 <strong class="text-danger">{{ contract[6] }}</strong>
                             </div>
-                        </div>
-                        
-                        <div class="row mb-3">
                             <div class="col-6">
                                 <small class="text-muted">NAICS Code:</small>
                                 <span class="badge bg-secondary">{{ contract[8] }}</span>
                             </div>
-                            <div class="col-6">
-                                <small class="text-muted">Notice ID:</small><br>
-                                <code class="small">{{ contract[10] }}</code>
-                            </div>
                         </div>
                         
-                        <div class="d-grid">
-                            <a href="{{ contract[9] }}" target="_blank" class="btn btn-success">
-                                <i class="fas fa-external-link-alt me-2"></i>Quick Apply on SAM.gov
-                            </a>
+                        <div class="mt-2">
+                            <small class="text-muted">Notice ID:</small>
+                            <code class="small">{{ contract[10] }}</code>
                         </div>
                     </div>
-                    <div class="card-footer text-muted small">
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ contract[9] }}" target="_blank" class="btn btn-success btn-sm" rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt me-1"></i>Quick Apply
+                            </a>
+                            <button class="btn btn-outline-secondary btn-sm" 
+                                    onclick="shareFederalContract('{{ contract[1] | safe }}', '{{ contract[7][:100] | safe }}', '{{ contract[2] }}', '{{ contract[5] }}', '{{ contract[6] }}')">
+                                <i class="fas fa-share-alt"></i> Share
+                            </button>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">Cost:</small><br>
+                            <strong class="text-warning">5 Credits</strong><br>
+                            <small class="text-success">($2.50)</small>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted small bg-light">
                         Posted: {{ contract[12] }}
                     </div>
                 </div>
             </div>
             {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="text-muted">Found {{ contracts|length }} federal contract{{ 's' if contracts|length != 1 else '' }}.</p>
         </div>
     {% else %}
         <div class="alert alert-warning">
@@ -110,18 +179,106 @@
     {% endif %}
 </div>
 
+<!-- Federal Contract Benefits -->
+<div class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Bid on Federal Contracts?</h2>
+        
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                        <h5>Secure & Reliable</h5>
+                        <p>Federal agencies always pay on time with guaranteed contract terms</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+                        <h5>Higher Value</h5>
+                        <p>Federal contracts typically range from $1M-$5M annually</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-3x text-warning mb-3"></i>
+                        <h5>Long-Term</h5>
+                        <p>Multi-year contracts with option years for stable revenue</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-award fa-3x text-info mb-3"></i>
+                        <h5>Set-Asides</h5>
+                        <p>Special programs for small businesses, veterans, and women-owned companies</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SAM.gov Direct Access -->
+<div class="container my-5">
+    <div class="card bg-primary text-white">
+        <div class="card-body text-center py-5">
+            <h2 class="mb-3">Apply Directly on SAM.gov</h2>
+            <p class="lead mb-4">All federal contracts link directly to SAM.gov for quick application submission</p>
+            <a href="https://sam.gov" target="_blank" class="btn btn-light btn-lg">
+                <i class="fas fa-external-link-alt me-2"></i>Visit SAM.gov
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareFederalContract(title, description, agency, value, deadline) {
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            text: `${title} from ${agency} - Value: ${value}, Deadline: ${deadline}\n\n${description}`,
+            url: window.location.href
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback: copy to clipboard
+        const shareText = `${title}\n${agency}\nValue: ${value}\nDeadline: ${deadline}\n\n${description}`;
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Contract details copied to clipboard!');
+        });
+    }
+}
+</script>
+
 <style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 0;
+    margin-bottom: 0;
+}
+
 .contract-card {
     transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid #667eea;
 }
 
 .contract-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
 .card-footer {
-    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0,0,0,.125);
 }
 </style>
 {% endblock %}
