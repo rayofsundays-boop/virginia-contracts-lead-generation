@@ -197,12 +197,17 @@
                 <div class="card-footer bg-transparent border-0">
                     <div class="d-grid gap-2">
                         <div class="btn-group" role="group">
-                            {% if lead.application_url %}
+                            {% if lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
                             <a href="{{ lead.application_url }}" target="_blank" 
                                class="btn btn-success btn-sm"
                                title="Apply directly on government website">
                                 <i class="fas fa-external-link-alt"></i> Apply Now
                             </a>
+                            {% elif lead.lead_type == 'commercial' %}
+                            <button class="btn btn-outline-success btn-sm" disabled
+                                    title="Contact information available through Get Contact button">
+                                <i class="fas fa-handshake"></i> Direct Contact Only
+                            </button>
                             {% endif %}
                             <button class="btn btn-primary btn-sm" 
                                     onclick="accessContactInfo('{{ lead.id }}', '{{ lead.title }}', '{{ lead.lead_type }}')">

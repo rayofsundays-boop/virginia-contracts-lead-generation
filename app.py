@@ -5,6 +5,10 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_mail import Mail, Message
 import sqlite3
 from datetime import datetime, date
+import threading
+import schedule
+import time
+from lead_generator import LeadGenerator
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
@@ -27,6 +31,54 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vacontracts.com')
 
 mail = Mail(app)
+
+# Initialize lead generator for automated updates
+lead_generator = LeadGenerator('leads.db')
+
+# Global variables for scheduling
+scheduler_thread = None
+scheduler_running = False
+
+def run_daily_updates():
+    """Background thread function for daily updates"""
+    global scheduler_running
+    while scheduler_running:
+        try:
+            # Check if it's time for daily update (run at 6 AM daily)
+            current_time = datetime.now()
+            if current_time.hour == 6 and current_time.minute == 0:
+                print("🕕 Running scheduled daily lead update...")
+                result = lead_generator.generate_daily_update()
+                
+                if result['success']:
+                    print(f"✅ Scheduled update completed: {result['government_added']} gov + {result['commercial_added']} commercial leads")
+                else:
+                    print(f"❌ Scheduled update failed: {result.get('error', 'Unknown error')}")
+                
+                # Sleep for 61 seconds to avoid running multiple times in same minute
+                time.sleep(61)
+            else:
+                # Check every minute
+                time.sleep(60)
+                
+        except Exception as e:
+            print(f"❌ Error in scheduler thread: {e}")
+            time.sleep(300)  # Wait 5 minutes before retrying
+
+def start_scheduler():
+    """Start the background scheduler"""
+    global scheduler_thread, scheduler_running
+    if not scheduler_running:
+        scheduler_running = True
+        scheduler_thread = threading.Thread(target=run_daily_updates, daemon=True)
+        scheduler_thread.start()
+        print("🔄 Daily update scheduler started")
+
+def stop_scheduler():
+    """Stop the background scheduler"""
+    global scheduler_running
+    scheduler_running = False
+    print("⏹️ Daily update scheduler stopped")
 
 # Credit management functions
 def get_user_credits(email):
@@ -836,17 +888,17 @@ def customer_leads():
                 contracts.agency,
                 contracts.location,
                 contracts.description,
-                contracts.contract_value,
+                contracts.value as contract_value,
                 contracts.deadline,
                 contracts.naics_code,
-                contracts.date_posted,
+                contracts.created_at,
                 contracts.website_url,
                 'government' as lead_type,
                 'General Cleaning' as services_needed,
                 'Active' as status,
-                contracts.requirements
+                contracts.description as requirements
             FROM contracts 
-            ORDER BY contracts.date_posted DESC
+            ORDER BY contracts.created_at DESC
         ''').fetchall()
         
         commercial_leads = c.execute('''
@@ -860,7 +912,7 @@ def customer_leads():
                 'Ongoing' as deadline,
                 '' as naics_code,
                 'Recent' as date_posted,
-                '' as website_url,
+                NULL as website_url,
                 'commercial' as lead_type,
                 commercial_opportunities.services_needed,
                 'Active' as status,
@@ -874,6 +926,9 @@ def customer_leads():
         
         # Add government leads
         for lead in government_leads:
+            # Ensure application_url is valid
+            app_url = lead[9] if lead[9] and lead[9].startswith(('http://', 'https://')) else None
+            
             lead_dict = {
                 'id': f"gov_{lead[0]}",
                 'title': lead[1],
@@ -884,7 +939,7 @@ def customer_leads():
                 'deadline': lead[6],
                 'naics_code': lead[7],
                 'date_posted': lead[8],
-                'application_url': lead[9],
+                'application_url': app_url,
                 'lead_type': lead[10],
                 'services_needed': lead[11],
                 'status': lead[12],
@@ -892,9 +947,10 @@ def customer_leads():
                 'days_left': calculate_days_left(lead[6])
             }
             all_leads.append(lead_dict)
-        
+
         # Add commercial leads
         for lead in commercial_leads:
+            # Commercial leads don't have application URLs
             lead_dict = {
                 'id': f"com_{lead[0]}",
                 'title': lead[1],
@@ -905,7 +961,7 @@ def customer_leads():
                 'deadline': lead[6],
                 'naics_code': lead[7],
                 'date_posted': lead[8],
-                'application_url': lead[9],
+                'application_url': None,  # Commercial leads don't have direct application URLs
                 'lead_type': lead[10],
                 'services_needed': lead[11],
                 'status': lead[12],
@@ -1061,6 +1117,163 @@ def send_proposal_help_notification(request_data, request_id):
     except Exception as e:
         print(f"Error sending proposal help notification: {e}")
         return False
+
+@app.route('/admin')
+def admin_dashboard():
+    """Admin dashboard for lead management"""
+    try:
+        # Get lead statistics
+        stats = lead_generator.get_lead_statistics()
+        
+        # Get recent activity (last 7 days)
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get recent government contracts
+        c.execute('''SELECT title, agency, location, value, created_at 
+                     FROM contracts 
+                     WHERE created_at >= date("now", "-7 days")
+                     ORDER BY created_at DESC LIMIT 10''')
+        recent_gov = c.fetchall()
+        
+        # Get recent commercial opportunities (last 10 added)
+        c.execute('''SELECT business_name, business_type, location, monthly_value 
+                     FROM commercial_opportunities 
+                     ORDER BY id DESC LIMIT 10''')
+        recent_commercial = c.fetchall()
+        
+        conn.close()
+        
+        return render_template('admin_dashboard.html', 
+                             stats=stats, 
+                             recent_gov=recent_gov, 
+                             recent_commercial=recent_commercial,
+                             scheduler_running=scheduler_running)
+        
+    except Exception as e:
+        print(f"Admin dashboard error: {e}")
+        flash('Error loading admin dashboard', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/admin/manual-update', methods=['POST'])
+def manual_update():
+    """Manually trigger lead updates"""
+    try:
+        data = request.get_json()
+        gov_count = int(data.get('government_count', 5))
+        commercial_count = int(data.get('commercial_count', 10))
+        
+        # Generate new leads
+        gov_leads = lead_generator.generate_government_leads(count=gov_count)
+        commercial_leads = lead_generator.generate_commercial_leads(count=commercial_count)
+        
+        # Update database
+        success = lead_generator.update_database(gov_leads, commercial_leads)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully added {len(gov_leads)} government and {len(commercial_leads)} commercial leads',
+                'government_added': len(gov_leads),
+                'commercial_added': len(commercial_leads)
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to update database'
+            }), 500
+            
+    except Exception as e:
+        print(f"Manual update error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/admin/cleanup-leads', methods=['POST'])
+def cleanup_leads():
+    """Clean up old leads"""
+    try:
+        data = request.get_json()
+        days_old = int(data.get('days_old', 90))
+        
+        success = lead_generator.cleanup_old_leads(days_old=days_old)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully cleaned up leads older than {days_old} days'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to cleanup leads'
+            }), 500
+            
+    except Exception as e:
+        print(f"Cleanup error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/admin/scheduler-control', methods=['POST'])
+def scheduler_control():
+    """Control the automatic scheduler"""
+    try:
+        data = request.get_json()
+        action = data.get('action')
+        
+        if action == 'start':
+            start_scheduler()
+            return jsonify({
+                'success': True,
+                'message': 'Scheduler started successfully',
+                'status': 'running'
+            })
+        elif action == 'stop':
+            stop_scheduler()
+            return jsonify({
+                'success': True,
+                'message': 'Scheduler stopped successfully',
+                'status': 'stopped'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid action'
+            }), 400
+            
+    except Exception as e:
+        print(f"Scheduler control error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/admin/stats', methods=['GET'])
+def admin_stats():
+    """Get current lead statistics"""
+    try:
+        stats = lead_generator.get_lead_statistics()
+        
+        if stats:
+            return jsonify({
+                'success': True,
+                'stats': stats
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to get statistics'
+            }), 500
+            
+    except Exception as e:
+        print(f"Stats error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
 
 @app.route('/leads')
 def leads():

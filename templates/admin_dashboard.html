@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Lead Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-cogs"></i> Admin Dashboard</h2>
+                    <p class="text-muted">Lead management and system controls</p>
+                </div>
+                <div>
+                    <span class="badge bg-{{ 'success' if scheduler_running else 'warning' }} fs-6">
+                        <i class="fas fa-{{ 'play' if scheduler_running else 'pause' }}"></i>
+                        Scheduler {{ 'Running' if scheduler_running else 'Stopped' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <i class="fas fa-building fa-2x mb-2"></i>
+                    <h4>{{ stats.total_government if stats else 0 }}</h4>
+                    <p class="mb-0">Government Contracts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <i class="fas fa-briefcase fa-2x mb-2"></i>
+                    <h4>{{ stats.total_commercial if stats else 0 }}</h4>
+                    <p class="mb-0">Commercial Opportunities</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h4>{{ stats.total_leads if stats else 0 }}</h4>
+                    <p class="mb-0">Total Active Leads</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-warning text-white">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4>{{ stats.recent_government if stats else 0 }}</h4>
+                    <p class="mb-0">Recent (7 days)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-plus-circle"></i> Manual Lead Generation</h5>
+                </div>
+                <div class="card-body">
+                    <form id="manualUpdateForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Government Contracts:</label>
+                                <input type="number" class="form-control" id="govCount" value="5" min="1" max="20">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Commercial Opportunities:</label>
+                                <input type="number" class="form-control" id="commercialCount" value="10" min="1" max="50">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Generate New Leads
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-robot"></i> Automation Controls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Daily Auto-Update Status:</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success btn-sm" onclick="controlScheduler('start')" 
+                                    {{ 'disabled' if scheduler_running else '' }}>
+                                <i class="fas fa-play"></i> Start Scheduler
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="controlScheduler('stop')"
+                                    {{ 'disabled' if not scheduler_running else '' }}>
+                                <i class="fas fa-pause"></i> Stop Scheduler
+                            </button>
+                        </div>
+                        <small class="text-muted">Auto-updates run daily at 6:00 AM</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Database Cleanup:</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="cleanupDays" value="90" min="30" max="365">
+                            <button class="btn btn-outline-danger" onclick="cleanupOldLeads()">
+                                <i class="fas fa-trash"></i> Cleanup Old Leads
+                            </button>
+                        </div>
+                        <small class="text-muted">Remove leads older than specified days</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-landmark"></i> Recent Government Contracts</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_gov %}
+                        <div class="list-group list-group-flush">
+                            {% for contract in recent_gov %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-fill">
+                                        <h6 class="mb-1">{{ contract[0] }}</h6>
+                                        <p class="mb-1 text-muted">{{ contract[1] }}</p>
+                                        <small class="text-success">{{ contract[3] }} • {{ contract[2] }}</small>
+                                    </div>
+                                    <small class="text-muted">{{ contract[4] }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent government contracts found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-building"></i> Recent Commercial Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_commercial %}
+                        <div class="list-group list-group-flush">
+                            {% for opportunity in recent_commercial %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-fill">
+                                        <h6 class="mb-1">{{ opportunity[0] }}</h6>
+                                        <p class="mb-1 text-muted">{{ opportunity[1]|title }}</p>
+                                        <small class="text-success">${{ opportunity[3] }}/month • {{ opportunity[2] }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent commercial opportunities found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> System Activity Log</h5>
+                </div>
+                <div class="card-body">
+                    <div id="activityLog">
+                        <p class="text-muted">System activity will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Modals -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultModalTitle">Operation Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="resultModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Manual update form submission
+document.getElementById('manualUpdateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const govCount = document.getElementById('govCount').value;
+    const commercialCount = document.getElementById('commercialCount').value;
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    submitBtn.disabled = true;
+    
+    fetch('/admin/manual-update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            government_count: parseInt(govCount),
+            commercial_count: parseInt(commercialCount)
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        if (result.success) {
+            showResultModal('Success!', result.message, 'success');
+            logActivity(`✅ Manual update: ${result.government_added} govt + ${result.commercial_added} commercial leads added`);
+            updateStats();
+        } else {
+            showResultModal('Error', result.message, 'error');
+            logActivity(`❌ Manual update failed: ${result.message}`);
+        }
+    })
+    .catch(error => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        showResultModal('Error', 'Network error occurred', 'error');
+        logActivity(`❌ Network error during manual update`);
+    });
+});
+
+function controlScheduler(action) {
+    fetch('/admin/scheduler-control', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: action })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showResultModal('Success!', result.message, 'success');
+            logActivity(`🔧 Scheduler ${action}ed`);
+        } else {
+            showResultModal('Error', result.message, 'error');
+        }
+    })
+    .catch(error => {
+        showResultModal('Error', 'Network error occurred', 'error');
+    });
+}
+
+function cleanupOldLeads() {
+    const days = document.getElementById('cleanupDays').value;
+    
+    if (confirm(`Are you sure you want to delete leads older than ${days} days?`)) {
+        fetch('/admin/cleanup-leads', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ days_old: parseInt(days) })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showResultModal('Success!', result.message, 'success');
+                logActivity(`🧹 Database cleanup: leads older than ${days} days removed`);
+                updateStats();
+            } else {
+                showResultModal('Error', result.message, 'error');
+            }
+        })
+        .catch(error => {
+            showResultModal('Error', 'Network error occurred', 'error');
+        });
+    }
+}
+
+function showResultModal(title, message, type) {
+    document.getElementById('resultModalTitle').textContent = title;
+    document.getElementById('resultModalMessage').textContent = message;
+    
+    const modal = document.getElementById('resultModal');
+    const modalHeader = modal.querySelector('.modal-header');
+    modalHeader.className = `modal-header bg-${type === 'success' ? 'success' : 'danger'} text-white`;
+    
+    new bootstrap.Modal(modal).show();
+}
+
+function logActivity(message) {
+    const activityLog = document.getElementById('activityLog');
+    const timestamp = new Date().toLocaleString();
+    const logEntry = document.createElement('div');
+    logEntry.className = 'mb-1';
+    logEntry.innerHTML = `<small class="text-muted">${timestamp}</small> - ${message}`;
+    
+    if (activityLog.children.length === 1 && activityLog.children[0].textContent.includes('System activity will appear here')) {
+        activityLog.innerHTML = '';
+    }
+    
+    activityLog.insertBefore(logEntry, activityLog.firstChild);
+    
+    // Keep only last 10 entries
+    while (activityLog.children.length > 10) {
+        activityLog.removeChild(activityLog.lastChild);
+    }
+}
+
+function updateStats() {
+    fetch('/admin/stats')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Update stat cards
+                const stats = result.stats;
+                document.querySelector('.bg-primary h4').textContent = stats.total_government;
+                document.querySelector('.bg-info h4').textContent = stats.total_commercial;
+                document.querySelector('.bg-success h4').textContent = stats.total_leads;
+                document.querySelector('.bg-warning h4').textContent = stats.recent_government;
+            }
+        })
+        .catch(error => {
+            console.error('Error updating stats:', error);
+        });
+}
+
+// Auto-refresh stats every 30 seconds
+setInterval(updateStats, 30000);
+
+// Log initial page load
+document.addEventListener('DOMContentLoaded', function() {
+    logActivity('📊 Admin dashboard loaded');
+});
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+#activityLog {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.bg-success, .bg-primary, .bg-info, .bg-warning {
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-primary-dark)) !important;
+}
+
+.bg-info {
+    background: linear-gradient(45deg, var(--bs-info), var(--bs-info-dark)) !important;
+}
+
+.bg-success {
+    background: linear-gradient(45deg, var(--bs-success), var(--bs-success-dark)) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(45deg, var(--bs-warning), var(--bs-warning-dark)) !important;
+}
+</style>
+{% endblock %}
