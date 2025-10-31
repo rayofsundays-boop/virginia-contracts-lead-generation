@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Virginia Contracts{% endblock %}
+
+{% block content %}
+<!-- Dashboard Hero -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-4">Welcome to Your Dashboard</h1>
+                <p class="lead">Your personalized contract opportunities and account overview</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="card bg-light text-dark">
+                    <div class="card-body text-center">
+                        <h3 id="dashboard-credits">-- Credits</h3>
+                        <p class="mb-0">Available Balance</p>
+                        <small class="text-muted">$<span id="dashboard-value">0.00</span> value</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-primary">
+                <div class="card-body">
+                    <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                    <h4 id="govt-contracts-count">--</h4>
+                    <p class="mb-0">Government Contracts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-success">
+                <div class="card-body">
+                    <i class="fas fa-briefcase fa-2x text-success mb-2"></i>
+                    <h4 id="commercial-leads-count">--</h4>
+                    <p class="mb-0">Commercial Leads</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-warning">
+                <div class="card-body">
+                    <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                    <h4 id="leads-accessed">--</h4>
+                    <p class="mb-0">Leads Accessed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-info">
+                <div class="card-body">
+                    <i class="fas fa-dollar-sign fa-2x text-info mb-2"></i>
+                    <h4 id="total-value">$--</h4>
+                    <p class="mb-0">Total Contract Value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Latest Opportunities</h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="opportunity-filter" id="all-opps" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="all-opps">All</label>
+
+                        <input type="radio" class="btn-check" name="opportunity-filter" id="govt-opps" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm" for="govt-opps">Government</label>
+
+                        <input type="radio" class="btn-check" name="opportunity-filter" id="commercial-opps" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm" for="commercial-opps">Commercial</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="opportunities-list">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                            <p class="text-muted mt-2">Loading your opportunities...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('contracts') }}" class="btn btn-primary me-2">View All Government</a>
+                    <a href="{{ url_for('commercial_contracts') }}" class="btn btn-success">View All Commercial</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Account Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('credits') }}" class="btn btn-warning">
+                            <i class="fas fa-coins"></i> Buy More Credits
+                        </a>
+                        <a href="{{ url_for('landing') }}" class="btn btn-info">
+                            <i class="fas fa-clipboard-check"></i> Retake Assessment
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="updateNotifications()">
+                            <i class="fas fa-bell"></i> Update Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Credit Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div id="credit-activity">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-muted"></i>
+                            <p class="text-muted small mt-1">Loading activity...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('credits') }}" class="small">View Full History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    
+    // Filter event listeners
+    document.querySelectorAll('input[name="opportunity-filter"]').forEach(radio => {
+        radio.addEventListener('change', filterOpportunities);
+    });
+});
+
+function loadDashboardData() {
+    // Load dashboard stats
+    Promise.all([
+        fetch('/api/dashboard-stats?email=demo@example.com'),
+        fetch('/api/recent-opportunities?email=demo@example.com'),
+        fetch('/get-credits-balance?email=demo@example.com'),
+        fetch('/credits-usage-history?email=demo@example.com')
+    ])
+    .then(responses => Promise.all(responses.map(r => r.json())))
+    .then(([stats, opportunities, credits, activity]) => {
+        updateDashboardStats(stats);
+        updateOpportunities(opportunities);
+        updateCreditsInfo(credits);
+        updateCreditActivity(activity);
+    })
+    .catch(error => {
+        console.error('Error loading dashboard data:', error);
+        showDashboardError();
+    });
+}
+
+function updateDashboardStats(stats) {
+    if (stats.success) {
+        document.getElementById('govt-contracts-count').textContent = stats.government_contracts || '10';
+        document.getElementById('commercial-leads-count').textContent = stats.commercial_leads || '20';
+        document.getElementById('leads-accessed').textContent = stats.leads_accessed || '0';
+        document.getElementById('total-value').textContent = '$' + (stats.total_value || '0').toLocaleString();
+    }
+}
+
+function updateOpportunities(opportunities) {
+    const container = document.getElementById('opportunities-list');
+    
+    if (opportunities.success && opportunities.data && opportunities.data.length > 0) {
+        let html = '';
+        opportunities.data.slice(0, 5).forEach(opp => {
+            const isGovernment = opp.type === 'government';
+            const badgeClass = isGovernment ? 'bg-primary' : 'bg-success';
+            const iconClass = isGovernment ? 'fas fa-building' : 'fas fa-briefcase';
+            
+            html += `
+                <div class="opportunity-item mb-3 p-3 border rounded" data-type="${opp.type}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="${iconClass} text-muted me-2"></i>
+                                <h6 class="mb-0">${opp.title}</h6>
+                                <span class="badge ${badgeClass} ms-2">${opp.type}</span>
+                            </div>
+                            <p class="text-muted small mb-2">${opp.description}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Value:</small>
+                                    <div class="fw-bold text-success">${opp.value}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Location:</small>
+                                    <div>${opp.location}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            ${isGovernment ? 
+                                `<a href="${opp.website_url || '#'}" target="_blank" class="btn btn-sm btn-success">
+                                    <i class="fas fa-external-link-alt"></i> Apply
+                                </a>` :
+                                `<button class="btn btn-sm btn-warning" onclick="requestContactFromDashboard('${opp.id}', '${opp.title}')">
+                                    <i class="fas fa-coins"></i> 5 Credits
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-inbox fa-2x mb-2"></i>
+                <p>No opportunities found. Check back soon!</p>
+            </div>
+        `;
+    }
+}
+
+function updateCreditsInfo(credits) {
+    if (credits.success) {
+        document.getElementById('dashboard-credits').textContent = credits.credits_balance + ' Credits';
+        const value = (credits.credits_balance * 0.50).toFixed(2);
+        document.getElementById('dashboard-value').textContent = value;
+    }
+}
+
+function updateCreditActivity(activity) {
+    const container = document.getElementById('credit-activity');
+    
+    if (activity.success && activity.usage_history && activity.usage_history.length > 0) {
+        let html = '';
+        activity.usage_history.slice(0, 3).forEach(item => {
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <small class="fw-bold">${item.action_type}</small><br>
+                        <small class="text-muted">${new Date(item.date).toLocaleDateString()}</small>
+                    </div>
+                    <span class="badge bg-danger">${item.credits_used} credits</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = '<p class="text-muted small text-center">No recent activity</p>';
+    }
+}
+
+function filterOpportunities() {
+    const selectedFilter = document.querySelector('input[name="opportunity-filter"]:checked').id;
+    const opportunities = document.querySelectorAll('.opportunity-item');
+    
+    opportunities.forEach(opp => {
+        const type = opp.dataset.type;
+        let show = false;
+        
+        switch(selectedFilter) {
+            case 'all-opps':
+                show = true;
+                break;
+            case 'govt-opps':
+                show = type === 'government';
+                break;
+            case 'commercial-opps':
+                show = type === 'commercial';
+                break;
+        }
+        
+        opp.style.display = show ? 'block' : 'none';
+    });
+}
+
+function requestContactFromDashboard(oppId, title) {
+    if (confirm(`Request contact information for ${title}?\n\nCost: 5 Credits ($2.50)`)) {
+        // Redirect to commercial contracts page or handle request
+        window.location.href = '/commercial-contracts';
+    }
+}
+
+function updateNotifications() {
+    // Show notification preferences modal
+    alert('Notification preferences will be available soon!');
+}
+
+function showDashboardError() {
+    document.getElementById('opportunities-list').innerHTML = `
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            Unable to load dashboard data. Please refresh the page.
+        </div>
+    `;
+}
+</script>
+
+{% endblock %}

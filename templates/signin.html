@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Virginia Contracts{% endblock %}
+
+{% block content %}
+<!-- Sign In Hero -->
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Welcome Back!</h1>
+        <p class="lead fs-4">Sign in to access your personalized leads and dashboard</p>
+        <div class="mt-3">
+            <span class="badge bg-light text-dark fs-6 p-3">
+                <i class="fas fa-user-check"></i> Registered Members Get More Leads
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Sign In Form -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">Sign In to Your Account</h3>
+                </div>
+                <div class="card-body p-5">
+                    <form id="signin-form">
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control form-control-lg" id="email" name="email" required 
+                                   placeholder="Enter your registered email">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg" id="password" name="password" required 
+                                       placeholder="Enter your password">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="password-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember-me">
+                            <label class="form-check-label" for="remember-me">
+                                Remember me for 30 days
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="signin-btn">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                        
+                        <div class="text-center">
+                            <a href="#" class="text-decoration-none" onclick="showForgotPassword()">
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Benefits for Signed In Users -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <div class="card h-100 border-success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-star fa-3x text-success mb-3"></i>
+                            <h5>Exclusive Access</h5>
+                            <ul class="list-unstyled">
+                                <li>✅ 50+ Premium Government Contracts</li>
+                                <li>✅ Commercial Lead Database</li>
+                                <li>✅ Email Notifications for New Opportunities</li>
+                                <li>✅ Advanced Filtering & Search</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body text-center">
+                            <i class="fas fa-coins fa-3x text-warning mb-3"></i>
+                            <h5>Credit System</h5>
+                            <ul class="list-unstyled">
+                                <li>✅ Free Monthly Credits</li>
+                                <li>✅ $2.50 per Commercial Lead</li>
+                                <li>✅ PayPal & Credit Card Payment</li>
+                                <li>✅ Purchase History & Tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Not Registered Yet -->
+            <div class="card mt-5 bg-light">
+                <div class="card-body text-center">
+                    <h4>Not registered yet?</h4>
+                    <p class="lead">Join thousands of contractors who are winning more government contracts!</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('register') }}" class="btn btn-success btn-lg w-100 mb-2">
+                                <i class="fas fa-user-plus"></i> Register Now - It's Free
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('landing') }}" class="btn btn-warning btn-lg w-100 mb-2">
+                                <i class="fas fa-clipboard-check"></i> Take Assessment First
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Your Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="forgot-password-form">
+                    <div class="mb-3">
+                        <label for="reset-email" class="form-label">Enter your registered email address</label>
+                        <input type="email" class="form-control" id="reset-email" required 
+                               placeholder="your.email@example.com">
+                    </div>
+                    <p class="text-muted small">
+                        We'll send you a link to reset your password. Check your email after submitting.
+                    </p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitPasswordReset()">
+                    <i class="fas fa-paper-plane"></i> Send Reset Link
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for registration success message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('registered') === 'true') {
+        showAlert('Registration successful! Please sign in to access your account.', 'success');
+    }
+    
+    // Handle sign in form submission
+    document.getElementById('signin-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleSignIn();
+    });
+});
+
+function handleSignIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('remember-me').checked;
+    
+    const signInBtn = document.getElementById('signin-btn');
+    signInBtn.disabled = true;
+    signInBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+    
+    // Simulate sign in process (in real app, make API call)
+    fetch('/api/signin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            remember_me: rememberMe
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Welcome back! Redirecting to your dashboard...', 'success');
+            
+            // Redirect based on user type
+            setTimeout(() => {
+                if (data.user_type === 'premium') {
+                    window.location.href = '/dashboard';
+                } else {
+                    window.location.href = '/contracts?welcome=true';
+                }
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Invalid email or password. Please try again.', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Sign in error:', error);
+        showAlert('Sign in failed. Please check your connection and try again.', 'danger');
+    })
+    .finally(() => {
+        signInBtn.disabled = false;
+        signInBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+    });
+}
+
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const passwordEye = document.getElementById('password-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        passwordEye.className = 'fas fa-eye-slash';
+    } else {
+        passwordField.type = 'password';
+        passwordEye.className = 'fas fa-eye';
+    }
+}
+
+function showForgotPassword() {
+    const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    modal.show();
+}
+
+function submitPasswordReset() {
+    const email = document.getElementById('reset-email').value;
+    
+    if (!email) {
+        showAlert('Please enter your email address.', 'warning');
+        return;
+    }
+    
+    // Simulate password reset request
+    fetch('/api/reset-password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Password reset link sent! Check your email.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+        } else {
+            showAlert('Email not found. Please check and try again.', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Failed to send reset email. Please try again.', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+
+{% endblock %}

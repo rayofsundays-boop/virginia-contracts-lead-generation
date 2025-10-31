@@ -65,8 +65,21 @@
                         </div>
                     </div>
                     <div class="card-footer bg-transparent">
-                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Apply Now</a>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:150] | safe }}...', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')">
+                        {% if contract[9] %}
+                            <a href="{{ contract[9] }}" target="_blank" 
+                               class="btn btn-success btn-sm external-link-btn" 
+                               title="Click to visit the official application website"
+                               rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt"></i> Apply Directly
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm"
+                           title="Register to get notified about similar opportunities">
+                           <i class="fas fa-bell"></i> Get Notified
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:150] | safe }}...', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')"
+                                title="Share this contract opportunity">
                             <i class="fas fa-share-alt"></i> Share
                         </button>
                     </div>

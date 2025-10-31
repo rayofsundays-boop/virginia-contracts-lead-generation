@@ -88,6 +88,20 @@
                                     </div>
                                     {% endif %}
                                 </div>
+                                <div class="card-footer bg-transparent">
+                                    {% if contract[9] %}
+                                        <a href="{{ contract[9] }}" target="_blank" 
+                                           class="btn btn-success btn-sm external-link-btn" 
+                                           title="Click to visit the official application website"
+                                           rel="noopener noreferrer">
+                                            <i class="fas fa-external-link-alt"></i> Apply Directly
+                                        </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm"
+                                       title="Register to get notified about similar opportunities">
+                                       <i class="fas fa-bell"></i> Get Notified
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}

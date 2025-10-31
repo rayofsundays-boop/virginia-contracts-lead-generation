@@ -28,6 +28,163 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vac
 
 mail = Mail(app)
 
+# Credit management functions
+def get_user_credits(email):
+    """Get user's current credit balance"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT credits_balance FROM leads WHERE email = ?', (email,))
+        result = c.fetchone()
+        conn.close()
+        return result[0] if result else 0
+    except Exception as e:
+        print(f"Error getting user credits: {e}")
+        return 0
+
+def deduct_credits(email, credits_amount, action_type, opportunity_id=None, opportunity_name=None):
+    """Deduct credits from user's balance and log usage"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get current balance
+        c.execute('SELECT credits_balance, credits_used FROM leads WHERE email = ?', (email,))
+        result = c.fetchone()
+        if not result:
+            return False, "User not found"
+        
+        current_balance, total_used = result
+        
+        if current_balance < credits_amount:
+            return False, "Insufficient credits"
+        
+        # Update user's credit balance and usage
+        new_balance = current_balance - credits_amount
+        new_total_used = total_used + credits_amount
+        
+        c.execute('''UPDATE leads 
+                     SET credits_balance = ?, credits_used = ?, low_credits_alert_sent = ?
+                     WHERE email = ?''', 
+                  (new_balance, new_total_used, False if new_balance >= 10 else True, email))
+        
+        # Log the credit usage
+        c.execute('''INSERT INTO credits_usage 
+                     (user_email, credits_used, action_type, opportunity_id, opportunity_name, usage_date)
+                     VALUES (?, ?, ?, ?, ?, ?)''',
+                  (email, credits_amount, action_type, opportunity_id, opportunity_name, datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return True, new_balance
+        
+    except Exception as e:
+        print(f"Error deducting credits: {e}")
+        return False, str(e)
+
+def add_credits(email, credits_amount, purchase_type, amount_paid, transaction_id=None):
+    """Add credits to user's balance and log purchase"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get current balance
+        c.execute('SELECT credits_balance FROM leads WHERE email = ?', (email,))
+        result = c.fetchone()
+        if not result:
+            return False, "User not found"
+        
+        current_balance = result[0]
+        new_balance = current_balance + credits_amount
+        
+        # Update user's credit balance
+        c.execute('''UPDATE leads 
+                     SET credits_balance = ?, last_credit_purchase_date = ?, low_credits_alert_sent = ?
+                     WHERE email = ?''', 
+                  (new_balance, datetime.now().isoformat(), False, email))
+        
+        # Log the credit purchase
+        c.execute('''INSERT INTO credits_purchases 
+                     (user_email, credits_purchased, amount_paid, purchase_type, transaction_id, purchase_date)
+                     VALUES (?, ?, ?, ?, ?, ?)''',
+                  (email, credits_amount, amount_paid, purchase_type, transaction_id, datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return True, new_balance
+        
+    except Exception as e:
+        print(f"Error adding credits: {e}")
+        return False, str(e)
+
+def check_low_credits(email):
+    """Check if user has low credits and hasn't been alerted"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT credits_balance, low_credits_alert_sent FROM leads WHERE email = ?', (email,))
+        result = c.fetchone()
+        conn.close()
+        
+        if result:
+            balance, alert_sent = result
+            return balance <= 10 and not alert_sent
+        return False
+        
+    except Exception as e:
+        print(f"Error checking low credits: {e}")
+        return False
+
+def allocate_monthly_credits():
+    """Allocate monthly credits to active subscribers"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get active subscribers who need monthly credits
+        current_date = datetime.now().date()
+        c.execute('''SELECT s.email, s.monthly_credits, l.credits_balance 
+                     FROM subscriptions s 
+                     JOIN leads l ON s.email = l.email 
+                     WHERE s.status = 'active' 
+                     AND (s.last_credits_allocated_date IS NULL 
+                          OR date(s.last_credits_allocated_date) < date(?))''', 
+                  (current_date.isoformat(),))
+        
+        subscribers = c.fetchall()
+        
+        for email, monthly_credits, current_balance in subscribers:
+            # Add monthly credits
+            new_balance = current_balance + monthly_credits
+            
+            c.execute('''UPDATE leads 
+                         SET credits_balance = ?, low_credits_alert_sent = ?
+                         WHERE email = ?''', 
+                      (new_balance, False, email))
+            
+            c.execute('''UPDATE subscriptions 
+                         SET last_credits_allocated_date = ?
+                         WHERE email = ?''', 
+                      (current_date.isoformat(), email))
+            
+            # Log the credit allocation
+            c.execute('''INSERT INTO credits_purchases 
+                         (user_email, credits_purchased, amount_paid, purchase_type, transaction_id, purchase_date)
+                         VALUES (?, ?, ?, ?, ?, ?)''',
+                      (email, monthly_credits, 25.00, 'monthly_subscription', f'monthly_{current_date}', 
+                       datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return len(subscribers)
+        
+    except Exception as e:
+        print(f"Error allocating monthly credits: {e}")
+        return 0
+
 def send_lead_notification(lead_data):
     """Send email notification when a new lead registers"""
     try:
@@ -111,6 +268,34 @@ def init_db():
                       proposal_support BOOLEAN DEFAULT FALSE,
                       free_leads_remaining INTEGER DEFAULT 3,
                       subscription_status TEXT DEFAULT 'free_trial',
+                      credits_balance INTEGER DEFAULT 0,
+                      credits_used INTEGER DEFAULT 0,
+                      last_credit_purchase_date TEXT,
+                      low_credits_alert_sent BOOLEAN DEFAULT FALSE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create credits purchases table
+        c.execute('''CREATE TABLE IF NOT EXISTS credits_purchases
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL,
+                      credits_purchased INTEGER NOT NULL,
+                      amount_paid REAL NOT NULL,
+                      purchase_type TEXT NOT NULL,
+                      transaction_id TEXT,
+                      payment_method TEXT DEFAULT 'credit_card',
+                      payment_reference TEXT,
+                      purchase_date TEXT NOT NULL,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create credits usage table
+        c.execute('''CREATE TABLE IF NOT EXISTS credits_usage
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL,
+                      credits_used INTEGER NOT NULL,
+                      action_type TEXT NOT NULL,
+                      opportunity_id TEXT,
+                      opportunity_name TEXT,
+                      usage_date TEXT NOT NULL,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         # Create survey responses table
@@ -135,7 +320,9 @@ def init_db():
                       proposal_support BOOLEAN DEFAULT FALSE,
                       subscription_date TEXT,
                       status TEXT DEFAULT 'active',
+                      monthly_credits INTEGER DEFAULT 50,
                       next_billing_date TEXT,
+                      last_credits_allocated_date TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         # Create contracts table
@@ -148,6 +335,7 @@ def init_db():
                       deadline DATE,
                       description TEXT,
                       naics_code TEXT,
+                      website_url TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         # Create commercial opportunities table
@@ -170,24 +358,25 @@ def init_db():
         conn.commit()
         
         # Add sample Virginia contracts
+        # Sample contract data with website URLs
         sample_contracts = [
-            ('Hampton City Hall Cleaning Services', 'City of Hampton', 'Hampton, VA', '$125,000', '2025-12-15', 'Daily cleaning services for City Hall including offices, restrooms, and common areas. 5-year contract with annual renewal options.', '561720'),
-            ('Suffolk Municipal Building Janitorial', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-30', 'Comprehensive janitorial services for municipal buildings including floor care, window cleaning, and waste management.', '561720'),
-            ('Virginia Beach Convention Center Cleaning', 'City of Virginia Beach', 'Virginia Beach, VA', '$350,000', '2025-12-31', 'Large-scale cleaning contract for convention center, meeting rooms, and event spaces. Must handle high-volume events.', '561720'),
-            ('Newport News Library System Maintenance', 'Newport News Public Library', 'Newport News, VA', '$75,000', '2025-11-15', 'Cleaning and maintenance services for 4 library branches including carpet cleaning and HVAC maintenance.', '561720'),
-            ('Williamsburg Historic Area Grounds Keeping', 'Colonial Williamsburg Foundation', 'Williamsburg, VA', '$180,000', '2025-12-18', 'Grounds keeping and facility cleaning for historic buildings and visitor centers. Requires sensitivity to historic preservation.', '561730'),
-            ('Hampton Roads Transit Facility Cleaning', 'Hampton Roads Transit', 'Hampton, VA', '$220,000', '2025-12-01', 'Cleaning services for bus maintenance facilities, administrative offices, and passenger terminals.', '561720'),
-            ('Suffolk Public Schools Custodial Services', 'Suffolk Public Schools', 'Suffolk, VA', '$450,000', '2025-11-20', 'Custodial services for 5 elementary schools including classrooms, gymnasiums, cafeterias, and administrative areas.', '561720'),
-            ('Virginia Beach Police Department Cleaning', 'Virginia Beach Police Dept', 'Virginia Beach, VA', '$85,000', '2025-12-10', 'Specialized cleaning services for police facilities including evidence rooms, holding cells, and administrative offices.', '561720'),
-            ('Newport News Shipyard Office Cleaning', 'Newport News Shipbuilding', 'Newport News, VA', '$275,000', '2025-12-20', 'Office cleaning services for shipyard administrative buildings. Security clearance may be required.', '561720'),
-            ('Williamsburg Court House Maintenance', 'James City County', 'Williamsburg, VA', '$65,000', '2025-11-25', 'Cleaning and maintenance services for county courthouse including courtrooms, offices, and public areas.', '561720')
+            ('Hampton City Hall Cleaning Services', 'City of Hampton', 'Hampton, VA', '$120,000', '2025-11-15', 'Comprehensive cleaning services for city hall including offices, conference rooms, and public areas. Must include floor waxing and window cleaning.', '561720', 'https://www.hampton.gov/bids'),
+            ('Suffolk Municipal Building Janitorial', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-30', 'Comprehensive janitorial services for municipal buildings including floor care, window cleaning, and waste management.', '561720', 'https://www.suffolkva.us/departments/procurement'),
+            ('Virginia Beach Convention Center Cleaning', 'City of Virginia Beach', 'Virginia Beach, VA', '$350,000', '2025-12-31', 'Large-scale cleaning contract for convention center, meeting rooms, and event spaces. Must handle high-volume events.', '561720', 'https://www.vbgov.com/departments/procurement'),
+            ('Newport News Library System Maintenance', 'Newport News Public Library', 'Newport News, VA', '$75,000', '2025-11-15', 'Cleaning and maintenance services for 4 library branches including carpet cleaning and HVAC maintenance.', '561720', 'https://www.nngov.com/procurement'),
+            ('Williamsburg Historic Area Grounds Keeping', 'Colonial Williamsburg Foundation', 'Williamsburg, VA', '$180,000', '2025-12-18', 'Grounds keeping and facility cleaning for historic buildings and visitor centers. Requires sensitivity to historic preservation.', '561730', 'https://www.colonialwilliamsburg.org/vendors'),
+            ('Hampton Roads Transit Facility Cleaning', 'Hampton Roads Transit', 'Hampton, VA', '$220,000', '2025-12-01', 'Cleaning services for bus maintenance facilities, administrative offices, and passenger terminals.', '561720', 'https://www.gohrt.com/about/procurement'),
+            ('Suffolk Public Schools Custodial Services', 'Suffolk Public Schools', 'Suffolk, VA', '$450,000', '2025-11-20', 'Custodial services for 5 elementary schools including classrooms, gymnasiums, cafeterias, and administrative areas.', '561720', 'https://www.spsk12.net/departments/procurement'),
+            ('Virginia Beach Police Department Cleaning', 'Virginia Beach Police Dept', 'Virginia Beach, VA', '$85,000', '2025-12-10', 'Specialized cleaning services for police facilities including evidence rooms, holding cells, and administrative offices.', '561720', 'https://www.vbgov.com/departments/police/procurement'),
+            ('Newport News Shipyard Office Cleaning', 'Newport News Shipbuilding', 'Newport News, VA', '$275,000', '2025-12-20', 'Office cleaning services for shipyard administrative buildings. Security clearance may be required.', '561720', 'https://www.huntingtoningalls.com/suppliers'),
+            ('Williamsburg Court House Maintenance', 'James City County', 'Williamsburg, VA', '$65,000', '2025-11-25', 'Cleaning and maintenance services for county courthouse including courtrooms, offices, and public areas.', '561720', 'https://www.jamescitycountyva.gov/procurement')
         ]
         
         # Check if contracts already exist
         c.execute('SELECT COUNT(*) FROM contracts')
         if c.fetchone()[0] == 0:
-            c.executemany('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code)
-                             VALUES (?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
+            c.executemany('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
             conn.commit()
         
         # Add sample commercial opportunities
@@ -333,10 +522,10 @@ def register():
         conn = get_db_connection()
         c = conn.cursor()
         c.execute('''INSERT INTO leads (company_name, contact_name, email, phone, 
-                     state, experience_years, certifications)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     state, experience_years, certifications, credits_balance)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
                   (company_name, contact_name, email, phone, state, 
-                   experience_years, certifications))
+                   experience_years, certifications, 10))  # Give 10 free credits
         conn.commit()
         conn.close()
         
@@ -353,11 +542,11 @@ def register():
         
         email_sent = send_lead_notification(lead_data)
         if email_sent:
-            flash('Registration successful! We\'ll send you contract opportunities.', 'success')
+            flash('Registration successful! You can now sign in to access more leads.', 'success')
         else:
-            flash('Registration successful! We\'ll send you contract opportunities. (Email notification pending)', 'success')
+            flash('Registration successful! You can now sign in to access more leads.', 'success')
         
-        return redirect(url_for('index'))
+        return redirect(url_for('signin', registered='true'))
     
     return render_template('register.html')
 
@@ -415,24 +604,93 @@ def commercial_contracts():
 
 @app.route('/request-commercial-contact', methods=['POST'])
 def request_commercial_contact():
-    """Handle commercial contact requests"""
+    """Handle commercial contact requests with credit system"""
     try:
         data = request.get_json()
         opportunity_id = data.get('opportunity_id')
         business_name = data.get('business_name')
+        user_email = data.get('user_email', 'demo@example.com')  # In real app, get from session
         
-        # In a real implementation, you would:
-        # 1. Check user's remaining free leads
-        # 2. Provide actual contact information
-        # 3. Update user's lead count
-        # 4. Send email with contact details
+        # Check if user has free leads remaining
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT free_leads_remaining, credits_balance, subscription_status FROM leads WHERE email = ?', (user_email,))
+        result = c.fetchone()
+        conn.close()
         
-        # For demo purposes, simulate the response
-        return {
+        if not result:
+            return {'success': False, 'message': 'User not found. Please register first.'}, 404
+        
+        free_leads, credits_balance, subscription_status = result
+        
+        # If user has free leads, use those first
+        if free_leads > 0:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('UPDATE leads SET free_leads_remaining = ? WHERE email = ?', 
+                     (free_leads - 1, user_email))
+            conn.commit()
+            conn.close()
+            
+            return {
+                'success': True,
+                'message': f'Contact information for {business_name} sent to your email!',
+                'remaining_free_leads': free_leads - 1,
+                'credits_balance': credits_balance,
+                'payment_required': False
+            }
+        
+        # Check if user has enough credits (5 credits per lead)
+        credits_needed = 5
+        if credits_balance < credits_needed:
+            return {
+                'success': False,
+                'message': 'Insufficient credits! You need 5 credits to access this contact information.',
+                'credits_balance': credits_balance,
+                'credits_needed': credits_needed,
+                'payment_required': True,
+                'low_credits': True
+            }
+        
+        # Deduct credits
+        success, new_balance = deduct_credits(
+            user_email, 
+            credits_needed, 
+            'contact_request', 
+            opportunity_id, 
+            business_name
+        )
+        
+        if not success:
+            return {
+                'success': False,
+                'message': f'Error processing request: {new_balance}',
+                'payment_required': True
+            }
+        
+        # Send contact information (in real implementation)
+        # send_contact_email(user_email, business_name, contact_info)
+        
+        # Check if credits are now low
+        low_credits_warning = new_balance <= 10
+        out_of_credits = new_balance == 0
+        
+        response = {
             'success': True,
             'message': f'Contact information for {business_name} sent to your email!',
-            'remaining_leads': 2  # Simulate remaining leads
+            'credits_balance': new_balance,
+            'credits_used': credits_needed,
+            'payment_required': False
         }
+        
+        if out_of_credits:
+            response['out_of_credits'] = True
+            response['alert_message'] = 'You\'re out of credits! Purchase more to continue accessing leads.'
+        elif low_credits_warning:
+            response['low_credits'] = True
+            response['alert_message'] = f'Low credits warning! You have {new_balance} credits remaining.'
+        
+        return response
         
     except Exception as e:
         return {'success': False, 'message': str(e)}, 500
@@ -566,6 +824,186 @@ def payment():
     """Payment page for subscription"""
     return render_template('payment.html')
 
+@app.route('/credits')
+def credits():
+    """Credits purchase page"""
+    return render_template('credits.html')
+
+@app.route('/signin')
+def signin():
+    """Sign in page for registered users"""
+    return render_template('signin.html')
+
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard for signed-in users"""
+    return render_template('dashboard.html')
+
+@app.route('/api/dashboard-stats')
+def api_dashboard_stats():
+    """Get dashboard statistics for user"""
+    try:
+        user_email = request.args.get('email', 'demo@example.com')
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get government contracts count
+        c.execute('SELECT COUNT(*) FROM contracts')
+        govt_contracts = c.fetchone()[0]
+        
+        # Get commercial leads count
+        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
+        commercial_leads = c.fetchone()[0]
+        
+        # Get user's leads accessed (credits used)
+        c.execute('SELECT COUNT(*) FROM credits_usage WHERE user_email = ?', (user_email,))
+        leads_accessed = c.fetchone()[0]
+        
+        # Calculate total contract value
+        c.execute('SELECT SUM(CAST(REPLACE(REPLACE(value, "$", ""), ",", "") AS INTEGER)) FROM contracts')
+        total_value_result = c.fetchone()[0]
+        total_value = total_value_result if total_value_result else 0
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'government_contracts': govt_contracts,
+            'commercial_leads': commercial_leads,
+            'leads_accessed': leads_accessed,
+            'total_value': total_value
+        })
+        
+    except Exception as e:
+        print(f"Dashboard stats error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to load stats'}), 500
+
+@app.route('/api/recent-opportunities')
+def api_recent_opportunities():
+    """Get recent opportunities for dashboard"""
+    try:
+        user_email = request.args.get('email', 'demo@example.com')
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        opportunities = []
+        
+        # Get recent government contracts
+        c.execute('SELECT title, agency, location, value, description, website_url FROM contracts ORDER BY created_at DESC LIMIT 3')
+        govt_contracts = c.fetchall()
+        
+        for contract in govt_contracts:
+            opportunities.append({
+                'id': f'govt_{hash(contract[0])}',
+                'type': 'government',
+                'title': contract[0],
+                'description': contract[4][:100] + '...' if len(contract[4]) > 100 else contract[4],
+                'value': contract[3],
+                'location': contract[2],
+                'website_url': contract[5]
+            })
+        
+        # Get recent commercial opportunities
+        c.execute('SELECT business_name, business_type, location, monthly_value, description FROM commercial_opportunities ORDER BY created_at DESC LIMIT 2')
+        commercial_opps = c.fetchall()
+        
+        for opp in commercial_opps:
+            opportunities.append({
+                'id': f'comm_{hash(opp[0])}',
+                'type': 'commercial',
+                'title': opp[0],
+                'description': opp[4][:100] + '...' if len(opp[4]) > 100 else opp[4],
+                'value': f'${opp[3]}/month',
+                'location': opp[2]
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': opportunities
+        })
+        
+    except Exception as e:
+        print(f"Recent opportunities error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to load opportunities'}), 500
+
+@app.route('/api/signin', methods=['POST'])
+def api_signin():
+    """Handle sign in API requests"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').lower().strip()
+        password = data.get('password', '')
+        remember_me = data.get('remember_me', False)
+        
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password are required'}), 400
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if user exists in leads table (simplified authentication for demo)
+        c.execute('SELECT * FROM leads WHERE email = ?', (email,))
+        user = c.fetchone()
+        
+        if user:
+            # In a real app, verify password hash
+            # For demo, just check if user exists
+            
+            # Determine user type based on credits or subscription
+            credits_balance = get_user_credits(email)
+            user_type = 'premium' if credits_balance > 0 else 'basic'
+            
+            # In a real app, create session or JWT token here
+            
+            conn.close()
+            return jsonify({
+                'success': True,
+                'message': 'Sign in successful',
+                'user_type': user_type,
+                'credits_balance': credits_balance
+            })
+        else:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+            
+    except Exception as e:
+        print(f"Sign in error: {e}")
+        return jsonify({'success': False, 'message': 'Sign in failed'}), 500
+
+@app.route('/api/reset-password', methods=['POST'])
+def api_reset_password():
+    """Handle password reset requests"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').lower().strip()
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'Email is required'}), 400
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if user exists
+        c.execute('SELECT * FROM leads WHERE email = ?', (email,))
+        user = c.fetchone()
+        
+        if user:
+            # In a real app, generate reset token and send email
+            # For demo, just simulate success
+            conn.close()
+            return jsonify({'success': True, 'message': 'Password reset link sent'})
+        else:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Email not found'}), 404
+            
+    except Exception as e:
+        print(f"Password reset error: {e}")
+        return jsonify({'success': False, 'message': 'Reset failed'}), 500
+
 @app.route('/process-subscription', methods=['POST'])
 def process_subscription():
     """Process subscription payment"""
@@ -670,6 +1108,177 @@ info@eliteecoservices.com
         
     except Exception as e:
         print(f"Confirmation email error: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/credits')
+def credits_page():
+    """Credits purchase page"""
+    return render_template('credits.html')
+
+@app.route('/get-credits-balance')
+def get_credits_balance():
+    """Get user's current credit balance"""
+    try:
+        user_email = request.args.get('email', 'demo@example.com')  # In real app, get from session
+        balance = get_user_credits(user_email)
+        low_credits = check_low_credits(user_email)
+        
+        return {
+            'success': True,
+            'credits_balance': balance,
+            'low_credits': low_credits,
+            'out_of_credits': balance == 0
+        }
+        
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/purchase-credits', methods=['POST'])
+def purchase_credits():
+    """Handle credit purchases with PayPal and credit card support"""
+    try:
+        data = request.get_json()
+        credits_package = data.get('package')  # '10', '20', '30'
+        user_email = data.get('user_email', 'demo@example.com')  # In real app, get from session
+        payment_method = data.get('payment_method', 'credit_card')
+        payment_info = data.get('payment_info', {})
+        paypal_details = data.get('paypal_details', {})
+        
+        # Credit packages
+        packages = {
+            '10': {'credits': 10, 'price': 5.00, 'description': '10 Credits - $5'},
+            '20': {'credits': 20, 'price': 10.00, 'description': '20 Credits - $10'},
+            '30': {'credits': 30, 'price': 15.00, 'description': '30 Credits - $15'}
+        }
+        
+        if credits_package not in packages:
+            return {'success': False, 'message': 'Invalid credit package'}, 400
+        
+        package_info = packages[credits_package]
+        
+        # Process payment based on method
+        if payment_method == 'paypal':
+            # PayPal payment processing
+            transaction_id = paypal_details.get('id', f'paypal_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
+            payment_status = paypal_details.get('status', 'COMPLETED')
+            
+            if payment_status != 'COMPLETED':
+                return {'success': False, 'message': 'PayPal payment not completed'}, 400
+                
+            payment_reference = f"PayPal: {transaction_id}"
+            
+        elif payment_method == 'credit_card':
+            # Credit card payment processing (simulate for demo)
+            # In production, integrate with Stripe, Square, etc.
+            transaction_id = f'card_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+            card_last_four = payment_info.get('card_number', '****')[-4:] if payment_info.get('card_number') else '****'
+            payment_reference = f"Card ending in {card_last_four}"
+            
+        else:
+            return {'success': False, 'message': 'Invalid payment method'}, 400
+        
+        # Add credits to user's account
+        success, new_balance = add_credits(
+            user_email,
+            package_info['credits'],
+            f"credit_purchase_{credits_package}_{payment_method}",
+            package_info['price'],
+            transaction_id
+        )
+        
+        if not success:
+            return {'success': False, 'message': f'Error adding credits: {new_balance}'}, 500
+        
+        # Record detailed purchase information
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        try:
+            c.execute('''UPDATE credits_purchases 
+                         SET payment_method = ?, payment_reference = ?
+                         WHERE user_email = ? AND transaction_id = ?''',
+                      (payment_method, payment_reference, user_email, transaction_id))
+            conn.commit()
+        except Exception as e:
+            print(f"Error updating purchase record: {e}")
+        finally:
+            conn.close()
+        
+        return {
+            'success': True,
+            'message': f'Successfully purchased {package_info["credits"]} credits via {payment_method.title()}!',
+            'credits_added': package_info['credits'],
+            'new_balance': new_balance,
+            'amount_paid': package_info['price'],
+            'transaction_id': transaction_id,
+            'payment_method': payment_method
+        }
+        
+    except Exception as e:
+        print(f"Purchase credits error: {e}")
+        return {'success': False, 'message': str(e)}, 500
+
+@app.route('/credits-usage-history')
+def credits_usage_history():
+    """Get user's credit usage history"""
+    try:
+        user_email = request.args.get('email', 'demo@example.com')  # In real app, get from session
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get usage history
+        c.execute('''SELECT credits_used, action_type, opportunity_name, usage_date 
+                     FROM credits_usage 
+                     WHERE user_email = ? 
+                     ORDER BY usage_date DESC LIMIT 50''', (user_email,))
+        usage_history = c.fetchall()
+        
+        # Get purchase history
+        c.execute('''SELECT credits_purchased, amount_paid, purchase_type, purchase_date 
+                     FROM credits_purchases 
+                     WHERE user_email = ? 
+                     ORDER BY purchase_date DESC LIMIT 50''', (user_email,))
+        purchase_history = c.fetchall()
+        
+        conn.close()
+        
+        return {
+            'success': True,
+            'usage_history': [
+                {
+                    'credits_used': row[0],
+                    'action_type': row[1],
+                    'opportunity_name': row[2],
+                    'date': row[3]
+                }
+                for row in usage_history
+            ],
+            'purchase_history': [
+                {
+                    'credits_purchased': row[0],
+                    'amount_paid': row[1],
+                    'purchase_type': row[2],
+                    'date': row[3]
+                }
+                for row in purchase_history
+            ]
+        }
+        
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/allocate-monthly-credits')
+def allocate_monthly_credits_route():
+    """Admin route to allocate monthly credits to subscribers"""
+    try:
+        allocated_count = allocate_monthly_credits()
+        return {
+            'success': True,
+            'message': f'Monthly credits allocated to {allocated_count} subscribers',
+            'subscribers_updated': allocated_count
+        }
+    except Exception as e:
         return {'success': False, 'error': str(e)}, 500
 
 # Initialize database for both local and production

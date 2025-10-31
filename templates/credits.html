@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Credits - Virginia Contracts{% endblock %}
+
+{% block content %}
+<!-- PayPal SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD&components=buttons,marks"></script>
+
+<!-- Credits Hero -->
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Purchase Credits</h1>
+        <p class="lead fs-4">Get more credits to access contact information</p>
+        <div class="mt-3">
+            <span class="badge bg-light text-dark fs-6 p-3">
+                <i class="fas fa-info-circle"></i> Each lead costs 5 credits
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Current Credits Display -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-6">
+            <div class="card text-center" id="credits-balance-card">
+                <div class="card-body">
+                    <h2 class="text-primary">Current Balance</h2>
+                    <div class="display-3 fw-bold text-success" id="current-credits">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <p class="text-muted">Credits Available</p>
+                    <small class="text-info">
+                        <span id="leads-available">Loading...</span> leads available
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Packages -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h2 class="text-center mb-5">Choose Your Credit Package</h2>
+            
+            <div class="row">
+                <!-- $5 for 10 Credits -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 credit-package" data-package="10">
+                        <div class="card-header text-center bg-light">
+                            <h5 class="mb-0">Starter Package</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold text-primary">10</div>
+                            <p class="text-muted">Credits</p>
+                            <div class="fs-2 fw-bold text-success">$5</div>
+                            <p class="text-muted">$0.50 per credit</p>
+                            
+                            <hr>
+                            <ul class="list-unstyled">
+                                <li>✅ 2 Business Leads</li>
+                                <li>✅ Contact Information</li>
+                                <li>✅ Email & Phone Access</li>
+                                <li>✅ Never Expires</li>
+                            </ul>
+                            
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <small class="text-muted">
+                                    <strong>Cost per lead:</strong> $2.50<br>
+                                    <strong>Cost per credit:</strong> $0.50
+                                </small>
+                            </div>
+                            
+                            <button class="btn btn-outline-primary btn-lg w-100 mt-3" onclick="selectPackage('10')">
+                                Purchase for $5
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- $10 for 20 Credits -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 credit-package border-success" data-package="20">
+                        <div class="card-header text-center bg-success text-white position-relative">
+                            <span class="badge bg-warning text-dark position-absolute top-0 start-50 translate-middle px-3 py-2">
+                                POPULAR
+                            </span>
+                            <h5 class="mb-0 mt-2">Value Package</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold text-success">20</div>
+                            <p class="text-muted">Credits</p>
+                            <div class="fs-2 fw-bold text-success">$10</div>
+                            <p class="text-muted">$0.50 per credit</p>
+                            
+                            <hr>
+                            <ul class="list-unstyled">
+                                <li>✅ 4 Business Leads</li>
+                                <li>✅ Contact Information</li>
+                                <li>✅ Email & Phone Access</li>
+                                <li>✅ Never Expires</li>
+                                <li>✅ <strong>Best Value!</strong></li>
+                            </ul>
+                            
+                            <div class="mt-3 p-2 bg-success text-white rounded">
+                                <small>
+                                    <strong>Cost per lead:</strong> $2.50<br>
+                                    <strong>Cost per credit:</strong> $0.50<br>
+                                    <strong>You save:</strong> Same great rate!
+                                </small>
+                            </div>
+                            
+                            <button class="btn btn-success btn-lg w-100 mt-3" onclick="selectPackage('20')">
+                                Purchase for $10
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- $15 for 30 Credits -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 credit-package" data-package="30">
+                        <div class="card-header text-center bg-warning">
+                            <h5 class="mb-0">Premium Package</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold text-warning">30</div>
+                            <p class="text-muted">Credits</p>
+                            <div class="fs-2 fw-bold text-success">$15</div>
+                            <p class="text-muted">$0.50 per credit</p>
+                            
+                            <hr>
+                            <ul class="list-unstyled">
+                                <li>✅ 6 Business Leads</li>
+                                <li>✅ Contact Information</li>
+                                <li>✅ Email & Phone Access</li>
+                                <li>✅ Never Expires</li>
+                                <li>✅ <strong>Most Credits!</strong></li>
+                            </ul>
+                            
+                            <div class="mt-3 p-2 bg-warning text-dark rounded">
+                                <small>
+                                    <strong>Cost per lead:</strong> $2.50<br>
+                                    <strong>Cost per credit:</strong> $0.50<br>
+                                    <strong>Total value:</strong> $15.00
+                                </small>
+                            </div>
+                            
+                            <button class="btn btn-warning btn-lg w-100 mt-3" onclick="selectPackage('30')">
+                                Purchase for $15
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Subscription Info -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-8">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>💡 Want Unlimited Access?</h4>
+                    <p class="lead">Our monthly subscription gives you 50 credits every month for just $25!</p>
+                    <p>That's 10 business leads per month - perfect for growing your client base.</p>
+                    <a href="{{ url_for('payment') }}" class="btn btn-light btn-lg">
+                        Upgrade to Monthly Subscription
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Usage History -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Credit Activity</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadCreditHistory()">
+                        <i class="fas fa-refresh"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="historyTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="usage-tab" data-bs-toggle="tab" data-bs-target="#usage" type="button" role="tab">
+                                Recent Usage
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab">
+                                Purchase History
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="historyTabsContent">
+                        <div class="tab-pane fade show active" id="usage" role="tabpanel">
+                            <div id="usage-history">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                    <p class="text-muted mt-2">Loading usage history...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="purchases" role="tabpanel">
+                            <div id="purchase-history">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                    <p class="text-muted mt-2">Loading purchase history...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Your Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Package Details</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div id="package-summary">
+                                    <!-- Package details will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Payment Method</h6>
+                        <div class="payment-options">
+                            <!-- PayPal Payment Button -->
+                            <div id="paypal-button-container" class="mb-3"></div>
+                            
+                            <!-- Credit Card Option -->
+                            <div class="text-center mb-3">
+                                <span class="text-muted">── OR ──</span>
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="showCreditCardForm()">
+                                <i class="fas fa-credit-card"></i> Pay with Credit Card
+                            </button>
+                            
+                            <!-- Credit Card Form (hidden by default) -->
+                            <div id="credit-card-form" style="display: none;" class="mt-3">
+                                <form id="payment-form">
+                                    <div class="mb-3">
+                                        <label class="form-label">Card Number</label>
+                                        <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label">Expiry</label>
+                                            <input type="text" class="form-control" id="expiry" placeholder="MM/YY" required>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Cardholder Name</label>
+                                        <input type="text" class="form-control" id="cardholder-name" required>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100" onclick="completeCreditCardPurchase()">
+                                        <i class="fas fa-credit-card"></i> Complete Purchase
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt"></i> Secure payment processing
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedPackage = null;
+
+// Load credits balance on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCreditsBalance();
+    loadCreditHistory();
+});
+
+function loadCreditsBalance() {
+    fetch('/get-credits-balance?email=demo@example.com')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('current-credits').innerHTML = data.credits_balance;
+                const leadsAvailable = Math.floor(data.credits_balance / 5);
+                document.getElementById('leads-available').textContent = leadsAvailable;
+                
+                // Show warning if low credits
+                if (data.low_credits) {
+                    document.getElementById('credits-balance-card').className += ' border-warning';
+                    showAlert('You have low credits! Consider purchasing more to continue accessing leads.', 'warning');
+                }
+                
+                if (data.out_of_credits) {
+                    document.getElementById('credits-balance-card').className += ' border-danger';
+                    showAlert('You\'re out of credits! Purchase credits to access contact information.', 'danger');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading credits balance:', error);
+            document.getElementById('current-credits').innerHTML = 'Error';
+        });
+}
+
+function selectPackage(packageType) {
+    selectedPackage = packageType;
+    
+    const packages = {
+        '10': {credits: 10, price: 5.00, description: 'Starter Package'},
+        '20': {credits: 20, price: 10.00, description: 'Value Package'},
+        '30': {credits: 30, price: 15.00, description: 'Premium Package'}
+    };
+    
+    const pkg = packages[packageType];
+    
+    document.getElementById('package-summary').innerHTML = `
+        <h5>${pkg.description}</h5>
+        <p><strong>${pkg.credits} Credits</strong> for <strong>$${pkg.price}</strong></p>
+        <p class="text-muted">Gives you access to ${Math.floor(pkg.credits / 5)} business leads</p>
+        <hr>
+        <div class="text-center">
+            <div class="h6 text-primary">Cost Breakdown:</div>
+            <div>• ${pkg.credits} Credits = $${pkg.price}</div>
+            <div>• Each Lead = 5 Credits ($2.50)</div>
+            <div>• Cost per Credit = $0.50</div>
+        </div>
+    `;
+    
+    // Initialize PayPal button
+    initializePayPalButton(pkg.price, pkg.credits, pkg.description);
+    
+    // Show payment modal
+    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    modal.show();
+}
+
+function initializePayPalButton(price, credits, description) {
+    // Clear existing PayPal button
+    document.getElementById('paypal-button-container').innerHTML = '';
+    
+    paypal.Buttons({
+        style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'paypal'
+        },
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: price.toFixed(2)
+                    },
+                    description: `${description} - ${credits} Credits for Virginia Contracts Lead Generation`
+                }]
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                // Process the successful PayPal payment
+                processPayPalPayment(details, credits);
+            });
+        },
+        onError: function(err) {
+            console.error('PayPal Error:', err);
+            showAlert('PayPal payment failed. Please try again or use credit card.', 'danger');
+        }
+    }).render('#paypal-button-container');
+}
+
+function processPayPalPayment(paypalDetails, credits) {
+    const paymentData = {
+        package: selectedPackage,
+        user_email: 'demo@example.com',
+        payment_method: 'paypal',
+        paypal_details: paypalDetails,
+        credits_purchased: credits
+    };
+    
+    fetch('/purchase-credits', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+            
+            // Show success message
+            showAlert(`Success! ${data.credits_added} credits added to your account via PayPal. New balance: ${data.new_balance} credits.`, 'success');
+            
+            // Reload balance
+            loadCreditsBalance();
+            loadCreditHistory();
+        } else {
+            showAlert('Payment processing failed: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Payment processing failed. Please contact support.', 'danger');
+    });
+}
+
+function showCreditCardForm() {
+    document.getElementById('credit-card-form').style.display = 'block';
+    event.target.style.display = 'none';
+}
+
+function completeCreditCardPurchase() {
+    if (!selectedPackage) return;
+    
+    const button = event.target;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    const paymentData = {
+        package: selectedPackage,
+        user_email: 'demo@example.com',
+        payment_method: 'credit_card',
+        payment_info: {
+            card_number: document.getElementById('card-number').value,
+            expiry: document.getElementById('expiry').value,
+            cvv: document.getElementById('cvv').value,
+            cardholder_name: document.getElementById('cardholder-name').value
+        }
+    };
+    
+    fetch('/purchase-credits', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+            
+            // Show success message
+            showAlert(`Success! ${data.credits_added} credits added to your account. New balance: ${data.new_balance} credits.`, 'success');
+            
+            // Reload balance
+            loadCreditsBalance();
+            loadCreditHistory();
+            
+            // Reset form
+            document.getElementById('payment-form').reset();
+        } else {
+            showAlert('Purchase failed: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Purchase failed. Please try again.', 'danger');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-credit-card"></i> Complete Purchase';
+    });
+}
+
+function loadCreditHistory() {
+    fetch('/credits-usage-history?email=demo@example.com')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Load usage history
+                let usageHtml = '';
+                if (data.usage_history.length === 0) {
+                    usageHtml = '<p class="text-muted text-center">No credit usage yet.</p>';
+                } else {
+                    usageHtml = '<div class="list-group">';
+                    data.usage_history.forEach(item => {
+                        usageHtml += `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">${item.opportunity_name || item.action_type}</h6>
+                                        <small class="text-muted">${new Date(item.date).toLocaleDateString()}</small>
+                                    </div>
+                                    <span class="badge bg-danger">${item.credits_used} credits</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    usageHtml += '</div>';
+                }
+                document.getElementById('usage-history').innerHTML = usageHtml;
+                
+                // Load purchase history
+                let purchaseHtml = '';
+                if (data.purchase_history.length === 0) {
+                    purchaseHtml = '<p class="text-muted text-center">No purchases yet.</p>';
+                } else {
+                    purchaseHtml = '<div class="list-group">';
+                    data.purchase_history.forEach(item => {
+                        purchaseHtml += `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">${item.purchase_type.replace('_', ' ').toUpperCase()}</h6>
+                                        <small class="text-muted">${new Date(item.date).toLocaleDateString()}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success">${item.credits_purchased} credits</span><br>
+                                        <small class="text-muted">$${item.amount_paid}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    purchaseHtml += '</div>';
+                }
+                document.getElementById('purchase-history').innerHTML = purchaseHtml;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading credit history:', error);
+        });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+// Format card number input
+document.getElementById('card-number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue;
+});
+
+// Format expiry date
+document.getElementById('expiry').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    e.target.value = value;
+});
+</script>
+
+<style>
+.credit-package {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.credit-package:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: white;
+    padding: 3rem 0;
+}
+</style>
+
+{% endblock %}

@@ -289,9 +289,16 @@
                                     <input type="tel" class="form-control" name="phone">
                                 </div>
                                 
-                                <div class="alert alert-info">
-                                    <h5>🎁 Special Offer: First 3 Contract Leads FREE!</h5>
-                                    <p class="mb-0">Get your first 3 high-value contract opportunities at no cost. After that, continue receiving unlimited leads for just $25/month.</p>
+                                <div class="alert alert-success">
+                                    <h5>🎁 Special Offer: Get Started FREE!</h5>
+                                    <p class="mb-2">✅ Register now and get access to:</p>
+                                    <ul class="mb-2">
+                                        <li><strong>10 Free Credits</strong> (2 commercial leads)</li>
+                                        <li><strong>All Government Contracts</strong> (unlimited access)</li>
+                                        <li><strong>Email Notifications</strong> for new opportunities</li>
+                                        <li><strong>Personalized Dashboard</strong> with your activity</li>
+                                    </ul>
+                                    <p class="mb-0"><small>After your free credits, continue with just $25/month for 50 credits (10 leads)</small></p>
                                 </div>
                             </div>
 
@@ -339,9 +346,22 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-light btn-lg mt-3" onclick="startSurvey()">
-                Start My Assessment →
-            </button>
+            <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                <button class="btn btn-light btn-lg" onclick="startSurvey()">
+                    Start My Assessment →
+                </button>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+                    Skip to Registration →
+                </a>
+            </div>
+            
+            <!-- Sign In for Existing Users -->
+            <div class="mt-4 pt-3 border-top border-light">
+                <p class="text-light mb-2">Already registered?</p>
+                <a href="{{ url_for('signin') }}" class="btn btn-link text-light">
+                    <i class="fas fa-sign-in-alt"></i> Sign In to Access Your Leads
+                </a>
+            </div>
         </div>
     </div>
 
