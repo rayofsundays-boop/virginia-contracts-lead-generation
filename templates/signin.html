@@ -56,6 +56,14 @@
                         </button>
                         
                         <div class="text-center">
+                            <small class="text-muted">
+                                By signing in, you agree to our 
+                                <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and 
+                                <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
+                            </small>
+                        </div>
+                        
+                        <div class="text-center mt-3">
                             <a href="#" class="text-decoration-none" onclick="showForgotPassword()">
                                 Forgot your password?
                             </a>

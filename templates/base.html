@@ -133,15 +133,53 @@
     {% block content %}{% endblock %}
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+        <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 pt-5 pb-4">
         <div class="container">
             <div class="row">
-                <div class="col-md-8">
-                    <h5>Virginia Government Contract Opportunities</h5>
-                    <p class="mb-0">Connecting contractors with government opportunities in Hampton, Suffolk, Virginia Beach, Newport News, and Williamsburg.</p>
+                <div class="col-md-4">
+                    <h5>Virginia Contracts</h5>
+                    <p>Connecting cleaning contractors with government and commercial opportunities across Virginia.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <p class="mb-0">© 2025 VA Contract Hub</p>
+                <div class="col-md-3">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('customer_leads') }}" class="text-white-50">Browse Leads</a></li>
+                        <li><a href="{{ url_for('credits') }}" class="text-white-50">Buy Credits</a></li>
+                        <li><a href="{{ url_for('payment') }}" class="text-white-50">Subscribe</a></li>
+                        <li><a href="{{ url_for('dashboard') }}" class="text-white-50">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('terms') }}" class="text-white-50">Terms of Service</a></li>
+                        <li><a href="{{ url_for('privacy') }}" class="text-white-50">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white-50">Cookie Policy</a></li>
+                        <li><a href="#" class="text-white-50">Refund Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5>Contact</h5>
+                    <ul class="list-unstyled">
+                        <li class="text-white-50"><i class="fas fa-envelope"></i> support@vacontracts.com</li>
+                        <li class="text-white-50"><i class="fas fa-phone"></i> (757) 555-0100</li>
+                        <li class="text-white-50"><i class="fas fa-map-marker-alt"></i> Hampton, VA</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="mb-0">&copy; 2025 Virginia Contracts Lead Generation. All rights reserved.</p>
+                    <p class="small text-white-50 mt-2">
+                        <strong>Disclaimer:</strong> Lead information is provided "as is" without warranties. We do not guarantee accuracy of information or success in winning contracts. Always verify information independently.
+                    </p>
                 </div>
             </div>
         </div>

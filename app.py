@@ -1423,6 +1423,16 @@ def signin():
     """Sign in page for registered users"""
     return render_template('signin.html')
 
+@app.route('/terms')
+def terms():
+    """Terms of Service page"""
+    return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+    """Privacy Policy page"""
+    return render_template('privacy.html')
+
 @app.route('/dashboard')
 def dashboard():
     """Dashboard for signed-in users"""
