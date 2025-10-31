@@ -946,11 +946,8 @@ def request_commercial_contact():
 def customer_leads():
     """Customer portal for accessing all leads with advanced features"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
         # Get all available leads (both government and commercial)
-        government_leads = c.execute('''
+        government_leads = db.session.execute(text('''
             SELECT 
                 contracts.id,
                 contracts.title,
@@ -968,9 +965,9 @@ def customer_leads():
                 contracts.description as requirements
             FROM contracts 
             ORDER BY contracts.created_at DESC
-        ''').fetchall()
+        ''')).fetchall()
         
-        commercial_leads = c.execute('''
+        commercial_leads = db.session.execute(text('''
             SELECT 
                 commercial_opportunities.id,
                 commercial_opportunities.business_name as title,
@@ -988,7 +985,7 @@ def customer_leads():
                 commercial_opportunities.special_requirements as requirements
             FROM commercial_opportunities 
             ORDER BY commercial_opportunities.id DESC
-        ''').fetchall()
+        ''')).fetchall()
         
         # Combine and format leads
         all_leads = []
@@ -1041,7 +1038,6 @@ def customer_leads():
             }
             all_leads.append(lead_dict)
         
-        conn.close()
         return render_template('customer_leads.html', all_leads=all_leads)
         
     except Exception as e:
