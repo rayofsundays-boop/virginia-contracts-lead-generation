@@ -1595,71 +1595,75 @@ def paypal_webhook():
 @app.route('/contracts')
 def contracts():
     location_filter = request.args.get('location', '')
-    conn = get_db_connection()
-    c = conn.cursor()
-    
-    if location_filter:
-        c.execute('SELECT * FROM contracts WHERE location LIKE ? ORDER BY deadline ASC', 
-                  (f'%{location_filter}%',))
-    else:
-        c.execute('SELECT * FROM contracts ORDER BY deadline ASC')
-    
-    all_contracts = c.fetchall()
-    conn.close()
-    
-    # Get unique locations for filter dropdown
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT DISTINCT location FROM contracts ORDER BY location')
-    locations = [row[0] for row in c.fetchall()]
-    conn.close()
-    
-    return render_template('contracts.html', contracts=all_contracts, locations=locations, current_filter=location_filter)
+    # Use SQLAlchemy so this works on PostgreSQL (Render) and SQLite (local)
+    try:
+        if location_filter:
+            rows = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                FROM contracts 
+                WHERE LOWER(location) LIKE LOWER(:loc)
+                ORDER BY deadline ASC
+            '''), { 'loc': f"%{location_filter}%" }).fetchall()
+        else:
+            rows = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                FROM contracts 
+                ORDER BY deadline ASC
+            ''')).fetchall()
+
+        # For filter dropdown
+        locations = [r[0] for r in db.session.execute(text('''
+            SELECT DISTINCT location FROM contracts ORDER BY location
+        ''')).fetchall()]
+        
+        return render_template('contracts.html', contracts=rows, locations=locations, current_filter=location_filter)
+    except Exception as e:
+        # Helpful guidance when table empty or missing
+        msg = f"<h1>Contracts Page Error</h1><p>{str(e)}</p>"
+        msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
+        return msg
 
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov"""
     department_filter = request.args.get('department', '')
     set_aside_filter = request.args.get('set_aside', '')
-    
-    conn = get_db_connection()
-    c = conn.cursor()
-    
-    query = 'SELECT * FROM federal_contracts WHERE 1=1'
-    params = []
-    
-    if department_filter:
-        query += ' AND department LIKE ?'
-        params.append(f'%{department_filter}%')
-    
-    if set_aside_filter:
-        query += ' AND set_aside LIKE ?'
-        params.append(f'%{set_aside_filter}%')
-    
-    query += ' ORDER BY deadline ASC'
-    
-    if params:
-        c.execute(query, params)
-    else:
-        c.execute(query)
-    
-    all_federal_contracts = c.fetchall()
-    
-    # Get unique departments and set-asides for filters
-    c.execute('SELECT DISTINCT department FROM federal_contracts ORDER BY department')
-    departments = [row[0] for row in c.fetchall()]
-    
-    c.execute('SELECT DISTINCT set_aside FROM federal_contracts ORDER BY set_aside')
-    set_asides = [row[0] for row in c.fetchall()]
-    
-    conn.close()
-    
-    return render_template('federal_contracts.html', 
-                          contracts=all_federal_contracts, 
-                          departments=departments,
-                          set_asides=set_asides,
-                          current_department=department_filter,
-                          current_set_aside=set_aside_filter)
+    try:
+        # Build dynamic filter with SQLAlchemy text
+        base_sql = '''
+            SELECT id, title, agency, department, location, value, deadline, description, 
+                   naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at
+            FROM federal_contracts WHERE 1=1
+        '''
+        params = {}
+        if department_filter:
+            base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
+            params['dept'] = f"%{department_filter}%"
+        if set_aside_filter:
+            base_sql += ' AND LOWER(set_aside) LIKE LOWER(:sa)'
+            params['sa'] = f"%{set_aside_filter}%"
+        base_sql += ' ORDER BY deadline ASC'
+
+        rows = db.session.execute(text(base_sql), params).fetchall()
+
+        # Filters
+        departments = [r[0] for r in db.session.execute(text('''
+            SELECT DISTINCT department FROM federal_contracts WHERE department IS NOT NULL AND department <> '' ORDER BY department
+        ''')).fetchall()]
+        set_asides = [r[0] for r in db.session.execute(text('''
+            SELECT DISTINCT set_aside FROM federal_contracts WHERE set_aside IS NOT NULL AND set_aside <> '' ORDER BY set_aside
+        ''')).fetchall()]
+
+        return render_template('federal_contracts.html', 
+                               contracts=rows,
+                               departments=departments,
+                               set_asides=set_asides,
+                               current_department=department_filter,
+                               current_set_aside=set_aside_filter)
+    except Exception as e:
+        msg = f"<h1>Federal Contracts Page Error</h1><p>{str(e)}</p>"
+        msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
+        return msg
 
 @app.route('/commercial-contracts')
 def commercial_contracts():
