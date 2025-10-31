@@ -26,11 +26,11 @@
                     <h3 class="mb-0">Sign In to Your Account</h3>
                 </div>
                 <div class="card-body p-5">
-                    <form id="signin-form">
+                    <form method="POST" action="{{ url_for('signin') }}">
                         <div class="mb-4">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control form-control-lg" id="email" name="email" required 
-                                   placeholder="Enter your registered email">
+                            <label for="username" class="form-label">Username or Email</label>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username" required 
+                                   placeholder="Enter your username or email">
                         </div>
                         
                         <div class="mb-4">
@@ -51,22 +51,17 @@
                             </label>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="signin-btn">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                         
                         <div class="text-center">
+                            <p class="mb-2">Don't have an account? <a href="{{ url_for('register') }}" class="fw-bold">Register Now</a></p>
                             <small class="text-muted">
                                 By signing in, you agree to our 
                                 <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and 
                                 <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
                             </small>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                            <a href="#" class="text-decoration-none" onclick="showForgotPassword()">
-                                Forgot your password?
-                            </a>
                         </div>
                     </form>
                 </div>

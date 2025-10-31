@@ -38,6 +38,19 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="username" name="username" required minlength="3" placeholder="Choose a unique username">
+                                <small class="form-text text-muted">3-20 characters, no spaces</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="Minimum 6 characters">
+                                <small class="form-text text-muted">Minimum 6 characters</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label for="state" class="form-label">State</label>
                                 <select class="form-select" id="state" name="state">
                                     <option value="">Select State</option>
