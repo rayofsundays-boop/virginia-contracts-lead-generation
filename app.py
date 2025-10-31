@@ -274,6 +274,15 @@ def update_local_gov_contracts():
             print("⚠️  No new local contracts found.")
             return
         
+        # Normalize data (ensure deadline is a proper DATE or NULL)
+        import re
+        normalized = []
+        for c in contracts:
+            dl = c.get('deadline')
+            if not dl or not re.match(r'^\d{4}-\d{2}-\d{2}$', str(dl)):
+                c['deadline'] = None
+            normalized.append(c)
+
         # Use SQLAlchemy for database operations
         with app.app_context():
             # Clean up old contracts (older than 120 days) - PostgreSQL syntax
@@ -284,7 +293,7 @@ def update_local_gov_contracts():
             
             # Insert new contracts
             new_count = 0
-            for contract in contracts:
+            for contract in normalized:
                 try:
                     # Check if contract already exists (by title and agency)
                     existing = db.session.execute(text('''
