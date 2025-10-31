@@ -662,16 +662,15 @@ def index():
 def home():
     """Original homepage with samples - now accessible at /home"""
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
         # Get government contracts
-        c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
-        contracts = c.fetchall()
+        contracts = db.session.execute(
+            text('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
+        ).fetchall()
         
         # Get commercial opportunities  
-        c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
-        commercial_rows = c.fetchall()
+        commercial_rows = db.session.execute(
+            text('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
+        ).fetchall()
         
         # Convert commercial rows to objects for easier template access
         commercial_opportunities = []
@@ -693,10 +692,10 @@ def home():
             })
         
         # Get total commercial count
-        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
-        commercial_count = c.fetchone()[0]
+        commercial_count = db.session.execute(
+            text('SELECT COUNT(*) FROM commercial_opportunities')
+        ).fetchone()[0]
         
-        conn.close()
         return render_template('index.html', 
                              contracts=contracts, 
                              commercial_opportunities=commercial_opportunities,
@@ -759,15 +758,23 @@ def register():
         certifications = request.form.get('certifications', '')
         
         # Save to database
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('''INSERT INTO leads (company_name, contact_name, email, phone, 
-                     state, experience_years, certifications, free_leads_remaining, credits_balance)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                  (company_name, contact_name, email, phone, state, 
-                   experience_years, certifications, 3, 0))  # Give 3 free leads
-        conn.commit()
-        conn.close()
+        db.session.execute(
+            text('''INSERT INTO leads (company_name, contact_name, email, phone, 
+                    state, experience_years, certifications, free_leads_remaining, credits_balance)
+                    VALUES (:company, :contact, :email, :phone, :state, :exp, :certs, :free, :credits)'''),
+            {
+                'company': company_name,
+                'contact': contact_name,
+                'email': email,
+                'phone': phone,
+                'state': state,
+                'exp': experience_years,
+                'certs': certifications,
+                'free': 3,
+                'credits': 0
+            }
+        )
+        db.session.commit()
         
         # Send email notification
         lead_data = {
