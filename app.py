@@ -431,6 +431,87 @@ def get_db_connection():
         db_path = 'leads.db'  # Fallback to SQLite for now
     return sqlite3.connect(db_path)
 
+def init_postgres_db():
+    """Initialize PostgreSQL database with proper syntax"""
+    try:
+        # Create tables using PostgreSQL-compatible SQL
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS leads
+                     (id SERIAL PRIMARY KEY,
+                      company_name TEXT NOT NULL,
+                      contact_name TEXT NOT NULL,
+                      email TEXT NOT NULL UNIQUE,
+                      username TEXT UNIQUE,
+                      password_hash TEXT,
+                      phone TEXT,
+                      state TEXT,
+                      experience_years TEXT,
+                      certifications TEXT,
+                      registration_date TEXT,
+                      lead_source TEXT DEFAULT 'website',
+                      survey_responses TEXT,
+                      proposal_support BOOLEAN DEFAULT FALSE,
+                      free_leads_remaining INTEGER DEFAULT 0,
+                      subscription_status TEXT DEFAULT 'unpaid',
+                      credits_balance INTEGER DEFAULT 0,
+                      credits_used INTEGER DEFAULT 0,
+                      last_credit_purchase_date TEXT,
+                      low_credits_alert_sent BOOLEAN DEFAULT FALSE,
+                      email_notifications BOOLEAN DEFAULT TRUE,
+                      sms_notifications BOOLEAN DEFAULT FALSE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS contracts
+                     (id SERIAL PRIMARY KEY,
+                      title TEXT NOT NULL,
+                      agency TEXT NOT NULL,
+                      location TEXT,
+                      value TEXT,
+                      deadline DATE,
+                      description TEXT,
+                      naics_code TEXT,
+                      website_url TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS federal_contracts
+                     (id SERIAL PRIMARY KEY,
+                      title TEXT NOT NULL,
+                      agency TEXT NOT NULL,
+                      department TEXT,
+                      location TEXT,
+                      value TEXT,
+                      deadline DATE,
+                      description TEXT,
+                      naics_code TEXT,
+                      sam_gov_url TEXT NOT NULL,
+                      notice_id TEXT UNIQUE,
+                      set_aside TEXT,
+                      posted_date DATE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS commercial_opportunities
+                     (id SERIAL PRIMARY KEY,
+                      business_name TEXT NOT NULL,
+                      business_type TEXT NOT NULL,
+                      address TEXT,
+                      location TEXT NOT NULL,
+                      square_footage INTEGER,
+                      monthly_value DECIMAL(10,2),
+                      frequency TEXT,
+                      services_needed TEXT,
+                      special_requirements TEXT,
+                      contact_type TEXT DEFAULT 'warm',
+                      description TEXT,
+                      size TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        print("PostgreSQL tables created successfully")
+        return True
+    except Exception as e:
+        print(f"Error creating PostgreSQL tables: {e}")
+        db.session.rollback()
+        return False
+
 def init_db():
     try:
         conn = get_db_connection()
@@ -819,14 +900,19 @@ def index():
                              commercial_opportunities=commercial_opportunities,
                              commercial_count=commercial_count)
     except Exception as e:
-        # If database doesn't exist, try to initialize it
-        if "no such table" in str(e).lower():
+        error_str = str(e).lower()
+        # Check for missing tables in both SQLite and PostgreSQL
+        if "no such table" in error_str or "does not exist" in error_str or "relation" in error_str:
             try:
-                init_db()
+                # Use PostgreSQL init if using PostgreSQL
+                if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+                    init_postgres_db()
+                else:
+                    init_db()
                 return redirect(url_for('index'))
             except Exception as e2:
                 return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
-        return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p>"
+        return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p><p><a href='/init-db'>Initialize Database</a></p>"
 
 @app.route('/home')
 def home():
@@ -840,8 +926,16 @@ def test():
 @app.route('/init-db')
 def manual_init_db():
     try:
-        init_db()
-        return "<h1>Database Initialized!</h1><p>Tables created and sample data loaded.</p>"
+        # Check if using PostgreSQL
+        if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+            success = init_postgres_db()
+            if success:
+                return "<h1>PostgreSQL Database Initialized!</h1><p>Tables created successfully.</p><p><a href='/'>Go to Home</a></p>"
+            else:
+                return "<h1>Database Error</h1><p>Failed to create tables. Check server logs.</p>"
+        else:
+            init_db()
+            return "<h1>Database Initialized!</h1><p>Tables created and sample data loaded.</p><p><a href='/'>Go to Home</a></p>"
     except Exception as e:
         return f"<h1>Database Error</h1><p>Error: {str(e)}</p>"
 
