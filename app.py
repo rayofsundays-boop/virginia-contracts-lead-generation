@@ -505,7 +505,34 @@ def init_postgres_db():
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         db.session.commit()
-        print("PostgreSQL tables created successfully")
+        
+        # Add sample data
+        # Check if data already exists
+        existing_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).fetchone()[0]
+        if existing_contracts == 0:
+            # Insert sample contracts
+            db.session.execute(text('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
+                VALUES 
+                ('Janitorial Services - City Hall Complex', 'Hampton City Government', 'Hampton, VA', '$45,000', '2025-12-15', 'Daily cleaning and maintenance services for City Hall and administrative buildings', '561720', 'https://www.hampton.gov/bids'),
+                ('Medical Facility Cleaning Services', 'Virginia Beach Health Department', 'Virginia Beach, VA', '$78,000', '2025-11-30', 'Specialized cleaning services for medical facilities requiring infection control protocols', '561720', 'https://www.vbgov.com/government/departments/purchasing'),
+                ('School Facility Maintenance Contract', 'Suffolk Public Schools', 'Suffolk, VA', '$125,000', '2026-01-20', 'Comprehensive cleaning and maintenance for 12 elementary schools', '561720', 'https://www.suffolkva.us/bids'),
+                ('Parks and Recreation Facilities', 'Newport News Parks Department', 'Newport News, VA', '$34,500', '2025-12-01', 'Cleaning services for community centers, sports facilities, and restrooms', '561720', 'https://www.nnva.gov/bids'),
+                ('Library System Cleaning Services', 'Williamsburg Regional Library', 'Williamsburg, VA', '$28,000', '2026-02-15', 'Evening and weekend cleaning services for 4 library branches', '561720', 'https://www.wrl.org/about-wrl/bids'),
+                ('Municipal Building Janitorial Services', 'Chesapeake City Government', 'Chesapeake, VA', '$52,000', '2025-11-25', 'Daily janitorial services for municipal offices and public spaces', '561720', 'https://www.cityofchesapeake.net/government/bids')
+            '''))
+            
+            # Insert sample commercial opportunities
+            db.session.execute(text('''INSERT INTO commercial_opportunities 
+                (business_name, business_type, address, location, square_footage, monthly_value, frequency, services_needed, special_requirements, contact_type, description, size)
+                VALUES
+                ('Hampton Marina Resort', 'hospitality', '456 Marina Dr', 'Hampton', 15000, 5200, 'daily', 'Guest rooms, lobby, restaurants, pool area', 'Marina resort with boat docks and waterfront dining', 'Property Manager', '120-room waterfront resort with marina and restaurant', 'medium'),
+                ('Suffolk Medical Center', 'medical', '789 Medical Plaza', 'Suffolk', 32000, 8500, 'daily', 'Patient rooms, exam rooms, surgical suites', 'Healthcare facility requiring infection control standards', 'Facilities Director', '80-bed medical center with outpatient services', 'large'),
+                ('Virginia Beach Tech Campus', 'office', '321 Innovation Way', 'Virginia Beach', 45000, 9200, 'weekly', 'Open office spaces, conference rooms, cafeteria', 'Modern tech campus with multiple buildings', 'Facility Operations Manager', 'Technology company campus with 500+ employees', 'large')
+            '''))
+            
+            db.session.commit()
+        
+        print("PostgreSQL tables created successfully with sample data")
         return True
     except Exception as e:
         print(f"Error creating PostgreSQL tables: {e}")
@@ -859,6 +886,9 @@ def init_db():
 @app.route('/')
 def index():
     """Main homepage with contract samples"""
+    # Check if we're being redirected (prevent infinite loop)
+    init_attempted = request.args.get('init_attempted', '0')
+    
     try:
         # Get government contracts
         contracts = db.session.execute(
@@ -902,17 +932,25 @@ def index():
     except Exception as e:
         error_str = str(e).lower()
         # Check for missing tables in both SQLite and PostgreSQL
-        if "no such table" in error_str or "does not exist" in error_str or "relation" in error_str:
+        if ("no such table" in error_str or "does not exist" in error_str or "relation" in error_str) and init_attempted == '0':
             try:
                 # Use PostgreSQL init if using PostgreSQL
                 if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
-                    init_postgres_db()
+                    success = init_postgres_db()
+                    if success:
+                        # Redirect with flag to prevent loop
+                        return redirect(url_for('index', init_attempted='1'))
                 else:
                     init_db()
-                return redirect(url_for('index'))
+                    return redirect(url_for('index', init_attempted='1'))
             except Exception as e2:
                 return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
-        return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p><p><a href='/init-db'>Initialize Database</a></p>"
+        
+        # If init was already attempted or different error, show with empty data
+        return render_template('index.html', 
+                             contracts=[], 
+                             commercial_opportunities=[],
+                             commercial_count=0)
 
 @app.route('/home')
 def home():
