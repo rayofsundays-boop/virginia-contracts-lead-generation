@@ -600,8 +600,8 @@ def init_db():
 
 @app.route('/')
 def index():
-    """Landing page - redirect to customer leads portal"""
-    return redirect(url_for('customer_leads'))
+    """Landing page - redirect to assessment/survey"""
+    return redirect(url_for('landing'))
 
 @app.route('/home')
 def home():
