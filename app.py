@@ -14,6 +14,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from lead_generator import LeadGenerator
 
+# Virginia Government Contracting Lead Generation Application
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
