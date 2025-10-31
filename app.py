@@ -20,6 +20,12 @@ if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
     # Fix Heroku's postgres:// to postgresql://
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
+# Use psycopg (version 3) instead of psycopg2
+if DATABASE_URL and 'postgresql://' in DATABASE_URL:
+    # Change postgresql:// to postgresql+psycopg:// for psycopg3 driver
+    if '+psycopg' not in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///leads.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
