@@ -1,0 +1,133 @@
+<!-- Ad Components for Monetization -->
+
+<!-- Google AdSense Header Ad (Horizontal Banner) -->
+{% macro header_ad() %}
+<div class="ad-container text-center my-3">
+    <div class="ad-label text-muted small mb-1">Advertisement</div>
+    <!-- Google AdSense Code -->
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="horizontal"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</div>
+{% endmacro %}
+
+<!-- Sidebar Ad (Vertical Rectangle) -->
+{% macro sidebar_ad() %}
+<div class="ad-container mb-4">
+    <div class="ad-label text-muted small mb-2">Sponsored</div>
+    <div class="card border-0 shadow-sm">
+        <!-- Google AdSense Code -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="rectangle"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- In-Feed Ad (Between content items) -->
+{% macro infeed_ad() %}
+<div class="ad-container my-4">
+    <div class="ad-label text-muted small text-center mb-2">Sponsored Content</div>
+    <div class="card border shadow-sm">
+        <div class="card-body p-3">
+            <!-- Google AdSense In-Feed Ad -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-6t+ed+2i-1n-4w"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                 data-ad-slot="XXXXXXXXXX"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Square Ad (300x250) -->
+{% macro square_ad() %}
+<div class="ad-container mb-4">
+    <div class="ad-label text-muted small mb-2">Advertisement</div>
+    <div style="min-height: 250px;">
+        <!-- Google AdSense Square Ad -->
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:300px;height:250px"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Custom Local Business Ad (For promoting your own services) -->
+{% macro custom_business_ad(title, description, link, cta="Learn More") %}
+<div class="ad-container mb-4">
+    <div class="ad-label text-muted small mb-2">Featured Service</div>
+    <div class="card border-primary shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title text-primary">{{ title }}</h5>
+            <p class="card-text">{{ description }}</p>
+            <a href="{{ link }}" class="btn btn-primary btn-sm">{{ cta }}</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Carbon Ads (Alternative to AdSense - Better for Tech/Business sites) -->
+{% macro carbon_ad() %}
+<div class="ad-container mb-4">
+    <div class="ad-label text-muted small mb-2">Sponsored</div>
+    <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=YOUR_CARBON_ID&placement=yoursite" id="YOUR_CARBON_ID"></script>
+</div>
+{% endmacro %}
+
+<!-- Media.net Ad (Alternative ad network) -->
+{% macro medianet_ad() %}
+<div class="ad-container mb-4">
+    <div class="ad-label text-muted small mb-2">Advertisement</div>
+    <div id="XXXXXX"></div>
+    <script type="text/javascript">
+        try {
+            window._mNHandle.queue.push(function (){
+                window._mNDetails.loadTag("XXXXXX", "300x250", "XXXXXX");
+            });
+        }
+        catch (error) {}
+    </script>
+</div>
+{% endmacro %}
+
+<style>
+.ad-container {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.ad-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive ad styling */
+@media (max-width: 768px) {
+    .ad-container {
+        margin: 1rem 0;
+    }
+}
+</style>

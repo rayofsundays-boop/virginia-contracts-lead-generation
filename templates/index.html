@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/ads.html" import header_ad, infeed_ad, custom_business_ad %}
 
 {% block title %}VA Contract Hub | Home{% endblock %}
 
@@ -107,6 +108,9 @@
     </div>
 </section>
 
+<!-- Ad - After Category Cards -->
+{{ header_ad() }}
+
 <!-- Featured Contracts Preview -->
 <section class="bg-light py-5">
     <div class="container">
@@ -197,6 +201,9 @@
         </div>
     </div>
 </section>
+
+<!-- Ad - Between Sections -->
+{{ infeed_ad() }}
 
 <!-- For Homeowners Section -->
 <section class="bg-light py-5">

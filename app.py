@@ -58,6 +58,119 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vac
 
 mail = Mail(app)
 
+# ============================================================================
+# EMAIL NOTIFICATION FUNCTIONS
+# ============================================================================
+
+def send_new_lead_notification(lead_type, lead_data):
+    """Send email notifications to subscribers when new leads come in"""
+    try:
+        # Get all paid subscribers with email notifications enabled
+        subscribers = db.session.execute(text('''
+            SELECT email, company_name FROM leads 
+            WHERE subscription_status = 'paid' 
+            AND email_notifications = TRUE
+        ''')).fetchall()
+        
+        if not subscribers:
+            return
+        
+        # Prepare email content based on lead type
+        if lead_type == 'residential':
+            subject = f"🏠 New Residential Cleaning Lead in {lead_data.get('city')}"
+            body = f"""
+            New residential cleaning lead available!
+            
+            Location: {lead_data.get('address')}, {lead_data.get('city')}, VA {lead_data.get('zip_code')}
+            Property Type: {lead_data.get('property_type', 'N/A')}
+            Square Footage: {lead_data.get('square_footage', 'N/A')} sq ft
+            Bedrooms: {lead_data.get('bedrooms', 'N/A')}
+            Bathrooms: {lead_data.get('bathrooms', 'N/A')}
+            Frequency: {lead_data.get('frequency', 'N/A')}
+            Budget: {lead_data.get('budget_range', 'Not specified')}
+            Estimated Value: ${lead_data.get('estimated_value', 0)}/month
+            
+            Services Needed:
+            {lead_data.get('services_needed', 'General cleaning')}
+            
+            Contact: {lead_data.get('homeowner_name')}
+            Phone: {lead_data.get('phone')}
+            Email: {lead_data.get('email')}
+            
+            Login to your Lead Marketplace to view full details and contact the homeowner!
+            """
+        else:  # commercial
+            subject = f"🏢 New Commercial Cleaning Lead in {lead_data.get('city')}"
+            body = f"""
+            New commercial cleaning lead available!
+            
+            Business: {lead_data.get('business_name')}
+            Type: {lead_data.get('business_type', 'N/A')}
+            Location: {lead_data.get('address')}, {lead_data.get('city')}, VA {lead_data.get('zip_code')}
+            Square Footage: {lead_data.get('square_footage', 'N/A')} sq ft
+            Frequency: {lead_data.get('frequency', 'N/A')}
+            Budget: {lead_data.get('budget_range', 'Not specified')}
+            Urgency: {lead_data.get('urgency', 'Normal')}
+            
+            Services Needed:
+            {lead_data.get('services_needed', 'General cleaning')}
+            
+            Contact: {lead_data.get('contact_name')}
+            Phone: {lead_data.get('phone')}
+            Email: {lead_data.get('email')}
+            
+            Login to your Lead Marketplace to submit a bid!
+            """
+        
+        # Send to all subscribers
+        for subscriber in subscribers:
+            try:
+                msg = Message(
+                    subject=subject,
+                    recipients=[subscriber[0]],  # email
+                    body=body
+                )
+                msg.html = body.replace('\n', '<br>')
+                mail.send(msg)
+            except Exception as e:
+                print(f"Failed to send email to {subscriber[0]}: {str(e)}")
+                
+        print(f"✅ Sent {lead_type} lead notifications to {len(subscribers)} subscribers")
+        
+    except Exception as e:
+        print(f"Error sending lead notifications: {str(e)}")
+
+def send_bid_notification(business_email, contractor_info, bid_info):
+    """Notify business owner when a contractor submits a bid"""
+    try:
+        subject = f"New Bid Received for Your Cleaning Request"
+        body = f"""
+        Good news! A contractor has submitted a bid for your cleaning request.
+        
+        Contractor: {contractor_info.get('company_name', 'Professional Cleaning Contractor')}
+        Proposed Price: ${bid_info.get('price', 'See proposal')}
+        Timeline: {bid_info.get('timeline', 'To be discussed')}
+        
+        Proposal:
+        {bid_info.get('proposal', 'Contact contractor for details')}
+        
+        The contractor will be reaching out to you soon to discuss the details.
+        
+        Thank you for using VA Contract Hub!
+        """
+        
+        msg = Message(
+            subject=subject,
+            recipients=[business_email],
+            body=body
+        )
+        msg.html = body.replace('\n', '<br>')
+        mail.send(msg)
+        print(f"✅ Sent bid notification to {business_email}")
+        
+    except Exception as e:
+        print(f"Error sending bid notification: {str(e)}")
+
 # Initialize lead generator for automated updates (only if using SQLite)
 lead_generator = None
 if not DATABASE_URL or 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
@@ -2427,6 +2540,9 @@ def submit_cleaning_request():
         '''), data)
         db.session.commit()
         
+        # Send email notifications to subscribers
+        send_new_lead_notification('commercial', data)
+        
         flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
         return redirect(url_for('submit_cleaning_request'))
         
@@ -2492,6 +2608,12 @@ def submit_residential_cleaning_request():
             'special_requirements': f"{data['special_requirements']}; Budget: {data['budget_range']}; Start: {data['preferred_start_date']}; Urgency: {data['urgency']}; Pets: {data['pets']}; Access: {data['access_instructions']}"
         })
         db.session.commit()
+        
+        # Add estimated_value to data for email
+        data['estimated_value'] = calculate_estimated_value(data)
+        
+        # Send email notifications to subscribers
+        send_new_lead_notification('residential', data)
         
         flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
         return redirect(url_for('submit_residential_cleaning_request'))
