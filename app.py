@@ -3,7 +3,8 @@ import json
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mail import Mail, Message
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from datetime import datetime, date
 import threading
 import schedule
@@ -12,6 +13,21 @@ from lead_generator import LeadGenerator
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
+
+# Database configuration - supports both PostgreSQL and SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    # Fix Heroku's postgres:// to postgresql://
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///leads.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
+
+db = SQLAlchemy(app)
 
 # Custom Jinja filters
 @app.template_filter('comma')
