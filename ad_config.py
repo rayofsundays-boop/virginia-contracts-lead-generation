@@ -5,10 +5,11 @@
 # GOOGLE ADSENSE
 # ============================================================================
 # Sign up at: https://www.google.com/adsense/
-# Replace ca-pub-XXXXXXXXXXXXXXXXX with your actual publisher ID
-GOOGLE_ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXXX"
+# Your publisher ID: ca-pub-1139151650006174
+GOOGLE_ADSENSE_CLIENT_ID = "ca-pub-1139151650006174"
 
 # Ad Slots (Create these in your AdSense dashboard)
+# Go to Ads → By site → Your site → New ad unit
 ADSENSE_HEADER_AD_SLOT = "XXXXXXXXXX"  # Horizontal banner (728x90 or responsive)
 ADSENSE_SIDEBAR_AD_SLOT = "XXXXXXXXXX"  # Vertical rectangle (300x250)
 ADSENSE_INFEED_AD_SLOT = "XXXXXXXXXX"  # In-feed ad
