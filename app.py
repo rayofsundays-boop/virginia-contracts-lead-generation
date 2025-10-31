@@ -524,6 +524,86 @@ def init_postgres_db():
         
         db.session.commit()
         
+        # Residential leads table (from Zillow/Realtor.com)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS residential_leads
+                     (id SERIAL PRIMARY KEY,
+                      address TEXT NOT NULL,
+                      city TEXT NOT NULL,
+                      state TEXT DEFAULT 'VA',
+                      zip_code TEXT,
+                      property_type TEXT,
+                      bedrooms INTEGER,
+                      bathrooms DECIMAL(3,1),
+                      square_feet INTEGER,
+                      estimated_value DECIMAL(12,2),
+                      owner_name TEXT,
+                      owner_phone TEXT,
+                      owner_email TEXT,
+                      last_sale_date DATE,
+                      last_sale_price DECIMAL(12,2),
+                      source TEXT,
+                      listing_url TEXT,
+                      status TEXT DEFAULT 'new',
+                      notes TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
+        # Commercial lead requests table (businesses requesting cleaners)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS commercial_lead_requests
+                     (id SERIAL PRIMARY KEY,
+                      business_name TEXT NOT NULL,
+                      contact_name TEXT NOT NULL,
+                      email TEXT NOT NULL,
+                      phone TEXT NOT NULL,
+                      address TEXT NOT NULL,
+                      city TEXT NOT NULL,
+                      state TEXT DEFAULT 'VA',
+                      zip_code TEXT,
+                      business_type TEXT NOT NULL,
+                      square_footage INTEGER,
+                      frequency TEXT NOT NULL,
+                      services_needed TEXT NOT NULL,
+                      special_requirements TEXT,
+                      budget_range TEXT,
+                      start_date DATE,
+                      urgency TEXT DEFAULT 'normal',
+                      status TEXT DEFAULT 'open',
+                      bid_count INTEGER DEFAULT 0,
+                      winning_bid_id INTEGER,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
+        # Bids table (subscribers bidding on commercial requests)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS bids
+                     (id SERIAL PRIMARY KEY,
+                      request_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      company_name TEXT NOT NULL,
+                      bid_amount DECIMAL(10,2) NOT NULL,
+                      proposal_text TEXT,
+                      estimated_start_date DATE,
+                      contact_phone TEXT,
+                      status TEXT DEFAULT 'pending',
+                      submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      accepted_at TIMESTAMP,
+                      FOREIGN KEY (request_id) REFERENCES commercial_lead_requests(id))'''))
+        
+        db.session.commit()
+        
+        # Lead access log (track which subscribers viewed which leads)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS lead_access_log
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL,
+                      lead_type TEXT NOT NULL,
+                      lead_id INTEGER NOT NULL,
+                      accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
         # Add sample data
         # Check if data already exists
         existing_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).fetchone()[0]
@@ -2303,6 +2383,173 @@ def allocate_monthly_credits_route():
         }
     except Exception as e:
         return {'success': False, 'error': str(e)}, 500
+
+# ============================================================================
+# NEW LEAD GENERATION SYSTEM
+# ============================================================================
+
+@app.route('/request-cleaning', methods=['GET', 'POST'])
+def submit_cleaning_request():
+    """Commercial businesses can request cleaning services"""
+    if request.method == 'GET':
+        return render_template('request_cleaning.html')
+    
+    try:
+        # Get form data
+        data = {
+            'business_name': request.form['business_name'],
+            'contact_name': request.form['contact_name'],
+            'email': request.form['email'],
+            'phone': request.form['phone'],
+            'address': request.form['address'],
+            'city': request.form['city'],
+            'zip_code': request.form['zip_code'],
+            'business_type': request.form['business_type'],
+            'square_footage': request.form['square_footage'],
+            'frequency': request.form['frequency'],
+            'services_needed': request.form['services_needed'],
+            'special_requirements': request.form.get('special_requirements', ''),
+            'budget_range': request.form.get('budget_range', ''),
+            'start_date': request.form.get('start_date', None),
+            'urgency': request.form.get('urgency', 'normal')
+        }
+        
+        # Insert into database
+        db.session.execute(text('''
+            INSERT INTO commercial_lead_requests 
+            (business_name, contact_name, email, phone, address, city, zip_code, 
+             business_type, square_footage, frequency, services_needed, 
+             special_requirements, budget_range, start_date, urgency, status)
+            VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :zip_code,
+                    :business_type, :square_footage, :frequency, :services_needed,
+                    :special_requirements, :budget_range, :start_date, :urgency, 'open')
+        '''), data)
+        db.session.commit()
+        
+        flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
+        return redirect(url_for('submit_cleaning_request'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error submitting request: {str(e)}', 'danger')
+        return redirect(url_for('submit_cleaning_request'))
+
+@app.route('/lead-marketplace')
+@login_required
+def lead_marketplace():
+    """Dashboard for subscribers to view and bid on leads"""
+    try:
+        # Check if user has active subscription
+        user_email = session.get('user_email')
+        user = db.session.execute(
+            text('SELECT * FROM leads WHERE email = :email'),
+            {'email': user_email}
+        ).fetchone()
+        
+        if not user or user[15] != 'paid':  # subscription_status column
+            flash('You need an active subscription to access the lead marketplace.', 'warning')
+            return redirect(url_for('register'))
+        
+        # Get open commercial lead requests
+        requests = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests 
+            WHERE status = 'open' 
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        # Get user's bids
+        my_bids = db.session.execute(text('''
+            SELECT b.*, clr.business_name, clr.city 
+            FROM bids b
+            JOIN commercial_lead_requests clr ON b.request_id = clr.id
+            WHERE b.user_email = :email
+            ORDER BY b.submitted_at DESC
+        '''), {'email': user_email}).fetchall()
+        
+        # Get residential leads
+        residential = db.session.execute(text('''
+            SELECT * FROM residential_leads 
+            WHERE status = 'new'
+            ORDER BY estimated_value DESC
+            LIMIT 50
+        ''')).fetchall()
+        
+        return render_template('lead_marketplace.html', 
+                             requests=requests, 
+                             my_bids=my_bids,
+                             residential=residential)
+    except Exception as e:
+        flash(f'Error loading marketplace: {str(e)}', 'danger')
+        return redirect(url_for('home'))
+
+@app.route('/submit-bid/<int:request_id>', methods=['POST'])
+@login_required
+def submit_bid(request_id):
+    """Submit a bid on a commercial lead request"""
+    try:
+        user_email = session.get('user_email')
+        
+        # Get user info
+        user = db.session.execute(
+            text('SELECT company_name FROM leads WHERE email = :email'),
+            {'email': user_email}
+        ).fetchone()
+        
+        # Insert bid
+        db.session.execute(text('''
+            INSERT INTO bids 
+            (request_id, user_email, company_name, bid_amount, proposal_text, 
+             estimated_start_date, contact_phone, status)
+            VALUES (:request_id, :user_email, :company_name, :bid_amount, :proposal_text,
+                    :start_date, :phone, 'pending')
+        '''), {
+            'request_id': request_id,
+            'user_email': user_email,
+            'company_name': user[0],
+            'bid_amount': request.form['bid_amount'],
+            'proposal_text': request.form['proposal_text'],
+            'start_date': request.form.get('estimated_start_date'),
+            'phone': request.form['contact_phone']
+        })
+        
+        # Update bid count
+        db.session.execute(text('''
+            UPDATE commercial_lead_requests 
+            SET bid_count = bid_count + 1,
+                status = CASE WHEN bid_count = 0 THEN 'bidding' ELSE status END
+            WHERE id = :request_id
+        '''), {'request_id': request_id})
+        
+        db.session.commit()
+        
+        flash('Your bid has been submitted successfully!', 'success')
+        return redirect(url_for('lead_marketplace'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error submitting bid: {str(e)}', 'danger')
+        return redirect(url_for('lead_marketplace'))
+
+@app.route('/mark-complete/<int:request_id>', methods=['POST'])
+@login_required
+def mark_request_complete(request_id):
+    """Mark a lead request as complete (admin only or request owner)"""
+    try:
+        db.session.execute(text('''
+            UPDATE commercial_lead_requests 
+            SET status = 'completed',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = :request_id
+        '''), {'request_id': request_id})
+        
+        db.session.commit()
+        flash('Lead request marked as complete!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
+    return redirect(url_for('lead_marketplace'))
 
 # Initialize database for both local and production
 try:

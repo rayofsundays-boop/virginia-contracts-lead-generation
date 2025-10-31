@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Marketplace - VA Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold">Lead Marketplace</h1>
+            <p class="lead text-muted">Browse and bid on cleaning opportunities</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="leadTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="commercial-tab" data-bs-toggle="tab" data-bs-target="#commercial" type="button" role="tab">
+                <i class="fas fa-building me-2"></i>Commercial Requests ({{ requests|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="residential-tab" data-bs-toggle="tab" data-bs-target="#residential" type="button" role="tab">
+                <i class="fas fa-home me-2"></i>Residential Leads ({{ residential|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="mybids-tab" data-bs-toggle="tab" data-bs-target="#mybids" type="button" role="tab">
+                <i class="fas fa-gavel me-2"></i>My Bids ({{ my_bids|length }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="leadTabsContent">
+        <!-- Commercial Requests Tab -->
+        <div class="tab-pane fade show active" id="commercial" role="tabpanel">
+            {% if requests %}
+                <div class="row">
+                    {% for req in requests %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">{{ req[1] }}</h5>
+                                <small>{{ req[2] }}</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong><i class="fas fa-map-marker-alt text-muted me-2"></i></strong>
+                                    {{ req[6] }}, {{ req[7] }} {{ req[9] }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong><i class="fas fa-building text-muted me-2"></i></strong>
+                                    {{ req[10]|title }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong><i class="fas fa-ruler-combined text-muted me-2"></i></strong>
+                                    {{ "{:,}".format(req[11]) if req[11] else 'N/A' }} sq ft
+                                </div>
+                                <div class="mb-2">
+                                    <strong><i class="fas fa-calendar-alt text-muted me-2"></i></strong>
+                                    {{ req[12]|title }}
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-broom text-muted me-2"></i></strong>
+                                    {{ req[13][:100] }}{% if req[13]|length > 100 %}...{% endif %}
+                                </div>
+                                
+                                {% if req[15] %}
+                                <div class="mb-2">
+                                    <span class="badge bg-info">Budget: {{ req[15]|replace('-', ' to $')|title }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <span class="badge bg-success">{{ req[17]|title }} Urgency</span>
+                                    <span class="badge bg-secondary">{{ req[19] }} bids</span>
+                                </div>
+                                
+                                <small class="text-muted">Posted: {{ req[21].strftime('%B %d, %Y') if req[21] else 'Recently' }}</small>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#bidModal{{ req[0] }}">
+                                    <i class="fas fa-gavel me-2"></i>Submit Bid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bid Modal -->
+                    <div class="modal fade" id="bidModal{{ req[0] }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Submit Bid for {{ req[1] }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('submit_bid', request_id=req[0]) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Your Bid Amount (Monthly)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" name="bid_amount" required min="100" step="0.01">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Proposal / What You'll Provide</label>
+                                            <textarea class="form-control" name="proposal_text" rows="5" required placeholder="Describe your services, experience, and why you're the best fit..."></textarea>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Estimated Start Date</label>
+                                                <input type="date" class="form-control" name="estimated_start_date">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Contact Phone</label>
+                                                <input type="tel" class="form-control" name="contact_phone" required placeholder="(757) 555-0123">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Requirements:</strong> {{ req[13] }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Submit Bid</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No open commercial requests at this time. Check back soon!
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Residential Leads Tab -->
+        <div class="tab-pane fade" id="residential" role="tabpanel">
+            {% if residential %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Address</th>
+                                <th>City</th>
+                                <th>Property Type</th>
+                                <th>Beds/Baths</th>
+                                <th>Sq Ft</th>
+                                <th>Est. Value</th>
+                                <th>Source</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in residential %}
+                            <tr>
+                                <td>{{ lead[1] }}</td>
+                                <td>{{ lead[2] }}</td>
+                                <td>{{ lead[5]|title if lead[5] else 'N/A' }}</td>
+                                <td>{{ lead[6] if lead[6] else '-' }} / {{ lead[7] if lead[7] else '-' }}</td>
+                                <td>{{ "{:,}".format(lead[8]) if lead[8] else 'N/A' }}</td>
+                                <td>${{ "{:,.0f}".format(lead[9]) if lead[9] else 'N/A' }}</td>
+                                <td><span class="badge bg-secondary">{{ lead[14] }}</span></td>
+                                <td>
+                                    {% if lead[15] %}
+                                    <a href="{{ lead[15] }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No residential leads available. We're working on adding more!
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Bids Tab -->
+        <div class="tab-pane fade" id="mybids" role="tabpanel">
+            {% if my_bids %}
+                <div class="row">
+                    {% for bid in my_bids %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ bid[10] }}</h5>
+                                <p class="text-muted">{{ bid[11] }}</p>
+                                
+                                <div class="mb-2">
+                                    <strong>Your Bid:</strong> ${{ "{:,.2f}".format(bid[4]) }}/month
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Status:</strong> 
+                                    <span class="badge bg-{{ 'success' if bid[8] == 'accepted' else 'warning' if bid[8] == 'pending' else 'secondary' }}">
+                                        {{ bid[8]|title }}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Submitted:</strong> {{ bid[9].strftime('%B %d, %Y at %I:%M %p') if bid[9] else 'Recently' }}
+                                </div>
+                                
+                                <details>
+                                    <summary class="text-primary" style="cursor: pointer;">View Proposal</summary>
+                                    <p class="mt-2 small">{{ bid[5] }}</p>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You haven't submitted any bids yet. Browse the commercial requests tab to get started!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
