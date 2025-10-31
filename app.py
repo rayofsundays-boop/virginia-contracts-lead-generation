@@ -358,7 +358,7 @@ def init_db():
         conn.commit()
         
         # Add sample Virginia contracts
-        # Sample contract data with website URLs
+        # Sample contract data with website URLs - 50+ Government Contracts
         sample_contracts = [
             ('Hampton City Hall Cleaning Services', 'City of Hampton', 'Hampton, VA', '$120,000', '2025-11-15', 'Comprehensive cleaning services for city hall including offices, conference rooms, and public areas. Must include floor waxing and window cleaning.', '561720', 'https://www.hampton.gov/bids'),
             ('Suffolk Municipal Building Janitorial', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-30', 'Comprehensive janitorial services for municipal buildings including floor care, window cleaning, and waste management.', '561720', 'https://www.suffolkva.us/departments/procurement'),
@@ -369,7 +369,50 @@ def init_db():
             ('Suffolk Public Schools Custodial Services', 'Suffolk Public Schools', 'Suffolk, VA', '$450,000', '2025-11-20', 'Custodial services for 5 elementary schools including classrooms, gymnasiums, cafeterias, and administrative areas.', '561720', 'https://www.spsk12.net/departments/procurement'),
             ('Virginia Beach Police Department Cleaning', 'Virginia Beach Police Dept', 'Virginia Beach, VA', '$85,000', '2025-12-10', 'Specialized cleaning services for police facilities including evidence rooms, holding cells, and administrative offices.', '561720', 'https://www.vbgov.com/departments/police/procurement'),
             ('Newport News Shipyard Office Cleaning', 'Newport News Shipbuilding', 'Newport News, VA', '$275,000', '2025-12-20', 'Office cleaning services for shipyard administrative buildings. Security clearance may be required.', '561720', 'https://www.huntingtoningalls.com/suppliers'),
-            ('Williamsburg Court House Maintenance', 'James City County', 'Williamsburg, VA', '$65,000', '2025-11-25', 'Cleaning and maintenance services for county courthouse including courtrooms, offices, and public areas.', '561720', 'https://www.jamescitycountyva.gov/procurement')
+            ('Williamsburg Court House Maintenance', 'James City County', 'Williamsburg, VA', '$65,000', '2025-11-25', 'Cleaning and maintenance services for county courthouse including courtrooms, offices, and public areas.', '561720', 'https://www.jamescitycountyva.gov/procurement'),
+            
+            # Additional 40 Government Contracts
+            ('Hampton Veterans Affairs Medical Center', 'U.S. Department of Veterans Affairs', 'Hampton, VA', '$420,000', '2025-12-05', 'Comprehensive cleaning services for medical facilities including patient rooms, operating areas, and administrative offices.', '561720', 'https://www.va.gov/oal/business/'),
+            ('Norfolk Naval Base Housing Cleaning', 'U.S. Navy', 'Norfolk, VA', '$680,000', '2025-11-28', 'Housing cleaning services for military families including interior and exterior maintenance.', '561720', 'https://www.navy.mil/Resources/Doing-Business/'),
+            ('Virginia Beach Fire Department Facilities', 'Virginia Beach Fire Dept', 'Virginia Beach, VA', '$145,000', '2025-12-15', 'Cleaning services for 20 fire stations including apparatus bays, living quarters, and training facilities.', '561720', 'https://www.vbgov.com/departments/fire/procurement'),
+            ('Portsmouth Naval Hospital Cleaning', 'U.S. Navy Medical Center', 'Portsmouth, VA', '$525,000', '2025-12-22', 'Medical facility cleaning including sterile areas, patient rooms, and laboratory spaces.', '561720', 'https://www.med.navy.mil/Portsmouth/'),
+            ('Chesapeake Public Works Building', 'City of Chesapeake', 'Chesapeake, VA', '$78,000', '2025-11-18', 'Municipal building cleaning including vehicle maintenance areas and administrative offices.', '561720', 'https://www.cityofchesapeake.net/procurement'),
+            ('Hampton University Research Center', 'Hampton University', 'Hampton, VA', '$165,000', '2025-12-30', 'University research facility cleaning including laboratories, classrooms, and administrative areas.', '561720', 'https://www.hamptonu.edu/purchasing/'),
+            ('Suffolk Waste Management Facility', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-22', 'Specialized cleaning for waste management and recycling facilities including vehicle cleaning.', '561720', 'https://www.suffolkva.us/departments/procurement'),
+            ('Newport News Park Facilities', 'Newport News Parks & Recreation', 'Newport News, VA', '$125,000', '2025-12-08', 'Cleaning services for park buildings, visitor centers, and recreational facilities.', '561720', 'https://www.nngov.com/parks'),
+            ('Virginia Beach Schools Administration', 'Virginia Beach City Schools', 'Virginia Beach, VA', '$385,000', '2025-12-12', 'Administrative building cleaning for school district headquarters and satellite offices.', '561720', 'https://www.vbschools.com/departments/purchasing'),
+            ('Williamsburg Regional Library', 'Williamsburg Regional Library', 'Williamsburg, VA', '$89,000', '2025-11-30', 'Multi-branch library system cleaning including computer labs and reading areas.', '561720', 'https://www.wrl.org/about/procurement'),
+            ('Hampton Social Services Building', 'Hampton Dept of Social Services', 'Hampton, VA', '$112,000', '2025-12-03', 'Social services facility cleaning including waiting areas, interview rooms, and offices.', '561720', 'https://www.hampton.gov/departments/social-services'),
+            ('Norfolk International Airport Terminal', 'Norfolk Airport Authority', 'Norfolk, VA', '$750,000', '2025-12-18', 'Airport terminal cleaning including gates, baggage areas, restaurants, and administrative offices.', '561720', 'https://www.norfolkairport.com/business/'),
+            ('Portsmouth City Hall Complex', 'City of Portsmouth', 'Portsmouth, VA', '$135,000', '2025-11-25', 'City hall and municipal complex cleaning including council chambers and public areas.', '561720', 'https://www.portsmouthva.gov/procurement'),
+            ('Chesapeake Regional Medical Center', 'Chesapeake Regional Healthcare', 'Chesapeake, VA', '$485,000', '2025-12-28', 'Hospital cleaning services including patient rooms, surgery suites, and emergency department.', '561720', 'https://www.chesapeakeregional.com/vendors'),
+            ('Virginia Beach Convention & Visitors Bureau', 'Virginia Beach CVB', 'Virginia Beach, VA', '$67,000', '2025-11-20', 'Tourism office cleaning including visitor center and administrative areas.', '561720', 'https://www.visitvirginiabeach.com/about/'),
+            ('Hampton Roads Bridge-Tunnel Commission', 'HRBT Commission', 'Hampton, VA', '$195,000', '2025-12-14', 'Bridge-tunnel facility cleaning including toll plazas and maintenance buildings.', '561720', 'https://www.hrbt.org/procurement/'),
+            ('Suffolk Fire & EMS Headquarters', 'Suffolk Fire & EMS', 'Suffolk, VA', '$88,000', '2025-11-28', 'Fire department headquarters and training facility cleaning.', '561720', 'https://www.suffolkva.us/departments/fire-ems'),
+            ('Newport News City Farm', 'Newport News Parks', 'Newport News, VA', '$45,000', '2025-12-01', 'Agricultural facility cleaning including visitor center and education buildings.', '561720', 'https://www.nngov.com/1449/City-Farm'),
+            ('Williamsburg Community Health Center', 'Peninsula Health District', 'Williamsburg, VA', '$125,000', '2025-12-10', 'Public health facility cleaning including clinic areas and administrative offices.', '561720', 'https://www.vdh.virginia.gov/peninsula/'),
+            ('Virginia Beach Juvenile Detention Center', 'Virginia Beach Sheriff', 'Virginia Beach, VA', '$245,000', '2025-12-20', 'Secure facility cleaning including housing units, administrative areas, and visiting rooms.', '561720', 'https://www.vbgov.com/departments/sheriff/'),
+            ('Hampton Coliseum Entertainment Complex', 'Hampton Coliseum', 'Hampton, VA', '$320,000', '2025-12-06', 'Large venue cleaning including arena, concourses, and event spaces.', '561720', 'https://www.hamptoncoliseum.org/business/'),
+            ('Norfolk Botanical Garden Facilities', 'Norfolk Botanical Garden', 'Norfolk, VA', '$98,000', '2025-11-24', 'Botanical garden facility cleaning including visitor center and greenhouse complexes.', '561720', 'https://norfolkbotanicalgarden.org/about/'),
+            ('Portsmouth Naval Shipyard Museum', 'Portsmouth Museums', 'Portsmouth, VA', '$52,000', '2025-12-02', 'Museum facility cleaning including exhibit areas and administrative offices.', '561720', 'https://www.portsmouthva.gov/museums'),
+            ('Chesapeake Bay Bridge Commission', 'CBBT Commission', 'Virginia Beach, VA', '$275,000', '2025-12-16', 'Bridge facility cleaning including visitor center and maintenance areas.', '561720', 'https://www.cbbt.com/about/procurement'),
+            ('Suffolk Animal Control Facility', 'Suffolk Animal Control', 'Suffolk, VA', '$85,000', '2025-11-26', 'Animal shelter cleaning including kennels, veterinary areas, and administrative offices.', '561720', 'https://www.suffolkva.us/departments/animal-control'),
+            ('Newport News One City Center', 'Newport News Economic Development', 'Newport News, VA', '$155,000', '2025-12-11', 'Municipal office complex cleaning including business development offices.', '561720', 'https://www.nngov.com/economic-development'),
+            ('Williamsburg Police Department', 'Williamsburg Police', 'Williamsburg, VA', '$76,000', '2025-11-29', 'Police facility cleaning including evidence rooms and administrative areas.', '561720', 'https://www.williamsburgva.gov/police'),
+            ('Virginia Beach Public Works Complex', 'Virginia Beach Public Works', 'Virginia Beach, VA', '$185,000', '2025-12-13', 'Public works facility cleaning including vehicle maintenance and administrative areas.', '561720', 'https://www.vbgov.com/departments/public-works'),
+            ('Hampton Roads Regional Jail', 'Hampton Roads Regional Jail', 'Portsmouth, VA', '$385,000', '2025-12-24', 'Correctional facility cleaning including housing units and administrative areas.', '561720', 'https://www.hrrj.org/procurement'),
+            ('Norfolk State University Campus', 'Norfolk State University', 'Norfolk, VA', '$425,000', '2025-12-19', 'University campus cleaning including academic buildings and dormitories.', '561720', 'https://www.nsu.edu/purchasing/'),
+            ('Portsmouth General Hospital', 'Portsmouth General Hospital', 'Portsmouth, VA', '$465,000', '2025-12-27', 'Hospital cleaning services including all patient care areas and support facilities.', '561720', 'https://www.portsmouthgeneralhospital.com/vendors'),
+            ('Chesapeake Arboretum Visitor Center', 'Chesapeake Parks', 'Chesapeake, VA', '$42,000', '2025-11-21', 'Nature center and arboretum facility cleaning including trails and education center.', '561720', 'https://www.cityofchesapeake.net/parks'),
+            ('Virginia Beach Oceanfront Hotels Inspection', 'Virginia Beach Health Dept', 'Virginia Beach, VA', '$95,000', '2025-12-09', 'Health department facility cleaning including inspection offices and laboratories.', '561720', 'https://www.vdh.virginia.gov/virginia-beach/'),
+            ('Suffolk Nansemond River High School', 'Suffolk Public Schools', 'Suffolk, VA', '$285,000', '2025-12-04', 'High school facility cleaning including classrooms, gymnasium, and cafeteria.', '561720', 'https://www.spsk12.net/departments/procurement'),
+            ('Newport News Christopher Newport University', 'Christopher Newport University', 'Newport News, VA', '$365,000', '2025-12-21', 'University campus cleaning including academic and residential buildings.', '561720', 'https://cnu.edu/purchasing/'),
+            ('Williamsburg Premium Outlets Management', 'Premium Outlets', 'Williamsburg, VA', '$225,000', '2025-12-07', 'Retail complex cleaning including common areas and restroom facilities.', '561720', 'https://www.premiumoutlets.com/williamsburg'),
+            ('Hampton VA Medical Center Outpatient', 'Veterans Affairs', 'Hampton, VA', '$285,000', '2025-12-17', 'VA outpatient clinic cleaning including medical areas and administrative offices.', '561720', 'https://www.va.gov/hampton-virginia-health-care/'),
+            ('Norfolk International Terminals', 'Norfolk International Terminals', 'Norfolk, VA', '$485,000', '2025-12-23', 'Port facility cleaning including administrative buildings and maintenance areas.', '561720', 'https://www.norfolkinterminals.com/business/'),
+            ('Portsmouth Children\'s Hospital', 'Children\'s Hospital of The King\'s Daughters', 'Portsmouth, VA', '$395,000', '2025-12-26', 'Pediatric hospital cleaning including patient rooms and specialized care areas.', '561720', 'https://www.chkd.org/about/doing-business/'),
+            ('Chesapeake Conference Center', 'Chesapeake Conference Center', 'Chesapeake, VA', '$165,000', '2025-12-15', 'Conference facility cleaning including meeting rooms and event spaces.', '561720', 'https://www.chesapeakeconferencecenter.com/vendors'),
+            ('Virginia Beach Aquarium & Marine Science', 'Virginia Aquarium Foundation', 'Virginia Beach, VA', '$275,000', '2025-12-29', 'Aquarium facility cleaning including exhibit areas and research laboratories.', '561720', 'https://www.virginiaaquarium.com/about/')
         ]
         
         # Check if contracts already exist
@@ -379,7 +422,7 @@ def init_db():
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
             conn.commit()
         
-        # Add sample commercial opportunities
+        # Add sample commercial opportunities - 100+ Commercial Leads
         sample_commercial = [
             ('Coastal Dental Group', 'medical', '1234 Hampton Blvd', 'Hampton', 4500, 2800, 'daily', 'General cleaning, sanitization, medical waste disposal', 'HIPAA compliance required, medical-grade disinfectants', 'Office Manager', 'Busy dental practice with 6 operatories requiring daily deep cleaning and sanitization', 'small'),
             ('Hampton Family Fitness', 'fitness', '567 Fitness Way', 'Hampton', 12000, 4200, 'daily', 'Locker rooms, equipment cleaning, floor mopping', 'Early morning access (5 AM), equipment sanitization', 'Facility Manager', 'Full-service gym with locker rooms, pool area, and cardio/weight equipment', 'medium'),
@@ -398,9 +441,92 @@ def init_db():
             ('Williamsburg Extended Stay', 'hospitality', '159 Extended Way', 'Williamsburg', 18000, 6200, 'weekly', 'Studio apartments, common areas, laundry facility', 'Extended stay guests, kitchen cleaning, weekly deep clean', 'Property Manager', 'Extended stay hotel with kitchenettes for business travelers', 'large'),
             ('Elite Real Estate Group', 'real-estate', '357 Realty Row', 'Virginia Beach', 4200, 1400, 'bi-weekly', 'Open office space, private offices, conference room', 'Staging area cleaning, model home prep as needed', 'Sales Manager', 'High-end real estate brokerage specializing in luxury coastal properties', 'small'),
             ('Suffolk Senior Living', 'healthcare', '486 Senior Blvd', 'Suffolk', 35000, 12000, 'daily', 'Resident rooms, dining hall, activity areas, medical wing', 'Healthcare regulations compliance, infection control, dignified service', 'Administrator', 'Assisted living facility with 65 residents and memory care unit', 'large'),
-            ('Hampton Shared Workspace', 'office', '753 Cowork St', 'Hampton', 8000, 2200, 'daily', 'Open workspace, private offices, meeting rooms, kitchen', 'Flexible membership space, technology cleaning, phone booth sanitization', 'Community Manager', 'Modern coworking space for entrepreneurs and remote workers', 'medium'),
-            ('Little Learners Academy', 'childcare', '624 Academy Ave', 'Newport News', 6200, 3100, 'daily', 'Infant rooms, toddler areas, preschool classrooms, playground equipment', 'State licensing requirements, outdoor equipment cleaning, meal prep areas', 'Assistant Director', 'Full-service daycare and preschool with infant care and after-school programs', 'medium'),
-            ('Norfolk Wellness Center', 'medical', '795 Wellness Way', 'Norfolk', 9500, 5800, 'daily', 'Treatment rooms, hydrotherapy pool, rehabilitation gym, offices', 'Medical equipment cleaning, pool chemical balance, physical therapy equipment', 'Clinical Coordinator', 'Comprehensive rehabilitation center with pool therapy and sports medicine', 'medium')
+            
+            # Additional 85 Commercial Opportunities
+            ('Hampton Bay Medical Plaza', 'medical', '789 Medical Center Dr', 'Hampton', 12000, 6500, 'daily', 'Multiple doctor offices, shared waiting areas, lab facilities', 'Multi-tenant medical building, specialized medical cleaning', 'Building Manager', 'Medical office complex with 8 specialty practices and diagnostic center', 'large'),
+            ('Norfolk Corporate Center', 'office', '456 Business Blvd', 'Norfolk', 18000, 4200, 'weekly', 'Corporate offices, meeting rooms, executive suites', 'After-hours cleaning, high-security building access', 'Facilities Director', 'Class A office building with Fortune 500 tenants', 'large'),
+            ('Virginia Beach Marriott', 'hospitality', '987 Resort Dr', 'Virginia Beach', 45000, 15000, 'daily', 'Hotel rooms, restaurants, conference center, spa', 'Luxury hotel standards, 24/7 operations, event turnover', 'Executive Housekeeper', '300-room oceanfront resort with full amenities and conference facilities', 'large'),
+            ('Chesapeake CrossFit', 'fitness', '123 Strong St', 'Chesapeake', 6500, 2800, 'daily', 'Open gym space, locker rooms, equipment cleaning', 'Specialized equipment cleaning, rubber flooring care', 'Head Coach', 'CrossFit box with Olympic lifting platform and group classes', 'medium'),
+            ('Portsmouth Legal Center', 'legal', '654 Justice Way', 'Portsmouth', 8500, 2400, 'weekly', 'Law offices, conference rooms, law library', 'Confidential document handling, evening cleaning preferred', 'Office Administrator', 'Multi-practice legal center with 15 attorneys', 'medium'),
+            ('Hampton Veterinary Hospital', 'medical', '321 Pet Care Ln', 'Hampton', 5500, 3200, 'daily', 'Exam rooms, surgery suite, kennels, reception', 'Animal-safe products, odor control, kennel sanitation', 'Hospital Manager', 'Full-service veterinary hospital with boarding and grooming', 'medium'),
+            ('Williamsburg Preschool Academy', 'education', '789 Learning Lane', 'Williamsburg', 4200, 2100, 'daily', 'Classrooms, playground areas, kitchen, bathrooms', 'Child-safe cleaning products, naptime schedule coordination', 'Director', 'Montessori preschool for ages 2-6 with 120 students', 'small'),
+            ('Norfolk Technology Solutions', 'office', '456 Tech Park Dr', 'Norfolk', 9500, 2800, 'weekly', 'Open office, server room, conference areas', 'Sensitive electronics, data security clearance required', 'Operations Manager', 'IT consulting firm with secure server facilities', 'medium'),
+            ('Virginia Beach Dental Specialists', 'medical', '147 Specialty Dr', 'Virginia Beach', 6800, 4200, 'daily', 'Oral surgery suites, recovery areas, sterilization rooms', 'Surgical-grade cleaning, specialized waste disposal', 'Clinical Director', 'Oral surgery and periodontics practice with 4 specialists', 'medium'),
+            ('Suffolk Manufacturing Office', 'office', '258 Industrial Way', 'Suffolk', 7200, 2100, 'weekly', 'Administrative offices, break rooms, conference facilities', 'Industrial setting, flexible scheduling around operations', 'HR Manager', 'Manufacturing company headquarters with 150 office employees', 'medium'),
+            ('Newport News Auto Dealership', 'office', '369 Auto Mall Dr', 'Newport News', 12000, 3500, 'weekly', 'Showroom, offices, customer lounge, service area', 'High-traffic showroom, weekend availability required', 'General Manager', 'Large automotive dealership with sales and service departments', 'large'),
+            ('Chesapeake Childcare Center', 'childcare', '741 Tiny Tots Dr', 'Chesapeake', 5800, 2900, 'daily', 'Age-specific classrooms, playground, kitchen, nursery', 'State licensing compliance, infant room specialization', 'Center Administrator', 'Licensed daycare serving 95 children from infants to school-age', 'medium'),
+            ('Portsmouth Marina Club', 'hospitality', '852 Marina Way', 'Portsmouth', 8500, 4800, 'weekly', 'Clubhouse, restaurant, event spaces, marina office', 'Waterfront location, event-based cleaning schedule', 'Club Manager', 'Private marina and yacht club with dining and events', 'medium'),
+            ('Hampton Physical Therapy', 'medical', '963 Rehab Dr', 'Hampton', 4500, 2600, 'daily', 'Treatment rooms, gym area, hydrotherapy pool', 'Medical equipment cleaning, pool area maintenance', 'Clinical Director', 'Outpatient physical therapy clinic with aquatic therapy', 'small'),
+            ('Virginia Beach Wedding Venue', 'hospitality', '159 Wedding Way', 'Virginia Beach', 15000, 8500, 'weekly', 'Reception halls, bridal suites, outdoor ceremony areas', 'Event-based cleaning, rapid turnovers, landscaping', 'Event Coordinator', 'Premier wedding venue with indoor/outdoor ceremony spaces', 'large'),
+            ('Norfolk Insurance Agency', 'office', '357 Insurance Blvd', 'Norfolk', 3500, 1200, 'weekly', 'Agent offices, conference rooms, reception area', 'Professional appearance, client confidentiality', 'Office Manager', 'Independent insurance agency with 8 agents', 'small'),
+            ('Williamsburg Assisted Living', 'healthcare', '486 Golden Years Dr', 'Williamsburg', 28000, 9500, 'daily', 'Resident apartments, dining room, activity areas, clinic', 'Healthcare standards, resident dignity, infection control', 'Administrator', '85-bed assisted living facility with memory care wing', 'large'),
+            ('Suffolk Fitness Club', 'fitness', '789 Wellness Way', 'Suffolk', 11000, 4200, 'daily', 'Cardio area, weight room, pool, group fitness studios', 'Pool chemicals, equipment sanitization, locker room deep cleaning', 'Club Manager', 'Full-service health club with pool and racquetball courts', 'large'),
+            ('Hampton Executive Suites', 'office', '123 Executive Dr', 'Hampton', 6500, 1800, 'weekly', 'Individual offices, shared conference rooms, reception', 'Multiple tenants, professional standards, flexible access', 'Building Manager', 'Executive suite office complex with 25 private offices', 'medium'),
+            ('Chesapeake Urgent Care', 'medical', '654 Emergency Dr', 'Chesapeake', 7800, 4500, 'daily', 'Exam rooms, X-ray area, waiting room, lab', 'Fast-paced environment, infection control, medical waste', 'Clinic Manager', 'Urgent care center with on-site X-ray and lab services', 'medium'),
+            ('Portsmouth Hotel & Conference Center', 'hospitality', '321 Conference Dr', 'Portsmouth', 22000, 8200, 'daily', 'Hotel rooms, meeting rooms, restaurant, business center', 'Conference turnover, multiple event spaces, catering areas', 'General Manager', '150-room hotel with extensive meeting and conference facilities', 'large'),
+            ('Virginia Beach Chiropractic', 'medical', '789 Spine St', 'Virginia Beach', 3800, 2100, 'daily', 'Treatment rooms, exercise area, reception, offices', 'Specialized equipment cleaning, relaxing environment', 'Practice Manager', 'Chiropractic clinic with massage therapy and rehabilitation', 'small'),
+            ('Norfolk Accounting Firm', 'office', '456 Numbers Dr', 'Norfolk', 5200, 1500, 'weekly', 'CPA offices, conference rooms, file storage areas', 'Tax season intensity, confidential documents, evening cleaning', 'Managing Partner', 'CPA firm with 12 accountants specializing in business taxes', 'medium'),
+            ('Suffolk Country Club', 'hospitality', '147 Golf Club Dr', 'Suffolk', 18000, 7200, 'weekly', 'Clubhouse, pro shop, restaurant, locker rooms', 'Upscale standards, golf tournament events, member privacy', 'Club Manager', 'Private country club with 18-hole golf course and dining', 'large'),
+            ('Newport News Dental Group', 'medical', '258 Smile Way', 'Newport News', 9500, 5200, 'daily', 'Multiple operatories, sterilization, waiting areas, offices', 'Large dental practice, high patient volume, team coordination', 'Office Administrator', '12-chair dental practice with general and specialty services', 'large'),
+            ('Williamsburg Law Firm', 'legal', '369 Attorney Ave', 'Williamsburg', 6800, 1900, 'weekly', 'Partner offices, associate areas, conference rooms, library', 'Historic district location, document confidentiality', 'Office Manager', 'Boutique law firm specializing in estate planning and real estate', 'medium'),
+            ('Hampton Medical Laboratory', 'medical', '741 Lab Dr', 'Hampton', 5500, 3800, 'daily', 'Lab areas, specimen processing, offices, waiting room', 'Biohazard protocols, sterile environment, specialized waste', 'Lab Director', 'Independent medical laboratory serving multiple healthcare providers', 'medium'),
+            ('Chesapeake Business Park', 'office', '852 Corporate Way', 'Chesapeake', 25000, 6500, 'weekly', 'Multiple office suites, shared amenities, conference center', 'Multi-tenant facility, common area maintenance', 'Property Manager', 'Business park with 40 office suites and shared facilities', 'large'),
+            ('Virginia Beach Spa & Wellness', 'fitness', '963 Relaxation Rd', 'Virginia Beach', 8500, 4800, 'daily', 'Treatment rooms, relaxation areas, changing rooms, reception', 'Luxury spa standards, serene environment, specialized cleaning', 'Spa Director', 'Day spa with massage, facial, and wellness services', 'medium'),
+            ('Portsmouth Business Center', 'office', '159 Business Dr', 'Portsmouth', 14000, 3200, 'weekly', 'Office spaces, meeting rooms, business lounge', 'Professional business environment, multi-tenant building', 'Leasing Manager', 'Class B office building with 30 office suites', 'large'),
+            ('Norfolk Pediatric Center', 'medical', '357 Kids Health Dr', 'Norfolk', 6200, 3600, 'daily', 'Exam rooms, play area, lab, administrative offices', 'Child-friendly environment, toy sanitization, family areas', 'Practice Administrator', 'Pediatric medical practice serving 2,500 patients', 'medium'),
+            ('Suffolk Corporate Plaza', 'office', '486 Plaza Dr', 'Suffolk', 16000, 3800, 'weekly', 'Executive offices, conference facilities, lobby areas', 'Prestigious location, executive standards, evening cleaning', 'Building Manager', 'Premium office building with Fortune 500 tenants', 'large'),
+            ('Hampton Innovation Center', 'office', '789 Innovation Way', 'Hampton', 12000, 2800, 'weekly', 'Startup offices, coworking spaces, tech labs', 'Modern facility, technology equipment, flexible spaces', 'Center Director', 'Technology incubator with 25 startup companies', 'large'),
+            ('Williamsburg Medical Associates', 'medical', '123 Medical Plaza', 'Williamsburg', 11000, 6200, 'daily', 'Multiple specialties, shared lab, surgery center', 'Multi-specialty practice, surgical suite cleaning', 'Administrator', 'Medical complex with 8 specialty practices', 'large'),
+            ('Virginia Beach Learning Center', 'education', '654 Education Dr', 'Virginia Beach', 4800, 2200, 'daily', 'Classrooms, computer lab, library, administration', 'Educational environment, technology care, student safety', 'Principal', 'Private learning center with K-12 tutoring and test prep', 'small'),
+            ('Chesapeake Professional Building', 'office', '321 Professional Way', 'Chesapeake', 8500, 2100, 'weekly', 'Professional offices, conference rooms, reception areas', 'Multi-tenant professional building, healthcare tenants', 'Property Manager', 'Professional building with medical and legal tenants', 'medium'),
+            ('Newport News Wellness Center', 'fitness', '789 Wellness Blvd', 'Newport News', 13000, 5200, 'daily', 'Fitness areas, pool, spa, group exercise rooms', 'Comprehensive wellness facility, aquatic programs', 'General Manager', 'Health and wellness center with medical fitness programs', 'large'),
+            ('Portsmouth Professional Center', 'office', '456 Professional Dr', 'Portsmouth', 7200, 1800, 'weekly', 'Individual offices, shared conference rooms, reception', 'Professional services building, evening cleaning preferred', 'Building Administrator', 'Professional services building with accountants and consultants', 'medium'),
+            ('Hampton Rehabilitation Center', 'medical', '147 Recovery Dr', 'Hampton', 9500, 5800, 'daily', 'Therapy rooms, exercise areas, patient rooms', 'Rehabilitation equipment, patient mobility considerations', 'Clinical Director', 'Inpatient and outpatient rehabilitation facility', 'large'),
+            ('Suffolk Technology Park', 'office', '258 Tech Valley Dr', 'Suffolk', 20000, 4500, 'weekly', 'Tech companies, labs, conference facilities, cafeteria', 'Technology equipment, clean room standards', 'Facilities Manager', 'Technology park with 15 high-tech companies', 'large'),
+            ('Virginia Beach Executive Center', 'office', '369 Executive Way', 'Virginia Beach', 11000, 2600, 'weekly', 'Executive suites, boardrooms, business services', 'Executive-level standards, prestigious location', 'Center Manager', 'Executive office center with concierge services', 'large'),
+            ('Williamsburg Retirement Community', 'healthcare', '741 Retirement Dr', 'Williamsburg', 32000, 11000, 'daily', 'Independent living, assisted care, memory care, dining', 'Senior living standards, healthcare compliance, dignity', 'Executive Director', 'Continuing care retirement community with 120 residents', 'large'),
+            ('Norfolk Maritime Museum', 'education', '852 Maritime Way', 'Norfolk', 6500, 2800, 'weekly', 'Exhibit areas, gift shop, education center, offices', 'Museum standards, artifact protection, visitor areas', 'Museum Director', 'Maritime museum with interactive exhibits and education programs', 'medium'),
+            ('Chesapeake Sports Complex', 'fitness', '963 Sports Dr', 'Chesapeake', 22000, 8500, 'daily', 'Multiple courts, locker rooms, pro shop, concessions', 'Multi-sport facility, tournament events, high traffic', 'Complex Manager', 'Indoor sports complex with basketball, volleyball, and tennis', 'large'),
+            ('Portsmouth Arts Center', 'education', '159 Arts Dr', 'Portsmouth', 5500, 2200, 'weekly', 'Studios, gallery, theater, classrooms', 'Art materials consideration, delicate equipment', 'Arts Director', 'Community arts center with classes and performances', 'medium'),
+            ('Hampton Business District', 'office', '357 Commerce St', 'Hampton', 15000, 3500, 'weekly', 'Mixed-use offices, retail spaces, common areas', 'Mixed-use development, multiple tenants', 'Property Manager', 'Downtown business district with office and retail tenants', 'large'),
+            ('Virginia Beach Medical Tower', 'medical', '486 Medical Tower Dr', 'Virginia Beach', 18000, 8500, 'daily', 'Multiple medical specialties, lab, imaging center', 'Medical tower with various specialties, imaging equipment', 'Building Administrator', '8-story medical tower with 25 medical practices', 'large'),
+            ('Suffolk Community College', 'education', '789 College Dr', 'Suffolk', 28000, 7200, 'weekly', 'Classrooms, labs, library, administrative offices', 'Educational institution, technology labs, student areas', 'Facilities Director', 'Community college campus with 5,000 students', 'large'),
+            ('Norfolk Convention Center', 'hospitality', '123 Convention Dr', 'Norfolk', 65000, 22000, 'weekly', 'Exhibition halls, meeting rooms, catering areas', 'Large convention facility, event-based cleaning', 'General Manager', 'Regional convention center with 100,000 sq ft exhibit space', 'large'),
+            ('Chesapeake Medical Clinic', 'medical', '654 Clinic Dr', 'Chesapeake', 8200, 4800, 'daily', 'Exam rooms, lab, pharmacy, administrative areas', 'Multi-service medical clinic, pharmacy integration', 'Clinic Administrator', 'Multi-specialty clinic with on-site pharmacy', 'medium'),
+            ('Williamsburg Conference Resort', 'hospitality', '321 Resort Way', 'Williamsburg', 35000, 12500, 'daily', 'Hotel rooms, conference center, restaurants, spa', 'Conference resort, multiple dining venues, spa services', 'Resort Manager', '200-room conference resort with full amenities', 'large'),
+            ('Portsmouth Technology Center', 'office', '789 Tech Center Dr', 'Portsmouth', 16000, 3600, 'weekly', 'Tech offices, labs, conference rooms, data center', 'Technology companies, server rooms, security requirements', 'Facilities Coordinator', 'Technology center with software and engineering firms', 'large'),
+            ('Hampton Senior Center', 'healthcare', '456 Senior Way', 'Hampton', 8500, 3200, 'weekly', 'Activity rooms, dining area, fitness center, offices', 'Senior community center, accessibility considerations', 'Program Director', 'Senior community center with daily programs for 300+ seniors', 'medium'),
+            ('Virginia Beach Trade Center', 'office', '147 Trade Dr', 'Virginia Beach', 24000, 5200, 'weekly', 'Warehouse offices, showrooms, conference facilities', 'Trade and industrial offices, showroom standards', 'Leasing Director', 'Trade center with wholesale and distribution companies', 'large'),
+            ('Suffolk Mental Health Center', 'medical', '258 Mental Health Dr', 'Suffolk', 6800, 3800, 'daily', 'Therapy offices, group rooms, administrative areas', 'Mental health facility, privacy considerations, calming environment', 'Clinical Director', 'Mental health clinic with individual and group therapy', 'medium'),
+            ('Newport News Cultural Center', 'education', '369 Culture Dr', 'Newport News', 12000, 4500, 'weekly', 'Theater, gallery, classrooms, administrative offices', 'Cultural facility, performance spaces, exhibit areas', 'Executive Director', 'Community cultural center with theater and art programs', 'large'),
+            ('Chesapeake Professional Plaza', 'office', '741 Plaza Dr', 'Chesapeake', 10000, 2400, 'weekly', 'Professional offices, conference center, business services', 'Professional services plaza, multiple tenant types', 'Plaza Manager', 'Professional plaza with medical, legal, and business tenants', 'medium'),
+            ('Portsmouth Wellness Clinic', 'medical', '852 Wellness Dr', 'Portsmouth', 5200, 3100, 'daily', 'Treatment rooms, wellness center, reception, offices', 'Integrative wellness clinic, holistic health focus', 'Practice Manager', 'Wellness clinic with alternative and traditional medicine', 'small'),
+            ('Hampton Educational Center', 'education', '963 Education Blvd', 'Hampton', 9500, 3200, 'weekly', 'Training rooms, computer labs, library, offices', 'Adult education center, technology training', 'Center Administrator', 'Adult education and workforce development center', 'medium'),
+            ('Virginia Beach Golf Club', 'hospitality', '159 Golf Dr', 'Virginia Beach', 16000, 6200, 'weekly', 'Clubhouse, pro shop, restaurant, event facilities', 'Golf club facility, member events, tournament hosting', 'Club General Manager', 'Semi-private golf club with dining and event facilities', 'large'),
+            ('Norfolk Health Campus', 'medical', '357 Health Campus Dr', 'Norfolk', 42000, 15000, 'daily', 'Multiple medical buildings, shared facilities, parking', 'Medical campus with multiple practices, unified cleaning', 'Campus Administrator', 'Health campus with 12 medical practices and shared services', 'large'),
+            ('Suffolk Innovation Hub', 'office', '486 Innovation Dr', 'Suffolk', 14000, 3200, 'weekly', 'Startup spaces, labs, conference areas, coworking', 'Innovation center, flexible spaces, technology focus', 'Hub Director', 'Innovation hub with 30 startup companies and entrepreneurs', 'large'),
+            ('Williamsburg Performance Center', 'education', '789 Performance Dr', 'Williamsburg', 8500, 3500, 'weekly', 'Theater, rehearsal rooms, costume areas, offices', 'Performing arts center, costume and set considerations', 'Artistic Director', 'Community theater and performing arts education center', 'medium'),
+            ('Hampton Commerce Center', 'office', '123 Commerce Dr', 'Hampton', 18000, 4100, 'weekly', 'Office spaces, warehouse areas, loading docks', 'Commercial center, mixed office and warehouse', 'Property Supervisor', 'Commerce center with office and light industrial tenants', 'large'),
+            ('Chesapeake Family Center', 'healthcare', '654 Family Dr', 'Chesapeake', 7500, 3800, 'daily', 'Family services offices, meeting rooms, play areas', 'Family services center, child-friendly areas', 'Program Coordinator', 'Family services center with counseling and support programs', 'medium'),
+            ('Virginia Beach Research Institute', 'office', '321 Research Dr', 'Virginia Beach', 22000, 5500, 'weekly', 'Laboratories, offices, conference facilities, library', 'Research facility, laboratory standards, security', 'Institute Director', 'Marine science research institute with wet and dry labs', 'large'),
+            ('Portsmouth Community Center', 'education', '789 Community Dr', 'Portsmouth', 11000, 4200, 'weekly', 'Multi-purpose rooms, gym, kitchen, offices', 'Community center, event hosting, recreational programs', 'Recreation Director', 'Community center with recreation and social programs', 'large'),
+            ('Newport News Professional Complex', 'office', '456 Professional Blvd', 'Newport News', 13000, 2900, 'weekly', 'Professional offices, shared conference rooms, reception', 'Professional complex, multiple service providers', 'Complex Manager', 'Professional complex with healthcare and business services', 'large'),
+            ('Suffolk Medical Plaza', 'medical', '147 Medical Plaza Dr', 'Suffolk', 16000, 7200, 'daily', 'Multiple medical practices, shared lab, pharmacy', 'Medical plaza, coordinated medical services', 'Plaza Administrator', 'Medical plaza with primary care and specialty practices', 'large'),
+            ('Hampton Technology Institute', 'education', '258 Institute Dr', 'Hampton', 15000, 4800, 'weekly', 'Classrooms, computer labs, research areas, administration', 'Technical education institute, hands-on learning', 'Institute President', 'Technology institute with engineering and IT programs', 'large'),
+            ('Virginia Beach Wellness Campus', 'fitness', '369 Wellness Campus Dr', 'Virginia Beach', 28000, 9500, 'daily', 'Fitness center, spa, medical offices, cafe', 'Wellness campus, integrated health services', 'Campus Director', 'Comprehensive wellness campus with fitness and medical services', 'large'),
+            ('Williamsburg Business Center', 'office', '741 Business Center Dr', 'Williamsburg', 12000, 2800, 'weekly', 'Office suites, conference facilities, business services', 'Business center, professional services, tourist location', 'Business Manager', 'Business center serving local and tourist-related businesses', 'large'),
+            ('Norfolk Athletic Club', 'fitness', '852 Athletic Dr', 'Norfolk', 20000, 7500, 'daily', 'Multiple courts, pools, fitness areas, restaurants', 'Athletic club, multiple sports, dining facilities', 'Athletic Director', 'Full-service athletic club with multiple sports and dining', 'large'),
+            ('Chesapeake Executive Plaza', 'office', '963 Executive Plaza Dr', 'Chesapeake', 14000, 3100, 'weekly', 'Executive offices, boardrooms, business center', 'Executive plaza, high-end finishes, professional services', 'Plaza Director', 'Executive office plaza with premium business services', 'large'),
+            ('Portsmouth Innovation Center', 'office', '159 Innovation Center Dr', 'Portsmouth', 11000, 2600, 'weekly', 'Tech startups, labs, conference rooms, coworking', 'Innovation center, emerging technology, flexible spaces', 'Innovation Director', 'Innovation center with technology startups and research', 'large'),
+            ('Hampton Medical Complex', 'medical', '357 Medical Complex Dr', 'Hampton', 24000, 9800, 'daily', 'Hospital outpatient, specialty clinics, diagnostic center', 'Medical complex, hospital standards, multiple specialties', 'Complex Administrator', 'Medical complex with outpatient hospital services', 'large'),
+            ('Virginia Beach Corporate Campus', 'office', '486 Corporate Campus Dr', 'Virginia Beach', 35000, 7500, 'weekly', 'Corporate headquarters, training center, cafeteria', 'Corporate campus, multiple buildings, executive standards', 'Campus Facilities Manager', 'Corporate campus with headquarters and training facilities', 'large'),
+            ('Suffolk Rehabilitation Hospital', 'medical', '789 Rehabilitation Dr', 'Suffolk', 18000, 8500, 'daily', 'Patient rooms, therapy areas, exercise facilities', 'Rehabilitation hospital, patient mobility, therapeutic equipment', 'Hospital Administrator', 'Rehabilitation hospital with inpatient and outpatient services', 'large'),
+            ('Newport News Convention Hotel', 'hospitality', '123 Convention Hotel Dr', 'Newport News', 38000, 13500, 'daily', 'Hotel rooms, convention center, restaurants, retail', 'Convention hotel, large events, multiple dining venues', 'Hotel General Manager', '300-room convention hotel with attached convention center', 'large'),
+            ('Williamsburg Medical Center', 'medical', '654 Medical Center Dr', 'Williamsburg', 26000, 11000, 'daily', 'Emergency department, inpatient units, surgical suites', 'Hospital facility, emergency services, surgical standards', 'Chief Operating Officer', 'Regional medical center with emergency and surgical services', 'large'),
+            ('Chesapeake Business Campus', 'office', '321 Business Campus Dr', 'Chesapeake', 28000, 6200, 'weekly', 'Multiple office buildings, shared amenities, conference center', 'Business campus, multiple companies, shared services', 'Campus Property Manager', 'Business campus with 50 companies and shared facilities', 'large'),
+            ('Portsmouth Regional Hospital', 'medical', '789 Hospital Dr', 'Portsmouth', 45000, 18000, 'daily', 'Patient rooms, operating rooms, emergency department', 'Full-service hospital, all departments, 24/7 operations', 'Director of Environmental Services', '250-bed regional hospital with full medical services', 'large'),
+            ('Virginia Beach Medical University', 'education', '456 University Dr', 'Virginia Beach', 55000, 12000, 'weekly', 'Medical school, research labs, clinical facilities', 'Medical university, research standards, clinical training', 'University Facilities Director', 'Medical university with research and clinical training', 'large'),
+            ('Norfolk Regional Medical Center', 'medical', '147 Regional Dr', 'Norfolk', 62000, 22000, 'daily', 'All hospital departments, research facilities, medical offices', 'Major medical center, trauma center, research hospital', 'Vice President of Operations', '400-bed academic medical center with trauma services', 'large')
         ]
         
         # Check if commercial opportunities already exist
@@ -694,6 +820,247 @@ def request_commercial_contact():
         
     except Exception as e:
         return {'success': False, 'message': str(e)}, 500
+
+@app.route('/customer-leads')
+def customer_leads():
+    """Customer portal for accessing all leads with advanced features"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Get all available leads (both government and commercial)
+        government_leads = c.execute('''
+            SELECT 
+                contracts.id,
+                contracts.title,
+                contracts.agency,
+                contracts.location,
+                contracts.description,
+                contracts.contract_value,
+                contracts.deadline,
+                contracts.naics_code,
+                contracts.date_posted,
+                contracts.website_url,
+                'government' as lead_type,
+                'General Cleaning' as services_needed,
+                'Active' as status,
+                contracts.requirements
+            FROM contracts 
+            ORDER BY contracts.date_posted DESC
+        ''').fetchall()
+        
+        commercial_leads = c.execute('''
+            SELECT 
+                commercial_opportunities.id,
+                commercial_opportunities.business_name as title,
+                commercial_opportunities.business_type as agency,
+                commercial_opportunities.location,
+                commercial_opportunities.description,
+                '$' || commercial_opportunities.monthly_value || '/month' as contract_value,
+                'Ongoing' as deadline,
+                '' as naics_code,
+                'Recent' as date_posted,
+                '' as website_url,
+                'commercial' as lead_type,
+                commercial_opportunities.services_needed,
+                'Active' as status,
+                commercial_opportunities.special_requirements as requirements
+            FROM commercial_opportunities 
+            ORDER BY commercial_opportunities.id DESC
+        ''').fetchall()
+        
+        # Combine and format leads
+        all_leads = []
+        
+        # Add government leads
+        for lead in government_leads:
+            lead_dict = {
+                'id': f"gov_{lead[0]}",
+                'title': lead[1],
+                'agency': lead[2],
+                'location': lead[3],
+                'description': lead[4],
+                'contract_value': lead[5],
+                'deadline': lead[6],
+                'naics_code': lead[7],
+                'date_posted': lead[8],
+                'application_url': lead[9],
+                'lead_type': lead[10],
+                'services_needed': lead[11],
+                'status': lead[12],
+                'requirements': lead[13] or 'Standard government contracting requirements apply.',
+                'days_left': calculate_days_left(lead[6])
+            }
+            all_leads.append(lead_dict)
+        
+        # Add commercial leads
+        for lead in commercial_leads:
+            lead_dict = {
+                'id': f"com_{lead[0]}",
+                'title': lead[1],
+                'agency': lead[2],
+                'location': lead[3],
+                'description': lead[4],
+                'contract_value': lead[5],
+                'deadline': lead[6],
+                'naics_code': lead[7],
+                'date_posted': lead[8],
+                'application_url': lead[9],
+                'lead_type': lead[10],
+                'services_needed': lead[11],
+                'status': lead[12],
+                'requirements': lead[13] or 'Standard commercial cleaning requirements.',
+                'days_left': 30  # Commercial leads are ongoing
+            }
+            all_leads.append(lead_dict)
+        
+        conn.close()
+        return render_template('customer_leads.html', all_leads=all_leads)
+        
+    except Exception as e:
+        print(f"Customer leads error: {e}")
+        return render_template('customer_leads.html', all_leads=[])
+
+def calculate_days_left(deadline_str):
+    """Calculate days remaining until deadline"""
+    try:
+        from datetime import datetime, timedelta
+        import re
+        
+        # Handle various deadline formats
+        if not deadline_str or deadline_str.lower() in ['ongoing', 'open', 'continuous']:
+            return 365  # Ongoing contracts
+        
+        # Extract date from string if it contains one
+        date_match = re.search(r'\d{1,2}/\d{1,2}/\d{4}', deadline_str)
+        if date_match:
+            deadline_date = datetime.strptime(date_match.group(), '%m/%d/%Y')
+            today = datetime.now()
+            delta = deadline_date - today
+            return max(0, delta.days)
+        
+        # Default to 30 days if can't parse
+        return 30
+    except:
+        return 30
+
+@app.route('/request-proposal-help', methods=['POST'])
+def request_proposal_help():
+    """Handle proposal help requests from customers"""
+    try:
+        data = request.get_json()
+        
+        # Extract form data
+        lead_id = data.get('lead_id')
+        lead_title = data.get('lead_title')
+        name = data.get('name')
+        company = data.get('company')
+        email = data.get('email')
+        phone = data.get('phone')
+        experience = data.get('experience')
+        help_needed = data.get('help_needed', [])
+        notes = data.get('notes', '')
+        contact_method = data.get('contact_method')
+        
+        # Validate required fields
+        if not all([lead_id, name, company, email, phone]):
+            return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
+        
+        # Store proposal help request in database
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Create proposal_help_requests table if it doesn't exist
+        c.execute('''CREATE TABLE IF NOT EXISTS proposal_help_requests
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      lead_id TEXT NOT NULL,
+                      lead_title TEXT NOT NULL,
+                      name TEXT NOT NULL,
+                      company TEXT NOT NULL,
+                      email TEXT NOT NULL,
+                      phone TEXT NOT NULL,
+                      experience TEXT NOT NULL,
+                      help_needed TEXT NOT NULL,
+                      notes TEXT,
+                      contact_method TEXT NOT NULL,
+                      request_date TEXT NOT NULL,
+                      status TEXT DEFAULT 'pending',
+                      assigned_expert TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Insert the request
+        help_needed_str = ', '.join(help_needed) if help_needed else ''
+        request_date = datetime.now().isoformat()
+        
+        c.execute('''INSERT INTO proposal_help_requests 
+                     (lead_id, lead_title, name, company, email, phone, experience, 
+                      help_needed, notes, contact_method, request_date)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                  (lead_id, lead_title, name, company, email, phone, experience,
+                   help_needed_str, notes, contact_method, request_date))
+        
+        conn.commit()
+        request_id = c.lastrowid
+        conn.close()
+        
+        # Send notification email (in real app)
+        send_proposal_help_notification(data, request_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Proposal help request submitted successfully! We\'ll contact you within 24 hours.',
+            'request_id': request_id
+        })
+        
+    except Exception as e:
+        print(f"Proposal help request error: {e}")
+        return jsonify({'success': False, 'message': 'Error submitting request'}), 500
+
+def send_proposal_help_notification(request_data, request_id):
+    """Send email notification for proposal help request"""
+    try:
+        # Email content
+        subject = f"New Proposal Help Request #{request_id} - {request_data['lead_title']}"
+        
+        html_body = f"""
+        <h2>New Proposal Help Request</h2>
+        <p><strong>Request ID:</strong> {request_id}</p>
+        <p><strong>Lead:</strong> {request_data['lead_title']} (ID: {request_data['lead_id']})</p>
+        
+        <h3>Contact Information</h3>
+        <ul>
+            <li><strong>Name:</strong> {request_data['name']}</li>
+            <li><strong>Company:</strong> {request_data['company']}</li>
+            <li><strong>Email:</strong> {request_data['email']}</li>
+            <li><strong>Phone:</strong> {request_data['phone']}</li>
+            <li><strong>Preferred Contact:</strong> {request_data['contact_method']}</li>
+        </ul>
+        
+        <h3>Experience & Help Needed</h3>
+        <p><strong>Experience Level:</strong> {request_data['experience']}</p>
+        <p><strong>Help Areas:</strong> {', '.join(request_data.get('help_needed', []))}</p>
+        
+        {f"<p><strong>Additional Notes:</strong> {request_data['notes']}</p>" if request_data.get('notes') else ''}
+        
+        <p><em>Please contact the customer within 24 hours.</em></p>
+        """
+        
+        # Create message
+        msg = Message(
+            subject=subject,
+            recipients=['info@eliteecoservices.com'],  # Your business email
+            html=html_body,
+            sender=app.config['MAIL_DEFAULT_SENDER']
+        )
+        
+        # Send email
+        mail.send(msg)
+        print(f"Proposal help notification sent for request {request_id}")
+        return True
+        
+    except Exception as e:
+        print(f"Error sending proposal help notification: {e}")
+        return False
 
 @app.route('/leads')
 def leads():
