@@ -1,103 +1,238 @@
 {% extends "base.html" %}
 
+{% block title %}VA Contract Hub | Home{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
-<div class="hero-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8">
-                <h1 class="display-4">Virginia Cleaning Contracts</h1>
-                <p class="lead">Discover government and commercial cleaning opportunities across Hampton Roads and beyond.</p>
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
-                <a href="{{ url_for('contracts') }}" class="btn btn-outline-light btn-lg ms-2">View Government</a>
-                <a href="{{ url_for('commercial_contracts') }}" class="btn btn-outline-light btn-lg ms-2">View Commercial</a>
+<section class="hero-section-modern text-center text-white">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h1 class="display-3 fw-bold mb-4">
+                    Connecting Virginia Businesses with Contract Opportunities
+                </h1>
+                <p class="lead fs-4 mb-5" style="color: rgba(255,255,255,0.9);">
+                    Discover local, federal, and commercial contracts that match your company's expertise.
+                </p>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg me-3 mb-3">
+                    <i class="fas fa-user-plus me-2"></i>Register Your Company
+                </a>
+                <a href="{{ url_for('landing') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill mb-3">
+                    <i class="fas fa-clipboard-check me-2"></i>Take Assessment
+                </a>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Stats Section -->
-<div class="container my-5">
-    <div class="row text-center">
-        <div class="col-md-4">
-            <h3 class="text-primary">{{ contracts|length }}</h3>
-            <p>Government Contracts</p>
-        </div>
-        <div class="col-md-4">
-            <h3 class="text-primary">{{ commercial_count }}</h3>
-            <p>Commercial Opportunities</p>
-        </div>
-        <div class="col-md-4">
-            <h3 class="text-primary">8</h3>
-            <p>Hampton Roads Cities</p>
+<!-- Stats Bar -->
+<section class="bg-white py-4 shadow-sm">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-3 mb-md-0">
+                <h3 class="text-primary fw-bold mb-0">30+</h3>
+                <p class="text-muted mb-0">Local Government Contracts</p>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <h3 class="text-primary fw-bold mb-0">10+</h3>
+                <p class="text-muted mb-0">Federal Opportunities</p>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <h3 class="text-primary fw-bold mb-0">{{ commercial_count }}+</h3>
+                <p class="text-muted mb-0">Commercial Leads</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="text-primary fw-bold mb-0">8</h3>
+                <p class="text-muted mb-0">Hampton Roads Cities</p>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Contract Tabs -->
-<div class="container">
-    <ul class="nav nav-tabs" id="contractTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="government-tab" data-bs-toggle="tab" data-bs-target="#government" type="button" role="tab">
-                <i class="fas fa-building"></i> Government Contracts
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="commercial-tab" data-bs-toggle="tab" data-bs-target="#commercial" type="button" role="tab">
-                <i class="fas fa-briefcase"></i> Commercial Opportunities
-            </button>
-        </li>
-    </ul>
+<!-- Category Cards -->
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">Explore Contract Opportunities</h2>
+        <p class="lead text-muted">Choose the category that best fits your business needs</p>
+    </div>
     
-    <div class="tab-content" id="contractTabsContent">
-        <!-- Government Contracts Tab -->
-        <div class="tab-pane fade show active" id="government" role="tabpanel">
-            <div class="py-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3>Latest Government Contract Opportunities</h3>
-                    <a href="{{ url_for('contracts') }}" class="btn btn-primary">View All Government Contracts</a>
+    <div class="row g-4">
+        <!-- Local Government -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow hover-lift">
+                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
+                    <div class="mb-3" style="font-size: 3.5rem;">🏛️</div>
+                    <h3 class="card-title fw-bold mb-3">Local Government Contracts</h3>
+                    <p class="card-text text-muted mb-4">
+                        Stay informed on county and city-level opportunities across Virginia including schools, libraries, and municipal buildings.
+                    </p>
+                    <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
+                        View Contracts <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
                 </div>
-                
-                {% if contracts %}
-                    <div class="row">
-                        {% for contract in contracts %}
-                        <div class="col-lg-6 mb-4">
-                            <div class="card contract-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title">{{ contract[1] }}</h5>
-                                        <span class="city-badge">{{ contract[3] }}</span>
-                                    </div>
-                                    <h6 class="card-subtitle mb-2 text-muted">{{ contract[2] }}</h6>
-                                    <p class="card-text">{{ contract[6][:100] }}{% if contract[6]|length > 100 %}...{% endif %}</p>
-                                    
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Value:</small><br>
-                                            <strong class="text-success">{{ contract[4] }}</strong>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Deadline:</small><br>
-                                            <strong class="deadline-normal">{{ contract[5] }}</strong>
-                                        </div>
-                                    </div>
-                                    
-                                    {% if contract[7] %}
-                                    <div class="mt-2">
-                                        <small class="text-muted">NAICS: {{ contract[7] }}</small>
-                                    </div>
-                                    {% endif %}
+            </div>
+        </div>
+
+        <!-- Federal Contracts -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow hover-lift">
+                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
+                    <div class="mb-3" style="font-size: 3.5rem;">⚖️</div>
+                    <h3 class="card-title fw-bold mb-3">Federal Contracts</h3>
+                    <p class="card-text text-muted mb-4">
+                        Explore open solicitations from federal agencies, military bases, and defense departments via SAM.gov.
+                    </p>
+                    <a href="{{ url_for('federal_contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
+                        View Federal <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commercial Opportunities -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow hover-lift">
+                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
+                    <div class="mb-3" style="font-size: 3.5rem;">💼</div>
+                    <h3 class="card-title fw-bold mb-3">Commercial Opportunities</h3>
+                    <p class="card-text text-muted mb-4">
+                        Connect with private-sector projects including medical offices, gyms, hotels, and office buildings.
+                    </p>
+                    <a href="{{ url_for('commercial_contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
+                        View Commercial <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Contracts Preview -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold mb-3">Latest Government Opportunities</h2>
+            <p class="lead text-muted">Recently posted contracts ready for bidding</p>
+        </div>
+        
+        {% if contracts %}
+            <div class="row g-4 mb-4">
+                {% for contract in contracts[:3] %}
+                <div class="col-md-4">
+                    <div class="card h-100 contract-card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title fw-bold">{{ contract[1][:60] }}{% if contract[1]|length > 60 %}...{% endif %}</h6>
+                                <span class="badge bg-primary">{{ contract[3] }}</span>
+                            </div>
+                            <p class="text-muted small mb-2">{{ contract[2] }}</p>
+                            
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Contract Value</small>
+                                    <strong class="text-success">{{ contract[4] }}</strong>
                                 </div>
-                                <div class="card-footer bg-transparent">
-                                    {% if contract[9] %}
-                                        <a href="{{ contract[9] }}" target="_blank" 
-                                           class="btn btn-success btn-sm external-link-btn" 
-                                           title="Click to visit the official application website"
-                                           rel="noopener noreferrer">
-                                            <i class="fas fa-external-link-alt"></i> Apply Directly
-                                        </a>
-                                    {% endif %}
-                                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm"
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Deadline</small>
+                                    <strong class="text-danger">{{ contract[5] }}</strong>
+                                </div>
+                            </div>
+                            
+                            {% if contract[8] %}
+                                <a href="{{ contract[8] }}" target="_blank" class="btn btn-sm btn-success w-100" rel="noopener noreferrer">
+                                    <i class="fas fa-external-link-alt me-1"></i>Apply Now
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg px-5 rounded-pill">
+                    View All Government Contracts <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="display-6 fw-bold mb-3">How It Works</h2>
+        <p class="lead text-muted">Get started in 3 simple steps</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                    1
+                </div>
+                <h4 class="fw-bold mb-3">Register Your Company</h4>
+                <p class="text-muted">Create a free account and tell us about your cleaning services and certifications.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                    2
+                </div>
+                <h4 class="fw-bold mb-3">Browse Opportunities</h4>
+                <p class="text-muted">Access government, federal, and commercial contracts matching your expertise.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                    3
+                </div>
+                <h4 class="fw-bold mb-3">Win Contracts</h4>
+                <p class="text-muted">Apply directly through our platform and grow your cleaning business.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-3">Ready to Grow Your Business?</h2>
+        <p class="lead mb-4">Join hundreds of Virginia cleaning contractors finding lucrative contracts</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow">
+            <i class="fas fa-rocket me-2"></i>Get Started Today
+        </a>
+    </div>
+</section>
+
+<style>
+.hero-section-modern {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    padding: 100px 0 80px 0;
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+}
+
+.contract-card {
+    transition: transform 0.2s ease;
+}
+
+.contract-card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}
                                        title="Register to get notified about similar opportunities">
                                        <i class="fas fa-bell"></i> Get Notified
                                     </a>
