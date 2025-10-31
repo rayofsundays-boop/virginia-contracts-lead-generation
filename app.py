@@ -405,6 +405,7 @@ def init_db():
                       contact_type TEXT,
                       description TEXT,
                       size TEXT,
+                      website_url TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         conn.commit()
@@ -599,6 +600,12 @@ def init_db():
 
 @app.route('/')
 def index():
+    """Landing page - redirect to customer leads portal"""
+    return redirect(url_for('customer_leads'))
+
+@app.route('/home')
+def home():
+    """Original homepage with samples - now accessible at /home"""
     try:
         conn = get_db_connection()
         c = conn.cursor()
@@ -912,7 +919,7 @@ def customer_leads():
                 'Ongoing' as deadline,
                 '' as naics_code,
                 'Recent' as date_posted,
-                NULL as website_url,
+                commercial_opportunities.website_url,
                 'commercial' as lead_type,
                 commercial_opportunities.services_needed,
                 'Active' as status,
@@ -950,7 +957,9 @@ def customer_leads():
 
         # Add commercial leads
         for lead in commercial_leads:
-            # Commercial leads don't have application URLs
+            # Check if commercial lead has a valid website URL
+            app_url = lead[9] if lead[9] and lead[9].startswith(('http://', 'https://')) else None
+            
             lead_dict = {
                 'id': f"com_{lead[0]}",
                 'title': lead[1],
@@ -961,7 +970,7 @@ def customer_leads():
                 'deadline': lead[6],
                 'naics_code': lead[7],
                 'date_posted': lead[8],
-                'application_url': None,  # Commercial leads don't have direct application URLs
+                'application_url': app_url,  # Use actual website URL if available
                 'lead_type': lead[10],
                 'services_needed': lead[11],
                 'status': lead[12],
