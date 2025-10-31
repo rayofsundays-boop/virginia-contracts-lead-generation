@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Request Residential Cleaning - VA Contract Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold mb-3">Request Residential Cleaning Services</h1>
+                <p class="lead text-muted">Connect with professional cleaning contractors in your area</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Form Card -->
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <form method="POST" action="{{ url_for('submit_residential_cleaning_request') }}">
+                        <!-- Personal Information -->
+                        <h4 class="mb-4 text-primary">
+                            <i class="fas fa-user me-2"></i>Your Information
+                        </h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="homeowner_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="homeowner_name" name="homeowner_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="(757) 123-4567" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Property Information -->
+                        <h4 class="mb-4 text-primary">
+                            <i class="fas fa-home me-2"></i>Property Details
+                        </h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="address" class="form-label">Street Address *</label>
+                                <input type="text" class="form-control" id="address" name="address" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City *</label>
+                                <select class="form-select" id="city" name="city" required>
+                                    <option value="">Select City</option>
+                                    <option value="Hampton">Hampton</option>
+                                    <option value="Suffolk">Suffolk</option>
+                                    <option value="Virginia Beach">Virginia Beach</option>
+                                    <option value="Newport News">Newport News</option>
+                                    <option value="Williamsburg">Williamsburg</option>
+                                    <option value="Norfolk">Norfolk</option>
+                                    <option value="Chesapeake">Chesapeake</option>
+                                    <option value="Portsmouth">Portsmouth</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="zip_code" class="form-label">ZIP Code *</label>
+                                <input type="text" class="form-control" id="zip_code" name="zip_code" pattern="[0-9]{5}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="property_type" class="form-label">Property Type *</label>
+                                <select class="form-select" id="property_type" name="property_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="single_family">Single Family Home</option>
+                                    <option value="townhouse">Townhouse</option>
+                                    <option value="condo">Condo/Apartment</option>
+                                    <option value="vacation_rental">Vacation Rental</option>
+                                    <option value="rental_property">Rental Property</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="square_footage" class="form-label">Square Footage</label>
+                                <input type="number" class="form-control" id="square_footage" name="square_footage" placeholder="e.g., 2000">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bedrooms" class="form-label">Bedrooms</label>
+                                <input type="number" class="form-control" id="bedrooms" name="bedrooms" min="0" max="20" placeholder="e.g., 3">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bathrooms" class="form-label">Bathrooms</label>
+                                <input type="number" class="form-control" id="bathrooms" name="bathrooms" min="0" max="20" step="0.5" placeholder="e.g., 2.5">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Service Requirements -->
+                        <h4 class="mb-4 text-primary">
+                            <i class="fas fa-broom me-2"></i>Cleaning Services Needed
+                        </h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="frequency" class="form-label">Cleaning Frequency *</label>
+                                <select class="form-select" id="frequency" name="frequency" required>
+                                    <option value="">Select Frequency</option>
+                                    <option value="one-time">One-Time Deep Clean</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="bi-weekly">Bi-Weekly (Every 2 weeks)</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="move-in-out">Move-In/Move-Out</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="urgency" class="form-label">Urgency Level</label>
+                                <select class="form-select" id="urgency" name="urgency">
+                                    <option value="flexible">Flexible</option>
+                                    <option value="normal" selected>Normal (1-2 weeks)</option>
+                                    <option value="urgent">Urgent (Within 1 week)</option>
+                                    <option value="emergency">Emergency (ASAP)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="services_needed" class="form-label">Services Needed *</label>
+                                <div class="form-text mb-2">Select all that apply:</div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="general_cleaning" id="service1">
+                                            <label class="form-check-label" for="service1">General Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="deep_cleaning" id="service2">
+                                            <label class="form-check-label" for="service2">Deep Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="kitchen" id="service3">
+                                            <label class="form-check-label" for="service3">Kitchen Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="bathrooms" id="service4">
+                                            <label class="form-check-label" for="service4">Bathroom Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="windows" id="service5">
+                                            <label class="form-check-label" for="service5">Window Cleaning</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="carpet" id="service6">
+                                            <label class="form-check-label" for="service6">Carpet Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="laundry" id="service7">
+                                            <label class="form-check-label" for="service7">Laundry</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="organizing" id="service8">
+                                            <label class="form-check-label" for="service8">Organizing</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="move_out" id="service9">
+                                            <label class="form-check-label" for="service9">Move-Out Cleaning</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="post_construction" id="service10">
+                                            <label class="form-check-label" for="service10">Post-Construction</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="services_needed" name="services_needed" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="budget_range" class="form-label">Budget Range</label>
+                                <select class="form-select" id="budget_range" name="budget_range">
+                                    <option value="">Prefer not to specify</option>
+                                    <option value="under_100">Under $100</option>
+                                    <option value="100-200">$100 - $200</option>
+                                    <option value="200-300">$200 - $300</option>
+                                    <option value="300-500">$300 - $500</option>
+                                    <option value="over_500">Over $500</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="preferred_start_date" class="form-label">Preferred Start Date</label>
+                                <input type="date" class="form-control" id="preferred_start_date" name="preferred_start_date">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Additional Details -->
+                        <h4 class="mb-4 text-primary">
+                            <i class="fas fa-clipboard-list me-2"></i>Additional Information
+                        </h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="pets" class="form-label">Do you have pets?</label>
+                                <select class="form-select" id="pets" name="pets">
+                                    <option value="no">No pets</option>
+                                    <option value="yes_friendly">Yes - Pet friendly</option>
+                                    <option value="yes_secured">Yes - Will be secured</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="access_instructions" class="form-label">Access Instructions</label>
+                                <textarea class="form-control" id="access_instructions" name="access_instructions" rows="2" placeholder="e.g., Key under mat, lockbox code, garage door code"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label for="special_requirements" class="form-label">Special Requirements or Notes</label>
+                                <textarea class="form-control" id="special_requirements" name="special_requirements" rows="3" placeholder="Any special requests, allergies, areas to avoid, eco-friendly products needed, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Request
+                            </button>
+                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>What happens next?</strong> Your request will be shared with professional cleaning contractors in your area. They will contact you directly with quotes and availability.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Collect selected services into hidden field
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][value]');
+    const servicesField = document.getElementById('services_needed');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const selected = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value)
+                .join(', ');
+            servicesField.value = selected;
+        });
+    });
+    
+    // Set minimum date to today
+    const dateInput = document.getElementById('preferred_start_date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+});
+</script>
+{% endblock %}

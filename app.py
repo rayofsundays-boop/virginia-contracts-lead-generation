@@ -2435,6 +2435,103 @@ def submit_cleaning_request():
         flash(f'Error submitting request: {str(e)}', 'danger')
         return redirect(url_for('submit_cleaning_request'))
 
+@app.route('/request-residential-cleaning', methods=['GET', 'POST'])
+def submit_residential_cleaning_request():
+    """Homeowners can request residential cleaning services"""
+    if request.method == 'GET':
+        return render_template('request_residential_cleaning.html')
+    
+    try:
+        # Get form data
+        data = {
+            'homeowner_name': request.form['homeowner_name'],
+            'email': request.form['email'],
+            'phone': request.form['phone'],
+            'address': request.form['address'],
+            'city': request.form['city'],
+            'zip_code': request.form['zip_code'],
+            'property_type': request.form['property_type'],
+            'bedrooms': request.form.get('bedrooms', 0),
+            'bathrooms': request.form.get('bathrooms', 0),
+            'square_footage': request.form.get('square_footage', 0),
+            'frequency': request.form['frequency'],
+            'services_needed': request.form['services_needed'],
+            'special_requirements': request.form.get('special_requirements', ''),
+            'budget_range': request.form.get('budget_range', ''),
+            'preferred_start_date': request.form.get('preferred_start_date', None),
+            'urgency': request.form.get('urgency', 'normal'),
+            'pets': request.form.get('pets', 'no'),
+            'access_instructions': request.form.get('access_instructions', '')
+        }
+        
+        # Insert into residential_leads table
+        db.session.execute(text('''
+            INSERT INTO residential_leads 
+            (homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, 
+             square_footage, contact_email, contact_phone, estimated_value, 
+             cleaning_frequency, services_needed, special_requirements, status, 
+             source, lead_quality, created_at)
+            VALUES 
+            (:homeowner_name, :address, :city, :zip_code, :property_type, :bedrooms, :bathrooms,
+             :square_footage, :email, :phone, :estimated_value, :frequency, :services_needed,
+             :special_requirements, 'new', 'website_form', 'hot', CURRENT_TIMESTAMP)
+        '''), {
+            'homeowner_name': data['homeowner_name'],
+            'address': data['address'],
+            'city': data['city'],
+            'zip_code': data['zip_code'],
+            'property_type': data['property_type'],
+            'bedrooms': data['bedrooms'],
+            'bathrooms': data['bathrooms'],
+            'square_footage': data['square_footage'],
+            'email': data['email'],
+            'phone': data['phone'],
+            'estimated_value': calculate_estimated_value(data),
+            'frequency': data['frequency'],
+            'services_needed': data['services_needed'],
+            'special_requirements': f"{data['special_requirements']}; Budget: {data['budget_range']}; Start: {data['preferred_start_date']}; Urgency: {data['urgency']}; Pets: {data['pets']}; Access: {data['access_instructions']}"
+        })
+        db.session.commit()
+        
+        flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
+        return redirect(url_for('submit_residential_cleaning_request'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error submitting request: {str(e)}', 'danger')
+        return redirect(url_for('submit_residential_cleaning_request'))
+
+def calculate_estimated_value(data):
+    """Calculate estimated monthly value based on property details"""
+    base_value = 100
+    
+    # Add value based on square footage
+    sqft = int(data.get('square_footage', 0) or 0)
+    if sqft > 3000:
+        base_value += 200
+    elif sqft > 2000:
+        base_value += 100
+    elif sqft > 1000:
+        base_value += 50
+    
+    # Add value based on frequency
+    freq = data.get('frequency', 'one-time')
+    if freq == 'weekly':
+        base_value *= 4
+    elif freq == 'bi-weekly':
+        base_value *= 2
+    elif freq == 'monthly':
+        base_value *= 1
+    else:  # one-time
+        base_value *= 1.5
+    
+    # Add value based on rooms
+    bedrooms = int(data.get('bedrooms', 0) or 0)
+    bathrooms = int(data.get('bathrooms', 0) or 0)
+    base_value += (bedrooms * 20) + (bathrooms * 30)
+    
+    return int(base_value)
+
 @app.route('/lead-marketplace')
 @login_required
 def lead_marketplace():
