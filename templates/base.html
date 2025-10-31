@@ -162,13 +162,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('signin') }}">Sign In</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('credits') }}" id="credits-nav-link" title="Each lead costs 5 credits ($2.50)">
-                            <i class="fas fa-coins"></i> 
-                            <span id="nav-credits-balance">--</span> Credits
-                            <br><small class="text-light">($<span id="nav-credit-value">0.00</span> value)</small>
-                        </a>
-                    </li>
+                    
                 </ul>
             </div>
         </div>
@@ -209,7 +203,6 @@
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li><a href="{{ url_for('customer_leads') }}" class="text-white-50">Browse Leads</a></li>
-                        <li><a href="{{ url_for('credits') }}" class="text-white-50">Buy Credits</a></li>
                         <li><a href="{{ url_for('payment') }}" class="text-white-50">Subscribe</a></li>
                         <li><a href="{{ url_for('dashboard') }}" class="text-white-50">Dashboard</a></li>
                     </ul>
@@ -246,188 +239,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Credits Management Script -->
+    <!-- Subscription-only: no credits tracking -->
     <script>
-        // Global credits management
-        let currentCredits = 0;
-        let creditsCheckInterval = null;
-
-        // Load credits balance on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadNavCreditsBalance();
-            
-            // Check credits every 30 seconds
-            creditsCheckInterval = setInterval(loadNavCreditsBalance, 30000);
-        });
-
-        function loadNavCreditsBalance() {
-            fetch('/get-credits-balance?email=demo@example.com')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        currentCredits = data.credits_balance;
-                        const navBalance = document.getElementById('nav-credits-balance');
-                        const navValue = document.getElementById('nav-credit-value');
-                        const navLink = document.getElementById('credits-nav-link');
-                        
-                        if (navBalance) {
-                            navBalance.textContent = currentCredits;
-                            
-                            // Calculate dollar value (credits * $0.50)
-                            const dollarValue = (currentCredits * 0.50).toFixed(2);
-                            if (navValue) {
-                                navValue.textContent = dollarValue;
-                            }
-                            
-                            // Update nav link color based on credits
-                            navLink.className = 'nav-link';
-                            if (currentCredits === 0) {
-                                navLink.className += ' text-danger';
-                            } else if (currentCredits <= 10) {
-                                navLink.className += ' text-warning';
-                            }
-                        }
-                        
-                        // Do not show automatic alerts - only show when user tries to access a lead
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading credits balance:', error);
-                });
-        }
-
-        function showCreditsAlert(type) {
-            let title, message, buttonText, buttonClass;
-            
-            if (type === 'out') {
-                title = '💳 Out of Credits!';
-                message = 'You need credits to access contact information. Purchase credits to continue accessing business leads.';
-                buttonText = 'Buy Credits Now';
-                buttonClass = 'btn-danger';
-            } else {
-                title = '⚠️ Low Credits Warning';
-                message = `You have ${currentCredits} credits remaining. Each lead costs 5 credits. Consider purchasing more to continue accessing leads.`;
-                buttonText = 'Buy More Credits';
-                buttonClass = 'btn-warning';
-            }
-
-            // Create modal HTML
-            const modalHTML = `
-                <div class="modal fade" id="creditsAlertModal" tabindex="-1" data-bs-backdrop="static">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">${title}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p class="lead">${message}</p>
-                                <div class="d-flex justify-content-center">
-                                    <div class="text-center">
-                                        <i class="fas fa-coins fa-3x text-warning mb-3"></i>
-                                        <h4>Credit Packages Available:</h4>
-                                        <div class="row g-2">
-                                            <div class="col-4">
-                                                <div class="card text-center">
-                                                    <div class="card-body p-2">
-                                                        <div class="h6 mb-1">10 Credits</div>
-                                                        <div class="fw-bold text-success">$5</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="card text-center border-success">
-                                                    <div class="card-body p-2">
-                                                        <div class="h6 mb-1">20 Credits</div>
-                                                        <div class="fw-bold text-success">$10</div>
-                                                        <small class="text-success">Popular</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="card text-center">
-                                                    <div class="card-body p-2">
-                                                        <div class="h6 mb-1">30 Credits</div>
-                                                        <div class="fw-bold text-success">$15</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    Maybe Later
-                                </button>
-                                <button type="button" class="btn ${buttonClass}" onclick="window.location.href='/credits'">
-                                    ${buttonText}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Remove existing modal if any
-            const existingModal = document.getElementById('creditsAlertModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-
-            // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('creditsAlertModal'));
-            modal.show();
-
-            // Clear session storage when modal is hidden
-            document.getElementById('creditsAlertModal').addEventListener('hidden.bs.modal', function() {
-                if (type === 'out') {
-                    sessionStorage.removeItem('credits_alert_shown');
-                } else {
-                    sessionStorage.removeItem('low_credits_alert_shown');
-                }
-                this.remove();
-            });
-        }
-
-        // Function to check credits before contact request
-        function checkCreditsBeforeRequest(callback) {
-            if (currentCredits < 5) {
-                showCreditsAlert(currentCredits === 0 ? 'out' : 'low');
-                return false;
-            }
-            return true;
-        }
-
-        // Function to deduct credits after successful request
-        function updateCreditsAfterRequest(creditsUsed = 5) {
-            currentCredits = Math.max(0, currentCredits - creditsUsed);
-            const navBalance = document.getElementById('nav-credits-balance');
-            const navValue = document.getElementById('nav-credit-value');
-            
-            if (navBalance) {
-                navBalance.textContent = currentCredits;
-            }
-            
-            if (navValue) {
-                const dollarValue = (currentCredits * 0.50).toFixed(2);
-                navValue.textContent = dollarValue;
-            }
-            
-            // Reset alert flags so they can show again if needed
-            sessionStorage.removeItem('credits_alert_shown');
-            sessionStorage.removeItem('low_credits_alert_shown');
-        }
-
-        // Clean up interval when page unloads
-        window.addEventListener('beforeunload', function() {
-            if (creditsCheckInterval) {
-                clearInterval(creditsCheckInterval);
-            }
-        });
+        function checkCreditsBeforeRequest(callback) { return true; }
+        function updateCreditsAfterRequest(creditsUsed = 0) {}
     </script>
 </body>
 </html>

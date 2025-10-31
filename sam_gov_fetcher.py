@@ -6,6 +6,8 @@ import requests
 import os
 from datetime import datetime, timedelta
 import logging
+import time
+import random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +27,7 @@ class SAMgovFetcher:
             '561790',  # Other Services to Buildings and Dwellings
         ]
     
-    def fetch_va_cleaning_contracts(self, days_back=30):
+    def fetch_va_cleaning_contracts(self, days_back=14):
         """
         Fetch real cleaning contracts from Virginia
         
@@ -42,10 +44,15 @@ class SAMgovFetcher:
         all_contracts = []
         
         # Search for each NAICS code
-        for naics in self.naics_codes:
+        for idx, naics in enumerate(self.naics_codes):
             logger.info(f"Fetching contracts for NAICS {naics}...")
             contracts = self._search_contracts(naics, days_back)
             all_contracts.extend(contracts)
+            # Stagger requests to minimize rate limiting
+            if idx < len(self.naics_codes) - 1:
+                sleep_s = 1.5 + random.random() * 1.5
+                logger.info(f"Sleeping {sleep_s:.1f}s to avoid rate limits...")
+                time.sleep(sleep_s)
         
         logger.info(f"✅ Fetched {len(all_contracts)} real contracts from SAM.gov")
         return all_contracts
@@ -62,22 +69,67 @@ class SAMgovFetcher:
             'limit': 100,
             'offset': 0
         }
-        
+        headers = {
+            'Accept': 'application/json',
+            'User-Agent': 'VA-Contracts-Fetcher/1.0 (+https://example.com)'
+        }
+
         try:
-            response = requests.get(self.base_url, params=params, timeout=30)
-            response.raise_for_status()
-            
+            # Basic single-page fetch with retries for 429/5xx
+            response = self._request_with_retries(self.base_url, params=params, headers=headers)
+            if response is None:
+                return []
+
             data = response.json()
             opportunities = data.get('opportunitiesData', [])
-            
             return [self._parse_opportunity(opp) for opp in opportunities]
-            
+
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching from SAM.gov: {e}")
             return []
         except Exception as e:
             logger.error(f"Error parsing SAM.gov response: {e}")
             return []
+
+    def _request_with_retries(self, url, params, headers, max_retries=5, base_delay=2.0):
+        """HTTP GET with exponential backoff and jitter for 429/5xx"""
+        attempt = 0
+        while attempt <= max_retries:
+            try:
+                resp = requests.get(url, params=params, headers=headers, timeout=30)
+                # Handle rate limiting
+                if resp.status_code == 429:
+                    retry_after = resp.headers.get('Retry-After')
+                    if retry_after:
+                        try:
+                            delay = float(retry_after)
+                        except ValueError:
+                            delay = base_delay * (2 ** attempt) + random.random()
+                    else:
+                        delay = base_delay * (2 ** attempt) + random.random()
+                    logger.warning(f"SAM.gov rate limit hit (429). Retrying in {delay:.1f}s...")
+                    time.sleep(delay)
+                    attempt += 1
+                    continue
+
+                # Retry on 5xx
+                if 500 <= resp.status_code < 600:
+                    delay = base_delay * (2 ** attempt) + random.random()
+                    logger.warning(f"SAM.gov server error {resp.status_code}. Retrying in {delay:.1f}s...")
+                    time.sleep(delay)
+                    attempt += 1
+                    continue
+
+                resp.raise_for_status()
+                return resp
+            except requests.exceptions.RequestException as e:
+                delay = base_delay * (2 ** attempt) + random.random()
+                logger.warning(f"Request error: {e}. Retrying in {delay:.1f}s...")
+                time.sleep(delay)
+                attempt += 1
+
+        logger.error("Exceeded maximum retries for SAM.gov request")
+        return None
     
     def _parse_opportunity(self, opp):
         """Convert SAM.gov opportunity to our database format"""

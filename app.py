@@ -221,9 +221,10 @@ def update_federal_contracts_from_samgov():
     try:
         print("📡 Fetching real federal contracts from SAM.gov API...")
         from sam_gov_fetcher import SAMgovFetcher
-        
+
         fetcher = SAMgovFetcher()
-        contracts = fetcher.fetch_va_cleaning_contracts(days_back=30)
+        # Use a shorter lookback to reduce rate-limit risk; fetcher has built-in retries
+        contracts = fetcher.fetch_va_cleaning_contracts(days_back=14)
         
         if not contracts:
             print("⚠️  No new contracts found. Check SAM_GOV_API_KEY.")

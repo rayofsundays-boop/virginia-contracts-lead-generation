@@ -83,8 +83,8 @@
                     </div>
                     <div class="col-md-4">
                         <div class="badge bg-warning text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-coins"></i><br>
-                            <strong>5 Credits</strong> per lead
+                            <i class="fas fa-check-circle"></i><br>
+                            Included with subscription
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -230,9 +230,8 @@
                         </button>
                     </div>
                     <div class="text-end">
-                        <small class="text-muted">Cost:</small><br>
-                        <strong class="text-warning">5 Credits</strong><br>
-                        <small class="text-success">($2.50)</small>
+                        <small class="text-muted">Access:</small><br>
+                        <strong class="text-success">Included</strong>
                     </div>
                 </div>
             </div>
@@ -388,7 +387,7 @@ function requestContact(opportunityId, businessName) {
         return; // Credits check failed, alert shown by base template function
     }
 
-    if (confirm(`Request contact information for ${businessName}?\n\n💰 Cost: 5 Credits ($2.50)\n💳 Current balance: ${currentCredits} credits\n\nAfter this purchase you'll have ${currentCredits - 5} credits remaining.`)) {
+    if (confirm(`Request contact information for ${businessName}?\n\nAccess is included with your subscription.`)) {
         // Disable the button to prevent double-clicks
         const buttons = document.querySelectorAll(`button[onclick*="${opportunityId}"]`);
         buttons.forEach(btn => {

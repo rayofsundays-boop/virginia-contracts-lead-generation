@@ -14,18 +14,10 @@
                 </div>
                 <div class="text-end">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="credits-display">
-                            <small class="text-muted">Credits Balance:</small><br>
-                            <strong class="text-primary" id="customer-credits">0</strong> credits
-                            <small class="text-success">($0.00)</small>
+                        <div class="subscription-display">
+                            <small class="text-muted">Access:</small><br>
+                            <strong class="text-success">Included with subscription</strong>
                         </div>
-                        <div class="free-leads-display">
-                            <small class="text-muted">Free Leads:</small><br>
-                            <strong class="text-info" id="customer-free-leads">3</strong> remaining
-                        </div>
-                        <a href="{{ url_for('credits') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-coins"></i> Buy Credits
-                        </a>
                     </div>
                 </div>
             </div>
@@ -552,7 +544,7 @@ function accessContactInfo(leadId, leadTitle, leadType) {
         return;
     }
 
-    const confirmMessage = `Access contact information for "${leadTitle}"?\n\n💰 Cost: 5 Credits ($2.50)\n💳 Current balance: ${currentCredits} credits\n\nAfter this purchase you'll have ${currentCredits - 5} credits remaining.`;
+    const confirmMessage = `Access contact information for "${leadTitle}"?\n\nAccess is included with your subscription.`;
     
     if (confirm(confirmMessage)) {
         fetch('/request-commercial-contact', {

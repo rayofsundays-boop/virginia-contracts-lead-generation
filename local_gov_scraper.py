@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime, timedelta
 import logging
+from urllib.parse import urljoin
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,12 +24,14 @@ class VirginiaLocalGovScraper:
         # Virginia cities and their procurement URLs
         self.government_sites = {
             'Hampton': {
-                'url': 'https://www.hampton.gov/bids',
+                # Use the canonical bids.aspx listing page to avoid 404s on detail links
+                'url': 'https://www.hampton.gov/bids.aspx',
                 'name': 'City of Hampton',
                 'keywords': ['cleaning', 'janitorial', 'custodial', 'maintenance', 'facility']
             },
             'Norfolk': {
-                'url': 'https://www.norfolk.gov/procurement',
+                # Update to the standard bids listing page (previous URL returned 404)
+                'url': 'https://www.norfolk.gov/bids.aspx',
                 'name': 'City of Norfolk',
                 'keywords': ['cleaning', 'janitorial', 'custodial', 'maintenance', 'facility']
             },
@@ -273,16 +276,10 @@ class VirginiaLocalGovScraper:
         link = element.find('a')
         if link and link.get('href'):
             href = link.get('href')
-            # Handle relative URLs
-            if href.startswith('http'):
-                return href
-            elif href.startswith('/'):
-                # Extract base domain
-                base_domain = re.match(r'https?://[^/]+', base_url)
-                if base_domain:
-                    return base_domain.group(0) + href
-            else:
-                return base_url.rstrip('/') + '/' + href.lstrip('/')
+            # Build robust absolute URL using urljoin to avoid duplicating path segments
+            # Ensure base_url ends with a slash for correct resolution of sibling paths
+            normalized_base = base_url if base_url.endswith('/') else base_url + '/'
+            return urljoin(normalized_base, href)
         
         return base_url
     
