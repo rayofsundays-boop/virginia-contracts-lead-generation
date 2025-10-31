@@ -199,7 +199,10 @@
                         <div class="btn-group" role="group">
                             {% if lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
                             <a href="{{ lead.application_url }}" target="_blank" 
-                               class="btn btn-success btn-sm"
+                               class="btn btn-success btn-sm apply-link"
+                               data-lead-id="{{ lead.id }}"
+                               data-lead-title="{{ lead.title }}"
+                               onclick="trackApplyClick(event, '{{ lead.application_url }}', '{{ lead.title }}')"
                                title="{% if lead.lead_type == 'government' %}Apply directly on government website{% else %}Visit business website{% endif %}">
                                 <i class="fas fa-external-link-alt"></i> {% if lead.lead_type == 'government' %}Apply Now{% else %}Visit Website{% endif %}
                             </a>
@@ -237,6 +240,76 @@
             <button class="btn btn-outline-primary" id="loadMoreBtn" onclick="loadMoreLeads()">
                 <i class="fas fa-plus"></i> Load More Leads
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Prompt Modal -->
+<div class="modal fade" id="subscriptionPromptModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #0066cc, #004499);">
+                <h4 class="modal-title">
+                    <i class="fas fa-star"></i> Unlock Unlimited Access!
+                </h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="display-1 mb-3">🎉</div>
+                    <h3 class="text-primary">You've Used Your 3 Free Lead Views!</h3>
+                    <p class="lead">Ready to scale your business? Get unlimited access to all opportunities.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <h5 class="text-success">✅ What You Get</h5>
+                                <ul class="list-unstyled text-start">
+                                    <li>✓ <strong>50 Credits Monthly</strong> ($125 value)</li>
+                                    <li>✓ <strong>Unlimited Browsing</strong></li>
+                                    <li>✓ <strong>150+ Active Leads</strong></li>
+                                    <li>✓ <strong>Daily Updates</strong></li>
+                                    <li>✓ <strong>Proposal Help</strong></li>
+                                    <li>✓ <strong>Email Alerts</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-warning">
+                            <div class="card-body text-center">
+                                <h5 class="text-warning">💰 Amazing Value</h5>
+                                <div class="display-4 text-primary my-3">$25<small class="fs-5 text-muted">/month</small></div>
+                                <p class="mb-2"><strong>Just $0.83/day</strong></p>
+                                <p class="text-muted">Less than a cup of coffee!</p>
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <strong>Typical ROI:</strong> 6,000%<br>
+                                    <small>Average contract: $150K</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i> <strong>Cancel Anytime</strong> - No long-term commitment. Full access until the end of your billing period.
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('payment') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-rocket"></i> Subscribe Now - $25/month
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Maybe Later
+                    </button>
+                </div>
+
+                <p class="text-center text-muted small mt-3 mb-0">
+                    By subscribing, you agree to our <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -617,5 +690,90 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Track Apply/Visit clicks and show subscription prompt after 3 clicks
+function trackApplyClick(event, url, title) {
+    // Get current click count from localStorage
+    let clickCount = parseInt(localStorage.getItem('applyClickCount') || '0');
+    
+    // Increment click count
+    clickCount++;
+    localStorage.setItem('applyClickCount', clickCount.toString());
+    
+    console.log(`Apply click tracked. Total clicks: ${clickCount}`);
+    
+    // If this is the 3rd click, prevent default and show subscription modal
+    if (clickCount >= 3) {
+        event.preventDefault();
+        
+        // Store the URL they wanted to visit
+        localStorage.setItem('pendingLeadUrl', url);
+        localStorage.setItem('pendingLeadTitle', title);
+        
+        // Show subscription prompt modal
+        const subscriptionModal = new bootstrap.Modal(document.getElementById('subscriptionPromptModal'));
+        subscriptionModal.show();
+        
+        // Show message
+        showToast('Subscribe to continue accessing more leads!', 'info');
+        
+        return false;
+    }
+    
+    // Track which lead was clicked
+    const clickedLeads = JSON.parse(localStorage.getItem('clickedLeads') || '[]');
+    if (!clickedLeads.includes(title)) {
+        clickedLeads.push(title);
+        localStorage.setItem('clickedLeads', JSON.stringify(clickedLeads));
+    }
+    
+    // Show remaining clicks notification
+    const remaining = 3 - clickCount;
+    if (remaining > 0) {
+        showToast(`${remaining} free lead view${remaining > 1 ? 's' : ''} remaining`, 'success');
+    }
+    
+    // Allow the link to open
+    return true;
+}
+
+// Check click count on page load and show indicator
+document.addEventListener('DOMContentLoaded', function() {
+    const clickCount = parseInt(localStorage.getItem('applyClickCount') || '0');
+    const remaining = Math.max(0, 3 - clickCount);
+    
+    // Add free trials indicator to header
+    if (clickCount < 3) {
+        const creditsDisplay = document.querySelector('.credits-display');
+        if (creditsDisplay) {
+            const freeTrialBadge = document.createElement('div');
+            freeTrialBadge.className = 'mt-2';
+            freeTrialBadge.innerHTML = `
+                <small class="badge bg-success">
+                    <i class="fas fa-gift"></i> ${remaining} Free View${remaining !== 1 ? 's' : ''} Left
+                </small>
+            `;
+            creditsDisplay.appendChild(freeTrialBadge);
+        }
+    }
+    
+    // If they've hit the limit, add visual indicator to all apply buttons
+    if (clickCount >= 3) {
+        document.querySelectorAll('.apply-link').forEach(link => {
+            link.classList.remove('btn-success');
+            link.classList.add('btn-warning');
+            link.innerHTML = '<i class="fas fa-lock"></i> Subscribe to Access';
+        });
+    }
+});
+
+// Reset function (for testing or admin purposes)
+function resetApplyClickCount() {
+    localStorage.removeItem('applyClickCount');
+    localStorage.removeItem('clickedLeads');
+    localStorage.removeItem('pendingLeadUrl');
+    localStorage.removeItem('pendingLeadTitle');
+    location.reload();
+}
 </script>
 {% endblock %}
