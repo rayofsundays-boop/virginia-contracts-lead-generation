@@ -777,12 +777,7 @@ def init_db():
 
 @app.route('/')
 def index():
-    """Landing page - redirect to assessment/survey"""
-    return redirect(url_for('landing'))
-
-@app.route('/home')
-def home():
-    """Original homepage with samples - now accessible at /home"""
+    """Main homepage with contract samples"""
     try:
         # Get government contracts
         contracts = db.session.execute(
@@ -813,10 +808,11 @@ def home():
                 'size': row[12]
             })
         
-        # Get total commercial count
-        commercial_count = db.session.execute(
+        # Get commercial count
+        commercial_count_result = db.session.execute(
             text('SELECT COUNT(*) FROM commercial_opportunities')
-        ).fetchone()[0]
+        ).fetchone()
+        commercial_count = commercial_count_result[0] if commercial_count_result else 0
         
         return render_template('index.html', 
                              contracts=contracts, 
@@ -827,34 +823,15 @@ def home():
         if "no such table" in str(e).lower():
             try:
                 init_db()
-                conn = get_db_connection()
-                c = conn.cursor()
-                c.execute('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
-                contracts = c.fetchall()
-                c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
-                commercial_rows = c.fetchall()
-                
-                commercial_opportunities = []
-                for row in commercial_rows:
-                    commercial_opportunities.append({
-                        'id': row[0], 'business_name': row[1], 'business_type': row[2],
-                        'address': row[3], 'location': row[4], 'square_footage': row[5],
-                        'monthly_value': row[6], 'frequency': row[7], 'services_needed': row[8],
-                        'special_requirements': row[9], 'contact_type': row[10], 
-                        'description': row[11], 'size': row[12]
-                    })
-                
-                c.execute('SELECT COUNT(*) FROM commercial_opportunities')
-                commercial_count = c.fetchone()[0]
-                
-                conn.close()
-                return render_template('index.html', 
-                                     contracts=contracts, 
-                                     commercial_opportunities=commercial_opportunities,
-                                     commercial_count=commercial_count)
+                return redirect(url_for('index'))
             except Exception as e2:
                 return f"<h1>Database Setup Error</h1><p>Error: {str(e2)}</p><p>Try visiting <a href='/init-db'>/init-db</a> to manually initialize the database.</p>"
         return f"<h1>Debug Info</h1><p>Error: {str(e)}</p><p>Flask is working!</p>"
+
+@app.route('/home')
+def home():
+    """Redirect /home to main page"""
+    return redirect(url_for('index'))
 
 @app.route('/test')
 def test():
