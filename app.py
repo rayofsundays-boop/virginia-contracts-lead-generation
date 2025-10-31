@@ -6,17 +6,39 @@ from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import sqlite3  # Keep for backward compatibility with existing queries
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import threading
 import schedule
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from lead_generator import LeadGenerator
+import paypalrestsdk
 
 # Virginia Government Contracting Lead Generation Application
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
+
+# PayPal Configuration
+paypalrestsdk.configure({
+    "mode": os.environ.get('PAYPAL_MODE', 'sandbox'),  # 'sandbox' or 'live'
+    "client_id": os.environ.get('PAYPAL_CLIENT_ID', ''),
+    "client_secret": os.environ.get('PAYPAL_SECRET', '')
+})
+
+# PayPal subscription plans (Update these with your actual Plan IDs from PayPal dashboard)
+SUBSCRIPTION_PLANS = {
+    'monthly': {
+        'name': 'Monthly Subscription',
+        'price': 99.00,
+        'plan_id': os.environ.get('PAYPAL_MONTHLY_PLAN_ID', 'P-MONTHLY-PLAN-ID')
+    },
+    'annual': {
+        'name': 'Annual Subscription (Save 20%)',
+        'price': 950.00,
+        'plan_id': os.environ.get('PAYPAL_ANNUAL_PLAN_ID', 'P-ANNUAL-PLAN-ID')
+    }
+}
 
 # Database configuration - supports both PostgreSQL and SQLite
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -189,6 +211,77 @@ def login_required(f):
             return redirect(url_for('signin'))
         return f(*args, **kwargs)
     return decorated_function
+
+# ============================================================================
+# AUTOMATED DATA UPDATES FROM SAM.GOV
+# ============================================================================
+
+def update_federal_contracts_from_samgov():
+    """Fetch and update federal contracts from SAM.gov API"""
+    try:
+        print("📡 Fetching real federal contracts from SAM.gov API...")
+        from sam_gov_fetcher import SAMgovFetcher
+        
+        fetcher = SAMgovFetcher()
+        contracts = fetcher.fetch_va_cleaning_contracts(days_back=30)
+        
+        if not contracts:
+            print("⚠️  No new contracts found. Check SAM_GOV_API_KEY.")
+            return
+        
+        # Use SQLAlchemy for database operations
+        with app.app_context():
+            # Clean up old contracts (older than 90 days)
+            db.session.execute(text('''
+                DELETE FROM federal_contracts 
+                WHERE posted_date < DATE('now', '-90 days')
+            '''))
+            
+            # Insert new contracts
+            new_count = 0
+            for contract in contracts:
+                try:
+                    db.session.execute(text('''
+                        INSERT OR IGNORE INTO federal_contracts 
+                        (title, agency, department, location, value, deadline, description, 
+                         naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                        VALUES (:title, :agency, :department, :location, :value, :deadline, 
+                                :description, :naics_code, :sam_gov_url, :notice_id, 
+                                :set_aside, :posted_date)
+                    '''), contract)
+                    new_count += 1
+                except Exception as e:
+                    print(f"⚠️  Error inserting contract {contract.get('notice_id')}: {e}")
+                    continue
+            
+            db.session.commit()
+            print(f"✅ Updated {new_count} real federal contracts from SAM.gov")
+            
+    except Exception as e:
+        print(f"❌ Error updating federal contracts: {e}")
+
+def schedule_samgov_updates():
+    """Run SAM.gov updates daily at 2 AM"""
+    schedule.every().day.at("02:00").do(update_federal_contracts_from_samgov)
+    
+    print("⏰ SAM.gov scheduler started - will update federal contracts daily at 2 AM")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
+# Start SAM.gov scheduler in background thread
+samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
+samgov_scheduler_thread.start()
+
+# Run initial update on startup (in background to not block app startup)
+def initial_samgov_fetch():
+    time.sleep(5)  # Wait 5 seconds for app to fully start
+    update_federal_contracts_from_samgov()
+
+initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
+initial_fetch_thread.start()
+
 
 def run_daily_updates():
     """Background thread function for daily updates"""
@@ -786,6 +879,22 @@ def init_db():
                       sms_notifications BOOLEAN DEFAULT FALSE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
+        # Add PayPal subscription tracking columns if they don't exist
+        try:
+            c.execute('ALTER TABLE leads ADD COLUMN paypal_subscription_id TEXT')
+        except:
+            pass  # Column already exists
+        
+        try:
+            c.execute('ALTER TABLE leads ADD COLUMN subscription_start_date DATE')
+        except:
+            pass  # Column already exists
+        
+        try:
+            c.execute('ALTER TABLE leads ADD COLUMN last_payment_date DATE')
+        except:
+            pass  # Column already exists
+        
         # Create credits purchases table
         c.execute('''CREATE TABLE IF NOT EXISTS credits_purchases
                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -890,100 +999,34 @@ def init_db():
         
         conn.commit()
         
-        # Add sample Virginia contracts
-        # Sample contract data with website URLs - 50+ Government Contracts
-        sample_contracts = [
-            ('Hampton City Hall Cleaning Services', 'City of Hampton', 'Hampton, VA', '$120,000', '2025-11-15', 'Comprehensive cleaning services for city hall including offices, conference rooms, and public areas. Must include floor waxing and window cleaning.', '561720', 'https://www.hampton.gov/bids'),
-            ('Suffolk Municipal Building Janitorial', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-30', 'Comprehensive janitorial services for municipal buildings including floor care, window cleaning, and waste management.', '561720', 'https://www.suffolkva.us/departments/procurement'),
-            ('Virginia Beach Convention Center Cleaning', 'City of Virginia Beach', 'Virginia Beach, VA', '$350,000', '2025-12-31', 'Large-scale cleaning contract for convention center, meeting rooms, and event spaces. Must handle high-volume events.', '561720', 'https://www.vbgov.com/departments/procurement'),
-            ('Newport News Library System Maintenance', 'Newport News Public Library', 'Newport News, VA', '$75,000', '2025-11-15', 'Cleaning and maintenance services for 4 library branches including carpet cleaning and HVAC maintenance.', '561720', 'https://www.nngov.com/procurement'),
-            ('Williamsburg Historic Area Grounds Keeping', 'Colonial Williamsburg Foundation', 'Williamsburg, VA', '$180,000', '2025-12-18', 'Grounds keeping and facility cleaning for historic buildings and visitor centers. Requires sensitivity to historic preservation.', '561730', 'https://www.colonialwilliamsburg.org/vendors'),
-            ('Hampton Roads Transit Facility Cleaning', 'Hampton Roads Transit', 'Hampton, VA', '$220,000', '2025-12-01', 'Cleaning services for bus maintenance facilities, administrative offices, and passenger terminals.', '561720', 'https://www.gohrt.com/about/procurement'),
-            ('Suffolk Public Schools Custodial Services', 'Suffolk Public Schools', 'Suffolk, VA', '$450,000', '2025-11-20', 'Custodial services for 5 elementary schools including classrooms, gymnasiums, cafeterias, and administrative areas.', '561720', 'https://www.spsk12.net/departments/procurement'),
-            ('Virginia Beach Police Department Cleaning', 'Virginia Beach Police Dept', 'Virginia Beach, VA', '$85,000', '2025-12-10', 'Specialized cleaning services for police facilities including evidence rooms, holding cells, and administrative offices.', '561720', 'https://www.vbgov.com/departments/police/procurement'),
-            ('Newport News Shipyard Office Cleaning', 'Newport News Shipbuilding', 'Newport News, VA', '$275,000', '2025-12-20', 'Office cleaning services for shipyard administrative buildings. Security clearance may be required.', '561720', 'https://www.huntingtoningalls.com/suppliers'),
-            ('Williamsburg Court House Maintenance', 'James City County', 'Williamsburg, VA', '$65,000', '2025-11-25', 'Cleaning and maintenance services for county courthouse including courtrooms, offices, and public areas.', '561720', 'https://www.jamescitycountyva.gov/procurement'),
+        # NOTE: Sample data removed - real data will be fetched from SAM.gov API
+        # Commercial and residential leads come from user-submitted request forms only
+        print("✅ Database tables initialized successfully")
+        print("📡 Fetching real federal contracts from SAM.gov API...")
+        
+        # Fetch real federal contracts from SAM.gov on first run
+        try:
+            from sam_gov_fetcher import SAMgovFetcher
+            fetcher = SAMgovFetcher()
+            real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
             
-            # Additional 40 Government Contracts
-            ('Hampton Veterans Affairs Medical Center', 'U.S. Department of Veterans Affairs', 'Hampton, VA', '$420,000', '2025-12-05', 'Comprehensive cleaning services for medical facilities including patient rooms, operating areas, and administrative offices.', '561720', 'https://www.va.gov/oal/business/'),
-            ('Norfolk Naval Base Housing Cleaning', 'U.S. Navy', 'Norfolk, VA', '$680,000', '2025-11-28', 'Housing cleaning services for military families including interior and exterior maintenance.', '561720', 'https://www.navy.mil/Resources/Doing-Business/'),
-            ('Virginia Beach Fire Department Facilities', 'Virginia Beach Fire Dept', 'Virginia Beach, VA', '$145,000', '2025-12-15', 'Cleaning services for 20 fire stations including apparatus bays, living quarters, and training facilities.', '561720', 'https://www.vbgov.com/departments/fire/procurement'),
-            ('Portsmouth Naval Hospital Cleaning', 'U.S. Navy Medical Center', 'Portsmouth, VA', '$525,000', '2025-12-22', 'Medical facility cleaning including sterile areas, patient rooms, and laboratory spaces.', '561720', 'https://www.med.navy.mil/Portsmouth/'),
-            ('Chesapeake Public Works Building', 'City of Chesapeake', 'Chesapeake, VA', '$78,000', '2025-11-18', 'Municipal building cleaning including vehicle maintenance areas and administrative offices.', '561720', 'https://www.cityofchesapeake.net/procurement'),
-            ('Hampton University Research Center', 'Hampton University', 'Hampton, VA', '$165,000', '2025-12-30', 'University research facility cleaning including laboratories, classrooms, and administrative areas.', '561720', 'https://www.hamptonu.edu/purchasing/'),
-            ('Suffolk Waste Management Facility', 'City of Suffolk', 'Suffolk, VA', '$95,000', '2025-11-22', 'Specialized cleaning for waste management and recycling facilities including vehicle cleaning.', '561720', 'https://www.suffolkva.us/departments/procurement'),
-            ('Newport News Park Facilities', 'Newport News Parks & Recreation', 'Newport News, VA', '$125,000', '2025-12-08', 'Cleaning services for park buildings, visitor centers, and recreational facilities.', '561720', 'https://www.nngov.com/parks'),
-            ('Virginia Beach Schools Administration', 'Virginia Beach City Schools', 'Virginia Beach, VA', '$385,000', '2025-12-12', 'Administrative building cleaning for school district headquarters and satellite offices.', '561720', 'https://www.vbschools.com/departments/purchasing'),
-            ('Williamsburg Regional Library', 'Williamsburg Regional Library', 'Williamsburg, VA', '$89,000', '2025-11-30', 'Multi-branch library system cleaning including computer labs and reading areas.', '561720', 'https://www.wrl.org/about/procurement'),
-            ('Hampton Social Services Building', 'Hampton Dept of Social Services', 'Hampton, VA', '$112,000', '2025-12-03', 'Social services facility cleaning including waiting areas, interview rooms, and offices.', '561720', 'https://www.hampton.gov/departments/social-services'),
-            ('Norfolk International Airport Terminal', 'Norfolk Airport Authority', 'Norfolk, VA', '$750,000', '2025-12-18', 'Airport terminal cleaning including gates, baggage areas, restaurants, and administrative offices.', '561720', 'https://www.norfolkairport.com/business/'),
-            ('Portsmouth City Hall Complex', 'City of Portsmouth', 'Portsmouth, VA', '$135,000', '2025-11-25', 'City hall and municipal complex cleaning including council chambers and public areas.', '561720', 'https://www.portsmouthva.gov/procurement'),
-            ('Chesapeake Regional Medical Center', 'Chesapeake Regional Healthcare', 'Chesapeake, VA', '$485,000', '2025-12-28', 'Hospital cleaning services including patient rooms, surgery suites, and emergency department.', '561720', 'https://www.chesapeakeregional.com/vendors'),
-            ('Virginia Beach Convention & Visitors Bureau', 'Virginia Beach CVB', 'Virginia Beach, VA', '$67,000', '2025-11-20', 'Tourism office cleaning including visitor center and administrative areas.', '561720', 'https://www.visitvirginiabeach.com/about/'),
-            ('Hampton Roads Bridge-Tunnel Commission', 'HRBT Commission', 'Hampton, VA', '$195,000', '2025-12-14', 'Bridge-tunnel facility cleaning including toll plazas and maintenance buildings.', '561720', 'https://www.hrbt.org/procurement/'),
-            ('Suffolk Fire & EMS Headquarters', 'Suffolk Fire & EMS', 'Suffolk, VA', '$88,000', '2025-11-28', 'Fire department headquarters and training facility cleaning.', '561720', 'https://www.suffolkva.us/departments/fire-ems'),
-            ('Newport News City Farm', 'Newport News Parks', 'Newport News, VA', '$45,000', '2025-12-01', 'Agricultural facility cleaning including visitor center and education buildings.', '561720', 'https://www.nngov.com/1449/City-Farm'),
-            ('Williamsburg Community Health Center', 'Peninsula Health District', 'Williamsburg, VA', '$125,000', '2025-12-10', 'Public health facility cleaning including clinic areas and administrative offices.', '561720', 'https://www.vdh.virginia.gov/peninsula/'),
-            ('Virginia Beach Juvenile Detention Center', 'Virginia Beach Sheriff', 'Virginia Beach, VA', '$245,000', '2025-12-20', 'Secure facility cleaning including housing units, administrative areas, and visiting rooms.', '561720', 'https://www.vbgov.com/departments/sheriff/'),
-            ('Hampton Coliseum Entertainment Complex', 'Hampton Coliseum', 'Hampton, VA', '$320,000', '2025-12-06', 'Large venue cleaning including arena, concourses, and event spaces.', '561720', 'https://www.hamptoncoliseum.org/business/'),
-            ('Norfolk Botanical Garden Facilities', 'Norfolk Botanical Garden', 'Norfolk, VA', '$98,000', '2025-11-24', 'Botanical garden facility cleaning including visitor center and greenhouse complexes.', '561720', 'https://norfolkbotanicalgarden.org/about/'),
-            ('Portsmouth Naval Shipyard Museum', 'Portsmouth Museums', 'Portsmouth, VA', '$52,000', '2025-12-02', 'Museum facility cleaning including exhibit areas and administrative offices.', '561720', 'https://www.portsmouthva.gov/museums'),
-            ('Chesapeake Bay Bridge Commission', 'CBBT Commission', 'Virginia Beach, VA', '$275,000', '2025-12-16', 'Bridge facility cleaning including visitor center and maintenance areas.', '561720', 'https://www.cbbt.com/about/procurement'),
-            ('Suffolk Animal Control Facility', 'Suffolk Animal Control', 'Suffolk, VA', '$85,000', '2025-11-26', 'Animal shelter cleaning including kennels, veterinary areas, and administrative offices.', '561720', 'https://www.suffolkva.us/departments/animal-control'),
-            ('Newport News One City Center', 'Newport News Economic Development', 'Newport News, VA', '$155,000', '2025-12-11', 'Municipal office complex cleaning including business development offices.', '561720', 'https://www.nngov.com/economic-development'),
-            ('Williamsburg Police Department', 'Williamsburg Police', 'Williamsburg, VA', '$76,000', '2025-11-29', 'Police facility cleaning including evidence rooms and administrative areas.', '561720', 'https://www.williamsburgva.gov/police'),
-            ('Virginia Beach Public Works Complex', 'Virginia Beach Public Works', 'Virginia Beach, VA', '$185,000', '2025-12-13', 'Public works facility cleaning including vehicle maintenance and administrative areas.', '561720', 'https://www.vbgov.com/departments/public-works'),
-            ('Hampton Roads Regional Jail', 'Hampton Roads Regional Jail', 'Portsmouth, VA', '$385,000', '2025-12-24', 'Correctional facility cleaning including housing units and administrative areas.', '561720', 'https://www.hrrj.org/procurement'),
-            ('Norfolk State University Campus', 'Norfolk State University', 'Norfolk, VA', '$425,000', '2025-12-19', 'University campus cleaning including academic buildings and dormitories.', '561720', 'https://www.nsu.edu/purchasing/'),
-            ('Portsmouth General Hospital', 'Portsmouth General Hospital', 'Portsmouth, VA', '$465,000', '2025-12-27', 'Hospital cleaning services including all patient care areas and support facilities.', '561720', 'https://www.portsmouthgeneralhospital.com/vendors'),
-            ('Chesapeake Arboretum Visitor Center', 'Chesapeake Parks', 'Chesapeake, VA', '$42,000', '2025-11-21', 'Nature center and arboretum facility cleaning including trails and education center.', '561720', 'https://www.cityofchesapeake.net/parks'),
-            ('Virginia Beach Oceanfront Hotels Inspection', 'Virginia Beach Health Dept', 'Virginia Beach, VA', '$95,000', '2025-12-09', 'Health department facility cleaning including inspection offices and laboratories.', '561720', 'https://www.vdh.virginia.gov/virginia-beach/'),
-            ('Suffolk Nansemond River High School', 'Suffolk Public Schools', 'Suffolk, VA', '$285,000', '2025-12-04', 'High school facility cleaning including classrooms, gymnasium, and cafeteria.', '561720', 'https://www.spsk12.net/departments/procurement'),
-            ('Newport News Christopher Newport University', 'Christopher Newport University', 'Newport News, VA', '$365,000', '2025-12-21', 'University campus cleaning including academic and residential buildings.', '561720', 'https://cnu.edu/purchasing/'),
-            ('Williamsburg Premium Outlets Management', 'Premium Outlets', 'Williamsburg, VA', '$225,000', '2025-12-07', 'Retail complex cleaning including common areas and restroom facilities.', '561720', 'https://www.premiumoutlets.com/williamsburg'),
-            ('Hampton VA Medical Center Outpatient', 'Veterans Affairs', 'Hampton, VA', '$285,000', '2025-12-17', 'VA outpatient clinic cleaning including medical areas and administrative offices.', '561720', 'https://www.va.gov/hampton-virginia-health-care/'),
-            ('Norfolk International Terminals', 'Norfolk International Terminals', 'Norfolk, VA', '$485,000', '2025-12-23', 'Port facility cleaning including administrative buildings and maintenance areas.', '561720', 'https://www.norfolkinterminals.com/business/'),
-            ('Portsmouth Children\'s Hospital', 'Children\'s Hospital of The King\'s Daughters', 'Portsmouth, VA', '$395,000', '2025-12-26', 'Pediatric hospital cleaning including patient rooms and specialized care areas.', '561720', 'https://www.chkd.org/about/doing-business/'),
-            ('Chesapeake Conference Center', 'Chesapeake Conference Center', 'Chesapeake, VA', '$165,000', '2025-12-15', 'Conference facility cleaning including meeting rooms and event spaces.', '561720', 'https://www.chesapeakeconferencecenter.com/vendors'),
-            ('Virginia Beach Aquarium & Marine Science', 'Virginia Aquarium Foundation', 'Virginia Beach, VA', '$275,000', '2025-12-29', 'Aquarium facility cleaning including exhibit areas and research laboratories.', '561720', 'https://www.virginiaaquarium.com/about/')
-        ]
-        
-        # Check if contracts already exist
-        c.execute('SELECT COUNT(*) FROM contracts')
-        if c.fetchone()[0] == 0:
-            c.executemany('''INSERT INTO contracts (title, agency, location, value, deadline, description, naics_code, website_url)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', sample_contracts)
-            conn.commit()
-        
-        # Add sample federal contracts from SAM.gov
-        # Note: URLs point to SAM.gov search for janitorial/custodial services in Virginia
-        sample_federal_contracts = [
-            ('Custodial Services - VA Medical Center', 'Department of Veterans Affairs', 'Veterans Health Administration', 'Hampton, VA', '$2,500,000', '2025-12-15', 'Comprehensive custodial services for 500,000 sq ft VA Medical Center including patient care areas, administrative offices, and surgical suites. SDVOSB set-aside.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=custodial&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=custodial', 'VA-25-12345', 'Service-Disabled Veteran-Owned Small Business', '2025-10-01'),
-            ('Janitorial Services - Naval Station Norfolk', 'Department of Defense', 'U.S. Navy', 'Norfolk, VA', '$5,000,000', '2025-12-20', 'Full-service janitorial and custodial services for multiple buildings at Naval Station Norfolk. Security clearance required. 5-year IDIQ contract.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=janitorial&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=janitorial', 'DOD-N-23456', 'Small Business', '2025-10-05'),
-            ('Facility Maintenance - NASA Langley', 'National Aeronautics and Space Administration', 'Langley Research Center', 'Hampton, VA', '$1,800,000', '2025-11-30', 'Facility maintenance and custodial services for research laboratories, wind tunnels, and administrative buildings.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=facility%20maintenance&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=facility%20maintenance', 'NASA-LRC-34567', 'HUBZone', '2025-09-28'),
-            ('Environmental Services - Fort Eustis', 'Department of Defense', 'U.S. Army', 'Newport News, VA', '$3,200,000', '2025-12-10', 'Environmental services including cleaning, waste management, and facility maintenance for Army base facilities.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=environmental%20services&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=environmental%20services', 'ARMY-FE-45678', 'Unrestricted', '2025-10-10'),
-            ('Custodial Services - Coast Guard Base', 'Department of Homeland Security', 'U.S. Coast Guard', 'Portsmouth, VA', '$950,000', '2025-11-25', 'Daily custodial services for Coast Guard facilities including administrative buildings, barracks, and training facilities.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=custodial&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=custodial', 'DHS-CG-56789', 'Small Business', '2025-10-03'),
-            ('Hospital Environmental Services - Naval Medical Center', 'Department of Defense', 'Navy Medicine', 'Portsmouth, VA', '$4,500,000', '2025-12-30', 'Comprehensive environmental services for 400-bed Naval Medical Center including operating rooms, patient floors, and support areas. Infection control protocols required.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=hospital%20environmental&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=hospital%20environmental', 'DOD-NMC-67890', 'Women-Owned Small Business', '2025-10-15'),
-            ('Building Maintenance - Federal Courthouse', 'General Services Administration', 'Public Buildings Service', 'Norfolk, VA', '$1,200,000', '2025-11-20', 'Daily building maintenance and custodial services for U.S. District Court including courtrooms, judges chambers, and public areas.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=building%20maintenance&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=building%20maintenance', 'GSA-PBS-78901', 'Unrestricted', '2025-09-30'),
-            ('Grounds and Facility Maintenance - Colonial NHP', 'Department of Interior', 'National Park Service', 'Yorktown, VA', '$850,000', '2025-12-05', 'Grounds keeping, facility maintenance, and custodial services for Colonial National Historical Park visitor centers and historic structures.', '561730', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=grounds%20maintenance&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=grounds%20maintenance', 'DOI-NPS-89012', 'Small Business', '2025-10-08'),
-            ('Janitorial Services - IRS Service Center', 'Department of Treasury', 'Internal Revenue Service', 'Richmond, VA', '$2,800,000', '2025-12-18', 'Comprehensive janitorial services for 750,000 sq ft IRS processing center. Security clearance and background checks required.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=janitorial&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=janitorial', 'TREAS-IRS-90123', 'Unrestricted', '2025-10-12'),
-            ('Custodial Services - FBI Field Office', 'Department of Justice', 'Federal Bureau of Investigation', 'Norfolk, VA', '$1,500,000', '2025-12-22', 'Specialized custodial services for FBI field office. Top Secret clearance required. Secure area cleaning protocols.', '561720', 'https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BkeywordTags%5D%5B0%5D%5Bkey%5D=custodial&sfm%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=custodial', 'DOJ-FBI-01234', 'Small Business', '2025-10-20'),
-        ]
-        
-        # Check if federal contracts already exist
-        c.execute('SELECT COUNT(*) FROM federal_contracts')
-        if c.fetchone()[0] == 0:
-            c.executemany('''INSERT INTO federal_contracts (title, agency, department, location, value, deadline, description, naics_code, sam_gov_url, notice_id, set_aside, posted_date)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', sample_federal_contracts)
-            conn.commit()
-        
-        # Add sample commercial opportunities - 100+ Commercial Leads
-        sample_commercial = [
-            ('Coastal Dental Group', 'medical', '1234 Hampton Blvd', 'Hampton', 4500, 2800, 'daily', 'General cleaning, sanitization, medical waste disposal', 'HIPAA compliance required, medical-grade disinfectants', 'Office Manager', 'Busy dental practice with 6 operatories requiring daily deep cleaning and sanitization', 'small'),
-            ('Hampton Family Fitness', 'fitness', '567 Fitness Way', 'Hampton', 12000, 4200, 'daily', 'Locker rooms, equipment cleaning, floor mopping', 'Early morning access (5 AM), equipment sanitization', 'Facility Manager', 'Full-service gym with locker rooms, pool area, and cardio/weight equipment', 'medium'),
-            ('Suffolk Legal Associates', 'legal', '890 Professional Dr', 'Suffolk', 6500, 1800, 'weekly', 'Office cleaning, conference rooms, reception area', 'Confidentiality agreement required, after-hours preferred', 'Managing Partner', 'Law firm specializing in real estate and business law with 12 attorneys', 'medium'),
-            ('Oceanfront Medical Center', 'medical', '456 Shore Dr', 'Virginia Beach', 8500, 5200, 'daily', 'Patient rooms, waiting areas, surgical suite cleaning', 'Medical waste handling, infection control protocols', 'Facility Director', 'Urgent care facility with surgical capabilities and imaging department', 'medium'),
-            ('Beach Fitness & Wellness', 'fitness', '789 Atlantic Ave', 'Virginia Beach', 15000, 6800, 'daily', 'Gym equipment, locker rooms, pool deck, yoga studios', '24/7 access facility, specialized floor care for pool area', 'General Manager', 'Premier fitness facility with pool, spa, and group fitness studios', 'large'),
+            if real_contracts:
+                for contract in real_contracts:
+                    c.execute('''INSERT OR IGNORE INTO federal_contracts 
+                                 (title, agency, department, location, value, deadline, description, 
+                                  naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                             (contract['title'], contract['agency'], contract['department'],
+                              contract['location'], contract['value'], contract['deadline'],
+                              contract['description'], contract['naics_code'], contract['sam_gov_url'],
+                              contract['notice_id'], contract['set_aside'], contract['posted_date']))
+                conn.commit()
+                print(f"✅ Successfully loaded {len(real_contracts)} REAL federal contracts from SAM.gov")
+            else:
+                print("⚠️  No contracts fetched. Check SAM_GOV_API_KEY environment variable.")
+        except Exception as e:
+            print(f"⚠️  Could not fetch SAM.gov contracts on init: {e}")
+            print("   Contracts will be fetched on next scheduled update.")
             ('Newport News Orthodontics', 'medical', '321 Dental Plaza', 'Newport News', 3200, 2200, 'daily', 'Operatories, sterilization areas, waiting room', 'Specialized dental equipment cleaning, child-friendly environment', 'Practice Administrator', 'Pediatric and adult orthodontics practice with digital imaging', 'small'),
             ('Colonial Fitness Center', 'fitness', '654 Colonial Way', 'Williamsburg', 8500, 3800, 'daily', 'Cardio areas, free weights, locker rooms', 'Historic district location, early morning cleaning preferred', 'Assistant Manager', 'Community fitness center near Colonial Williamsburg with senior programs', 'medium'),
             ('Tidewater Property Management', 'real-estate', '987 Business Park Dr', 'Norfolk', 5500, 1600, 'weekly', 'Offices, conference rooms, break rooms', 'Flexible scheduling for client meetings, document confidentiality', 'Office Coordinator', 'Property management company overseeing 200+ rental properties', 'medium'),
@@ -1073,28 +1116,11 @@ def init_db():
             ('Norfolk Athletic Club', 'fitness', '852 Athletic Dr', 'Norfolk', 20000, 7500, 'daily', 'Multiple courts, pools, fitness areas, restaurants', 'Athletic club, multiple sports, dining facilities', 'Athletic Director', 'Full-service athletic club with multiple sports and dining', 'large'),
             ('Chesapeake Executive Plaza', 'office', '963 Executive Plaza Dr', 'Chesapeake', 14000, 3100, 'weekly', 'Executive offices, boardrooms, business center', 'Executive plaza, high-end finishes, professional services', 'Plaza Director', 'Executive office plaza with premium business services', 'large'),
             ('Portsmouth Innovation Center', 'office', '159 Innovation Center Dr', 'Portsmouth', 11000, 2600, 'weekly', 'Tech startups, labs, conference rooms, coworking', 'Innovation center, emerging technology, flexible spaces', 'Innovation Director', 'Innovation center with technology startups and research', 'large'),
-            ('Hampton Medical Complex', 'medical', '357 Medical Complex Dr', 'Hampton', 24000, 9800, 'daily', 'Hospital outpatient, specialty clinics, diagnostic center', 'Medical complex, hospital standards, multiple specialties', 'Complex Administrator', 'Medical complex with outpatient hospital services', 'large'),
-            ('Virginia Beach Corporate Campus', 'office', '486 Corporate Campus Dr', 'Virginia Beach', 35000, 7500, 'weekly', 'Corporate headquarters, training center, cafeteria', 'Corporate campus, multiple buildings, executive standards', 'Campus Facilities Manager', 'Corporate campus with headquarters and training facilities', 'large'),
-            ('Suffolk Rehabilitation Hospital', 'medical', '789 Rehabilitation Dr', 'Suffolk', 18000, 8500, 'daily', 'Patient rooms, therapy areas, exercise facilities', 'Rehabilitation hospital, patient mobility, therapeutic equipment', 'Hospital Administrator', 'Rehabilitation hospital with inpatient and outpatient services', 'large'),
-            ('Newport News Convention Hotel', 'hospitality', '123 Convention Hotel Dr', 'Newport News', 38000, 13500, 'daily', 'Hotel rooms, convention center, restaurants, retail', 'Convention hotel, large events, multiple dining venues', 'Hotel General Manager', '300-room convention hotel with attached convention center', 'large'),
-            ('Williamsburg Medical Center', 'medical', '654 Medical Center Dr', 'Williamsburg', 26000, 11000, 'daily', 'Emergency department, inpatient units, surgical suites', 'Hospital facility, emergency services, surgical standards', 'Chief Operating Officer', 'Regional medical center with emergency and surgical services', 'large'),
-            ('Chesapeake Business Campus', 'office', '321 Business Campus Dr', 'Chesapeake', 28000, 6200, 'weekly', 'Multiple office buildings, shared amenities, conference center', 'Business campus, multiple companies, shared services', 'Campus Property Manager', 'Business campus with 50 companies and shared facilities', 'large'),
-            ('Portsmouth Regional Hospital', 'medical', '789 Hospital Dr', 'Portsmouth', 45000, 18000, 'daily', 'Patient rooms, operating rooms, emergency department', 'Full-service hospital, all departments, 24/7 operations', 'Director of Environmental Services', '250-bed regional hospital with full medical services', 'large'),
-            ('Virginia Beach Medical University', 'education', '456 University Dr', 'Virginia Beach', 55000, 12000, 'weekly', 'Medical school, research labs, clinical facilities', 'Medical university, research standards, clinical training', 'University Facilities Director', 'Medical university with research and clinical training', 'large'),
-            ('Norfolk Regional Medical Center', 'medical', '147 Regional Dr', 'Norfolk', 62000, 22000, 'daily', 'All hospital departments, research facilities, medical offices', 'Major medical center, trauma center, research hospital', 'Vice President of Operations', '400-bed academic medical center with trauma services', 'large')
-        ]
-        
-        # Check if commercial opportunities already exist
-        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
-        if c.fetchone()[0] == 0:
-            c.executemany('''INSERT INTO commercial_opportunities 
-                             (business_name, business_type, address, location, square_footage, monthly_value, 
-                              frequency, services_needed, special_requirements, contact_type, description, size)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', sample_commercial)
-            conn.commit()
         
         conn.close()
-        print("Database initialized successfully")
+        print("✅ Database initialization complete - ready for real leads!")
+        print("💡 Commercial/Residential leads will appear as users submit request forms")
+        print("📡 Federal contracts are being fetched from SAM.gov API...")
         
     except Exception as e:
         print(f"Database initialization error: {e}")
@@ -1295,6 +1321,160 @@ def logout():
     session.clear()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('landing'))
+
+# ============================================================================
+# PAYPAL SUBSCRIPTION ROUTES
+# ============================================================================
+
+@app.route('/subscribe/<plan_type>')
+@login_required
+def subscribe(plan_type):
+    """Initiate PayPal subscription"""
+    user_email = session.get('user_email')
+    company_name = session.get('company_name', 'User')
+    
+    if plan_type not in SUBSCRIPTION_PLANS:
+        flash('Invalid subscription plan selected.', 'error')
+        return redirect(url_for('register'))
+    
+    plan = SUBSCRIPTION_PLANS[plan_type]
+    
+    try:
+        # Create PayPal billing agreement (subscription)
+        billing_agreement = paypalrestsdk.BillingAgreement({
+            "name": plan['name'],
+            "description": f"Virginia Cleaning Contracts Lead Access - {plan['name']}",
+            "start_date": (datetime.now() + timedelta(minutes=5)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "plan": {
+                "id": plan['plan_id']
+            },
+            "payer": {
+                "payment_method": "paypal",
+                "payer_info": {
+                    "email": user_email
+                }
+            }
+        })
+        
+        if billing_agreement.create():
+            # Get approval URL
+            for link in billing_agreement.links:
+                if link.rel == "approval_url":
+                    return redirect(link.href)
+        else:
+            print(f"PayPal Error: {billing_agreement.error}")
+            flash('Unable to create subscription. Please try again or contact support.', 'error')
+            return redirect(url_for('register'))
+            
+    except Exception as e:
+        print(f"PayPal Exception: {e}")
+        flash('Payment system error. Please try again later.', 'error')
+        return redirect(url_for('register'))
+
+@app.route('/subscription-success')
+@login_required
+def subscription_success():
+    """Handle successful PayPal subscription approval"""
+    token = request.args.get('token')
+    
+    if not token:
+        flash('Subscription verification failed. Please try again.', 'error')
+        return redirect(url_for('register'))
+    
+    try:
+        # Execute the billing agreement
+        billing_agreement = paypalrestsdk.BillingAgreement.execute(token)
+        
+        if billing_agreement:
+            # Update user to paid subscriber
+            user_email = session.get('user_email')
+            agreement_id = billing_agreement.id
+            
+            db.session.execute(text('''
+                UPDATE leads 
+                SET subscription_status = 'paid',
+                    paypal_subscription_id = :sub_id,
+                    subscription_start_date = :start_date,
+                    last_payment_date = :payment_date
+                WHERE email = :email
+            '''), {
+                'sub_id': agreement_id,
+                'start_date': datetime.now().strftime('%Y-%m-%d'),
+                'payment_date': datetime.now().strftime('%Y-%m-%d'),
+                'email': user_email
+            })
+            db.session.commit()
+            
+            flash('🎉 Subscription activated! Welcome to exclusive cleaning contract leads.', 'success')
+            return redirect(url_for('lead_marketplace'))
+        else:
+            flash('Subscription activation failed. Please contact support.', 'error')
+            return redirect(url_for('register'))
+            
+    except Exception as e:
+        print(f"PayPal Execute Error: {e}")
+        flash('Subscription verification error. Please contact support with your payment confirmation.', 'error')
+        return redirect(url_for('register'))
+
+@app.route('/subscription-cancel')
+def subscription_cancel():
+    """Handle cancelled PayPal subscription"""
+    flash('Subscription cancelled. You can subscribe anytime to access exclusive leads!', 'info')
+    return redirect(url_for('register'))
+
+@app.route('/webhook/paypal', methods=['POST'])
+def paypal_webhook():
+    """Handle PayPal webhook events (subscription updates, cancellations, payments)"""
+    try:
+        webhook_data = request.json
+        event_type = webhook_data.get('event_type')
+        
+        print(f"📥 PayPal Webhook: {event_type}")
+        
+        if event_type == 'BILLING.SUBSCRIPTION.CANCELLED':
+            # User cancelled subscription
+            subscription_id = webhook_data['resource']['id']
+            db.session.execute(text('''
+                UPDATE leads 
+                SET subscription_status = 'cancelled'
+                WHERE paypal_subscription_id = :sub_id
+            '''), {'sub_id': subscription_id})
+            db.session.commit()
+            print(f"✅ Subscription {subscription_id} marked as cancelled")
+        
+        elif event_type == 'PAYMENT.SALE.COMPLETED':
+            # Payment received
+            billing_agreement_id = webhook_data['resource'].get('billing_agreement_id')
+            if billing_agreement_id:
+                db.session.execute(text('''
+                    UPDATE leads 
+                    SET subscription_status = 'paid',
+                        last_payment_date = :payment_date
+                    WHERE paypal_subscription_id = :sub_id
+                '''), {
+                    'sub_id': billing_agreement_id,
+                    'payment_date': datetime.now().strftime('%Y-%m-%d')
+                })
+                db.session.commit()
+                print(f"✅ Payment recorded for subscription {billing_agreement_id}")
+        
+        elif event_type == 'BILLING.SUBSCRIPTION.SUSPENDED':
+            # Subscription suspended (payment failure)
+            subscription_id = webhook_data['resource']['id']
+            db.session.execute(text('''
+                UPDATE leads 
+                SET subscription_status = 'suspended'
+                WHERE paypal_subscription_id = :sub_id
+            '''), {'sub_id': subscription_id})
+            db.session.commit()
+            print(f"⚠️  Subscription {subscription_id} suspended")
+        
+        return jsonify({'status': 'success'}), 200
+        
+    except Exception as e:
+        print(f"❌ Webhook error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
 
 @app.route('/contracts')
 def contracts():
