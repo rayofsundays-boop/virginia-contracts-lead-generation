@@ -186,14 +186,7 @@
                             }
                         }
                         
-                        // Check for alerts
-                        if (data.out_of_credits && !sessionStorage.getItem('credits_alert_shown')) {
-                            showCreditsAlert('out');
-                            sessionStorage.setItem('credits_alert_shown', 'true');
-                        } else if (data.low_credits && !sessionStorage.getItem('low_credits_alert_shown')) {
-                            showCreditsAlert('low');
-                            sessionStorage.setItem('low_credits_alert_shown', 'true');
-                        }
+                        // Do not show automatic alerts - only show when user tries to access a lead
                     }
                 })
                 .catch(error => {

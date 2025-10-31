@@ -522,10 +522,10 @@ def register():
         conn = get_db_connection()
         c = conn.cursor()
         c.execute('''INSERT INTO leads (company_name, contact_name, email, phone, 
-                     state, experience_years, certifications, credits_balance)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                     state, experience_years, certifications, free_leads_remaining, credits_balance)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                   (company_name, contact_name, email, phone, state, 
-                   experience_years, certifications, 10))  # Give 10 free credits
+                   experience_years, certifications, 3, 0))  # Give 3 free leads
         conn.commit()
         conn.close()
         
