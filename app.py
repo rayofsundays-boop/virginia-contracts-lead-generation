@@ -4711,8 +4711,9 @@ def admin_panel():
         users = []
         gov_contracts = 0
         commercial_leads = 0
+        all_leads = []
         
-        # Try to get user statistics
+        # Try to get user statistics from leads table
         try:
             user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar() or 0
             paid_count = db.session.execute(text('''
@@ -4730,12 +4731,21 @@ def admin_panel():
         except Exception as e:
             print(f"Note: leads table not found: {e}")
         
-        # Try to get contract counts
+        # Get contract counts from the actual contracts table
         try:
-            gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM government_contracts')).scalar() or 0
+            gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
+            
+            # Get all available contract leads
+            all_leads = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, 
+                       description, naics_code, set_aside, posted_date, solicitation_number
+                FROM contracts 
+                ORDER BY posted_date DESC
+            ''')).fetchall()
         except Exception as e:
-            print(f"Note: government_contracts table not found: {e}")
+            print(f"Note: contracts table error: {e}")
         
+        # Try to get commercial opportunities count
         try:
             commercial_leads = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
         except Exception as e:
@@ -4747,9 +4757,12 @@ def admin_panel():
                              unpaid_count=unpaid_count,
                              users=users,
                              gov_contracts=gov_contracts,
-                             commercial_leads=commercial_leads)
+                             commercial_leads=commercial_leads,
+                             all_leads=all_leads)
     except Exception as e:
         print(f"Error loading admin panel: {e}")
+        import traceback
+        traceback.print_exc()
         return f"<h1>Error loading admin panel</h1><p>{str(e)}</p><a href='/'>Back to Home</a>"
 
 @app.route('/admin-logout')
