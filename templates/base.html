@@ -255,25 +255,7 @@
                             <a class="nav-link" href="{{ url_for('toolbox') }}">Resource Toolbox</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ai_proposal_generator') }}">AI Proposal Generator</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('proposal_templates') }}">Proposal Templates</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ai_assistant') }}">AI Assistant</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('proposal_support') }}">Expert Consultation</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('pricing_calculator') }}">Pricing Calculator</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('pricing_guide') }}">Pricing Guide</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('partnerships') }}">Partnerships</a>
                         </li>
                         
                         {% if session.get('user_email') %}
@@ -295,14 +277,21 @@
                                         {% endif %}
                                     </small>
                                 </li>
-                                <li><a class="dropdown-item" href="{{ url_for('customer_dashboard') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}">My Leads</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('customer_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}"><i class="fas fa-briefcase me-2"></i>My Leads</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('ai_proposal_generator') }}"><i class="fas fa-magic me-2"></i>AI Proposal Generator</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('proposal_templates') }}"><i class="fas fa-file-alt me-2"></i>Proposal Templates</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('ai_assistant') }}"><i class="fas fa-robot me-2"></i>AI Assistant</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('proposal_support') }}"><i class="fas fa-headset me-2"></i>Expert Consultation</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('pricing_calculator') }}"><i class="fas fa-calculator me-2"></i>Pricing Calculator</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('partnerships') }}"><i class="fas fa-handshake me-2"></i>Partnerships</a></li>
                                 {% if session.get('is_admin') %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('admin_panel') }}"><i class="fas fa-shield-alt me-2"></i>Admin Panel</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sign Out</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
                             </ul>
                         </li>
                         {% else %}
