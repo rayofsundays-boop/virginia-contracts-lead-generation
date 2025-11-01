@@ -349,25 +349,30 @@ def get_dashboard_cache(user_email):
         if cache:
             return json.loads(cache[0])
     except Exception as e:
-        print(f"Cache read error: {e}")
+        # Silently fail if table doesn't exist (graceful degradation)
+        if "does not exist" not in str(e).lower() and "no such table" not in str(e).lower():
+            print(f"Cache read error: {e}")
     return None
 
 def set_dashboard_cache(user_email, stats_data, ttl_minutes=5):
     """Cache dashboard data"""
     try:
-        db.session.execute(text('''
+        # Use string formatting for interval since it can't be parameterized properly
+        db.session.execute(text(f'''
             INSERT INTO dashboard_cache (user_email, stats_data, expires_at)
-            VALUES (:email, :data, NOW() + INTERVAL ':ttl minutes')
+            VALUES (:email, :data, NOW() + INTERVAL '{ttl_minutes} minutes')
             ON CONFLICT (user_email) 
-            DO UPDATE SET stats_data = :data, expires_at = NOW() + INTERVAL ':ttl minutes'
+            DO UPDATE SET stats_data = :data, expires_at = NOW() + INTERVAL '{ttl_minutes} minutes'
         '''), {
             'email': user_email,
-            'data': json.dumps(stats_data),
-            'ttl': ttl_minutes
+            'data': json.dumps(stats_data)
         })
         db.session.commit()
     except Exception as e:
-        print(f"Cache write error: {e}")
+        # Silently fail if table doesn't exist (graceful degradation)
+        if "does not exist" not in str(e).lower() and "no such table" not in str(e).lower():
+            print(f"Cache write error: {e}")
+        db.session.rollback()
         db.session.rollback()
 
 # Add to Jinja environment
