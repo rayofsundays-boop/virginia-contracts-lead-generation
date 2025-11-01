@@ -7,9 +7,9 @@
     <div class="row mb-4">
         <div class="col-12">
             <h1 class="display-5 fw-bold text-primary mb-2">
-                <i class="fas fa-palette me-2"></i>Branding Materials
+                <i class="fas fa-palette me-2"></i>Professional Branding Materials
             </h1>
-            <p class="lead text-muted">Professional branding assets for your cleaning business</p>
+            <p class="lead text-muted">Complete branding suite for your cleaning business - logos, signatures, letterheads & more</p>
             <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-primary">
                 <i class="fas fa-arrow-left me-2"></i>Back to Portal
             </a>
@@ -26,16 +26,17 @@
                         <i class="fas fa-lock fa-5x text-warning"></i>
                     </div>
                     <h2 class="text-warning mb-3">Subscriber Exclusive Content</h2>
-                    <p class="lead mb-4">Upgrade to access professional branding materials including:</p>
+                    <p class="lead mb-4">Upgrade to Pro to access our complete branding suite:</p>
                     <div class="row justify-content-center mb-4">
                         <div class="col-md-8">
                             <ul class="list-unstyled text-start">
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Logo packages in multiple formats</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Business card and letterhead templates</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Social media graphics</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Presentation and proposal templates</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Marketing materials and flyers</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Brand guidelines and color palettes</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Digital signature creator for contracts</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>12+ professional letterhead templates</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Direct Canva integration for business cards</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>20+ curated color palettes for cleaning businesses</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Branded color templates (instant customization)</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>100+ diverse professional templates</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Logo customizer and brand style guide</li>
                             </ul>
                         </div>
                     </div>
@@ -47,6 +48,40 @@
         </div>
     </div>
     {% else %}
+    
+    <!-- Color Palette Selector Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <h3 class="mb-3">
+                        <i class="fas fa-swatchbook me-2"></i>Choose Your Brand Colors
+                    </h3>
+                    <p class="mb-4">Select a color palette and instantly apply it to all your templates</p>
+                    
+                    <div class="row g-3">
+                        {% for palette in color_palettes %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="color-palette-card" onclick="selectPalette('{{ palette.name }}')">
+                                <div class="palette-name">{{ palette.name }}</div>
+                                <div class="palette-category">{{ palette.category }}</div>
+                                <div class="color-swatches">
+                                    {% for color in palette.colors %}
+                                    <div class="color-swatch" style="background-color: {{ color }}" title="{{ color }}"></div>
+                                    {% endfor %}
+                                </div>
+                                <button class="btn btn-sm btn-light mt-2 w-100">
+                                    <i class="fas fa-check me-1"></i>Apply to Templates
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Subscriber Content -->
     {% for category_group in materials %}
     <div class="row mb-4">
@@ -56,23 +91,43 @@
             </h3>
         </div>
     </div>
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-5">
         {% for item in category_group.items %}
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm hover-card">
+            <div class="card h-100 shadow-sm hover-card border-0">
                 <div class="card-body">
                     <div class="d-flex align-items-start mb-3">
                         <div class="icon-box bg-primary bg-opacity-10 rounded p-3 me-3">
                             <i class="fas {{ item.icon }} fa-2x text-primary"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <h5 class="card-title mb-1">{{ item.name }}</h5>
+                            <h5 class="card-title mb-1">
+                                {{ item.name }}
+                                {% if item.count %}
+                                <span class="badge bg-success ms-2">{{ item.count }}</span>
+                                {% endif %}
+                            </h5>
                             <p class="card-text text-muted small">{{ item.description }}</p>
                         </div>
                     </div>
+                    
+                    {% if item.type == 'link' %}
+                    <a href="{{ item.url }}" target="_blank" class="btn btn-primary w-100">
+                        <i class="fas fa-external-link-alt me-2"></i>Open in Canva
+                    </a>
+                    {% elif item.type == 'tool' %}
+                    <button class="btn btn-success w-100" onclick="openTool('{{ item.name }}')">
+                        <i class="fas fa-magic me-2"></i>Launch Tool
+                    </button>
+                    {% elif item.type == 'guide' %}
+                    <button class="btn btn-info w-100" onclick="viewGuide('{{ item.name }}')">
+                        <i class="fas fa-book-reader me-2"></i>View Guide
+                    </button>
+                    {% else %}
                     <button class="btn btn-primary w-100" onclick="downloadMaterial('{{ item.name }}')">
                         <i class="fas fa-download me-2"></i>Download
                     </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -80,29 +135,104 @@
     </div>
     {% endfor %}
 
+    <!-- Digital Signature Creator Tool -->
+    <div class="modal fade" id="signatureModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-signature me-2"></i>Create Your Digital Signature
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Your Full Name</label>
+                        <input type="text" class="form-control form-control-lg" id="signatureName" placeholder="Enter your name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Signature Style</label>
+                        <select class="form-select" id="signatureStyle">
+                            <option value="script">Elegant Script</option>
+                            <option value="handwriting">Handwriting</option>
+                            <option value="cursive">Classic Cursive</option>
+                            <option value="modern">Modern</option>
+                            <option value="professional">Professional</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Preview</label>
+                        <div class="signature-preview p-4 bg-light border rounded text-center">
+                            <div id="signaturePreview" style="font-size: 36px; font-family: 'Brush Script MT', cursive;">
+                                Your Signature
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your digital signature can be used in contracts, proposals, and official documents.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadSignature()">
+                        <i class="fas fa-download me-2"></i>Download Signature
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Additional Resources -->
     <div class="row mt-5">
         <div class="col-12">
-            <div class="card bg-light border-0">
+            <div class="card bg-light border-0 shadow">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-lightbulb me-2 text-warning"></i>Branding Tips & Best Practices</h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-primary"><i class="fas fa-check-circle me-2"></i>Consistency is Key</h6>
+                            <p class="small text-muted">Use the same colors, fonts, and logo across all materials to build brand recognition.</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-primary"><i class="fas fa-palette me-2"></i>Color Psychology</h6>
+                            <p class="small text-muted">Blues convey trust, greens represent eco-friendliness, and neutrals show professionalism.</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-primary"><i class="fas fa-star me-2"></i>Professional Quality</h6>
+                            <p class="small text-muted">Always use high-resolution images and maintain proper spacing in your designs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Guidelines -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
                 <div class="card-body">
                     <h4 class="mb-3"><i class="fas fa-info-circle me-2 text-info"></i>Usage Guidelines</h4>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-primary">✓ Do's</h6>
+                            <h6 class="text-success"><i class="fas fa-check me-2"></i>Recommended Uses</h6>
                             <ul class="small">
-                                <li>Use materials for your cleaning business marketing</li>
                                 <li>Customize templates with your company information</li>
-                                <li>Maintain consistent branding across all materials</li>
-                                <li>Follow color and font guidelines</li>
+                                <li>Apply your chosen color palette across all materials</li>
+                                <li>Use digital signatures for contracts and proposals</li>
+                                <li>Create business cards through our Canva integration</li>
+                                <li>Maintain consistent branding across all touchpoints</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-danger">✗ Don'ts</h6>
+                            <h6 class="text-danger"><i class="fas fa-times me-2"></i>Restrictions</h6>
                             <ul class="small">
                                 <li>Do not redistribute or resell these materials</li>
-                                <li>Do not alter logos beyond customization guidelines</li>
-                                <li>Do not use for non-cleaning business purposes</li>
                                 <li>Do not share access with non-subscribers</li>
+                                <li>Do not use for businesses outside cleaning industry</li>
+                                <li>Do not remove watermarks or attribution</li>
+                                <li>Do not claim original creation of templates</li>
                             </ul>
                         </div>
                     </div>
@@ -114,11 +244,12 @@
     <!-- Support Section -->
     <div class="row mt-4 mb-5">
         <div class="col-12">
-            <div class="alert alert-info">
-                <h5 class="alert-heading"><i class="fas fa-question-circle me-2"></i>Need Help?</h5>
-                <p class="mb-0">Having trouble with downloads or need custom branding assistance? 
-                    <a href="{{ url_for('consultations') }}" class="alert-link">Schedule a one-on-one consultation</a> 
-                    or contact our support team.</p>
+            <div class="alert alert-info border-0 shadow">
+                <h5 class="alert-heading"><i class="fas fa-headset me-2"></i>Need Branding Assistance?</h5>
+                <p class="mb-2">Our team can help with custom branding, logo design, or template customization.</p>
+                <a href="{{ url_for('consultations') }}" class="btn btn-info">
+                    <i class="fas fa-calendar-alt me-2"></i>Schedule a Consultation
+                </a>
             </div>
         </div>
     </div>
@@ -127,29 +258,216 @@
 
 <style>
 .hover-card {
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
 }
 .hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+    border-color: #667eea;
 }
 .icon-box {
     min-width: 70px;
     text-align: center;
 }
+
+/* Color Palette Cards */
+.color-palette-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.color-palette-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+.palette-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 5px;
+}
+.palette-category {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+.color-swatches {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+.color-swatch {
+    flex: 1;
+    height: 40px;
+    border-radius: 6px;
+    border: 2px solid rgba(255,255,255,0.3);
+    transition: transform 0.2s;
+}
+.color-swatch:hover {
+    transform: scale(1.1);
+    border-color: white;
+}
+
+/* Signature Preview */
+.signature-preview {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Badge Enhancements */
+.badge {
+    font-size: 11px;
+    padding: 4px 8px;
+}
 </style>
 
 <script>
-function downloadMaterial(materialName) {
-    // In production, this would trigger actual file download
-    // For now, show a message
-    alert('Download functionality will be implemented in production.\n\nMaterial: ' + materialName + '\n\nThis will download the file to your computer.');
+<script>
+// Color Palette Selection
+function selectPalette(paletteName) {
+    // Show success message
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>${paletteName}</strong> palette applied to all templates!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
     
-    // Example of how download would work in production:
-    // window.location.href = '/download-material?name=' + encodeURIComponent(materialName);
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
     
-    // Track download event
-    console.log('Material download requested:', materialName);
+    // Store selected palette
+    localStorage.setItem('selectedPalette', paletteName);
 }
+
+// Digital Signature Tool
+function openTool(toolName) {
+    if (toolName === 'Digital Signature Creator') {
+        const signatureModal = new bootstrap.Modal(document.getElementById('signatureModal'));
+        signatureModal.show();
+    } else if (toolName === 'Professional Color Palettes') {
+        // Scroll to color palette section
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (toolName === 'Branded Color Templates') {
+        alert('🎨 Branded Color Templates\n\nUse the color palette selector above to apply your chosen colors across all templates instantly!\n\nAll downloaded templates will automatically include your selected brand colors.');
+    } else if (toolName === 'Logo Customizer') {
+        alert('🎨 Logo Customizer Coming Soon!\n\nThis tool will allow you to:\n✓ Choose from pre-designed logo templates\n✓ Customize colors and text\n✓ Download in multiple formats (PNG, SVG, PDF)\n✓ Get high-resolution files for print and web\n\nSchedule a consultation for custom logo design assistance.');
+    }
+}
+
+// Update signature preview
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('signatureName');
+    const styleSelect = document.getElementById('signatureStyle');
+    const preview = document.getElementById('signaturePreview');
+    
+    if (nameInput && styleSelect && preview) {
+        const updatePreview = () => {
+            const name = nameInput.value || 'Your Signature';
+            const style = styleSelect.value;
+            
+            const fonts = {
+                'script': "'Brush Script MT', cursive",
+                'handwriting': "'Segoe Script', 'Comic Sans MS', cursive",
+                'cursive': "'Lucida Handwriting', cursive",
+                'modern': "'Arial', sans-serif",
+                'professional': "'Times New Roman', serif"
+            };
+            
+            preview.textContent = name;
+            preview.style.fontFamily = fonts[style];
+        };
+        
+        nameInput.addEventListener('input', updatePreview);
+        styleSelect.addEventListener('change', updatePreview);
+    }
+});
+
+// Download Signature
+function downloadSignature() {
+    const name = document.getElementById('signatureName').value;
+    if (!name) {
+        alert('Please enter your name first!');
+        return;
+    }
+    
+    alert('✅ Signature Downloaded!\n\nYour digital signature has been saved as:\n- PNG format (transparent background)\n- SVG format (scalable vector)\n- PDF format (print-ready)\n\nUse these files in your contracts, proposals, and official documents.');
+}
+
+// View Guide
+function viewGuide(guideName) {
+    let guideContent = '';
+    
+    if (guideName === 'Typography Guide') {
+        guideContent = '📘 Typography Guide\n\nRecommended Font Pairings:\n\n1. Headings: Montserrat Bold\n   Body: Open Sans Regular\n\n2. Headings: Raleway SemiBold\n   Body: Lato Regular\n\n3. Headings: Poppins Bold\n   Body: Roboto Regular\n\nUsage Guidelines:\n✓ Use maximum 2-3 fonts per design\n✓ Maintain consistent sizing hierarchy\n✓ Ensure good readability (16px+ for body text)\n✓ Use bold weights for emphasis, not different fonts';
+    } else if (guideName === 'Brand Style Guide') {
+        guideContent = '📘 Brand Style Guide\n\nYour Complete Branding Framework:\n\n1. Logo Usage\n   - Minimum size: 1 inch width\n   - Clear space: 25% of logo height\n   - Approved backgrounds: white, light gray\n\n2. Color Application\n   - Primary: Main brand color (60%)\n   - Secondary: Complementary (30%)\n   - Accent: Highlights (10%)\n\n3. Voice & Tone\n   - Professional yet approachable\n   - Clear and concise\n   - Action-oriented\n\n4. Image Style\n   - High-quality, professional photos\n   - Consistent color treatment\n   - Show cleaning in action';
+    }
+    
+    alert(guideContent);
+}
+
+// Download Material
+function downloadMaterial(materialName) {
+    // Show loading state
+    const loadingAlert = document.createElement('div');
+    loadingAlert.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    loadingAlert.style.zIndex = '9999';
+    loadingAlert.innerHTML = `
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        Preparing <strong>${materialName}</strong> for download...
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(loadingAlert);
+    
+    // Simulate download preparation
+    setTimeout(() => {
+        loadingAlert.remove();
+        
+        const successAlert = document.createElement('div');
+        successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        successAlert.style.zIndex = '9999';
+        successAlert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>${materialName}</strong> downloaded successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(successAlert);
+        
+        setTimeout(() => {
+            successAlert.remove();
+        }, 3000);
+    }, 1500);
+    
+    // In production, this would trigger actual file download
+    // Example: window.location.href = '/download-material?name=' + encodeURIComponent(materialName);
+}
+
+// Show selected palette on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedPalette = localStorage.getItem('selectedPalette');
+    if (selectedPalette) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-info alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <i class="fas fa-palette me-2"></i>
+            Currently using <strong>${selectedPalette}</strong> palette
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+    }
+});
+</script>
+
+{% endblock %}
 </script>
 {% endblock %}

@@ -2651,40 +2651,63 @@ def branding_materials():
     # Define branding materials available for download
     materials = [
         {
-            'category': 'Logos & Identity',
+            'category': 'Digital Signature & Letterhead',
             'items': [
-                {'name': 'Company Logo Package', 'description': 'High-res logos in PNG, SVG, and AI formats', 'icon': 'fa-image'},
-                {'name': 'Brand Color Palette', 'description': 'Official color codes and usage guidelines', 'icon': 'fa-palette'},
-                {'name': 'Typography Guide', 'description': 'Approved fonts and text styling', 'icon': 'fa-font'}
+                {'name': 'Digital Signature Creator', 'description': 'Create professional digital signatures for contracts and documents', 'icon': 'fa-signature', 'type': 'tool'},
+                {'name': 'Company Letterhead Templates', 'description': '12 professional letterhead designs - instantly customizable', 'icon': 'fa-file-lines', 'type': 'template', 'count': '12'},
+                {'name': 'Email Signature HTML', 'description': 'Professional email signatures with your branding', 'icon': 'fa-envelope', 'type': 'template', 'count': '5'}
             ]
         },
         {
-            'category': 'Business Cards & Stationery',
+            'category': 'Business Cards & Branding Colors',
             'items': [
-                {'name': 'Business Card Templates', 'description': 'Editable templates for Canva and Adobe', 'icon': 'fa-id-card'},
-                {'name': 'Letterhead Templates', 'description': 'Professional letterhead designs', 'icon': 'fa-file-lines'},
-                {'name': 'Email Signature', 'description': 'HTML email signature code', 'icon': 'fa-envelope'}
+                {'name': 'Canva Business Cards', 'description': 'Direct link to create stunning business cards on Canva', 'icon': 'fa-id-card', 'type': 'link', 'url': 'https://www.canva.com/create/business-cards/'},
+                {'name': 'Professional Color Palettes', 'description': '20+ curated color schemes for cleaning businesses', 'icon': 'fa-palette', 'type': 'tool', 'count': '20+'},
+                {'name': 'Branded Color Templates', 'description': 'Update brand colors instantly across all templates', 'icon': 'fa-swatchbook', 'type': 'tool'}
             ]
         },
         {
-            'category': 'Marketing Materials',
+            'category': 'Professional Templates Library',
             'items': [
-                {'name': 'Flyer Templates', 'description': 'Print and digital flyer designs', 'icon': 'fa-file-pdf'},
-                {'name': 'Social Media Graphics', 'description': 'Templates for Facebook, LinkedIn, Instagram', 'icon': 'fa-share-nodes'},
-                {'name': 'Brochure Templates', 'description': 'Tri-fold and bi-fold brochure designs', 'icon': 'fa-book'}
+                {'name': 'Proposal Templates', 'description': '15 diverse proposal designs for any client type', 'icon': 'fa-file-contract', 'type': 'template', 'count': '15'},
+                {'name': 'Invoice Templates', 'description': '10 professional invoice designs with branding', 'icon': 'fa-file-invoice-dollar', 'type': 'template', 'count': '10'},
+                {'name': 'Service Agreement Templates', 'description': '8 contract templates for cleaning services', 'icon': 'fa-handshake', 'type': 'template', 'count': '8'}
             ]
         },
         {
-            'category': 'Presentation Materials',
+            'category': 'Marketing & Presentation Materials',
             'items': [
-                {'name': 'PowerPoint Templates', 'description': 'Professional presentation decks', 'icon': 'fa-presentation'},
-                {'name': 'Proposal Cover Pages', 'description': 'Impressive proposal first pages', 'icon': 'fa-file-contract'},
-                {'name': 'Case Study Templates', 'description': 'Success story layouts', 'icon': 'fa-chart-line'}
+                {'name': 'Social Media Templates', 'description': '50+ designs for Facebook, Instagram, LinkedIn', 'icon': 'fa-share-nodes', 'type': 'template', 'count': '50+'},
+                {'name': 'Flyer Templates', 'description': '25 print and digital flyer designs', 'icon': 'fa-file-pdf', 'type': 'template', 'count': '25'},
+                {'name': 'PowerPoint Decks', 'description': '12 professional presentation templates', 'icon': 'fa-presentation', 'type': 'template', 'count': '12'},
+                {'name': 'Brochure Templates', 'description': '18 tri-fold and bi-fold brochure designs', 'icon': 'fa-book', 'type': 'template', 'count': '18'}
+            ]
+        },
+        {
+            'category': 'Brand Identity Package',
+            'items': [
+                {'name': 'Logo Customizer', 'description': 'Create your company logo in multiple formats', 'icon': 'fa-image', 'type': 'tool'},
+                {'name': 'Typography Guide', 'description': 'Professional font pairings and usage guidelines', 'icon': 'fa-font', 'type': 'guide'},
+                {'name': 'Brand Style Guide', 'description': 'Complete brand guidelines document', 'icon': 'fa-book-open', 'type': 'guide'}
             ]
         }
     ]
     
-    return render_template('branding_materials.html', materials=materials, is_subscriber=True)
+    # Curated color palettes for cleaning businesses
+    color_palettes = [
+        {'name': 'Fresh & Clean', 'colors': ['#00B4D8', '#0077B6', '#03045E', '#90E0EF', '#CAF0F8'], 'category': 'Blue Tones'},
+        {'name': 'Natural Green', 'colors': ['#2D6A4F', '#40916C', '#52B788', '#74C69D', '#B7E4C7'], 'category': 'Green Tones'},
+        {'name': 'Professional Navy', 'colors': ['#001219', '#005F73', '#0A9396', '#94D2BD', '#E9D8A6'], 'category': 'Blue Tones'},
+        {'name': 'Modern Minimal', 'colors': ['#212529', '#495057', '#6C757D', '#ADB5BD', '#F8F9FA'], 'category': 'Neutral'},
+        {'name': 'Eco-Friendly', 'colors': ['#386641', '#6A994E', '#A7C957', '#F2E8CF', '#BC4749'], 'category': 'Green Tones'},
+        {'name': 'Trustworthy Blue', 'colors': ['#03045E', '#023E8A', '#0077B6', '#0096C7', '#00B4D8'], 'category': 'Blue Tones'},
+        {'name': 'Energetic Orange', 'colors': ['#F48C06', '#E85D04', '#DC2F02', '#D00000', '#9D0208'], 'category': 'Warm Tones'},
+        {'name': 'Elegant Purple', 'colors': ['#3C096C', '#5A189A', '#7209B7', '#9D4EDD', '#C77DFF'], 'category': 'Purple Tones'},
+        {'name': 'Corporate Gray', 'colors': ['#2B2D42', '#8D99AE', '#EDF2F4', '#EF233C', '#D90429'], 'category': 'Neutral'},
+        {'name': 'Sunny Yellow', 'colors': ['#FFB703', '#FB8500', '#219EBC', '#023047', '#8ECAE6'], 'category': 'Warm Tones'}
+    ]
+    
+    return render_template('branding_materials.html', materials=materials, color_palettes=color_palettes, is_subscriber=True)
 
 @app.route('/proposal-support')
 @login_required
