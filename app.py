@@ -2789,68 +2789,112 @@ def customer_leads():
         if user_credits == 0 and not is_admin:
             return render_template('customer_leads.html', all_leads=[], show_payment_prompt=True)
         
-        # Get all available leads (both government and commercial)
-        government_leads = db.session.execute(text('''
-            SELECT 
-                contracts.id,
-                contracts.title,
-                contracts.agency,
-                contracts.location,
-                contracts.description,
-                contracts.value as contract_value,
-                contracts.deadline,
-                contracts.naics_code,
-                contracts.created_at,
-                contracts.website_url,
-                'government' as lead_type,
-                'General Cleaning' as services_needed,
-                'Active' as status,
-                contracts.description as requirements
-            FROM contracts 
-            ORDER BY contracts.created_at DESC
-        ''')).fetchall()
+        # Get all available leads (government contracts, supply contracts, and commercial)
+        government_leads = []
+        supply_leads = []
+        commercial_leads = []
         
-        commercial_leads = db.session.execute(text('''
-            SELECT 
-                commercial_opportunities.id,
-                commercial_opportunities.business_name as title,
-                commercial_opportunities.business_type as agency,
-                commercial_opportunities.location,
-                commercial_opportunities.description,
-                '$' || commercial_opportunities.monthly_value || '/month' as contract_value,
-                'Ongoing' as deadline,
-                '' as naics_code,
-                'Recent' as date_posted,
-                commercial_opportunities.website_url,
-                'commercial' as lead_type,
-                commercial_opportunities.services_needed,
-                'Active' as status,
-                commercial_opportunities.special_requirements as requirements
-            FROM commercial_opportunities 
-            ORDER BY commercial_opportunities.id DESC
-        ''')).fetchall()
+        # Get government cleaning contracts
+        try:
+            government_leads = db.session.execute(text('''
+                SELECT 
+                    contracts.id,
+                    contracts.title,
+                    contracts.agency,
+                    contracts.location,
+                    contracts.description,
+                    contracts.value as contract_value,
+                    contracts.deadline,
+                    contracts.naics_code,
+                    contracts.created_at,
+                    contracts.website_url,
+                    'government' as lead_type,
+                    'General Cleaning' as services_needed,
+                    'Active' as status,
+                    contracts.description as requirements
+                FROM contracts 
+                ORDER BY contracts.created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching government contracts: {e}")
+        
+        # Get supply/product procurement contracts
+        try:
+            supply_leads = db.session.execute(text('''
+                SELECT 
+                    supply_contracts.id,
+                    supply_contracts.title,
+                    supply_contracts.agency,
+                    supply_contracts.location,
+                    supply_contracts.description,
+                    supply_contracts.estimated_value as contract_value,
+                    supply_contracts.bid_deadline as deadline,
+                    '' as naics_code,
+                    supply_contracts.posted_date as created_at,
+                    supply_contracts.website_url,
+                    'supply' as lead_type,
+                    supply_contracts.product_category as services_needed,
+                    'Active' as status,
+                    supply_contracts.requirements
+                FROM supply_contracts 
+                ORDER BY supply_contracts.posted_date DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching supply contracts: {e}")
+        
+        # Get commercial opportunities
+        try:
+            commercial_leads = db.session.execute(text('''
+                SELECT 
+                    commercial_opportunities.id,
+                    commercial_opportunities.business_name as title,
+                    commercial_opportunities.business_type as agency,
+                    commercial_opportunities.location,
+                    commercial_opportunities.description,
+                    '$' || commercial_opportunities.monthly_value || '/month' as contract_value,
+                    'Ongoing' as deadline,
+                    '' as naics_code,
+                    'Recent' as date_posted,
+                    commercial_opportunities.website_url,
+                    'commercial' as lead_type,
+                    commercial_opportunities.services_needed,
+                    'Active' as status,
+                    commercial_opportunities.special_requirements as requirements
+                FROM commercial_opportunities 
+                ORDER BY commercial_opportunities.id DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching commercial opportunities: {e}")
         
         # Get commercial cleaning requests (businesses looking for cleaners)
-        commercial_requests = db.session.execute(text('''
-            SELECT 
-                id, business_name, contact_name, email, phone, address, city, zip_code,
-                business_type, square_footage, frequency, services_needed, 
-                special_requirements, budget_range, start_date, urgency, status, created_at
-            FROM commercial_lead_requests 
-            WHERE status = 'open'
-            ORDER BY created_at DESC
-        ''')).fetchall()
+        commercial_requests = []
+        try:
+            commercial_requests = db.session.execute(text('''
+                SELECT 
+                    id, business_name, contact_name, email, phone, address, city, zip_code,
+                    business_type, square_footage, frequency, services_needed, 
+                    special_requirements, budget_range, start_date, urgency, status, created_at
+                FROM commercial_lead_requests 
+                WHERE status = 'open'
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching commercial requests: {e}")
         
         # Get residential cleaning requests (homeowners looking for cleaners)
-        residential_requests = db.session.execute(text('''
-            SELECT 
-                id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
-                square_footage, contact_email, contact_phone, estimated_value, 
-                cleaning_frequency, services_needed, special_requirements, status, created_at
-            FROM residential_leads 
-            WHERE status = 'new'
-            ORDER BY created_at DESC
-        ''')).fetchall()
+        residential_requests = []
+        try:
+            residential_requests = db.session.execute(text('''
+                SELECT 
+                    id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
+                    square_footage, contact_email, contact_phone, estimated_value, 
+                    cleaning_frequency, services_needed, special_requirements, status, created_at
+                FROM residential_leads 
+                WHERE status = 'new'
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching residential requests: {e}")
         
     # Combine and format leads
         all_leads = []
@@ -2871,10 +2915,33 @@ def customer_leads():
                 'naics_code': lead[7],
                 'date_posted': lead[8],
                 'application_url': app_url,
-                'lead_type': lead[10],
+                'lead_type': 'Government Contract',
                 'services_needed': lead[11],
                 'status': lead[12],
                 'requirements': lead[13] or 'Standard government contracting requirements apply.',
+                'days_left': calculate_days_left(lead[6])
+            }
+            all_leads.append(lead_dict)
+        
+        # Add supply/product procurement leads
+        for lead in supply_leads:
+            app_url = lead[9] if lead[9] and lead[9].startswith(('http://', 'https://')) else None
+            
+            lead_dict = {
+                'id': f"supply_{lead[0]}",
+                'title': lead[1],
+                'agency': lead[2],
+                'location': lead[3],
+                'description': lead[4],
+                'contract_value': lead[5],
+                'deadline': lead[6],
+                'naics_code': lead[7],
+                'date_posted': lead[8],
+                'application_url': app_url,
+                'lead_type': 'Supply Contract',
+                'services_needed': lead[11],  # product_category
+                'status': lead[12],
+                'requirements': lead[13] or 'Standard procurement requirements apply.',
                 'days_left': calculate_days_left(lead[6])
             }
             all_leads.append(lead_dict)
@@ -2895,7 +2962,7 @@ def customer_leads():
                 'naics_code': lead[7],
                 'date_posted': lead[8],
                 'application_url': app_url,  # Use actual website URL if available
-                'lead_type': lead[10],
+                'lead_type': 'Commercial Opportunity',
                 'services_needed': lead[11],
                 'status': lead[12],
                 'requirements': lead[13] or 'Standard commercial cleaning requirements.',
@@ -2916,7 +2983,7 @@ def customer_leads():
                 'naics_code': '',
                 'date_posted': req[17],  # created_at
                 'application_url': None,
-                'lead_type': 'commercial_request',
+                'lead_type': 'Commercial Request',
                 'services_needed': req[11],
                 'status': 'NEW - Client Seeking Services',
                 'requirements': f"Contact: {req[2]} | Phone: {req[4]} | Email: {req[3]} | Square Footage: {req[9]} sq ft | Urgency: {req[15]}",
@@ -2941,7 +3008,7 @@ def customer_leads():
                 'naics_code': '',
                 'date_posted': req[16],  # created_at
                 'application_url': None,
-                'lead_type': 'residential_request',
+                'lead_type': 'Residential Request',
                 'services_needed': req[13],
                 'status': 'NEW - Client Seeking Services',
                 'requirements': f"Contact: {req[1]} | Phone: {req[10]} | Email: {req[9]} | Special: {req[14] or 'None'}",
