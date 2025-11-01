@@ -6085,6 +6085,110 @@ def quick_wins():
         flash('Quick Wins feature is currently being set up. Please check back soon.', 'info')
         return redirect(url_for('customer_leads'))
 
+@app.route('/property-management-companies')
+@login_required
+def property_management_companies():
+    """Directory of property management companies with vendor application links"""
+    try:
+        # Filters
+        location_filter = request.args.get('location', '')
+        size_filter = request.args.get('size', '')
+        search_query = request.args.get('search', '')
+        
+        # Check if paid subscriber or admin
+        is_admin = session.get('is_admin', False)
+        is_paid = False
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            if result and result[0] == 'paid':
+                is_paid = True
+        
+        # Admin gets full access
+        if is_admin:
+            is_paid = True
+        
+        # Build query with filters
+        where_conditions = ["business_type = 'Property Management Company'"]
+        params = {}
+        
+        if location_filter:
+            where_conditions.append("location LIKE :location")
+            params['location'] = f'%{location_filter}%'
+        
+        if size_filter:
+            where_conditions.append("size = :size")
+            params['size'] = size_filter
+        
+        if search_query:
+            where_conditions.append("(business_name LIKE :search OR description LIKE :search)")
+            params['search'] = f'%{search_query}%'
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get property management companies
+        companies = db.session.execute(text(f'''
+            SELECT 
+                id, business_name, location, square_footage, monthly_value,
+                frequency, services_needed, contact_name, contact_phone, 
+                contact_email, website_url, description, size
+            FROM commercial_opportunities 
+            WHERE {where_clause}
+            ORDER BY business_name ASC
+        '''), params).fetchall()
+        
+        # Get filter options
+        locations = db.session.execute(text('''
+            SELECT DISTINCT location FROM commercial_opportunities 
+            WHERE business_type = 'Property Management Company'
+            ORDER BY location
+        ''')).fetchall()
+        
+        sizes = db.session.execute(text('''
+            SELECT DISTINCT size FROM commercial_opportunities 
+            WHERE business_type = 'Property Management Company' AND size IS NOT NULL
+            ORDER BY size
+        ''')).fetchall()
+        
+        # Format companies data
+        companies_data = []
+        for company in companies:
+            companies_data.append({
+                'id': company[0],
+                'business_name': company[1],
+                'location': company[2],
+                'square_footage': company[3],
+                'monthly_value': company[4],
+                'frequency': company[5],
+                'services_needed': company[6],
+                'contact_name': company[7],
+                'contact_phone': company[8],
+                'contact_email': company[9],
+                'website_url': company[10],
+                'description': company[11],
+                'size': company[12]
+            })
+        
+        return render_template('property_management_companies.html',
+                             companies=companies_data,
+                             locations=[loc[0] for loc in locations if loc[0]],
+                             sizes=[size[0] for size in sizes if size[0]],
+                             current_filters={
+                                 'location': location_filter,
+                                 'size': size_filter,
+                                 'search': search_query
+                             },
+                             total_count=len(companies_data),
+                             is_paid_subscriber=is_paid,
+                             is_admin=is_admin)
+    except Exception as e:
+        print(f"Property management companies error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Property management directory is being set up. Please check back soon.', 'info')
+        return redirect(url_for('customer_leads'))
+
 @app.route('/bulk-products')
 @login_required
 def bulk_products():

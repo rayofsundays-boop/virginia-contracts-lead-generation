@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Property Management Companies - Virginia Contracts{% endblock %}
+
+{% block content %}
+<style>
+    .company-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    
+    .company-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .company-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .company-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .company-size-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .contact-section {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .contact-item i {
+        width: 20px;
+        color: #667eea;
+    }
+    
+    .vendor-apply-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .vendor-apply-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .services-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    .service-tag {
+        background: #e6f2ff;
+        color: #0066cc;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .contract-value {
+        background: #d4edda;
+        color: #155724;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+        font-weight: 600;
+        margin: 0.5rem 0;
+    }
+    
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .blur-contact {
+        filter: blur(5px);
+        user-select: none;
+        cursor: not-allowed;
+    }
+    
+    .upgrade-overlay {
+        position: relative;
+    }
+    
+    .upgrade-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #f5576c;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+    }
+</style>
+
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    <i class="fas fa-building me-3"></i>Property Management Companies
+                </h1>
+                <p class="lead text-white mb-0">
+                    {{ total_count }} Virginia property management companies actively seeking cleaning contractors
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="bg-white rounded-3 p-3 d-inline-block">
+                    <div class="text-muted small">Total Contract Value</div>
+                    <div class="h3 fw-bold mb-0 text-success">
+                        ${{ "{:,}".format(companies|sum(attribute='monthly_value')|int) }}/mo
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('property_management_companies') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-search me-2"></i>Search Companies
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ current_filters.search }}"
+                           placeholder="Search by name or description...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-map-marker-alt me-2"></i>Location
+                    </label>
+                    <select class="form-select" name="location">
+                        <option value="">All Locations</option>
+                        {% for location in locations %}
+                        <option value="{{ location }}" {% if current_filters.location == location %}selected{% endif %}>
+                            {{ location }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-chart-bar me-2"></i>Company Size
+                    </label>
+                    <select class="form-select" name="size">
+                        <option value="">All Sizes</option>
+                        {% for size in sizes %}
+                        <option value="{{ size }}" {% if current_filters.size == size %}selected{% endif %}>
+                            {{ size }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Companies List -->
+    {% if companies %}
+    <div class="row">
+        <div class="col-12">
+            <div class="mb-3 text-muted">
+                <i class="fas fa-info-circle me-2"></i>
+                Showing {{ total_count }} compan{{ 'y' if total_count == 1 else 'ies' }}
+            </div>
+        </div>
+    </div>
+
+    {% for company in companies %}
+    <div class="company-card">
+        <div class="company-header">
+            <div>
+                <h2 class="company-name">{{ company.business_name }}</h2>
+                <div class="text-muted">
+                    <i class="fas fa-map-marker-alt me-2"></i>{{ company.location }}
+                </div>
+            </div>
+            <div>
+                {% if company.size %}
+                <span class="company-size-badge 
+                    {% if 'Enterprise' in company.size %}bg-danger text-white
+                    {% elif 'Large' in company.size %}bg-primary text-white
+                    {% else %}bg-info text-white{% endif %}">
+                    {{ company.size }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if company.description %}
+        <p class="text-muted mb-3">{{ company.description }}</p>
+        {% endif %}
+
+        <!-- Contract Details -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="contract-value">
+                    <i class="fas fa-dollar-sign me-2"></i>
+                    ${{ "{:,}".format(company.monthly_value|int) }}/month
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Frequency:</strong> {{ company.frequency }}
+                </div>
+            </div>
+            {% if company.square_footage %}
+            <div class="col-md-4">
+                <div class="text-muted">
+                    <i class="fas fa-ruler-combined me-2"></i>
+                    <strong>{{ "{:,}".format(company.square_footage) }}</strong> sq ft
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Services Needed -->
+        {% if company.services_needed %}
+        <div class="mb-3">
+            <strong class="d-block mb-2">
+                <i class="fas fa-tools me-2"></i>Services Needed:
+            </strong>
+            <div class="services-list">
+                {% for service in company.services_needed.split(',') %}
+                <span class="service-tag">{{ service.strip() }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Contact Information -->
+        <div class="contact-section {% if not is_paid_subscriber %}upgrade-overlay{% endif %}">
+            <strong class="d-block mb-3">
+                <i class="fas fa-address-card me-2"></i>Contact Information
+            </strong>
+            
+            {% if not is_paid_subscriber %}
+            <span class="upgrade-badge">
+                <i class="fas fa-lock me-1"></i>Premium Only
+            </span>
+            {% endif %}
+
+            <div class="{% if not is_paid_subscriber %}blur-contact{% endif %}">
+                {% if company.contact_name %}
+                <div class="contact-item">
+                    <i class="fas fa-user"></i>
+                    <strong>Contact:</strong> {{ company.contact_name }}
+                </div>
+                {% endif %}
+                
+                {% if company.contact_phone %}
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <strong>Phone:</strong> 
+                    <a href="tel:{{ company.contact_phone }}">{{ company.contact_phone }}</a>
+                </div>
+                {% endif %}
+                
+                {% if company.contact_email %}
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <strong>Email:</strong> 
+                    <a href="mailto:{{ company.contact_email }}">{{ company.contact_email }}</a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if not is_paid_subscriber %}
+            <div class="text-center mt-3">
+                <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-crown me-2"></i>Upgrade to View Contact Info
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Vendor Application Link -->
+        {% if company.website_url %}
+        <div class="text-center mt-3">
+            <a href="{{ company.website_url }}" 
+               target="_blank" 
+               class="vendor-apply-btn"
+               {% if not is_paid_subscriber %}onclick="return confirm('Premium subscribers get priority responses from property managers. Upgrade now?');"{% endif %}>
+                <i class="fas fa-external-link-alt"></i>
+                Apply as Vendor
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h3 class="text-muted">No property management companies found</h3>
+        <p class="text-muted">Try adjusting your filters</p>
+        <a href="{{ url_for('property_management_companies') }}" class="btn btn-primary">
+            Clear Filters
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Call to Action for Non-Subscribers -->
+    {% if not is_paid_subscriber %}
+    <div class="alert alert-info mt-5" role="alert">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h4 class="alert-heading">
+                    <i class="fas fa-crown me-2"></i>Unlock Full Access to Property Management Contacts
+                </h4>
+                <p class="mb-0">
+                    Get direct contact information, priority vendor consideration, and exclusive access to all {{ total_count }} property management companies actively hiring cleaning contractors.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-lg">
+                    <i class="fas fa-star me-2"></i>Upgrade Now
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-submit form on filter change
+document.querySelectorAll('.filter-section select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.form.submit();
+    });
+});
+</script>
+{% endblock %}
