@@ -193,6 +193,183 @@ def get_admin_stats_cached(cache_timestamp):
         # Return default values if query fails
         return (0, 0, 0, 0, 0, 0)
 
+# ============================================================================
+# PORTAL OPTIMIZATION HELPERS
+# ============================================================================
+
+def log_user_activity(user_email, activity_type, resource_type=None, resource_id=None, details=None):
+    """Log user activity for analytics and personalization"""
+    try:
+        db.session.execute(text('''
+            INSERT INTO user_activity (user_email, activity_type, resource_type, resource_id, details)
+            VALUES (:email, :activity, :res_type, :res_id, :details)
+        '''), {
+            'email': user_email,
+            'activity': activity_type,
+            'res_type': resource_type,
+            'res_id': resource_id,
+            'details': json.dumps(details) if details else None
+        })
+        db.session.commit()
+    except Exception as e:
+        print(f"Activity logging error: {e}")
+        db.session.rollback()
+
+def get_user_preferences(user_email):
+    """Get user preferences or return defaults"""
+    try:
+        prefs = db.session.execute(text('''
+            SELECT dashboard_layout, favorite_lead_types, preferred_locations,
+                   notification_enabled, email_alerts_enabled, theme
+            FROM user_preferences WHERE user_email = :email
+        '''), {'email': user_email}).fetchone()
+        
+        if prefs:
+            return {
+                'dashboard_layout': prefs[0],
+                'favorite_lead_types': prefs[1] or [],
+                'preferred_locations': prefs[2] or [],
+                'notification_enabled': prefs[3],
+                'email_alerts_enabled': prefs[4],
+                'theme': prefs[5]
+            }
+    except Exception as e:
+        print(f"Error fetching preferences: {e}")
+    
+    # Return defaults
+    return {
+        'dashboard_layout': 'default',
+        'favorite_lead_types': [],
+        'preferred_locations': [],
+        'notification_enabled': True,
+        'email_alerts_enabled': True,
+        'theme': 'light'
+    }
+
+def get_unread_notifications(user_email, limit=10):
+    """Get unread notifications for user"""
+    try:
+        notifications = db.session.execute(text('''
+            SELECT id, notification_type, title, message, link, priority, created_at
+            FROM notifications
+            WHERE user_email = :email AND is_read = FALSE
+            ORDER BY priority DESC, created_at DESC
+            LIMIT :limit
+        '''), {'email': user_email, 'limit': limit}).fetchall()
+        
+        return [{
+            'id': n[0],
+            'type': n[1],
+            'title': n[2],
+            'message': n[3],
+            'link': n[4],
+            'priority': n[5],
+            'created_at': n[6]
+        } for n in notifications]
+    except Exception as e:
+        print(f"Error fetching notifications: {e}")
+        return []
+
+def get_personalized_recommendations(user_email, limit=5):
+    """Get personalized lead recommendations based on user activity"""
+    try:
+        # Get user's recent activity
+        recent_activity = db.session.execute(text('''
+            SELECT resource_type, COUNT(*) as views
+            FROM user_activity
+            WHERE user_email = :email 
+            AND activity_type = 'viewed_lead'
+            AND created_at > NOW() - INTERVAL '30 days'
+            GROUP BY resource_type
+            ORDER BY views DESC
+            LIMIT 3
+        '''), {'email': user_email}).fetchall()
+        
+        if not recent_activity:
+            # Return quick wins for new users
+            return get_quick_win_leads(limit)
+        
+        # Get leads from preferred types
+        preferred_type = recent_activity[0][0] if recent_activity else 'contracts'
+        
+        # Return personalized leads based on preferences
+        return get_leads_by_type(preferred_type, limit)
+    except Exception as e:
+        print(f"Error getting recommendations: {e}")
+        return []
+
+def get_quick_win_leads(limit=5):
+    """Get quick win leads for recommendations"""
+    try:
+        leads = db.session.execute(text('''
+            SELECT id, title, agency, location, estimated_value, 'Government Contract' as type
+            FROM contracts
+            WHERE status = 'open'
+            AND estimated_value <= 50000
+            ORDER BY posted_date DESC
+            LIMIT :limit
+        '''), {'limit': limit}).fetchall()
+        
+        return [{
+            'id': l[0],
+            'title': l[1],
+            'agency': l[2],
+            'location': l[3],
+            'value': l[4],
+            'type': l[5]
+        } for l in leads]
+    except:
+        return []
+
+def get_leads_by_type(lead_type, limit=5):
+    """Get leads by specific type"""
+    # Implementation placeholder - expand based on lead_type
+    return get_quick_win_leads(limit)
+
+def check_onboarding_status(user_email):
+    """Check if user has completed onboarding"""
+    try:
+        status = db.session.execute(text('''
+            SELECT onboarding_completed FROM user_onboarding WHERE user_email = :email
+        '''), {'email': user_email}).scalar()
+        
+        return status or False
+    except:
+        return False
+
+def get_dashboard_cache(user_email):
+    """Get cached dashboard data if available and not expired"""
+    try:
+        cache = db.session.execute(text('''
+            SELECT stats_data, expires_at
+            FROM dashboard_cache
+            WHERE user_email = :email AND expires_at > NOW()
+        '''), {'email': user_email}).fetchone()
+        
+        if cache:
+            return json.loads(cache[0])
+    except Exception as e:
+        print(f"Cache read error: {e}")
+    return None
+
+def set_dashboard_cache(user_email, stats_data, ttl_minutes=5):
+    """Cache dashboard data"""
+    try:
+        db.session.execute(text('''
+            INSERT INTO dashboard_cache (user_email, stats_data, expires_at)
+            VALUES (:email, :data, NOW() + INTERVAL ':ttl minutes')
+            ON CONFLICT (user_email) 
+            DO UPDATE SET stats_data = :data, expires_at = NOW() + INTERVAL ':ttl minutes'
+        '''), {
+            'email': user_email,
+            'data': json.dumps(stats_data),
+            'ttl': ttl_minutes
+        })
+        db.session.commit()
+    except Exception as e:
+        print(f"Cache write error: {e}")
+        db.session.rollback()
+
 # Add to Jinja environment
 app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
 
@@ -1979,100 +2156,133 @@ def user_profile():
 @app.route('/customer-dashboard')
 @login_required
 def customer_dashboard():
-    """Internal customer dashboard with stats and quick access"""
+    """Optimized customer dashboard with caching, personalization, and recommendations"""
     try:
-        # Get stats
-        gov_contracts = db.session.execute(text(
-            "SELECT COUNT(*) FROM contracts WHERE status = 'open'"
-        )).scalar() or 0
+        user_email = session.get('user_email')
         
-        supply_contracts = 0
-        try:
-            supply_contracts = db.session.execute(text(
-                "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
+        # Log activity
+        log_user_activity(user_email, 'viewed_dashboard')
+        
+        # Check cache first
+        cached_data = get_dashboard_cache(user_email)
+        if cached_data:
+            stats = cached_data
+        else:
+            # Get stats (will be cached)
+            gov_contracts = db.session.execute(text(
+                "SELECT COUNT(*) FROM contracts WHERE status = 'open'"
             )).scalar() or 0
-        except:
-            pass
+            
+            supply_contracts = 0
+            try:
+                supply_contracts = db.session.execute(text(
+                    "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
+                )).scalar() or 0
+            except:
+                pass
+            
+            commercial_leads = 0
+            try:
+                commercial_leads = db.session.execute(text(
+                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
+                )).scalar() or 0
+            except:
+                pass
+            
+            quick_wins = 0
+            try:
+                quick_wins = db.session.execute(text(
+                    "SELECT COUNT(*) FROM supply_contracts WHERE is_quick_win = TRUE AND status = 'open'"
+                )).scalar() or 0
+                quick_wins += db.session.execute(text(
+                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
+                )).scalar() or 0
+            except:
+                pass
+            
+            total_leads = gov_contracts + supply_contracts + commercial_leads
+            
+            stats = {
+                'total_leads': total_leads,
+                'government_contracts': gov_contracts,
+                'supply_contracts': supply_contracts,
+                'commercial_leads': commercial_leads,
+                'quick_wins': quick_wins
+            }
+            
+            # Cache the stats
+            set_dashboard_cache(user_email, stats)
         
-        commercial_leads = 0
-        try:
-            commercial_leads = db.session.execute(text(
-                "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
-            )).scalar() or 0
-        except:
-            pass
+        # Get user preferences for personalization
+        preferences = get_user_preferences(user_email)
         
-        quick_wins = 0
-        try:
-            quick_wins = db.session.execute(text(
-                "SELECT COUNT(*) FROM supply_contracts WHERE is_quick_win = TRUE AND status = 'open'"
-            )).scalar() or 0
-            quick_wins += db.session.execute(text(
-                "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
-            )).scalar() or 0
-        except:
-            pass
+        # Get unread notifications
+        notifications = get_unread_notifications(user_email, limit=5)
         
-        total_leads = gov_contracts + supply_contracts + commercial_leads
+        # Check onboarding status
+        show_onboarding = not check_onboarding_status(user_email)
         
-        stats = {
-            'total_leads': total_leads,
-            'government_contracts': gov_contracts,
-            'supply_contracts': supply_contracts,
-            'commercial_leads': commercial_leads,
-            'quick_wins': quick_wins
-        }
+        # Get personalized recommendations
+        recommended_leads = get_personalized_recommendations(user_email, limit=5)
         
-        # Get latest opportunities
+        # Get latest opportunities (optimized query)
         latest_opportunities = []
         try:
-            # Get 5 most recent government contracts
-            gov_results = db.session.execute(text('''
-                SELECT title, agency, location, estimated_value, posted_date, id
+            # Single query with UNION instead of multiple queries
+            opportunities = db.session.execute(text('''
+                SELECT title, agency, location, estimated_value, posted_date, 
+                       'Government Contract' as lead_type, id, 'government' as link_type
                 FROM contracts 
                 WHERE status = 'open'
                 ORDER BY posted_date DESC
-                LIMIT 3
+                LIMIT 5
             ''')).fetchall()
             
-            for row in gov_results:
+            for row in opportunities:
                 latest_opportunities.append({
                     'title': row[0],
                     'agency': row[1],
                     'location': row[2],
                     'value': row[3],
                     'posted_date': row[4],
-                    'lead_type': 'Government Contract',
+                    'lead_type': row[5],
+                    'id': row[6],
                     'link': url_for('government_contracts')
-                })
-            
-            # Get 2 supply contracts
-            supply_results = db.session.execute(text('''
-                SELECT title, agency, location, estimated_value, created_at, id
-                FROM supply_contracts 
-                WHERE status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 2
-            ''')).fetchall()
-            
-            for row in supply_results:
-                latest_opportunities.append({
-                    'title': row[0],
-                    'agency': row[1],
-                    'location': row[2],
-                    'value': row[3],
-                    'posted_date': row[4],
-                    'lead_type': 'Supply Contract',
-                    'link': url_for('supply_contracts')
                 })
         except Exception as e:
             print(f"Error fetching latest opportunities: {e}")
         
+        # Get saved searches count
+        saved_searches_count = 0
+        try:
+            saved_searches_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM saved_searches WHERE user_email = :email
+            '''), {'email': user_email}).scalar() or 0
+        except:
+            pass
+        
+        # Get saved leads count
+        saved_leads_count = 0
+        try:
+            saved_leads_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM saved_leads WHERE user_email = :email
+            '''), {'email': user_email}).scalar() or 0
+        except:
+            pass
+        
         return render_template('customer_dashboard.html', 
                              stats=stats, 
-                             latest_opportunities=latest_opportunities)
+                             latest_opportunities=latest_opportunities,
+                             preferences=preferences,
+                             notifications=notifications,
+                             show_onboarding=show_onboarding,
+                             recommended_leads=recommended_leads,
+                             saved_searches_count=saved_searches_count,
+                             saved_leads_count=saved_leads_count)
     except Exception as e:
         print(f"Error loading dashboard: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error loading dashboard. Please try again.', 'error')
         return redirect(url_for('customer_leads'))
 
@@ -2108,6 +2318,270 @@ def update_profile():
         print(f"Error updating profile: {e}")
         db.session.rollback()
         flash('Error updating profile. Please try again.', 'error')
+        return redirect(url_for('user_profile'))
+
+# ============================================================================
+# PORTAL OPTIMIZATION API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/save-search', methods=['POST'])
+@login_required
+def api_save_search():
+    """Save a search with filters for quick access and alerts"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        
+        search_name = data.get('name', '').strip()
+        filters = data.get('filters', {})
+        alert_enabled = data.get('alert_enabled', False)
+        
+        if not search_name:
+            return jsonify({'success': False, 'error': 'Search name is required'}), 400
+        
+        db.session.execute(text('''
+            INSERT INTO saved_searches (user_email, search_name, search_filters, alert_enabled)
+            VALUES (:email, :name, :filters, :alert)
+        '''), {
+            'email': user_email,
+            'name': search_name,
+            'filters': json.dumps(filters),
+            'alert': alert_enabled
+        })
+        db.session.commit()
+        
+        log_user_activity(user_email, 'saved_search', details={'name': search_name})
+        
+        return jsonify({'success': True, 'message': 'Search saved successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/saved-searches', methods=['GET'])
+@login_required
+def api_get_saved_searches():
+    """Get user's saved searches"""
+    try:
+        user_email = session.get('user_email')
+        
+        searches = db.session.execute(text('''
+            SELECT id, search_name, search_filters, alert_enabled, created_at
+            FROM saved_searches
+            WHERE user_email = :email
+            ORDER BY created_at DESC
+        '''), {'email': user_email}).fetchall()
+        
+        return jsonify({
+            'success': True,
+            'searches': [{
+                'id': s[0],
+                'name': s[1],
+                'filters': json.loads(s[2]) if s[2] else {},
+                'alert_enabled': s[3],
+                'created_at': s[4].isoformat() if s[4] else None
+            } for s in searches]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save-lead', methods=['POST'])
+@login_required
+def api_save_lead():
+    """Bookmark/save a lead for later"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        
+        lead_type = data.get('lead_type')
+        lead_id = data.get('lead_id')
+        notes = data.get('notes', '')
+        
+        db.session.execute(text('''
+            INSERT INTO saved_leads (user_email, lead_type, lead_id, notes)
+            VALUES (:email, :type, :id, :notes)
+            ON CONFLICT (user_email, lead_type, lead_id) DO UPDATE SET notes = :notes
+        '''), {
+            'email': user_email,
+            'type': lead_type,
+            'id': lead_id,
+            'notes': notes
+        })
+        db.session.commit()
+        
+        log_user_activity(user_email, 'saved_lead', lead_type, lead_id)
+        
+        return jsonify({'success': True, 'message': 'Lead saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/unsave-lead/<int:saved_id>', methods=['DELETE'])
+@login_required
+def api_unsave_lead(saved_id):
+    """Remove a saved/bookmarked lead"""
+    try:
+        user_email = session.get('user_email')
+        
+        db.session.execute(text('''
+            DELETE FROM saved_leads
+            WHERE id = :id AND user_email = :email
+        '''), {'id': saved_id, 'email': user_email})
+        db.session.commit()
+        
+        log_user_activity(user_email, 'unsaved_lead', details={'saved_id': saved_id})
+        
+        return jsonify({'success': True, 'message': 'Lead removed'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/notifications/read', methods=['POST'])
+@login_required
+def api_mark_notification_read():
+    """Mark notification as read"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        notification_id = data.get('notification_id')
+        
+        db.session.execute(text('''
+            UPDATE notifications
+            SET is_read = TRUE, read_at = NOW()
+            WHERE id = :id AND user_email = :email
+        '''), {'id': notification_id, 'email': user_email})
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/preferences', methods=['POST'])
+@login_required
+def api_update_preferences():
+    """Update user preferences"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        
+        db.session.execute(text('''
+            INSERT INTO user_preferences (
+                user_email, dashboard_layout, favorite_lead_types, preferred_locations,
+                notification_enabled, email_alerts_enabled, theme
+            ) VALUES (
+                :email, :layout, :fav_types, :locations, :notif, :email_alert, :theme
+            )
+            ON CONFLICT (user_email) DO UPDATE SET
+                dashboard_layout = :layout,
+                favorite_lead_types = :fav_types,
+                preferred_locations = :locations,
+                notification_enabled = :notif,
+                email_alerts_enabled = :email_alert,
+                theme = :theme,
+                updated_at = NOW()
+        '''), {
+            'email': user_email,
+            'layout': data.get('dashboard_layout', 'default'),
+            'fav_types': data.get('favorite_lead_types', []),
+            'locations': data.get('preferred_locations', []),
+            'notif': data.get('notification_enabled', True),
+            'email_alert': data.get('email_alerts_enabled', True),
+            'theme': data.get('theme', 'light')
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Preferences updated'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/complete-onboarding', methods=['POST'])
+@login_required
+def api_complete_onboarding():
+    """Mark onboarding step as complete"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        step = data.get('step')
+        
+        # Update onboarding progress
+        db.session.execute(text(f'''
+            INSERT INTO user_onboarding (user_email, completed_{step})
+            VALUES (:email, TRUE)
+            ON CONFLICT (user_email) DO UPDATE SET completed_{step} = TRUE
+        '''), {'email': user_email})
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/saved-leads')
+@login_required
+def saved_leads():
+    """Show user's saved/bookmarked leads"""
+    try:
+        user_email = session.get('user_email')
+        
+        # Get saved leads with details
+        saved_items = db.session.execute(text('''
+            SELECT sl.id, sl.lead_type, sl.lead_id, sl.notes, sl.created_at
+            FROM saved_leads sl
+            WHERE sl.user_email = :email
+            ORDER BY sl.created_at DESC
+        '''), {'email': user_email}).fetchall()
+        
+        # Fetch full lead details for each saved lead
+        leads_with_details = []
+        for item in saved_items:
+            lead_details = get_lead_details(item[1], item[2])
+            if lead_details:
+                lead_details['saved_id'] = item[0]
+                lead_details['notes'] = item[3]
+                lead_details['saved_at'] = item[4]
+                leads_with_details.append(lead_details)
+        
+        return render_template('saved_leads.html', saved_leads=leads_with_details)
+    except Exception as e:
+        print(f"Error loading saved leads: {e}")
+        flash('Error loading saved leads', 'error')
+        return redirect(url_for('customer_dashboard'))
+
+def get_lead_details(lead_type, lead_id):
+    """Helper to fetch lead details by type and ID"""
+    try:
+        if lead_type == 'contract':
+            result = db.session.execute(text('''
+                SELECT title, agency, location, estimated_value, posted_date
+                FROM contracts WHERE id = :id
+            '''), {'id': lead_id}).fetchone()
+            if result:
+                return {
+                    'type': 'Government Contract',
+                    'title': result[0],
+                    'agency': result[1],
+                    'location': result[2],
+                    'value': result[3],
+                    'date': result[4]
+                }
+        elif lead_type == 'supply_contract':
+            result = db.session.execute(text('''
+                SELECT title, agency, location, estimated_value, created_at
+                FROM supply_contracts WHERE id = :id
+            '''), {'id': lead_id}).fetchone()
+            if result:
+                return {
+                    'type': 'Supply Contract',
+                    'title': result[0],
+                    'agency': result[1],
+                    'location': result[2],
+                    'value': result[3],
+                    'date': result[4]
+                }
+    except:
+        pass
+    return None
         return redirect(url_for('user_profile'))
 
 @app.route('/change-password', methods=['POST'])

@@ -3,7 +3,69 @@
 {% block title %}Customer Dashboard - VA Contracts Lead Generation{% endblock %}
 
 {% block content %}
+<!-- Onboarding Modal -->
+{% if show_onboarding %}
+<div class="modal fade" id="onboardingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-graduation-cap me-2"></i>Welcome to VA Contract Leads!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="onboarding-steps">
+                    <div class="step active" data-step="profile">
+                        <h5><i class="fas fa-user-circle text-primary"></i> Step 1: Complete Your Profile</h5>
+                        <p>Set up your business information to get personalized recommendations.</p>
+                        <a href="{{ url_for('user_profile') }}" class="btn btn-primary">Complete Profile</a>
+                    </div>
+                    <div class="step mt-4" data-step="preferences">
+                        <h5><i class="fas fa-sliders-h text-success"></i> Step 2: Set Your Preferences</h5>
+                        <p>Tell us what types of contracts and locations you're interested in.</p>
+                        <button class="btn btn-success" onclick="showPreferences()">Set Preferences</button>
+                    </div>
+                    <div class="step mt-4" data-step="first_lead">
+                        <h5><i class="fas fa-bookmark text-warning"></i> Step 3: Save Your First Lead</h5>
+                        <p>Browse opportunities and save leads that interest you.</p>
+                        <a href="{{ url_for('customer_leads') }}" class="btn btn-warning">Browse Leads</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="skipOnboarding()">Skip Tour</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="container-fluid py-4">
+    <!-- Notifications Bar -->
+    {% if notifications %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="fas fa-bell me-3 fa-lg"></i>
+                <div class="flex-grow-1">
+                    <strong>You have {{ notifications|length }} unread notification(s)</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for notif in notifications[:3] %}
+                        <li>
+                            {{ notif.message }}
+                            <button class="btn btn-sm btn-link" onclick="markRead({{ notif.id }})">Mark as read</button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if notifications|length > 3 %}
+                    <a href="#" class="btn btn-sm btn-primary mt-2">View all notifications</a>
+                    {% endif %}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Welcome Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -25,6 +87,45 @@
             </div>
         </div>
     </div>
+
+    <!-- Personalized Recommendations -->
+    {% if recommendations and recommendations|length > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-4">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-magic me-2 text-primary"></i>Recommended For You
+                    </h5>
+                    <small class="text-muted">Based on your activity and preferences</small>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for rec in recommendations[:4] %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100 hover-shadow">
+                                <span class="badge bg-{{ rec.badge_color }} mb-2">{{ rec.type }}</span>
+                                <h6 class="fw-bold">{{ rec.title }}</h6>
+                                <p class="text-muted small mb-2">{{ rec.agency }}</p>
+                                <p class="mb-2"><i class="fas fa-map-marker-alt text-primary me-1"></i>{{ rec.location }}</p>
+                                {% if rec.value %}
+                                <p class="mb-2"><strong class="text-success">${{ rec.value }}</strong></p>
+                                {% endif %}
+                                <div class="d-flex gap-2">
+                                    <a href="{{ rec.url }}" class="btn btn-sm btn-primary">View Details</a>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="saveLead('{{ rec.type }}', {{ rec.id }})">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Quick Stats Cards -->
     <div class="row g-4 mb-4">
@@ -91,6 +192,12 @@
                         </a>
                         <a href="{{ url_for('quick_wins') }}" class="btn btn-danger btn-lg">
                             <i class="fas fa-bolt me-2"></i>Quick Wins
+                        </a>
+                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning btn-lg">
+                            <i class="fas fa-bookmark me-2"></i>Saved Leads
+                            {% if saved_leads_count > 0 %}
+                            <span class="badge bg-white text-warning">{{ saved_leads_count }}</span>
+                            {% endif %}
                         </a>
                         <a href="{{ url_for('customer_dashboard') }}#opportunities" class="btn btn-info btn-lg text-white">
                             <i class="fas fa-fire me-2"></i>All Opportunities
@@ -399,5 +506,89 @@
         border-color: rgba(102, 126, 234, 0.5) !important;
         box-shadow: 0 0.5rem 1rem rgba(102, 126, 234, 0.15);
     }
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    }
+    .onboarding-steps .step {
+        padding: 1rem;
+        border-left: 3px solid #e0e0e0;
+    }
+    .onboarding-steps .step.active {
+        border-left-color: #667eea;
+    }
 </style>
+
+<script>
+// Onboarding functions
+{% if show_onboarding %}
+window.addEventListener('DOMContentLoaded', function() {
+    new bootstrap.Modal(document.getElementById('onboardingModal')).show();
+});
+{% endif %}
+
+function skipOnboarding() {
+    fetch('/api/complete-onboarding', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({step: 'skipped'})
+    }).then(() => {
+        bootstrap.Modal.getInstance(document.getElementById('onboardingModal')).hide();
+    });
+}
+
+function showPreferences() {
+    window.location.href = '{{ url_for("user_profile") }}#preferences';
+}
+
+// Notification functions
+function markRead(notifId) {
+    fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({notification_id: notifId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// Lead saving functions
+function saveLead(leadType, leadId) {
+    fetch('/api/save-lead', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            lead_type: leadType,
+            lead_id: leadId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Lead saved successfully!');
+        }
+    });
+}
+
+// Add hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.hover-lift');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+
 {% endblock %}
