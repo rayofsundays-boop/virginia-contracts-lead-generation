@@ -340,6 +340,12 @@ def check_onboarding_status(user_email):
 def get_dashboard_cache(user_email):
     """Get cached dashboard data if available and not expired"""
     try:
+        # Ensure clean transaction state
+        try:
+            db.session.rollback()
+        except:
+            pass
+            
         cache = db.session.execute(text('''
             SELECT stats_data, expires_at
             FROM dashboard_cache
@@ -349,6 +355,11 @@ def get_dashboard_cache(user_email):
         if cache:
             return json.loads(cache[0])
     except Exception as e:
+        # Rollback on error
+        try:
+            db.session.rollback()
+        except:
+            pass
         # Silently fail if table doesn't exist (graceful degradation)
         if "does not exist" not in str(e).lower() and "no such table" not in str(e).lower():
             print(f"Cache read error: {e}")
@@ -357,6 +368,12 @@ def get_dashboard_cache(user_email):
 def set_dashboard_cache(user_email, stats_data, ttl_minutes=5):
     """Cache dashboard data"""
     try:
+        # Ensure clean transaction state
+        try:
+            db.session.rollback()
+        except:
+            pass
+            
         # Use string formatting for interval since it can't be parameterized properly
         db.session.execute(text(f'''
             INSERT INTO dashboard_cache (user_email, stats_data, expires_at)
@@ -1898,17 +1915,30 @@ def index():
         
         error_str = str(e).lower()
         
-        # Check for transaction errors specifically
+        # Check for transaction errors specifically - always retry these
         if "transaction is aborted" in error_str or "infailedsqltransaction" in error_str:
-            print("⚠️ Transaction error detected - forcing rollback and retry")
+            print("⚠️ Transaction error detected - forcing complete cleanup and retry")
             try:
                 db.session.rollback()
                 db.session.close()
+                db.session.remove()
             except:
                 pass
-            # Redirect to retry
-            if init_attempted == '0':
-                return redirect(url_for('index', init_attempted='1'))
+            
+            # Always redirect to retry for transaction errors (no init_attempted check)
+            # But add a counter to prevent infinite loops
+            retry_count = request.args.get('retry_count', '0')
+            retry_num = int(retry_count)
+            
+            if retry_num < 3:  # Allow up to 3 retries
+                return redirect(url_for('index', retry_count=str(retry_num + 1)))
+            else:
+                return """
+                <h1>Database Connection Error</h1>
+                <p>Unable to connect to the database after multiple attempts.</p>
+                <p>The database might be restarting or undergoing maintenance.</p>
+                <p><a href="/">Try again</a> or contact support if the issue persists.</p>
+                """
         
         # Check for missing tables in both SQLite and PostgreSQL
         if ("no such table" in error_str or "does not exist" in error_str or "relation" in error_str) and init_attempted == '0':
