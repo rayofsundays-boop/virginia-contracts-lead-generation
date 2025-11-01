@@ -4704,26 +4704,42 @@ def admin_panel():
         return redirect('/')
     
     try:
-        # Get comprehensive statistics
-        user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar() or 0
+        # Get comprehensive statistics - handle if tables don't exist yet
+        user_count = 0
+        paid_count = 0
+        unpaid_count = 0
+        users = []
+        gov_contracts = 0
+        commercial_leads = 0
         
-        paid_count = db.session.execute(text('''
-            SELECT COUNT(*) FROM leads WHERE subscription_status = 'active'
-        ''')).scalar() or 0
+        # Try to get user statistics
+        try:
+            user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar() or 0
+            paid_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM leads WHERE subscription_status = 'active'
+            ''')).scalar() or 0
+            unpaid_count = user_count - paid_count
+            
+            # Get all users with full details
+            users = db.session.execute(text('''
+                SELECT id, email, contact_name, company_name, subscription_status, 
+                       created_at, phone, state, certifications
+                FROM leads 
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Note: leads table not found: {e}")
         
-        unpaid_count = user_count - paid_count
+        # Try to get contract counts
+        try:
+            gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM government_contracts')).scalar() or 0
+        except Exception as e:
+            print(f"Note: government_contracts table not found: {e}")
         
-        # Get all users with full details
-        users = db.session.execute(text('''
-            SELECT id, email, contact_name, company_name, subscription_status, 
-                   created_at, phone, state, certifications
-            FROM leads 
-            ORDER BY created_at DESC
-        ''')).fetchall()
-        
-        # Get contract counts
-        gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM government_contracts')).scalar() or 0
-        commercial_leads = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
+        try:
+            commercial_leads = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
+        except Exception as e:
+            print(f"Note: commercial_opportunities table not found: {e}")
         
         return render_template('admin_dashboard.html',
                              user_count=user_count,
