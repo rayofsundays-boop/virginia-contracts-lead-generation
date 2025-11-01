@@ -166,10 +166,6 @@
                                 <label for="start_date" class="form-label">Desired Start Date</label>
                                 <input type="date" class="form-control" id="start_date" name="start_date">
                             </div>
-                        </div>
-
-                                <input type="date" class="form-control" id="start_date" name="start_date">
-                            </div>
                             <div class="col-md-6">
                                 <label for="urgency" class="form-label">Urgency Level</label>
                                 <select class="form-select" id="urgency" name="urgency">
@@ -187,7 +183,7 @@
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-paper-plane me-2"></i>Submit Request
                             </button>
-                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
 
                         <div class="alert alert-info mt-4">
@@ -209,9 +205,4 @@ document.addEventListener('DOMContentLoaded', function() {
     dateInput.setAttribute('min', today);
 });
 </script>
-{% endblock %}
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
