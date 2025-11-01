@@ -345,16 +345,30 @@
                         </ul>
                     </li>
                     {% endif %}
+                    
+                    {% if session.get('user_email') %}
+                    <!-- Show Customer Portal only when logged in -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('customer_leads') }}">
                             <i class="fas fa-user-tie"></i> Customer Portal
                         </a>
                     </li>
+                    {% else %}
+                    <!-- Show Sign In prompt for non-authenticated users -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth') }}" title="Sign in to access Customer Portal">
+                            <i class="fas fa-sign-in-alt"></i> Sign In to Access Portal
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('landing') }}">
                             <i class="fas fa-clipboard-check"></i> Assessment
                         </a>
                     </li>
+                    
+                    {% if not session.get('user_email') %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('auth') }}#register">
                             <i class="fas fa-user-plus"></i> Register
@@ -365,6 +379,7 @@
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </a>
                     </li>
+                    {% endif %}
                     
                 </ul>
             </div>

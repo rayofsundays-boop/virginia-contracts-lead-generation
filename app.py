@@ -270,8 +270,8 @@ def login_required(f):
         if session.get('is_admin'):
             return f(*args, **kwargs)
         if 'user_id' not in session:
-            flash('Please sign in to access this page.', 'warning')
-            return redirect(url_for('signin'))
+            flash('Please sign in to access the Customer Portal.', 'warning')
+            return redirect(url_for('auth'))
         return f(*args, **kwargs)
     return decorated_function
 
