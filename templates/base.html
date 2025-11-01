@@ -103,68 +103,53 @@
         
         /* Professional Navigation Styling */
         .navbar {
-            padding: 1rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .navbar-brand {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
             padding: 0.5rem 0;
         }
         
         .navbar-nav {
-            font-size: 1.1rem;
+            font-size: 14pt;
             font-weight: 500;
         }
         
         .nav-link {
-            padding: 0.75rem 1.25rem !important;
+            padding: 0.5rem 1rem !important;
             transition: all 0.3s ease;
             position: relative;
             font-weight: 500;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
         }
         
         .nav-link:hover {
-            transform: translateY(-2px);
-            color: rgba(255,255,255,0.9) !important;
-        }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background: white;
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-            border-radius: 2px;
-        }
-        
-        .nav-link:hover::after {
-            width: 80%;
+            color: rgba(255,255,255,0.95) !important;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
         }
         
         .nav-link i {
-            font-size: 1rem;
-            margin-right: 0.5rem;
+            font-size: 0.9rem;
+            margin-right: 0.35rem;
         }
         
         .dropdown-menu {
-            font-size: 1rem;
+            font-size: 13pt;
             border: none;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             border-radius: 12px;
-            padding: 0.75rem 0;
+            padding: 0.5rem 0;
             margin-top: 0.5rem;
         }
         
         .dropdown-item {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.25rem;
             transition: all 0.3s ease;
             font-weight: 500;
         }
@@ -172,7 +157,7 @@
         .dropdown-item:hover {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding-left: 2rem;
+            padding-left: 1.75rem;
         }
         
         .dropdown-item i {
@@ -184,31 +169,58 @@
             font-weight: 600;
             border-width: 2px;
             transition: all 0.3s ease;
+            font-size: 13pt;
         }
         
         .btn-outline-light:hover {
             background: white;
             color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+            box-shadow: 0 2px 8px rgba(255,255,255,0.3);
         }
         
         .badge {
-            font-size: 0.7rem;
-            padding: 0.35rem 0.65rem;
+            font-size: 0.65rem;
+            padding: 0.3rem 0.55rem;
             font-weight: 600;
         }
         
+        /* Keep all nav items on one line */
+        .navbar-nav .nav-item {
+            display: inline-block;
+        }
+        
+        .navbar-collapse {
+            flex-grow: 0;
+        }
+        
         /* Mobile responsiveness */
+        @media (max-width: 1400px) {
+            .nav-link {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 13pt;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .nav-link {
+                padding: 0.5rem 0.6rem !important;
+                font-size: 12pt;
+            }
+            .nav-link i {
+                display: none;
+            }
+        }
+        
         @media (max-width: 991px) {
             .navbar-nav {
                 padding: 1rem 0;
+                font-size: 14pt;
             }
             .nav-link {
                 padding: 0.75rem 1rem !important;
             }
-            .nav-link::after {
-                display: none;
+            .nav-link i {
+                display: inline-block;
             }
         }
     </style>
@@ -216,15 +228,15 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
+        <div class="container-fluid px-4">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="fas fa-award me-2"></i>VA Contract Hub
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}">
                             <i class="fas fa-home"></i> Home
