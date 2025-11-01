@@ -387,6 +387,14 @@
                             {% endif %}
                         </a>
                     </li>
+                    <!-- Admin Panel Link (Only for Admins) -->
+                    {% if session.get('is_admin') %}
+                    <li class="nav-item">
+                        <a class="nav-link bg-danger text-white rounded px-3" href="{{ url_for('admin_enhanced') }}" style="font-weight: 600;">
+                            <i class="fas fa-shield-alt"></i> Admin Panel
+                        </a>
+                    </li>
+                    {% endif %}
                     <!-- Signed in as notification -->
                     <li class="nav-item">
                         <span class="nav-link text-white-50 pe-none" style="font-size: 11pt;">
