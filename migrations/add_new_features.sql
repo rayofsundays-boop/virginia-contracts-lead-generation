@@ -149,3 +149,22 @@ CREATE INDEX IF NOT EXISTS idx_commercial_urgency ON commercial_lead_requests(ur
 --     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 -- );
 
+-- Table for buyer bulk purchase requests (companies wanting to purchase products)
+CREATE TABLE IF NOT EXISTS bulk_purchase_requests (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES leads(id),
+    company_name VARCHAR(255) NOT NULL,
+    contact_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    product_category VARCHAR(100) NOT NULL,
+    product_description TEXT NOT NULL,
+    quantity VARCHAR(255) NOT NULL,
+    budget VARCHAR(100),
+    delivery_location VARCHAR(100) NOT NULL,
+    needed_by DATE NOT NULL,
+    urgency VARCHAR(50) DEFAULT 'standard',
+    additional_notes TEXT,
+    status VARCHAR(20) DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

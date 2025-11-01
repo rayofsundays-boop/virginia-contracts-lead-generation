@@ -321,6 +321,13 @@
                             </li>
                         </ul>
                     </li>
+                    <!-- Quick Wins - Prominent Link for All Users -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('quick_wins') }}" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 50px; padding: 8px 20px; font-weight: bold;">
+                            <i class="fas fa-bolt me-1"></i>Quick Wins <span class="badge bg-white text-danger">HOT</span>
+                        </a>
+                    </li>
+                    
                     {% if session.get('user_email') %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="leadsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -333,13 +340,13 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('quick_wins') }}">
-                                    <i class="fas fa-bolt me-2"></i>Quick Wins <span class="badge bg-danger">Urgent</span>
+                                <a class="dropdown-item" href="{{ url_for('bulk_products') }}">
+                                    <i class="fas fa-boxes me-2"></i>Bulk Products
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('bulk_products') }}">
-                                    <i class="fas fa-boxes me-2"></i>Bulk Products
+                                <a class="dropdown-item" href="{{ url_for('bulk_purchasing') }}">
+                                    <i class="fas fa-warehouse me-2"></i>Bulk Purchasing Portal
                                 </a>
                             </li>
                         </ul>

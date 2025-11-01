@@ -5065,6 +5065,65 @@ def submit_bulk_quote():
         print(f"Submit bulk quote error: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/bulk-purchasing')
+def bulk_purchasing():
+    """Bulk purchasing portal for companies wanting to buy products"""
+    return render_template('bulk_purchasing.html')
+
+@app.route('/submit-bulk-request', methods=['POST'])
+@login_required
+def submit_bulk_request():
+    """Handle bulk purchase request submissions"""
+    try:
+        # Get form data
+        company_name = request.form.get('company_name')
+        contact_name = request.form.get('contact_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        product_category = request.form.get('product_category')
+        product_description = request.form.get('product_description')
+        quantity = request.form.get('quantity')
+        budget = request.form.get('budget', '')
+        delivery_location = request.form.get('delivery_location')
+        needed_by = request.form.get('needed_by')
+        urgency = request.form.get('urgency')
+        additional_notes = request.form.get('additional_notes', '')
+        
+        # Insert into database
+        db.session.execute(text('''
+            INSERT INTO bulk_purchase_requests
+            (user_id, company_name, contact_name, email, phone, product_category, 
+             product_description, quantity, budget, delivery_location, needed_by, 
+             urgency, additional_notes, status, created_at)
+            VALUES (:user_id, :company_name, :contact_name, :email, :phone, :product_category,
+                    :product_description, :quantity, :budget, :delivery_location, :needed_by,
+                    :urgency, :additional_notes, 'open', CURRENT_TIMESTAMP)
+        '''), {
+            'user_id': session.get('user_id'),
+            'company_name': company_name,
+            'contact_name': contact_name,
+            'email': email,
+            'phone': phone,
+            'product_category': product_category,
+            'product_description': product_description,
+            'quantity': quantity,
+            'budget': budget,
+            'delivery_location': delivery_location,
+            'needed_by': needed_by,
+            'urgency': urgency,
+            'additional_notes': additional_notes
+        })
+        db.session.commit()
+        
+        flash('Your bulk purchase request has been submitted successfully! Suppliers will contact you soon.', 'success')
+        return redirect(url_for('bulk_purchasing'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Submit bulk request error: {e}")
+        flash('An error occurred while submitting your request. Please try again.', 'danger')
+        return redirect(url_for('bulk_purchasing'))
+
 # Helper function for proposal generation
 def generate_proposal_content(contract, company_name, years, differentiators, sections):
     """Generate proposal content (placeholder for AI integration)"""
