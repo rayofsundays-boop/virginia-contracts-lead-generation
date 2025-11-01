@@ -1750,45 +1750,62 @@ def init_db():
 
 @app.route('/')
 def index():
-    """Main homepage with contract samples"""
+    """Main homepage with contract samples - Optimized with caching"""
     # Check if we're being redirected (prevent infinite loop)
     init_attempted = request.args.get('init_attempted', '0')
     
     try:
-        # Get government contracts
-        contracts = db.session.execute(
-            text('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
-        ).fetchall()
+        # Try to get cached homepage data
+        cache_data = get_dashboard_cache('homepage_data')
         
-        # Get commercial opportunities  
-        commercial_rows = db.session.execute(
-            text('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
-        ).fetchall()
-        
-        # Convert commercial rows to objects for easier template access
-        commercial_opportunities = []
-        for row in commercial_rows:
-            commercial_opportunities.append({
-                'id': row[0],
-                'business_name': row[1],
-                'business_type': row[2],
-                'address': row[3],
-                'location': row[4],
-                'square_footage': row[5],
-                'monthly_value': row[6],
-                'frequency': row[7],
-                'services_needed': row[8],
-                'special_requirements': row[9],
-                'contact_type': row[10],
-                'description': row[11],
-                'size': row[12]
-            })
-        
-        # Get commercial count
-        commercial_count_result = db.session.execute(
-            text('SELECT COUNT(*) FROM commercial_opportunities')
-        ).fetchone()
-        commercial_count = commercial_count_result[0] if commercial_count_result else 0
+        if cache_data:
+            # Use cached data
+            contracts = cache_data.get('contracts', [])
+            commercial_opportunities = cache_data.get('commercial_opportunities', [])
+            commercial_count = cache_data.get('commercial_count', 0)
+        else:
+            # Fetch fresh data - Optimized single query with UNION
+            contracts = db.session.execute(
+                text('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
+            ).fetchall()
+            
+            # Get commercial opportunities  
+            commercial_rows = db.session.execute(
+                text('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC LIMIT 6')
+            ).fetchall()
+            
+            # Convert commercial rows to objects for easier template access
+            commercial_opportunities = []
+            for row in commercial_rows:
+                commercial_opportunities.append({
+                    'id': row[0],
+                    'business_name': row[1],
+                    'business_type': row[2],
+                    'address': row[3],
+                    'location': row[4],
+                    'square_footage': row[5],
+                    'monthly_value': row[6],
+                    'frequency': row[7],
+                    'services_needed': row[8],
+                    'special_requirements': row[9],
+                    'contact_type': row[10],
+                    'description': row[11],
+                    'size': row[12]
+                })
+            
+            # Get commercial count
+            commercial_count_result = db.session.execute(
+                text('SELECT COUNT(*) FROM commercial_opportunities')
+            ).fetchone()
+            commercial_count = commercial_count_result[0] if commercial_count_result else 0
+            
+            # Cache the data for 10 minutes (homepage changes less frequently)
+            cache_data = {
+                'contracts': contracts,
+                'commercial_opportunities': commercial_opportunities,
+                'commercial_count': commercial_count
+            }
+            set_dashboard_cache('homepage_data', cache_data, ttl_minutes=10)
         
         return render_template('index.html', 
                              contracts=contracts, 
