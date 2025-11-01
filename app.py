@@ -5750,6 +5750,12 @@ def proposal_templates():
     """Free proposal writing templates and guidance"""
     return render_template('proposal_templates.html')
 
+@app.route('/partnerships')
+@login_required
+def partnerships():
+    """Partnership resources - PTAC, SBA, GSA certification guides"""
+    return render_template('partnerships.html')
+
 @app.route('/subscription')
 @login_required
 def subscription():
