@@ -567,10 +567,18 @@ scheduler_running = False
 def handle_failed_transactions():
     """Rollback any failed transactions before processing requests"""
     try:
-        # Check if there's a failed transaction and rollback
+        # Always rollback to clear any pending transactions
         db.session.rollback()
-    except:
-        pass
+    except Exception as e:
+        # If rollback fails, close and remove the session entirely
+        try:
+            db.session.close()
+        except:
+            pass
+        try:
+            db.session.remove()
+        except:
+            pass
 
 @app.before_request
 def check_session_timeout():
@@ -608,6 +616,34 @@ def cleanup_session(response):
     except:
         pass
     return response
+
+@app.errorhandler(Exception)
+def handle_database_errors(error):
+    """Global error handler for database transaction errors"""
+    error_str = str(error).lower()
+    
+    # Check for transaction errors
+    if "transaction is aborted" in error_str or "infailedsqltransaction" in error_str:
+        # Force cleanup
+        try:
+            db.session.rollback()
+            db.session.close()
+            db.session.remove()
+        except:
+            pass
+        
+        # Redirect to retry
+        flash('Database connection reset. Please try again.', 'info')
+        return redirect(request.url)
+    
+    # For other errors, just rollback and re-raise
+    try:
+        db.session.rollback()
+    except:
+        pass
+    
+    # Re-raise the error to be handled by the route
+    raise error
 
 # Login required decorator
 def login_required(f):
@@ -1777,9 +1813,17 @@ def index():
     init_attempted = request.args.get('init_attempted', '0')
     
     try:
-        # Rollback any failed transactions first
+        # Aggressively clear any failed transactions
         try:
             db.session.rollback()
+            db.session.close()
+            db.session.remove()
+        except:
+            pass
+        
+        # Create a new session
+        try:
+            db.session()
         except:
             pass
         
