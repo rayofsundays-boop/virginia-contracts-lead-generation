@@ -4560,9 +4560,14 @@ def send_existing_leads():
         </html>
         """
 
-@app.route('/admin-login', methods=['POST'])
+@app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
     """Admin authentication"""
+    if request.method == 'GET':
+        # Show admin login page
+        return render_template('admin_login.html')
+    
+    # POST method - handle login
     password = request.form.get('admin_password')
     redirect_to = request.form.get('redirect_to', '/admin-panel')
     

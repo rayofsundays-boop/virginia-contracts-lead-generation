@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Virginia Contracts{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg" style="border-top: 4px solid #dc3545;">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="admin-icon mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);">
+                            <i class="fas fa-shield-alt text-white" style="font-size: 36px;"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark">Admin Access</h2>
+                        <p class="text-muted">Enter your credentials to continue</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('admin_login') }}" id="adminLoginForm">
+                        <div class="mb-4">
+                            <label for="admin_password" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>Admin Password
+                            </label>
+                            <input type="password" 
+                                   class="form-control form-control-lg" 
+                                   id="admin_password" 
+                                   name="admin_password" 
+                                   placeholder="Enter admin password"
+                                   required
+                                   autofocus
+                                   style="border-left: 3px solid #dc3545;">
+                        </div>
+
+                        <input type="hidden" name="redirect_to" value="{{ request.args.get('redirect', '/admin-panel') }}">
+
+                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold" style="border-radius: 50px;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Access Admin Panel
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="text-muted">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Home
+                        </a>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Default Credentials:</strong><br>
+                            Username: admin<br>
+                            Password: VAContracts2024!
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="alert alert-warning mt-3" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Security Notice:</strong> Admin access is logged and monitored.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+</style>
+
+<script>
+    // Auto-focus on password field
+    document.getElementById('admin_password').focus();
+    
+    // Form submission feedback
+    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Authenticating...';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}
