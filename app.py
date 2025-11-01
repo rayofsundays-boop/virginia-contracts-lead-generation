@@ -2769,7 +2769,7 @@ def proposal_support():
 @app.route('/consultations')
 @login_required
 def consultations():
-    """Subscriber-exclusive one-on-one consultation scheduling"""
+    """Subscriber-exclusive one-on-one consultation scheduling with Ray Matthews"""
     user_email = session.get('user_email')
     
     # Check if user is subscriber
@@ -2780,6 +2780,20 @@ def consultations():
     
     if not result or result[0] != 'active':
         return render_template('consultations.html', is_subscriber=False, user_name='')
+    
+    # Specialist information
+    specialist = {
+        'name': 'Ray Matthews',
+        'title': 'Proposal Support Specialist',
+        'email': 'RayMatthews@sparkbiz.co',
+        'expertise': [
+            'Government Contract Proposals',
+            'Bid Strategy Development',
+            'Compliance & Requirements',
+            'Business Growth Coaching'
+        ],
+        'availability': 'Monday - Friday, 9 AM - 6 PM EST'
+    }
     
     # Available consultation types
     consultation_types = [
@@ -2814,7 +2828,8 @@ def consultations():
     ]
     
     return render_template('consultations.html', 
-                         consultation_types=consultation_types, 
+                         consultation_types=consultation_types,
+                         specialist=specialist,
                          is_subscriber=True, 
                          user_name=result[1])
 
