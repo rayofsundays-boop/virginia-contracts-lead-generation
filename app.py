@@ -2067,7 +2067,7 @@ def contracts():
                 SELECT COUNT(*) FROM contracts WHERE LOWER(location) LIKE LOWER(:loc)
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc)
                 ORDER BY deadline ASC
@@ -2076,7 +2076,7 @@ def contracts():
         else:
             total = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 ORDER BY deadline ASC
                 LIMIT :limit OFFSET :offset
