@@ -996,6 +996,21 @@ def init_postgres_db():
         
         db.session.commit()
         
+        # Saved leads table (user bookmarks)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS saved_leads
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL,
+                      lead_type TEXT NOT NULL,
+                      lead_id TEXT NOT NULL,
+                      lead_title TEXT,
+                      lead_data JSON,
+                      notes TEXT,
+                      status TEXT DEFAULT 'saved',
+                      saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      UNIQUE(user_email, lead_type, lead_id))'''))
+        
+        db.session.commit()
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
@@ -2316,6 +2331,123 @@ def calculate_days_left(deadline_str):
         return 30
     except:
         return 30
+
+@app.route('/save-lead', methods=['POST'])
+@login_required
+def save_lead():
+    """Save a lead to user's repository"""
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        
+        if not user_email:
+            return jsonify({'success': False, 'message': 'Not logged in'}), 401
+        
+        # Insert or update saved lead
+        db.session.execute(text('''
+            INSERT INTO saved_leads 
+            (user_email, lead_type, lead_id, lead_title, lead_data, status)
+            VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved')
+            ON CONFLICT (user_email, lead_type, lead_id) 
+            DO UPDATE SET lead_title = :lead_title, lead_data = :lead_data
+        '''), {
+            'user_email': user_email,
+            'lead_type': data.get('lead_type'),
+            'lead_id': data.get('lead_id'),
+            'lead_title': data.get('title'),
+            'lead_data': json.dumps(data)
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead saved successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/unsave-lead', methods=['POST'])
+@login_required
+def unsave_lead():
+    """Remove a lead from user's repository"""
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        
+        if not user_email:
+            return jsonify({'success': False, 'message': 'Not logged in'}), 401
+        
+        # Support both saved_id (from saved_leads page) and lead_type+lead_id (from customer_leads page)
+        if 'saved_id' in data:
+            db.session.execute(text('''
+                DELETE FROM saved_leads 
+                WHERE id = :saved_id 
+                AND user_email = :user_email
+            '''), {
+                'saved_id': data.get('saved_id'),
+                'user_email': user_email
+            })
+        else:
+            db.session.execute(text('''
+                DELETE FROM saved_leads 
+                WHERE user_email = :user_email 
+                AND lead_type = :lead_type 
+                AND lead_id = :lead_id
+            '''), {
+                'user_email': user_email,
+                'lead_type': data.get('lead_type'),
+                'lead_id': data.get('lead_id')
+            })
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead removed from saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/saved-leads')
+@login_required
+def saved_leads():
+    """View user's saved leads"""
+    try:
+        user_email = session.get('user_email')
+        
+        saved = db.session.execute(text('''
+            SELECT id, lead_type, lead_id, lead_title, lead_data, notes, status, saved_at
+            FROM saved_leads
+            WHERE user_email = :user_email
+            ORDER BY saved_at DESC
+        '''), {'user_email': user_email}).fetchall()
+        
+        saved_leads_list = []
+        for s in saved:
+            lead_data = json.loads(s[4]) if s[4] else {}
+            
+            # Create object with attributes for template access
+            class SavedLead:
+                def __init__(self, id, lead_type, lead_id, lead_title, lead_data, notes, status, saved_at):
+                    self.id = id
+                    self.lead_type = lead_type
+                    self.lead_id = lead_id
+                    self.lead_title = lead_title
+                    self.lead_data = lead_data
+                    self.notes = notes
+                    self.status = status
+                    self.saved_at = saved_at
+            
+            saved_leads_list.append(SavedLead(
+                id=s[0],
+                lead_type=s[1],
+                lead_id=s[2],
+                lead_title=s[3],
+                lead_data=lead_data,
+                notes=s[5],
+                status=s[6],
+                saved_at=s[7]
+            ))
+        
+        return render_template('saved_leads.html', saved_leads=saved_leads_list)
+    except Exception as e:
+        print(f"Error loading saved leads: {e}")
+        return render_template('saved_leads.html', saved_leads=[])
 
 @app.route('/request-proposal-help', methods=['POST'])
 def request_proposal_help():

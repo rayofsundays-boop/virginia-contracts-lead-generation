@@ -14,6 +14,9 @@
                 </div>
                 <div class="text-end">
                     <div class="d-flex align-items-center gap-3">
+                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning">
+                            <i class="fas fa-bookmark me-2"></i>Saved Leads
+                        </a>
                         <div class="subscription-display">
                             <small class="text-muted">Access:</small><br>
                             <strong class="text-success">Included with subscription</strong>
@@ -149,7 +152,17 @@
                                 <span class="badge bg-primary" style="font-size: 0.7rem;">🏠 Homeowner Needs Cleaner</span>
                             {% endif %}
                         </div>
-                        <small class="text-muted" style="font-size: 0.65rem;">5 Credits</small>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-link p-0 me-2 save-btn" 
+                                    data-lead-type="{{ lead.lead_type }}" 
+                                    data-lead-id="{{ lead.id }}"
+                                    data-lead-title="{{ lead.title }}"
+                                    onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
+                                    title="Save lead">
+                                <i class="far fa-bookmark text-warning" style="font-size: 1.1rem;"></i>
+                            </button>
+                            <small class="text-muted" style="font-size: 0.65rem;">5 Credits</small>
+                        </div>
                     </div>
                 </div>
                 
@@ -720,6 +733,77 @@ function submitProposalHelp() {
         console.error('Error:', error);
         showToast('Error submitting proposal help request', 'error');
     });
+}
+
+function toggleSaveLead(button, leadType, leadId, leadTitle) {
+    const icon = button.querySelector('i');
+    const isSaved = icon.classList.contains('fas');
+    
+    if (isSaved) {
+        // Unsave the lead
+        fetch('/unsave-lead', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lead_type: leadType,
+                lead_id: leadId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                showToast('Lead removed from saved', 'success');
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to unsave lead'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to unsave lead. Please try again.', 'error');
+        });
+    } else {
+        // Save the lead - collect lead data from card
+        const card = button.closest('.lead-card');
+        const leadData = {
+            agency: card.dataset.agency || '',
+            contract_value: card.dataset.value || '',
+            location: card.dataset.location || '',
+            deadline: card.dataset.deadline || '',
+            services_needed: card.dataset.services || '',
+            status: card.dataset.status || ''
+        };
+        
+        fetch('/save-lead', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lead_type: leadType,
+                lead_id: leadId,
+                lead_title: leadTitle,
+                lead_data: leadData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                showToast('Lead saved successfully!', 'success');
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to save lead'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to save lead. Please try again.', 'error');
+        });
+    }
 }
 
 function shareLead(title, description, location) {
