@@ -71,11 +71,38 @@
 
 <!-- Federal Contracts Section -->
 <div class="container my-5">
+    {% if not is_admin and not is_paid_subscriber and clicks_remaining <= 0 %}
+    <!-- Paywall Overlay -->
+    <div class="alert alert-warning text-center p-4 mb-4">
+        <h4><i class="fas fa-lock"></i> You've reached your free view limit</h4>
+        <p class="mb-3">Subscribe now to unlock unlimited access to all federal contract opportunities!</p>
+        <a href="{{ url_for('subscribe_page') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-star me-2"></i>Subscribe Now - $99/month
+        </a>
+        <br><br>
+        <small class="text-muted">Already have an account? <a href="{{ url_for('signin') }}">Sign In</a></small>
+    </div>
+    {% endif %}
+
     {% if contracts %}
         <div class="row">
             {% for contract in contracts %}
             <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 contract-card">
+                <div class="card h-100 contract-card {% if not is_admin and not is_paid_subscriber %}contract-limited{% endif %}" data-index="{{ loop.index }}">
+                    {% if not is_admin and not is_paid_subscriber and loop.index > 3 %}
+                    <!-- Blur overlay for items after 3rd -->
+                    <div class="paywall-overlay">
+                        <div class="paywall-content">
+                            <i class="fas fa-lock fa-3x mb-3"></i>
+                            <h5>Subscribe to View</h5>
+                            <p>{{ clicks_remaining }} free views remaining</p>
+                            <a href="{{ url_for('subscribe_page') }}" class="btn btn-light btn-sm">
+                                Subscribe Now
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 text-primary">{{ contract[2] }}</h6>
                         <span class="badge bg-primary">Federal</span>
@@ -245,6 +272,7 @@ function shareFederalContract(title, description, agency, value, deadline) {
 .contract-card {
     transition: transform 0.2s, box-shadow 0.2s;
     border-left: 4px solid #667eea;
+    position: relative;
 }
 
 .contract-card:hover {
@@ -254,6 +282,35 @@ function shareFederalContract(title, description, agency, value, deadline) {
 
 .card-footer {
     border-top: 1px solid rgba(0,0,0,.125);
+}
+
+/* Paywall overlay styles */
+.contract-limited[data-index]:nth-child(n+4) {
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+.paywall-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: all;
+}
+
+.paywall-content {
+    text-align: center;
+    color: #333;
+}
+
+.paywall-content i {
+    color: #667eea;
 }
 </style>
 {% endblock %}

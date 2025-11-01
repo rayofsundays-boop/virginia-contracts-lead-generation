@@ -26,6 +26,10 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Admin credentials (bypass paywall)
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'VAContracts2024!')
+
 # PayPal Configuration
 paypalrestsdk.configure({
     "mode": os.environ.get('PAYPAL_MODE', 'sandbox'),  # 'sandbox' or 'live'
@@ -230,9 +234,38 @@ scheduler_running = False
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Admin bypass
+        if session.get('is_admin'):
+            return f(*args, **kwargs)
         if 'user_id' not in session:
             flash('Please sign in to access this page.', 'warning')
             return redirect(url_for('signin'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def paid_or_limited_access(f):
+    """Allow 3 free views, then blur content for non-subscribers"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Admin bypass
+        if session.get('is_admin'):
+            return f(*args, **kwargs)
+        
+        # Check if user is paid subscriber
+        if 'user_id' in session:
+            user_id = session['user_id']
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': user_id}).fetchone()
+            
+            if result and result[0] == 'paid':
+                return f(*args, **kwargs)
+        
+        # Track free clicks (for non-logged-in or unpaid users)
+        if 'contract_clicks' not in session:
+            session['contract_clicks'] = 0
+        
+        # Allow function to run, but pass click limit info to template
         return f(*args, **kwargs)
     return decorated_function
 
@@ -1454,6 +1487,14 @@ def signin():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        # Check for admin login first
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['is_admin'] = True
+            session['username'] = 'Admin'
+            session['name'] = 'Administrator'
+            flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
+            return redirect(url_for('contracts'))
+        
         # Get user from database
         result = db.session.execute(
             text('SELECT id, username, email, password_hash, contact_name, credits_balance FROM leads WHERE username = :username OR email = :username'),
@@ -1700,13 +1741,36 @@ def contracts():
 
 @app.route('/federal-contracts')
 def federal_contracts():
-    """Federal contracts from SAM.gov"""
+    """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
     department_filter = request.args.get('department', '')
     set_aside_filter = request.args.get('set_aside', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
     per_page = int(request.args.get('per_page', 12) or 12)
     per_page = min(max(per_page, 6), 48)
     offset = (page - 1) * per_page
+    
+    # Check access level
+    is_admin = session.get('is_admin', False)
+    is_paid_subscriber = False
+    clicks_remaining = 3
+    
+    if not is_admin:
+        # Check if paid subscriber
+        if 'user_id' in session:
+            user_id = session['user_id']
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': user_id}).fetchone()
+            
+            if result and result[0] == 'paid':
+                is_paid_subscriber = True
+        
+        # Track clicks for non-subscribers
+        if not is_paid_subscriber:
+            if 'contract_clicks' not in session:
+                session['contract_clicks'] = 0
+            clicks_remaining = max(0, 3 - session['contract_clicks'])
+    
     try:
         # Build dynamic filter with SQLAlchemy text
         base_sql = '''
@@ -1760,7 +1824,10 @@ def federal_contracts():
                                set_asides=set_asides,
                                current_department=department_filter,
                                current_set_aside=set_aside_filter,
-                               pagination=pagination)
+                               pagination=pagination,
+                               is_admin=is_admin,
+                               is_paid_subscriber=is_paid_subscriber,
+                               clicks_remaining=clicks_remaining)
     except Exception as e:
         msg = f"<h1>Federal Contracts Page Error</h1><p>{str(e)}</p>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
@@ -1960,6 +2027,26 @@ def request_commercial_contact():
     except Exception as e:
         print(f"Error in request_commercial_contact: {e}")
         return {'success': False, 'message': str(e)}, 500
+
+@app.route('/track-click', methods=['POST'])
+def track_click():
+    """Track contract clicks for paywall limit"""
+    # Don't track for admin or paid subscribers
+    if session.get('is_admin') or session.get('is_paid_subscriber'):
+        return {'success': True, 'clicks_remaining': 999}
+    
+    # Initialize or increment clicks
+    if 'contract_clicks' not in session:
+        session['contract_clicks'] = 0
+    
+    session['contract_clicks'] += 1
+    clicks_remaining = max(0, 3 - session['contract_clicks'])
+    
+    return {
+        'success': True,
+        'clicks_remaining': clicks_remaining,
+        'clicks_used': session['contract_clicks']
+    }
 
 @app.route('/customer-leads')
 @login_required
