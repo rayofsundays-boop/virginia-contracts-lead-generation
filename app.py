@@ -4622,15 +4622,8 @@ def allocate_monthly_credits_route():
 @login_required
 def toolbox():
     """Toolbox page with templates and resources"""
-    # Check if user is paid subscriber
-    is_paid = False
-    if 'user_id' in session:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads WHERE id = :user_id
-        '''), {'user_id': session['user_id']}).fetchone()
-        if result and result[0] == 'paid':
-            is_paid = True
-    
+    # For now, show toolbox to all logged-in users
+    is_paid = True
     return render_template('toolbox.html', is_paid_subscriber=is_paid, is_admin=session.get('is_admin', False))
 
 @app.route('/proposal-templates')
@@ -4642,21 +4635,7 @@ def proposal_templates():
 @login_required
 def pricing_guide():
     """Subscriber-only pricing guide for cleaning contracts"""
-    # Check if user is paid subscriber or admin
-    is_admin = session.get('is_admin', False)
-    is_paid = False
-    
-    if not is_admin and 'user_id' in session:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads WHERE id = :user_id
-        '''), {'user_id': session['user_id']}).fetchone()
-        if result and result[0] == 'paid':
-            is_paid = True
-    
-    if not is_admin and not is_paid:
-        flash('Pricing Guide is available to paid subscribers only. Subscribe to access this valuable resource!', 'warning')
-        return redirect(url_for('subscribe_page'))
-    
+    # For now, show pricing guide to all logged-in users
     return render_template('pricing_guide.html')
 
 @app.route('/capability-statement')
@@ -4743,21 +4722,8 @@ def analyze_proposal_compliance(rfp_path, proposal_path):
 @login_required
 def pricing_calculator():
     """Interactive pricing calculator for subscribers"""
-    # Check if user is paid subscriber or admin
-    is_admin = session.get('is_admin', False)
-    is_paid = False
-    
-    if not is_admin and 'user_id' in session:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads WHERE id = :user_id
-        '''), {'user_id': session['user_id']}).fetchone()
-        if result and result[0] == 'paid':
-            is_paid = True
-    
-    if not is_admin and not is_paid:
-        flash('Pricing Calculator is available to paid subscribers only. Subscribe to unlock this powerful tool!', 'warning')
-        return redirect(url_for('subscribe_page'))
-    
+    # For now, show calculator to all logged-in users
+    # TODO: Add proper subscription check when payment system is fully implemented
     return render_template('pricing_calculator.html')
 
 @app.route('/ai-assistant')
