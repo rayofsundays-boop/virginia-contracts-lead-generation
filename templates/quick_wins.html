@@ -73,17 +73,21 @@
             <div class="card bg-danger text-white shadow">
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <h3 class="fw-bold mb-0">{{ emergency_count }}</h3>
                             <p class="mb-0 small">Emergency (Today)</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <h3 class="fw-bold mb-0">{{ urgent_count }}</h3>
                             <p class="mb-0 small">Urgent (This Week)</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <h3 class="fw-bold mb-0">{{ quick_win_count }}</h3>
+                            <p class="mb-0 small">Supply Quick Wins</p>
+                        </div>
+                        <div class="col-md-3">
                             <h3 class="fw-bold mb-0">{{ total_count }}</h3>
-                            <p class="mb-0 small">Total Quick Wins</p>
+                            <p class="mb-0 small">Total Opportunities</p>
                         </div>
                     </div>
                 </div>
@@ -98,56 +102,68 @@
                 <div class="row g-4">
                     {% for lead in leads %}
                     <div class="col-md-6">
-                        <div class="card h-100 shadow hover-lift {% if lead.urgency == 'emergency' %}border-danger border-3{% elif lead.urgency == 'urgent' %}border-warning border-2{% endif %}">
+                        <div class="card h-100 shadow hover-lift {% if lead.urgency_level == 'emergency' %}border-danger border-3{% elif lead.urgency_level == 'urgent' %}border-warning border-2{% elif lead.urgency_level == 'quick-win' %}border-success border-2{% endif %}">
                             <div class="card-body">
                                 <!-- Urgency Badge -->
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h5 class="card-title mb-0">{{ lead.business_name }}</h5>
-                                    {% if lead.urgency == 'emergency' %}
+                                    <h5 class="card-title mb-0">{{ lead.title }}</h5>
+                                    {% if lead.urgency_level == 'emergency' %}
                                         <span class="badge bg-danger pulse-badge">🔴 EMERGENCY</span>
-                                    {% elif lead.urgency == 'urgent' %}
+                                    {% elif lead.urgency_level == 'urgent' %}
                                         <span class="badge bg-warning text-dark">🟠 URGENT</span>
+                                    {% elif lead.urgency_level == 'quick-win' %}
+                                        <span class="badge bg-success">⚡ QUICK WIN</span>
                                     {% else %}
                                         <span class="badge bg-info">🟡 SOON</span>
                                     {% endif %}
                                 </div>
 
+                                <!-- Lead Type -->
                                 <p class="text-muted mb-2">
-                                    <i class="fas fa-building me-2"></i>{{ lead.business_type }}
+                                    <i class="fas fa-tag me-2"></i><strong>{{ lead.lead_type }}</strong>
+                                </p>
+                                
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-building me-2"></i>{{ lead.agency }}
                                 </p>
                                 <p class="text-muted mb-2">
-                                    <i class="fas fa-map-marker-alt me-2"></i>{{ lead.city }}, VA
+                                    <i class="fas fa-map-marker-alt me-2"></i>{{ lead.location }}, VA
                                 </p>
+                                
+                                {% if lead.source == 'supply' %}
                                 <p class="text-muted mb-2">
-                                    <i class="fas fa-calendar me-2"></i>Start: {{ lead.start_date or 'ASAP' }}
+                                    <i class="fas fa-calendar me-2"></i>Bid Deadline: {{ lead.deadline }}
                                 </p>
+                                {% else %}
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-clock me-2"></i>{{ lead.deadline }}
+                                </p>
+                                {% endif %}
 
                                 <div class="mb-3">
-                                    <strong>Services Needed:</strong>
-                                    <p class="mb-0">{{ lead.services_needed }}</p>
+                                    <strong>{% if lead.source == 'supply' %}Product/Service:{% else %}Services Needed:{% endif %}</strong>
+                                    <p class="mb-0">{{ lead.category }}</p>
                                 </div>
 
-                                {% if lead.special_requirements %}
+                                {% if lead.description %}
                                 <div class="mb-3">
-                                    <strong>Special Requirements:</strong>
-                                    <p class="mb-0 small">{{ lead.special_requirements }}</p>
+                                    <strong>Details:</strong>
+                                    <p class="mb-0 small">{{ lead.description }}</p>
                                 </div>
                                 {% endif %}
 
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
-                                        <small class="text-muted d-block">Square Footage</small>
-                                        <strong>{{ lead.square_footage }} sq ft</strong>
+                                        <small class="text-muted d-block">Estimated Value</small>
+                                        <strong class="text-success">{{ lead.value }}</strong>
                                     </div>
+                                    {% if lead.is_small_business %}
                                     <div class="col-6">
-                                        <small class="text-muted d-block">Budget Range</small>
-                                        <strong class="text-success">{{ lead.budget_range or 'Negotiable' }}</strong>
+                                        <small class="text-muted d-block">Set-Aside</small>
+                                        <span class="badge bg-primary">Small Business</span>
                                     </div>
+                                    {% endif %}
                                 </div>
-
-                                <div class="mb-3">
-                                    <small class="text-muted d-block">Posted</small>
-                                    <strong>{{ lead.created_at }}</strong>
                                 </div>
 
                                 {% if is_paid_subscriber or is_admin %}

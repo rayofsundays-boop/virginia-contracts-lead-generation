@@ -5462,14 +5462,13 @@ def generate_proposal_api():
 @app.route('/quick-wins')
 @login_required
 def quick_wins():
-    """Show urgent leads requiring immediate response"""
+    """Show urgent leads and quick win supply contracts requiring immediate response"""
     try:
         urgency_filter = request.args.get('urgency', '')
         lead_type_filter = request.args.get('lead_type', '')
         city_filter = request.args.get('city', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
         per_page = 12
-        offset = (page - 1) * per_page
         
         # Check if paid subscriber or admin
         is_admin = session.get('is_admin', False)
@@ -5485,57 +5484,97 @@ def quick_wins():
         if is_admin:
             is_paid = True
         
-        # Build query
-        where_conditions = ["urgency IN ('emergency', 'urgent', 'soon')"]
-        params = {}
+        # Get quick win supply contracts
+        quick_win_supplies = []
+        try:
+            quick_win_supplies = db.session.execute(text('''
+                SELECT 
+                    id, title, agency, location, product_category, estimated_value,
+                    bid_deadline, description, website_url, is_small_business_set_aside,
+                    'supply' as lead_source
+                FROM supply_contracts 
+                WHERE is_quick_win = TRUE AND status = 'open'
+                ORDER BY bid_deadline ASC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Supply contracts quick wins error: {e}")
         
-        if urgency_filter:
-            where_conditions.append("urgency = :urgency")
-            params['urgency'] = urgency_filter
+        # Get urgent commercial requests
+        urgent_commercial = []
+        try:
+            urgent_commercial = db.session.execute(text('''
+                SELECT 
+                    id, business_name, city, business_type, services_needed,
+                    budget_range, urgency, created_at, 'commercial' as lead_source
+                FROM commercial_lead_requests 
+                WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
+                ORDER BY 
+                    CASE urgency 
+                        WHEN 'emergency' THEN 1
+                        WHEN 'urgent' THEN 2
+                        ELSE 3
+                    END,
+                    created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Commercial requests error: {e}")
         
-        if city_filter:
-            where_conditions.append("city = :city")
-            params['city'] = city_filter
+        # Combine all quick wins
+        all_quick_wins = []
         
-        where_clause = " AND ".join(where_conditions)
+        # Add supply contracts
+        for supply in quick_win_supplies:
+            all_quick_wins.append({
+                'id': f"supply_{supply[0]}",
+                'title': supply[1],
+                'agency': supply[2],
+                'location': supply[3],
+                'category': supply[4],
+                'value': supply[5],
+                'deadline': supply[6],
+                'description': supply[7],
+                'website_url': supply[8],
+                'is_small_business': supply[9],
+                'lead_type': 'Supply Contract - Quick Win',
+                'urgency_level': 'quick-win',
+                'source': 'supply'
+            })
         
-        # Get counts
-        emergency_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
-        )).scalar() or 0
+        # Add commercial requests
+        for comm in urgent_commercial:
+            all_quick_wins.append({
+                'id': f"commercial_{comm[0]}",
+                'title': f"Commercial Cleaning - {comm[1]}",
+                'agency': comm[3],
+                'location': comm[2],
+                'category': comm[4],
+                'value': comm[5],
+                'deadline': 'ASAP',
+                'description': f"Urgency: {comm[6]}",
+                'website_url': None,
+                'is_small_business': False,
+                'lead_type': 'Commercial Request',
+                'urgency_level': comm[6],
+                'source': 'commercial'
+            })
         
-        urgent_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
-        )).scalar() or 0
+        # Pagination
+        total_count = len(all_quick_wins)
+        total_pages = max(math.ceil(total_count / per_page), 1)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_leads = all_quick_wins[start:end]
         
-        # Get leads
-        total_count = db.session.execute(text(f'''
-            SELECT COUNT(*) FROM commercial_lead_requests WHERE {where_clause} AND status = 'open'
-        '''), params).scalar() or 0
-        
-        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-        
-        params['limit'] = per_page
-        params['offset'] = offset
-        
-        leads = db.session.execute(text(f'''
-            SELECT * FROM commercial_lead_requests 
-            WHERE {where_clause} AND status = 'open'
-            ORDER BY 
-                CASE urgency 
-                    WHEN 'emergency' THEN 1
-                    WHEN 'urgent' THEN 2
-                    WHEN 'soon' THEN 3
-                    ELSE 4
-                END,
-                created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''), params).fetchall()
+        # Get counts for badges
+        emergency_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'emergency'])
+        urgent_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'urgent'])
+        quick_win_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'quick-win'])
         
         return render_template('quick_wins.html',
-                             leads=leads,
+                             leads=paginated_leads,
                              emergency_count=emergency_count,
                              urgent_count=urgent_count,
+                             quick_win_count=quick_win_count,
                              total_count=total_count,
                              page=page,
                              total_pages=total_pages,
@@ -5543,6 +5582,8 @@ def quick_wins():
                              is_admin=is_admin)
     except Exception as e:
         print(f"Quick Wins error: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Quick Wins feature is currently being set up. Please check back soon.', 'info')
         return redirect(url_for('customer_leads'))
 
