@@ -2599,7 +2599,6 @@ def get_lead_details(lead_type, lead_id):
     except:
         pass
     return None
-        return redirect(url_for('user_profile'))
 
 @app.route('/change-password', methods=['POST'])
 @login_required
