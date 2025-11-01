@@ -1755,8 +1755,9 @@ def index():
     init_attempted = request.args.get('init_attempted', '0')
     
     try:
-        # Try to get cached homepage data
-        cache_data = get_dashboard_cache('homepage_data')
+        # Use global cache key for homepage (not user-specific)
+        cache_key = 'homepage_global'
+        cache_data = get_dashboard_cache(cache_key)
         
         if cache_data:
             # Use cached data
@@ -1764,7 +1765,7 @@ def index():
             commercial_opportunities = cache_data.get('commercial_opportunities', [])
             commercial_count = cache_data.get('commercial_count', 0)
         else:
-            # Fetch fresh data - Optimized single query with UNION
+            # Fetch fresh data
             contracts = db.session.execute(
                 text('SELECT * FROM contracts ORDER BY deadline ASC LIMIT 6')
             ).fetchall()
@@ -1805,7 +1806,7 @@ def index():
                 'commercial_opportunities': commercial_opportunities,
                 'commercial_count': commercial_count
             }
-            set_dashboard_cache('homepage_data', cache_data, ttl_minutes=10)
+            set_dashboard_cache(cache_key, cache_data, ttl_minutes=10)
         
         return render_template('index.html', 
                              contracts=contracts, 
