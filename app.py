@@ -3526,82 +3526,6 @@ def admin_panel():
         print(f"Error loading admin panel: {e}")
         return f"<h1>Error loading admin panel</h1><p>{str(e)}</p><a href='/'>Back to Home</a>"
 
-@app.route('/admin-reset-password', methods=['POST'])
-def admin_reset_password():
-    """Admin function to reset user password"""
-    if not session.get('is_admin'):
-        return jsonify({{'success': False, 'error': 'Unauthorized'}}), 401
-    
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        
-        if not email:
-            return jsonify({{'success': False, 'error': 'Email required'}})
-        
-        # Check if user exists
-        user = db.session.execute(
-            text('SELECT id, contact_name FROM leads WHERE email = :email'),
-            {{'email': email}}
-        ).fetchone()
-        
-        if not user:
-            return jsonify({{'success': False, 'error': 'User not found'}})
-        
-        # Generate new random password
-        import secrets
-        import string
-        alphabet = string.ascii_letters + string.digits
-        new_password = ''.join(secrets.choice(alphabet) for i in range(12))
-        
-        # Hash the new password
-        password_hash = generate_password_hash(new_password)
-        
-        # Update password in database
-        db.session.execute(
-            text('UPDATE leads SET password_hash = :password_hash WHERE email = :email'),
-            {{'email': email, 'password_hash': password_hash}}
-        )
-        db.session.commit()
-        
-        # Send email to user with new password
-        try:
-            subject = "Your Password Has Been Reset - Virginia Contracts"
-            body = f"""
-Hello {{user[1]}},
-
-Your password has been reset by an administrator.
-
-New Login Credentials:
-Email: {{email}}
-Password: {{new_password}}
-
-For security, please sign in and change your password immediately.
-
-Sign in here: {{request.host_url}}auth
-
-If you did not request this password reset, please contact support immediately at info@eliteecocareservices.com
-
-Best regards,
-Virginia Contract Leads Team
-            """
-            
-            msg = Message(subject=subject, recipients=[email], body=body)
-            mail.send(msg)
-            
-        except Exception as e:
-            print(f"Failed to send password reset email: {{e}}")
-        
-        return jsonify({{
-            'success': True,
-            'new_password': new_password,
-            'message': 'Password reset successfully'
-        }})
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({{'success': False, 'error': str(e)}}), 500
-
 @app.route('/admin-logout')
 def admin_logout():
     """Logout from admin panel"""
@@ -4520,9 +4444,9 @@ def landing():
     """Landing page with pain point survey"""
     return render_template('landing.html')
 
-@app.route('/submit-survey', methods=['POST'])
-def submit_survey():
-    """Handle survey submission and redirect to results"""
+@app.route('/submit-landing-survey', methods=['POST'])
+def submit_landing_survey():
+    """Handle landing page survey submission and redirect to results"""
     try:
         import json
         
