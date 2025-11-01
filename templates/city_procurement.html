@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}{{ city }} Procurement Opportunities - Virginia Government Contracts{% endblock %}
+
+{% block content %}
+<!-- City Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-3 fw-bold text-white mb-3">
+            <i class="fas fa-map-marker-alt me-3"></i>{{ city }}, Virginia
+        </h1>
+        <p class="lead text-white fs-4">Procurement Opportunities & Government Contracts</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10">
+                <div class="row text-white">
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 bg-white bg-opacity-25 rounded">
+                            <h3 class="mb-1">{{ total_opportunities }}</h3>
+                            <p class="mb-0">Total Opportunities</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 bg-white bg-opacity-25 rounded">
+                            <h3 class="mb-1">{{ contracts|length }}</h3>
+                            <p class="mb-0">Government Contracts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 bg-white bg-opacity-25 rounded">
+                            <h3 class="mb-1">{{ commercial|length }}</h3>
+                            <p class="mb-0">Commercial Opportunities</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- City Information -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="fas fa-info-circle text-primary me-2"></i>About {{ city }}</h3>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>Population:</strong> {{ city_info.population }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Major Facilities:</strong> {{ city_info.major_facilities }}</p>
+                        </div>
+                    </div>
+                    {% if city_info.procurement_url %}
+                    <a href="{{ city_info.procurement_url }}" target="_blank" class="btn btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-2"></i>Official Procurement Portal
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Government Contracts -->
+            <h2 class="mb-4"><i class="fas fa-landmark text-primary me-2"></i>Local & State Government Contracts</h2>
+            
+            {% if contracts %}
+                <div class="row">
+                    {% for contract in contracts %}
+                    <div class="col-12 mb-4">
+                        <div class="card shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">{{ contract[1] }}</h5>
+                                    {% if contract[10] %}
+                                        <span class="badge bg-info">{{ contract[10] }}</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Government</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-building me-2"></i>{{ contract[2] }}
+                                </p>
+                                
+                                <p class="card-text">{{ contract[4][:250] }}{% if contract[4]|length > 250 %}...{% endif %}</p>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Contract Value</small>
+                                        <strong class="text-success">{{ contract[5] }}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Deadline</small>
+                                        <strong>{{ contract[6] }}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">NAICS Code</small>
+                                        <strong>{{ contract[7] }}</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    {% if contract[9] %}
+                                    <a href="{{ contract[9] }}" target="_blank" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Details
+                                    </a>
+                                    {% endif %}
+                                    <button class="btn btn-outline-primary btn-sm" onclick="saveOpportunity('gov_{{ contract[0] }}')">
+                                        <i class="fas fa-bookmark me-1"></i>Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No government contracts currently available for {{ city }}. Check back soon!
+                </div>
+            {% endif %}
+
+            <!-- Commercial Opportunities -->
+            <h2 class="mb-4 mt-5"><i class="fas fa-store text-success me-2"></i>Commercial Opportunities</h2>
+            
+            {% if commercial %}
+                <div class="row">
+                    {% for opp in commercial %}
+                    <div class="col-12 mb-4">
+                        <div class="card shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">{{ opp[1] }}</h5>
+                                    <span class="badge bg-success">Commercial</span>
+                                </div>
+                                
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-briefcase me-2"></i>{{ opp[2] }}
+                                </p>
+                                
+                                <p class="card-text">{{ opp[4][:200] }}{% if opp[4]|length > 200 %}...{% endif %}</p>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Monthly Value</small>
+                                        <strong class="text-success">${{ opp[5] }}/month</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Services Needed</small>
+                                        <strong>{{ opp[6] }}</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    {% if opp[7] %}
+                                    <a href="{{ opp[7] }}" target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>Visit Website
+                                    </a>
+                                    {% endif %}
+                                    <button class="btn btn-outline-success btn-sm" onclick="saveOpportunity('com_{{ opp[0] }}')">
+                                        <i class="fas fa-bookmark me-1"></i>Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No commercial opportunities currently available for {{ city }}. Check back soon!
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Wins Promotion -->
+            <div class="card shadow-sm mb-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <div class="card-body text-center">
+                    <h4 class="card-title text-white">
+                        <i class="fas fa-bolt me-2"></i>⚡ Quick Wins
+                    </h4>
+                    <p class="mb-3">Get urgent leads requiring immediate response with less competition!</p>
+                    <a href="{{ url_for('quick_wins', city=city) }}" class="btn btn-light btn-lg w-100 fw-bold">
+                        <i class="fas fa-fire me-2"></i>View Quick Wins
+                    </a>
+                    <small class="d-block mt-2 text-white-50">
+                        <i class="fas fa-crown me-1"></i>Subscriber Exclusive
+                    </small>
+                </div>
+            </div>
+
+            <!-- Other Virginia Cities -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map me-2"></i>Other Virginia Cities
+                    </h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% set cities = [
+                        ('Hampton', 'hampton'),
+                        ('Norfolk', 'norfolk'),
+                        ('Virginia Beach', 'virginia-beach'),
+                        ('Newport News', 'newport-news'),
+                        ('Williamsburg', 'williamsburg'),
+                        ('Suffolk', 'suffolk'),
+                        ('Chesapeake', 'chesapeake'),
+                        ('Portsmouth', 'portsmouth')
+                    ] %}
+                    
+                    {% for city_name, city_slug in cities %}
+                        {% if city_name != city %}
+                        <a href="{{ url_for('city_procurement', city_name=city_slug) }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-arrow-right me-2 text-primary"></i>{{ city_name }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Resources -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Resources
+                    </h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('proposal_support') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-contract me-2 text-primary"></i>Proposal Templates
+                    </a>
+                    <a href="{{ url_for('branding_materials') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-palette me-2 text-primary"></i>Branding Materials
+                    </a>
+                    <a href="{{ url_for('consultations') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-tie me-2 text-primary"></i>Expert Consultations
+                    </a>
+                    <a href="{{ url_for('pricing_calculator') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calculator me-2 text-primary"></i>Pricing Calculator
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+
+<script>
+function saveOpportunity(oppId) {
+    // Save opportunity functionality
+    fetch('/save-lead', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lead_id: oppId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Opportunity saved successfully!');
+        } else {
+            alert('Error saving opportunity');
+        }
+    });
+}
+</script>
+
+{% endblock %}

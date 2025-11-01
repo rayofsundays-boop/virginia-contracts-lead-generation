@@ -2608,8 +2608,21 @@ def customer_leads():
             'prev_url': prev_url,
             'next_url': next_url
         }
+        
+        # Get Quick Wins counts for promotion banner
+        emergency_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
+        )).scalar() or 0
+        
+        urgent_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
+        )).scalar() or 0
 
-        return render_template('customer_leads.html', all_leads=leads_page, pagination=pagination)
+        return render_template('customer_leads.html', 
+                             all_leads=leads_page, 
+                             pagination=pagination,
+                             emergency_count=emergency_count,
+                             urgent_count=urgent_count)
         
     except Exception as e:
         print(f"Customer leads error: {e}")
@@ -5576,6 +5589,199 @@ def initialize_va_data():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/scrape-procurement', methods=['POST'])
+@login_required
+def scrape_procurement():
+    """Manually trigger procurement scrapers - Admin only"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        from sam_gov_fetcher import SAMgovFetcher
+        from local_gov_scraper import VirginiaLocalGovScraper
+        
+        results = {
+            'federal': 0,
+            'local': 0,
+            'errors': []
+        }
+        
+        # Scrape federal contracts
+        try:
+            sam_fetcher = SAMgovFetcher()
+            federal_contracts = sam_fetcher.fetch_va_cleaning_contracts(days_back=30)
+            
+            for contract in federal_contracts:
+                try:
+                    # Check if exists
+                    existing = db.session.execute(text('''
+                        SELECT id FROM federal_contracts WHERE notice_id = :notice_id
+                    '''), {'notice_id': contract.get('notice_id', '')}).fetchone()
+                    
+                    if not existing:
+                        db.session.execute(text('''
+                            INSERT INTO federal_contracts 
+                            (title, agency, location, description, value, deadline, 
+                             naics_code, posted_date, notice_id, sam_gov_url)
+                            VALUES 
+                            (:title, :agency, :location, :description, :value, :deadline,
+                             :naics_code, :posted_date, :notice_id, :sam_gov_url)
+                        '''), {
+                            'title': contract['title'],
+                            'agency': contract['agency'],
+                            'location': contract['location'],
+                            'description': contract['description'],
+                            'value': contract['value'],
+                            'deadline': contract['deadline'],
+                            'naics_code': contract['naics_code'],
+                            'posted_date': contract.get('posted_date', datetime.now().strftime('%Y-%m-%d')),
+                            'notice_id': contract.get('notice_id', ''),
+                            'sam_gov_url': contract.get('sam_gov_url', '')
+                        })
+                        results['federal'] += 1
+                except Exception as e:
+                    results['errors'].append(f"Federal: {str(e)}")
+        except Exception as e:
+            results['errors'].append(f"Federal scraper error: {str(e)}")
+        
+        # Scrape local government contracts
+        try:
+            local_scraper = VirginiaLocalGovScraper()
+            local_contracts = local_scraper.fetch_all_local_contracts()
+            
+            for contract in local_contracts:
+                try:
+                    # Check if exists
+                    existing = db.session.execute(text('''
+                        SELECT id FROM contracts 
+                        WHERE title = :title AND agency = :agency
+                    '''), {
+                        'title': contract['title'],
+                        'agency': contract['agency']
+                    }).fetchone()
+                    
+                    if not existing:
+                        db.session.execute(text('''
+                            INSERT INTO contracts 
+                            (title, agency, location, description, value, deadline, 
+                             naics_code, created_at, website_url, category)
+                            VALUES 
+                            (:title, :agency, :location, :description, :value, :deadline,
+                             :naics_code, CURRENT_TIMESTAMP, :website_url, :category)
+                        '''), {
+                            'title': contract['title'],
+                            'agency': contract['agency'],
+                            'location': contract['location'],
+                            'description': contract['description'],
+                            'value': contract.get('value', 'Contact for quote'),
+                            'deadline': contract.get('deadline', '2026-12-31'),
+                            'naics_code': contract.get('naics_code', '561720'),
+                            'website_url': contract.get('website_url', ''),
+                            'category': contract.get('category', 'Municipal Government')
+                        })
+                        results['local'] += 1
+                except Exception as e:
+                    results['errors'].append(f"Local: {str(e)}")
+        except Exception as e:
+            results['errors'].append(f"Local scraper error: {str(e)}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f"Scraping complete! Added {results['federal']} federal and {results['local']} local contracts",
+            'details': results
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/city/<city_name>')
+def city_procurement(city_name):
+    """Show procurement opportunities for a specific Virginia city"""
+    # Normalize city name
+    city_map = {
+        'hampton': 'Hampton',
+        'norfolk': 'Norfolk',
+        'virginia-beach': 'Virginia Beach',
+        'newport-news': 'Newport News',
+        'williamsburg': 'Williamsburg',
+        'suffolk': 'Suffolk',
+        'chesapeake': 'Chesapeake',
+        'portsmouth': 'Portsmouth'
+    }
+    
+    city = city_map.get(city_name.lower())
+    if not city:
+        flash('City not found', 'error')
+        return redirect(url_for('contracts'))
+    
+    try:
+        # Get all contracts for this city
+        contracts = db.session.execute(text('''
+            SELECT id, title, agency, location, description, value, deadline, 
+                   naics_code, created_at, website_url, category
+            FROM contracts 
+            WHERE location LIKE :city
+            ORDER BY created_at DESC
+        '''), {'city': f'%{city}%'}).fetchall()
+        
+        # Get commercial opportunities
+        commercial = db.session.execute(text('''
+            SELECT id, business_name, business_type, location, description, 
+                   monthly_value, services_needed, website_url
+            FROM commercial_opportunities 
+            WHERE location LIKE :city
+            ORDER BY id DESC
+        '''), {'city': f'%{city}%'}).fetchall()
+        
+        # City information
+        city_info = {
+            'Hampton': {
+                'population': '135,000',
+                'major_facilities': 'City Hall, Hampton University, NASA Langley',
+                'procurement_url': 'https://www.hampton.gov/bids.aspx'
+            },
+            'Norfolk': {
+                'population': '245,000',
+                'major_facilities': 'Naval Station Norfolk, ODU, Norfolk Airport',
+                'procurement_url': 'https://www.norfolk.gov/bids.aspx'
+            },
+            'Virginia Beach': {
+                'population': '450,000',
+                'major_facilities': 'Convention Center, Town Center, Military Bases',
+                'procurement_url': 'https://www.vbgov.com/departments/procurement'
+            },
+            'Newport News': {
+                'population': '180,000',
+                'major_facilities': 'Newport News Shipbuilding, Airport, Hospital',
+                'procurement_url': 'https://www.nngov.com/procurement'
+            },
+            'Williamsburg': {
+                'population': '15,000',
+                'major_facilities': 'Colonial Williamsburg, W&M, Historic District',
+                'procurement_url': 'https://www.williamsburgva.gov/procurement'
+            },
+            'Suffolk': {
+                'population': '95,000',
+                'major_facilities': 'Municipal Center, Public Schools, Transit',
+                'procurement_url': 'https://www.suffolkva.us/departments/procurement'
+            }
+        }
+        
+        return render_template('city_procurement.html', 
+                             city=city,
+                             contracts=contracts,
+                             commercial=commercial,
+                             city_info=city_info.get(city, {}),
+                             total_opportunities=len(contracts) + len(commercial))
+    
+    except Exception as e:
+        print(f"Error loading city procurement: {e}")
+        flash('Error loading city data', 'error')
+        return redirect(url_for('contracts'))
 
 # Initialize database for both local and production
 try:
