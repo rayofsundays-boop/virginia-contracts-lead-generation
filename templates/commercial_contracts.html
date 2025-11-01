@@ -66,6 +66,13 @@
         </div>
     </div>
 </div>
+
+<!-- Pagination -->
+<div class="container">
+    {% if opportunities %}
+        {% include 'components/pagination.html' %}
+    {% endif %}
+</div>
 {% else %}
 <!-- Commercial Contracts Hero -->
 <div class="hero-section text-center">

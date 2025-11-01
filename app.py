@@ -14,6 +14,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from lead_generator import LeadGenerator
 import paypalrestsdk
+import math
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # Safe to continue if dotenv is not available in production
+    pass
 
 # Virginia Government Contracting Lead Generation Application
 app = Flask(__name__)
@@ -60,6 +67,23 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db = SQLAlchemy(app)
+
+# ---------------------------------------------------------------------------
+# Single-instance background jobs guard (avoid duplicate schedulers under Gunicorn)
+# ---------------------------------------------------------------------------
+_BACKGROUND_LOCK_PATH = '/tmp/va_contracts_background.lock'
+
+def _acquire_background_lock():
+    try:
+        # Try to exclusively create the lock file
+        import errno
+        fd = os.open(_BACKGROUND_LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        with os.fdopen(fd, 'w') as f:
+            f.write(str(os.getpid()))
+        return True
+    except Exception as e:
+        # If file exists, another worker already started background jobs
+        return False
 
 # Custom Jinja filters
 @app.template_filter('comma')
@@ -340,28 +364,38 @@ def schedule_local_gov_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
-# Start SAM.gov scheduler in background thread
-samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
-samgov_scheduler_thread.start()
+def start_background_jobs_once():
+    """Start schedulers and optional initial fetch only in a single worker."""
+    if not _acquire_background_lock():
+        # Another worker already launched background jobs
+        return
 
-# Start Local Government scheduler in background thread
-localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
-localgov_scheduler_thread.start()
+    # Start SAM.gov scheduler in background thread
+    samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
+    samgov_scheduler_thread.start()
 
-# Run initial update on startup (in background to not block app startup)
-def initial_samgov_fetch():
-    time.sleep(5)  # Wait 5 seconds for app to fully start
-    update_federal_contracts_from_samgov()
+    # Start Local Government scheduler in background thread
+    localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
+    localgov_scheduler_thread.start()
 
-def initial_localgov_fetch():
-    time.sleep(10)  # Wait 10 seconds, after SAM.gov
-    update_local_gov_contracts()
+    # Optional initial update on startup (controlled by env to reduce load)
+    if os.environ.get('FETCH_ON_INIT', '0') == '1':
+        def initial_samgov_fetch():
+            time.sleep(5)  # Wait 5 seconds for app to fully start
+            update_federal_contracts_from_samgov()
 
-initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
-initial_fetch_thread.start()
+        def initial_localgov_fetch():
+            time.sleep(10)  # Wait 10 seconds, after SAM.gov
+            update_local_gov_contracts()
 
-localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
-localgov_fetch_thread.start()
+        initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
+        initial_fetch_thread.start()
+
+        localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
+        localgov_fetch_thread.start()
+
+# Launch background jobs once per container/process cluster
+start_background_jobs_once()
 
 
 def run_daily_updates():
@@ -899,32 +933,32 @@ def init_postgres_db():
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
-        print("📡 Fetching real federal contracts from SAM.gov API...")
-        
-        # Fetch real federal contracts from SAM.gov on first run
-        try:
-            from sam_gov_fetcher import SAMgovFetcher
-            fetcher = SAMgovFetcher()
-            real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
-            
-            if real_contracts:
-                for contract in real_contracts:
-                    db.session.execute(text('''
-                        INSERT INTO federal_contracts 
-                        (title, agency, department, location, value, deadline, description, 
-                         naics_code, sam_gov_url, notice_id, set_aside, posted_date)
-                        VALUES 
-                        (:title, :agency, :department, :location, :value, :deadline, 
-                         :description, :naics_code, :sam_gov_url, :notice_id, :set_aside, :posted_date)
-                        ON CONFLICT (notice_id) DO NOTHING
-                    '''), contract)
-                db.session.commit()
-                print(f"✅ Successfully loaded {len(real_contracts)} REAL federal contracts from SAM.gov")
-            else:
-                print("⚠️  No contracts fetched. Check SAM_GOV_API_KEY environment variable.")
-        except Exception as e:
-            print(f"⚠️  Could not fetch SAM.gov contracts on init: {e}")
-            print("   Contracts will be fetched on next scheduled update.")
+        if os.environ.get('FETCH_ON_INIT', '0') == '1':
+            print("📡 Fetching real federal contracts from SAM.gov API...")
+            # Fetch real federal contracts from SAM.gov on first run (optional)
+            try:
+                from sam_gov_fetcher import SAMgovFetcher
+                fetcher = SAMgovFetcher()
+                real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
+                
+                if real_contracts:
+                    for contract in real_contracts:
+                        db.session.execute(text('''
+                            INSERT INTO federal_contracts 
+                            (title, agency, department, location, value, deadline, description, 
+                             naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                            VALUES 
+                            (:title, :agency, :department, :location, :value, :deadline, 
+                             :description, :naics_code, :sam_gov_url, :notice_id, :set_aside, :posted_date)
+                            ON CONFLICT (notice_id) DO NOTHING
+                        '''), contract)
+                    db.session.commit()
+                    print(f"✅ Successfully loaded {len(real_contracts)} REAL federal contracts from SAM.gov")
+                else:
+                    print("⚠️  No contracts fetched. Check SAM_GOV_API_KEY environment variable.")
+            except Exception as e:
+                print(f"⚠️  Could not fetch SAM.gov contracts on init: {e}")
+                print("   Contracts will be fetched on next scheduled update.")
         
         print("✅ Database initialization complete - ready for real leads!")
         print("💡 Commercial/Residential leads will appear as users submit request forms")
@@ -1092,31 +1126,31 @@ def init_db():
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API
         # Commercial and residential leads come from user-submitted request forms only
         print("✅ Database tables initialized successfully")
-        print("📡 Fetching real federal contracts from SAM.gov API...")
-        
-        # Fetch real federal contracts from SAM.gov on first run
-        try:
-            from sam_gov_fetcher import SAMgovFetcher
-            fetcher = SAMgovFetcher()
-            real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
-            
-            if real_contracts:
-                for contract in real_contracts:
-                    c.execute('''INSERT OR IGNORE INTO federal_contracts 
-                                 (title, agency, department, location, value, deadline, description, 
-                                  naics_code, sam_gov_url, notice_id, set_aside, posted_date)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                             (contract['title'], contract['agency'], contract['department'],
-                              contract['location'], contract['value'], contract['deadline'],
-                              contract['description'], contract['naics_code'], contract['sam_gov_url'],
-                              contract['notice_id'], contract['set_aside'], contract['posted_date']))
-                conn.commit()
-                print(f"✅ Successfully loaded {len(real_contracts)} REAL federal contracts from SAM.gov")
-            else:
-                print("⚠️  No contracts fetched. Check SAM_GOV_API_KEY environment variable.")
-        except Exception as e:
-            print(f"⚠️  Could not fetch SAM.gov contracts on init: {e}")
-            print("   Contracts will be fetched on next scheduled update.")
+        if os.environ.get('FETCH_ON_INIT', '0') == '1':
+            print("📡 Fetching real federal contracts from SAM.gov API...")
+            # Fetch real federal contracts from SAM.gov on first run (optional)
+            try:
+                from sam_gov_fetcher import SAMgovFetcher
+                fetcher = SAMgovFetcher()
+                real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
+                
+                if real_contracts:
+                    for contract in real_contracts:
+                        c.execute('''INSERT OR IGNORE INTO federal_contracts 
+                                     (title, agency, department, location, value, deadline, description, 
+                                      naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                                 (contract['title'], contract['agency'], contract['department'],
+                                  contract['location'], contract['value'], contract['deadline'],
+                                  contract['description'], contract['naics_code'], contract['sam_gov_url'],
+                                  contract['notice_id'], contract['set_aside'], contract['posted_date']))
+                    conn.commit()
+                    print(f"✅ Successfully loaded {len(real_contracts)} REAL federal contracts from SAM.gov")
+                else:
+                    print("⚠️  No contracts fetched. Check SAM_GOV_API_KEY environment variable.")
+            except Exception as e:
+                print(f"⚠️  Could not fetch SAM.gov contracts on init: {e}")
+                print("   Contracts will be fetched on next scheduled update.")
         
         conn.close()
         print("✅ Database initialization complete - ready for real leads!")
@@ -1605,30 +1639,61 @@ def paypal_webhook():
 @app.route('/contracts')
 def contracts():
     location_filter = request.args.get('location', '')
-    # Use SQLAlchemy so this works on PostgreSQL (Render) and SQLite (local)
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    per_page = int(request.args.get('per_page', 12) or 12)
+    per_page = min(max(per_page, 6), 48)  # sane bounds
+    offset = (page - 1) * per_page
     try:
+        # Count total with optional filter
         if location_filter:
+            total = db.session.execute(text('''
+                SELECT COUNT(*) FROM contracts WHERE LOWER(location) LIKE LOWER(:loc)
+            '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc)
                 ORDER BY deadline ASC
-            '''), { 'loc': f"%{location_filter}%" }).fetchall()
+                LIMIT :limit OFFSET :offset
+            '''), { 'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset }).fetchall()
         else:
+            total = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 ORDER BY deadline ASC
-            ''')).fetchall()
+                LIMIT :limit OFFSET :offset
+            '''), {'limit': per_page, 'offset': offset}).fetchall()
 
         # For filter dropdown
         locations = [r[0] for r in db.session.execute(text('''
             SELECT DISTINCT location FROM contracts ORDER BY location
         ''')).fetchall()]
+
+        pages = max(math.ceil(total / per_page), 1)
+        # Build prev/next URLs preserving filters
+        args_base = dict(request.args)
+        args_base.pop('page', None)
+        args_base.pop('per_page', None)
+        prev_url = url_for('contracts', page=page-1, per_page=per_page, **args_base) if page > 1 else None
+        next_url = url_for('contracts', page=page+1, per_page=per_page, **args_base) if page < pages else None
+        pagination = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'pages': pages,
+            'has_prev': page > 1,
+            'has_next': page < pages,
+            'prev_url': prev_url,
+            'next_url': next_url
+        }
         
-        return render_template('contracts.html', contracts=rows, locations=locations, current_filter=location_filter)
+        return render_template('contracts.html', 
+                               contracts=rows, 
+                               locations=locations, 
+                               current_filter=location_filter,
+                               pagination=pagination)
     except Exception as e:
-        # Helpful guidance when table empty or missing
         msg = f"<h1>Contracts Page Error</h1><p>{str(e)}</p>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
         return msg
@@ -1638,6 +1703,10 @@ def federal_contracts():
     """Federal contracts from SAM.gov"""
     department_filter = request.args.get('department', '')
     set_aside_filter = request.args.get('set_aside', '')
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    per_page = int(request.args.get('per_page', 12) or 12)
+    per_page = min(max(per_page, 6), 48)
+    offset = (page - 1) * per_page
     try:
         # Build dynamic filter with SQLAlchemy text
         base_sql = '''
@@ -1652,8 +1721,12 @@ def federal_contracts():
         if set_aside_filter:
             base_sql += ' AND LOWER(set_aside) LIKE LOWER(:sa)'
             params['sa'] = f"%{set_aside_filter}%"
-        base_sql += ' ORDER BY deadline ASC'
+        # Count total
+        count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
+        total = db.session.execute(text(count_sql), params).scalar() or 0
 
+        base_sql += ' ORDER BY deadline ASC LIMIT :limit OFFSET :offset'
+        params.update({'limit': per_page, 'offset': offset})
         rows = db.session.execute(text(base_sql), params).fetchall()
 
         # Filters
@@ -1664,12 +1737,30 @@ def federal_contracts():
             SELECT DISTINCT set_aside FROM federal_contracts WHERE set_aside IS NOT NULL AND set_aside <> '' ORDER BY set_aside
         ''')).fetchall()]
 
+        pages = max(math.ceil(total / per_page), 1)
+        args_base = dict(request.args)
+        args_base.pop('page', None)
+        args_base.pop('per_page', None)
+        prev_url = url_for('federal_contracts', page=page-1, per_page=per_page, **args_base) if page > 1 else None
+        next_url = url_for('federal_contracts', page=page+1, per_page=per_page, **args_base) if page < pages else None
+        pagination = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'pages': pages,
+            'has_prev': page > 1,
+            'has_next': page < pages,
+            'prev_url': prev_url,
+            'next_url': next_url
+        }
+
         return render_template('federal_contracts.html', 
                                contracts=rows,
                                departments=departments,
                                set_asides=set_asides,
                                current_department=department_filter,
-                               current_set_aside=set_aside_filter)
+                               current_set_aside=set_aside_filter,
+                               pagination=pagination)
     except Exception as e:
         msg = f"<h1>Federal Contracts Page Error</h1><p>{str(e)}</p>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
@@ -1703,12 +1794,22 @@ def commercial_contracts():
     
     # Load opportunities for subscribers
     try:
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = int(request.args.get('per_page', 12) or 12)
+        per_page = min(max(per_page, 6), 48)
+        offset = (page - 1) * per_page
+
+        total = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
+        rows = db.session.execute(text('''
+            SELECT id, business_name, business_type, address, location, square_footage, monthly_value,
+                   frequency, services_needed, special_requirements, contact_type, description, size
+            FROM commercial_opportunities
+            ORDER BY monthly_value DESC
+            LIMIT :limit OFFSET :offset
+        '''), {'limit': per_page, 'offset': offset}).fetchall()
+
         opportunities = []
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('SELECT * FROM commercial_opportunities ORDER BY monthly_value DESC')
-        
-        for row in c.fetchall():
+        for row in rows:
             opportunities.append({
                 'id': row[0],
                 'business_name': row[1],
@@ -1724,12 +1825,29 @@ def commercial_contracts():
                 'description': row[11],
                 'size': row[12]
             })
-        
-        conn.close()
+
+        pages = max(math.ceil(total / per_page), 1)
+        args_base = dict(request.args)
+        args_base.pop('page', None)
+        args_base.pop('per_page', None)
+        prev_url = url_for('commercial_contracts', page=page-1, per_page=per_page, **args_base) if page > 1 else None
+        next_url = url_for('commercial_contracts', page=page+1, per_page=per_page, **args_base) if page < pages else None
+        pagination = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'pages': pages,
+            'has_prev': page > 1,
+            'has_next': page < pages,
+            'prev_url': prev_url,
+            'next_url': next_url
+        }
+
         return render_template('commercial_contracts.html', 
                              opportunities=opportunities,
                              is_subscriber=True,
-                             show_upgrade_message=False)
+                             show_upgrade_message=False,
+                             pagination=pagination)
     except Exception as e:
         flash(f'Error loading opportunities: {str(e)}', 'danger')
         return render_template('commercial_contracts.html', 
@@ -1896,7 +2014,7 @@ def customer_leads():
             ORDER BY commercial_opportunities.id DESC
         ''')).fetchall()
         
-        # Combine and format leads
+    # Combine and format leads
         all_leads = []
         
         # Add government leads
@@ -1947,11 +2065,37 @@ def customer_leads():
             }
             all_leads.append(lead_dict)
         
-        return render_template('customer_leads.html', all_leads=all_leads)
+        # Pagination for combined leads
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = int(request.args.get('per_page', 12) or 12)
+        per_page = min(max(per_page, 6), 48)
+        total = len(all_leads)
+        pages = max(math.ceil(total / per_page), 1)
+        start = (page - 1) * per_page
+        end = start + per_page
+        leads_page = all_leads[start:end]
+
+        args_base = dict(request.args)
+        args_base.pop('page', None)
+        args_base.pop('per_page', None)
+        prev_url = url_for('customer_leads', page=page-1, per_page=per_page, **args_base) if page > 1 else None
+        next_url = url_for('customer_leads', page=page+1, per_page=per_page, **args_base) if page < pages else None
+        pagination = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'pages': pages,
+            'has_prev': page > 1,
+            'has_next': page < pages,
+            'prev_url': prev_url,
+            'next_url': next_url
+        }
+
+        return render_template('customer_leads.html', all_leads=leads_page, pagination=pagination)
         
     except Exception as e:
         print(f"Customer leads error: {e}")
-        return render_template('customer_leads.html', all_leads=[])
+        return render_template('customer_leads.html', all_leads=[], pagination={'page':1,'per_page':12,'total':0,'pages':1,'has_prev':False,'has_next':False,'prev_url':None,'next_url':None})
 
 def calculate_days_left(deadline_str):
     """Calculate days remaining until deadline"""

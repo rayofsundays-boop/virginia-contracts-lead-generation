@@ -17,7 +17,7 @@ class SAMgovFetcher:
     """Fetch real federal cleaning contracts from SAM.gov API"""
     
     def __init__(self):
-        self.api_key = os.environ.get('SAM_GOV_API_KEY', '')
+        self.api_key = os.environ.get('SAM_GOV_API_KEY', '').strip()
         self.base_url = 'https://api.sam.gov/opportunities/v2/search'
         
         # Cleaning-related NAICS codes
@@ -58,31 +58,66 @@ class SAMgovFetcher:
         return all_contracts
     
     def _search_contracts(self, naics_code, days_back):
-        """Search SAM.gov for contracts with specific NAICS code"""
-        params = {
-            'api_key': self.api_key,
-            'postedFrom': str(days_back),  # Last N days
-            'postedTo': '0',
-            'ptype': 'o,s',  # Opportunities and sources sought
-            'ncode': naics_code,
-            'placeOfPerformanceState': 'VA',  # Virginia only
-            'limit': 100,
-            'offset': 0
-        }
+        """Search SAM.gov for contracts with specific NAICS code with pagination"""
         headers = {
             'Accept': 'application/json',
             'User-Agent': 'VA-Contracts-Fetcher/1.0 (+https://example.com)'
         }
 
-        try:
-            # Basic single-page fetch with retries for 429/5xx
-            response = self._request_with_retries(self.base_url, params=params, headers=headers)
-            if response is None:
-                return []
+        limit = 100
+        offset = 0
+        # Lower default max pages to reduce rate limit pressure; can be overridden via env
+        max_pages = int(os.environ.get('SAM_MAX_PAGES_PER_NAICS', 2))
+        all_items = []
 
-            data = response.json()
-            opportunities = data.get('opportunitiesData', [])
-            return [self._parse_opportunity(opp) for opp in opportunities]
+        try:
+            for page_idx in range(max_pages):
+                # Build date window as YYYY-MM-DD strings (SAM.gov expects dates, not offsets)
+                now = datetime.utcnow().date()
+                from_date = (now - timedelta(days=days_back)).strftime('%Y-%m-%d')
+                to_date = now.strftime('%Y-%m-%d')
+                params = {
+                    'api_key': self.api_key,
+                    'postedFrom': from_date,
+                    'postedTo': to_date,
+                    # Prefer explicit notice types commonly used for open opportunities
+                    'noticeType': 'PRESOLICITATION,SOURCES_SOUGHT,SOLICITATION,COMBINED_SYNOPSIS_SOLICITATION',
+                    # Legacy/alternate param some integrations used; harmless if ignored
+                    'ptype': 'o,s',
+                    'ncode': naics_code,
+                    'placeOfPerformanceState': 'VA',  # Virginia only
+                    # Try fully-qualified filter key as well (API accepts dotted keys)
+                    'placeOfPerformance.state': 'VA',
+                    'limit': limit,
+                    'offset': offset
+                }
+
+                response = self._request_with_retries(self.base_url, params=params, headers=headers)
+                if response is None:
+                    break
+
+                data = response.json()
+                opportunities = data.get('opportunitiesData', []) or []
+                all_items.extend(opportunities)
+
+                # Determine if there's another page
+                total_records = data.get('totalRecords') or data.get('totalrecords') or data.get('total')
+                if total_records is not None:
+                    total_records = int(total_records)
+                    if offset + limit >= total_records:
+                        break
+
+                # If fewer than limit returned, likely last page
+                if len(opportunities) < limit:
+                    break
+
+                # Move to next page with a small jitter to avoid rate limits
+                offset += limit
+                sleep_s = 0.8 + random.random() * 1.2
+                logger.info(f"Fetched page {page_idx+1} for NAICS {naics_code} (items: {len(opportunities)}). Sleeping {sleep_s:.1f}s before next page...")
+                time.sleep(sleep_s)
+
+            return [self._parse_opportunity(opp) for opp in all_items]
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching from SAM.gov: {e}")
@@ -97,6 +132,22 @@ class SAMgovFetcher:
         while attempt <= max_retries:
             try:
                 resp = requests.get(url, params=params, headers=headers, timeout=30)
+                
+                # Check for API key errors (403 or specific error messages)
+                if resp.status_code == 403:
+                    try:
+                        error_data = resp.json()
+                        error_msg = error_data.get('error', {}).get('message', '')
+                        if 'API_KEY_INVALID' in error_msg or 'invalid API key' in error_msg.lower():
+                            logger.error(f"❌ INVALID SAM.gov API KEY: {error_msg}")
+                            logger.error(f"   Current key starts with: {params.get('api_key', '')[:20]}...")
+                            logger.error(f"   Get a valid key from: https://open.gsa.gov/api/sam-gov-entity-api/")
+                            return None
+                    except:
+                        pass
+                    logger.error(f"SAM.gov access denied (403). Check API key validity.")
+                    return None
+                
                 # Handle rate limiting
                 if resp.status_code == 429:
                     retry_after = resp.headers.get('Retry-After')
