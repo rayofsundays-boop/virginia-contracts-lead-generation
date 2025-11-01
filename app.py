@@ -1805,23 +1805,28 @@ def signin():
             session['is_admin'] = True
             session['username'] = 'Admin'
             session['name'] = 'Administrator'
+            session['user_email'] = 'admin@vacontracts.com'
+            session['email'] = 'admin@vacontracts.com'
+            session['subscription_status'] = 'paid'  # Admin has full access
             flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
             return redirect(url_for('contracts'))
         
-        # Get user from database (including is_admin flag)
+        # Get user from database (including is_admin flag and subscription status)
         result = db.session.execute(
-            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin FROM leads WHERE username = :username OR email = :username'),
+            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
             {'username': username}
         ).fetchone()
         
         if result and check_password_hash(result[3], password):
-            # Login successful
+            # Login successful - set all session variables
             session['user_id'] = result[0]
             session['username'] = result[1]
             session['email'] = result[2]
+            session['user_email'] = result[2]  # Add user_email for template compatibility
             session['name'] = result[4]
             session['credits_balance'] = result[5]
             session['is_admin'] = bool(result[6])  # Set admin status from database
+            session['subscription_status'] = result[7] or 'free'  # Set subscription status
             
             # Show appropriate welcome message
             if session['is_admin']:
@@ -4069,6 +4074,9 @@ def admin_login():
     
     if password == ADMIN_PASSWORD:
         session['is_admin'] = True
+        session['user_email'] = 'admin@vacontracts.com'
+        session['email'] = 'admin@vacontracts.com'
+        session['subscription_status'] = 'paid'
         flash('Admin authentication successful!', 'success')
         return redirect(redirect_to)
     else:
@@ -5891,7 +5899,7 @@ def quick_wins():
                 SELECT 
                     id, title, agency, location, product_category, estimated_value,
                     bid_deadline, description, website_url, is_small_business_set_aside,
-                    'supply' as lead_source
+                    contact_name, contact_email, contact_phone, 'supply' as lead_source
                 FROM supply_contracts 
                 WHERE is_quick_win = TRUE AND status = 'open'
                 ORDER BY bid_deadline ASC
@@ -5905,7 +5913,8 @@ def quick_wins():
             urgent_commercial = db.session.execute(text('''
                 SELECT 
                     id, business_name, city, business_type, services_needed,
-                    budget_range, urgency, created_at, 'commercial' as lead_source
+                    budget_range, urgency, created_at, contact_person, email, phone,
+                    'commercial' as lead_source
                 FROM commercial_lead_requests 
                 WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
                 ORDER BY 
@@ -5935,6 +5944,9 @@ def quick_wins():
                 'description': supply[7],
                 'website_url': supply[8],
                 'is_small_business': supply[9],
+                'contact_name': supply[10] or 'Procurement Office',
+                'email': supply[11] or 'N/A',
+                'phone': supply[12] or 'N/A',
                 'lead_type': 'Supply Contract - Quick Win',
                 'urgency_level': 'quick-win',
                 'source': 'supply'
@@ -5951,6 +5963,9 @@ def quick_wins():
                 'value': comm[5],
                 'deadline': 'ASAP',
                 'description': f"Urgency: {comm[6]}",
+                'contact_name': comm[8] or 'Business Contact',
+                'email': comm[9] or 'N/A',
+                'phone': comm[10] or 'N/A',
                 'website_url': None,
                 'is_small_business': False,
                 'lead_type': 'Commercial Request',
