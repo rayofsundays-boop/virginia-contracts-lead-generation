@@ -117,7 +117,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label" style="font-size: 0.9rem;">Lead Type:</label>
                             <select class="form-select form-select-sm" id="leadTypeFilter">
                                 <option value="">All Types</option>
@@ -127,55 +127,97 @@
                                 <option value="residential_request">🏠 Homeowner Needs Cleaner</option>
                             </select>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label" style="font-size: 0.9rem;">Category:</label>
+                            <select class="form-select form-select-sm" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <optgroup label="Education">
+                                    <option value="Higher Education">🎓 Colleges & Universities</option>
+                                    <option value="Community College">📚 Community Colleges</option>
+                                    <option value="School District">🏫 School Districts</option>
+                                    <option value="Medical School">⚕️ Medical Schools</option>
+                                </optgroup>
+                                <optgroup label="Government">
+                                    <option value="Municipal Government">🏛️ Municipal/City Government</option>
+                                    <option value="Transit Authority">🚌 Transit Authorities</option>
+                                    <option value="Airport Authority">✈️ Airports</option>
+                                    <option value="Public Library">📖 Public Libraries</option>
+                                    <option value="Military Base">🪖 Military Bases</option>
+                                    <option value="Federal Healthcare">🏥 VA Medical Centers</option>
+                                </optgroup>
+                                <optgroup label="Private Sector">
+                                    <option value="Hospital">🏥 Hospitals</option>
+                                    <option value="Private Healthcare">🩺 Healthcare Facilities</option>
+                                    <option value="Hotel">🏨 Hotels & Resorts</option>
+                                    <option value="Shopping Mall">🛍️ Shopping Centers/Malls</option>
+                                    <option value="Class A Office Building">🏢 Office Buildings</option>
+                                    <option value="Office Park">🏢 Office Parks</option>
+                                    <option value="Convention Center">🎪 Convention Centers</option>
+                                    <option value="Defense Contractor">🔧 Defense Contractors</option>
+                                    <option value="Historic Foundation">🏛️ Historic Sites</option>
+                                </optgroup>
+                            </select>
+                        </div>
                         <div class="col-md-2">
-                            <label class="form-label">Location:</label>
-                            <select class="form-select" id="locationFilter">
-                                <option value="">All Locations</option>
+                            <label class="form-label">City:</label>
+                            <select class="form-select form-select-sm" id="locationFilter">
+                                <option value="">All Cities</option>
                                 <option value="Hampton">Hampton</option>
-                                <option value="Suffolk">Suffolk</option>
+                                <option value="Norfolk">Norfolk</option>
                                 <option value="Virginia Beach">Virginia Beach</option>
                                 <option value="Newport News">Newport News</option>
                                 <option value="Williamsburg">Williamsburg</option>
-                                <option value="Norfolk">Norfolk</option>
+                                <option value="Suffolk">Suffolk</option>
                                 <option value="Chesapeake">Chesapeake</option>
                                 <option value="Portsmouth">Portsmouth</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Value Range:</label>
-                            <select class="form-select" id="valueFilter">
+                            <select class="form-select form-select-sm" id="valueFilter">
                                 <option value="">All Values</option>
-                                <option value="under-10k">Under $10,000</option>
-                                <option value="10k-50k">$10,000 - $50,000</option>
-                                <option value="50k-100k">$50,000 - $100,000</option>
-                                <option value="100k-500k">$100,000 - $500,000</option>
-                                <option value="over-500k">Over $500,000</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Services:</label>
-                            <select class="form-select" id="servicesFilter">
-                                <option value="">All Services</option>
-                                <option value="general">General Cleaning</option>
-                                <option value="medical">Medical/Dental</option>
-                                <option value="carpet">Carpet Cleaning</option>
-                                <option value="window">Window Cleaning</option>
-                                <option value="pressure">Pressure Washing</option>
-                                <option value="janitorial">Janitorial</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Status:</label>
-                            <select class="form-select" id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="closing-soon">Closing Soon</option>
-                                <option value="new">New This Week</option>
+                                <option value="under-50k">Under $50K</option>
+                                <option value="50k-100k">$50K - $100K</option>
+                                <option value="100k-250k">$100K - $250K</option>
+                                <option value="250k-500k">$250K - $500K</option>
+                                <option value="500k-1m">$500K - $1M</option>
+                                <option value="1m-3m">$1M - $3M</option>
+                                <option value="over-3m">Over $3M</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Search:</label>
-                            <input type="text" class="form-control" id="searchInput" placeholder="Search leads...">
+                            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search leads...">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-outline-primary" onclick="filterByCategory('Higher Education')">
+                                    🎓 Universities
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="filterByCategory('School District')">
+                                    🏫 Schools
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="filterByCategory('Hospital')">
+                                    🏥 Hospitals
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="filterByCategory('Hotel')">
+                                    🏨 Hotels
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="filterByCategory('Military Base')">
+                                    🪖 Military
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Norfolk')">
+                                    📍 Norfolk
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Virginia Beach')">
+                                    📍 VB
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Hampton')">
+                                    📍 Hampton
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,12 +256,16 @@
              data-type="{{ lead.lead_type }}" 
              data-location="{{ lead.location }}" 
              data-value="{{ lead.contract_value }}"
+             data-category="{{ lead.category|default('') }}"
              data-services="{{ lead.services_needed }}"
              data-status="{{ lead.status }}">
             <div class="card h-100 border-0 shadow-sm {% if lead.lead_type in ['commercial_request', 'residential_request'] %}border-warning{% endif %}">
                 <div class="card-header bg-transparent border-0 pb-1 pt-2 px-2">
                     <div class="d-flex justify-content-between align-items-start flex-wrap">
                         <div class="mb-1">
+                            {% if lead.category %}
+                                <span class="badge bg-secondary me-1" style="font-size: 0.65rem;">{{ lead.category }}</span>
+                            {% endif %}
                             {% if lead.lead_type == 'government' %}
                                 <span class="badge bg-success" style="font-size: 0.7rem;">Government</span>
                             {% elif lead.lead_type == 'commercial' %}
@@ -552,9 +598,12 @@ function loadCustomerCredits() {
 }
 
 function bindFilterEvents() {
-    const filters = ['leadTypeFilter', 'locationFilter', 'valueFilter', 'servicesFilter', 'statusFilter'];
+    const filters = ['leadTypeFilter', 'locationFilter', 'valueFilter', 'categoryFilter'];
     filters.forEach(filterId => {
-        document.getElementById(filterId).addEventListener('change', applyFilters);
+        const element = document.getElementById(filterId);
+        if (element) {
+            element.addEventListener('change', applyFilters);
+        }
     });
     
     document.getElementById('searchInput').addEventListener('input', applyFilters);
@@ -565,8 +614,7 @@ function applyFilters() {
     const leadType = document.getElementById('leadTypeFilter').value;
     const location = document.getElementById('locationFilter').value;
     const value = document.getElementById('valueFilter').value;
-    const services = document.getElementById('servicesFilter').value;
-    const status = document.getElementById('statusFilter').value;
+    const category = document.getElementById('categoryFilter').value;
     const search = document.getElementById('searchInput').value.toLowerCase();
     
     const cards = document.querySelectorAll('.lead-card');
@@ -576,14 +624,14 @@ function applyFilters() {
         let show = true;
         
         if (leadType && card.dataset.type !== leadType) show = false;
-        if (location && card.dataset.location !== location) show = false;
-        if (services && !card.dataset.services.toLowerCase().includes(services)) show = false;
-        if (status && card.dataset.status !== status) show = false;
+        if (location && !card.dataset.location.includes(location)) show = false;
+        if (category && card.dataset.category !== category) show = false;
         
         if (search) {
             const title = card.querySelector('.card-title').textContent.toLowerCase();
             const description = card.querySelector('.card-text').textContent.toLowerCase();
-            if (!title.includes(search) && !description.includes(search)) show = false;
+            const agency = card.querySelector('.text-muted').textContent.toLowerCase();
+            if (!title.includes(search) && !description.includes(search) && !agency.includes(search)) show = false;
         }
         
         if (value) {
@@ -599,17 +647,22 @@ function applyFilters() {
 }
 
 function parseContractValue(valueStr) {
-    const cleanValue = valueStr.replace(/[,$]/g, '');
+    // Extract numbers from strings like "$50,000 - $150,000" or "$35,000/month"
+    const numbers = valueStr.match(/[\d,]+/g);
+    if (!numbers) return 0;
+    const cleanValue = numbers[0].replace(/,/g, '');
     return parseFloat(cleanValue) || 0;
 }
 
 function isInValueRange(value, range) {
     switch(range) {
-        case 'under-10k': return value < 10000;
-        case '10k-50k': return value >= 10000 && value <= 50000;
+        case 'under-50k': return value < 50000;
         case '50k-100k': return value >= 50000 && value <= 100000;
-        case '100k-500k': return value >= 100000 && value <= 500000;
-        case 'over-500k': return value > 500000;
+        case '100k-250k': return value >= 100000 && value <= 250000;
+        case '250k-500k': return value >= 250000 && value <= 500000;
+        case '500k-1m': return value >= 500000 && value <= 1000000;
+        case '1m-3m': return value >= 1000000 && value <= 3000000;
+        case 'over-3m': return value > 3000000;
         default: return true;
     }
 }
@@ -618,9 +671,18 @@ function clearAllFilters() {
     document.getElementById('leadTypeFilter').value = '';
     document.getElementById('locationFilter').value = '';
     document.getElementById('valueFilter').value = '';
-    document.getElementById('servicesFilter').value = '';
-    document.getElementById('statusFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
     document.getElementById('searchInput').value = '';
+    applyFilters();
+}
+
+function filterByCategory(category) {
+    document.getElementById('categoryFilter').value = category;
+    applyFilters();
+}
+
+function filterByCity(city) {
+    document.getElementById('locationFilter').value = city;
     applyFilters();
 }
 
