@@ -1,4 +1,4 @@
-import os
+-- Run: migrations/add_portal_optimization_tables.sqlimport os
 import json
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
@@ -372,7 +372,6 @@ def set_dashboard_cache(user_email, stats_data, ttl_minutes=5):
         # Silently fail if table doesn't exist (graceful degradation)
         if "does not exist" not in str(e).lower() and "no such table" not in str(e).lower():
             print(f"Cache write error: {e}")
-        db.session.rollback()
         db.session.rollback()
 
 # Add to Jinja environment
