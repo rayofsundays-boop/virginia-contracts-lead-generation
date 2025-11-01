@@ -1,0 +1,462 @@
+<!-- AI Chatbot Widget -->
+<div id="chatbot-container" class="chatbot-minimized">
+    <button id="chatbot-toggle" class="chatbot-toggle-btn" onclick="toggleChatbot()">
+        <i class="fas fa-comments"></i>
+        <span class="chatbot-badge" id="unread-count" style="display: none;">1</span>
+    </button>
+    
+    <div id="chatbot-window" class="chatbot-window">
+        <div class="chatbot-header">
+            <div class="d-flex align-items-center">
+                <div class="chatbot-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-0">VA Contracts Assistant</h6>
+                    <small class="text-muted">Online • Ready to help</small>
+                </div>
+                <button class="btn btn-sm btn-link text-white" onclick="minimizeChatbot()">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="chatbot-messages" class="chatbot-messages">
+            <div class="chatbot-message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>👋 Hi! I'm your VA Contracts Assistant. I can help you with:</p>
+                    <ul class="mb-2">
+                        <li>Navigating the platform</li>
+                        <li>Understanding contract requirements</li>
+                        <li>Finding specific opportunities</li>
+                        <li>Submitting proposals</li>
+                    </ul>
+                    <p class="mb-0">What would you like to know?</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-quick-actions">
+            <button class="btn btn-sm btn-outline-primary" onclick="sendQuickMessage('How do I find contracts?')">
+                🔍 Find Contracts
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="sendQuickMessage('How do I apply?')">
+                📝 How to Apply
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="sendQuickMessage('What are the requirements?')">
+                📋 Requirements
+            </button>
+        </div>
+        
+        <div class="chatbot-input">
+            <form id="chatbot-form" onsubmit="sendMessage(event)">
+                <div class="input-group">
+                    <input type="text" id="chatbot-message-input" class="form-control" 
+                           placeholder="Type your question..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.chatbot-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chatbot-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.chatbot-toggle-btn .chatbot-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.chatbot-window {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 380px;
+    height: 550px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 999;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chatbot-minimized .chatbot-window {
+    display: none;
+}
+
+.chatbot-expanded .chatbot-window {
+    display: flex;
+}
+
+.chatbot-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 15px 15px 0 0;
+}
+
+.chatbot-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.chatbot-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.chatbot-message {
+    display: flex;
+    margin-bottom: 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bot-message {
+    justify-content: flex-start;
+}
+
+.user-message {
+    justify-content: flex-end;
+}
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.bot-message .message-avatar {
+    margin-right: 10px;
+}
+
+.user-message .message-avatar {
+    margin-left: 10px;
+    background: #6c757d;
+}
+
+.message-content {
+    max-width: 75%;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-message .message-content {
+    background: #667eea;
+    color: white;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.message-content ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.chatbot-quick-actions {
+    padding: 10px 15px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.chatbot-quick-actions .btn {
+    font-size: 12px;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+
+.chatbot-input {
+    padding: 15px;
+    border-top: 1px solid #dee2e6;
+    background: white;
+    border-radius: 0 0 15px 15px;
+}
+
+.chatbot-typing {
+    display: none;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 15px;
+    width: fit-content;
+}
+
+.chatbot-typing span {
+    height: 8px;
+    width: 8px;
+    background: #667eea;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: typing 1.4s infinite;
+}
+
+.chatbot-typing span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.chatbot-typing span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+}
+
+@media (max-width: 768px) {
+    .chatbot-window {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+        height: 500px;
+    }
+}
+</style>
+
+<script>
+const chatbotKnowledge = {
+    "find contracts": {
+        response: "To find contracts, go to the <strong>Customer Portal</strong> and use the filters to search by location, contract type, or value. You can save leads you're interested in by clicking the bookmark icon.",
+        suggestions: ["How do I apply?", "What's the difference between government and commercial contracts?"]
+    },
+    "apply": {
+        response: "To apply for a contract:<br>1. Click on the lead in your Customer Portal<br>2. Review the requirements carefully<br>3. Click 'Get Contact Info' or 'Apply' button<br>4. You can also request proposal help for assistance",
+        suggestions: ["What are the requirements?", "How do I save leads?"]
+    },
+    "requirements": {
+        response: "Each contract has specific requirements shown in the lead details. Common requirements include:<br>• Business license<br>• Insurance coverage<br>• Certifications (CIMS, ISSA, etc.)<br>• Past performance references<br>• Financial capacity",
+        suggestions: ["How do I find contracts?", "What if I don't meet requirements?"]
+    },
+    "save leads": {
+        response: "Click the bookmark icon on any lead card to save it to your <strong>Saved Leads</strong> repository. Access your saved leads from the button in the Customer Portal header.",
+        suggestions: ["How do I apply?", "Can I add notes to saved leads?"]
+    },
+    "branding materials": {
+        response: "Pro subscribers get access to professional branding materials including logos, business cards, and marketing templates. Visit <strong>Pro Resources → Branding Materials</strong> from your portal.",
+        suggestions: ["What else is included in Pro?", "How do I schedule a consultation?"]
+    },
+    "proposal help": {
+        response: "We offer proposal writing support with templates, guides, and samples. Pro subscribers can also schedule one-on-one consultations for personalized help. Access these from the <strong>Pro Resources</strong> menu.",
+        suggestions: ["How do I schedule a consultation?", "Are there proposal templates?"]
+    },
+    "consultation": {
+        response: "Pro subscribers can schedule one-on-one consultations for proposal reviews, bidding strategy, or business development. Click <strong>Pro Resources → One-on-One Consultations</strong> to book a session.",
+        suggestions: ["What types of consultations are available?", "How long are sessions?"]
+    },
+    "subscription": {
+        response: "Subscription plans include:<br>• Unlimited lead access<br>• Branding materials<br>• Proposal templates & guides<br>• One-on-one consultations<br>• Priority support<br><br>Visit the <strong>Payment</strong> page to subscribe.",
+        suggestions: ["What's the cost?", "Can I cancel anytime?"]
+    },
+    "navigate": {
+        response: "Main navigation:<br>• <strong>Customer Portal</strong> - View all leads<br>• <strong>Saved Leads</strong> - Your bookmarked opportunities<br>• <strong>Pro Resources</strong> - Branding, proposals, consultations<br>• <strong>Payment</strong> - Manage subscription",
+        suggestions: ["How do I find contracts?", "What are Pro Resources?"]
+    },
+    "default": {
+        response: "I can help you with:<br>• Finding and applying for contracts<br>• Understanding requirements<br>• Using platform features<br>• Accessing Pro resources<br><br>What specific question do you have?",
+        suggestions: ["How do I find contracts?", "What's included in my subscription?", "How do I get help with proposals?"]
+    }
+};
+
+function toggleChatbot() {
+    const container = document.getElementById('chatbot-container');
+    if (container.classList.contains('chatbot-minimized')) {
+        container.classList.remove('chatbot-minimized');
+        container.classList.add('chatbot-expanded');
+        document.getElementById('unread-count').style.display = 'none';
+    } else {
+        minimizeChatbot();
+    }
+}
+
+function minimizeChatbot() {
+    const container = document.getElementById('chatbot-container');
+    container.classList.remove('chatbot-expanded');
+    container.classList.add('chatbot-minimized');
+}
+
+function sendMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('chatbot-message-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // Show typing indicator
+    showTyping();
+    
+    // Get bot response
+    setTimeout(() => {
+        hideTyping();
+        const response = getBotResponse(message);
+        addMessage(response.text, 'bot', response.suggestions);
+    }, 1000);
+}
+
+function sendQuickMessage(message) {
+    document.getElementById('chatbot-message-input').value = message;
+    sendMessage(new Event('submit'));
+}
+
+function addMessage(text, type, suggestions = []) {
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chatbot-message ${type}-message`;
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.innerHTML = type === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+    
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.innerHTML = `<p>${text}</p>`;
+    
+    if (suggestions && suggestions.length > 0) {
+        const suggestionsDiv = document.createElement('div');
+        suggestionsDiv.className = 'mt-2';
+        suggestions.forEach(sug => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-outline-primary me-1 mb-1';
+            btn.style.fontSize = '11px';
+            btn.textContent = sug;
+            btn.onclick = () => sendQuickMessage(sug);
+            suggestionsDiv.appendChild(btn);
+        });
+        content.appendChild(suggestionsDiv);
+    }
+    
+    if (type === 'bot') {
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(content);
+    } else {
+        messageDiv.appendChild(content);
+        messageDiv.appendChild(avatar);
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function showTyping() {
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'chatbot-message bot-message';
+    typingDiv.innerHTML = `
+        <div class="message-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chatbot-typing" style="display: flex;">
+            <span></span><span></span><span></span>
+        </div>
+    `;
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function hideTyping() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+}
+
+function getBotResponse(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Match keywords to responses
+    for (const [key, data] of Object.entries(chatbotKnowledge)) {
+        if (lowerMessage.includes(key)) {
+            return { text: data.response, suggestions: data.suggestions };
+        }
+    }
+    
+    // Default response
+    return { 
+        text: chatbotKnowledge.default.response, 
+        suggestions: chatbotKnowledge.default.suggestions 
+    };
+}
+
+// Show badge after 3 seconds on first visit
+setTimeout(() => {
+    if (document.getElementById('chatbot-container').classList.contains('chatbot-minimized')) {
+        document.getElementById('unread-count').style.display = 'flex';
+    }
+}, 3000);
+</script>

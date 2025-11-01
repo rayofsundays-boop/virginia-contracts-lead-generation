@@ -824,6 +824,61 @@ Prefer not to receive these updates? [Unsubscribe](https://your-app-url.render.c
         print(f"Failed to send welcome email: {e}")
         return False
 
+def send_password_reset_email(email, name, reset_link):
+    """Send password reset email"""
+    try:
+        subject = "🔐 Reset Your Virginia Contracts Password"
+        
+        body = f"""
+Hello {name},
+
+We received a request to reset your password for your Virginia Contracts account.
+
+Click the link below to create a new password:
+
+{reset_link}
+
+This link will expire in 24 hours.
+
+If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
+
+Need help? Contact our support team at support@vacontracthub.com
+
+Best regards,
+Virginia Contracts Team
+"""
+        
+        # Send email using your email configuration
+        msg = Message(subject, recipients=[email])
+        msg.body = body
+        msg.html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #667eea;">🔐 Reset Your Password</h2>
+                <p>Hello {name},</p>
+                <p>We received a request to reset your password for your Virginia Contracts account.</p>
+                <div style="margin: 30px 0;">
+                    <a href="{reset_link}" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                        Reset Password
+                    </a>
+                </div>
+                <p><small style="color: #666;">This link will expire in 24 hours.</small></p>
+                <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #666; font-size: 12px;">
+                    Need help? Contact our support team at support@vacontracthub.com
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send password reset email: {e}")
+        return False
+
 # Database setup
 def get_db_connection():
     db_path = os.environ.get('DATABASE_URL', 'leads.db')
@@ -1008,6 +1063,14 @@ def init_postgres_db():
                       status TEXT DEFAULT 'saved',
                       saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(user_email, lead_type, lead_id))'''))
+        
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS password_reset_tokens
+                     (id SERIAL PRIMARY KEY,
+                      email TEXT NOT NULL UNIQUE,
+                      token TEXT NOT NULL,
+                      expiry TIMESTAMP NOT NULL,
+                      used BOOLEAN DEFAULT FALSE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         db.session.commit()
         
@@ -1473,8 +1536,18 @@ def manual_init_db():
         import traceback
         return f"<h1>Database Error</h1><p>Error: {str(e)}</p><pre>{traceback.format_exc()}</pre>"
 
+@app.route('/auth')
+def auth():
+    """Unified authentication page (sign in or register)"""
+    return render_template('auth.html')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Redirect GET requests to unified auth page
+    if request.method == 'GET':
+        return redirect(url_for('auth') + '#register')
+    
+    # Handle POST request for registration
     if request.method == 'POST':
         company_name = request.form['company_name']
         contact_name = request.form['contact_name']
@@ -1516,7 +1589,7 @@ def register():
             send_welcome_email(email, contact_name)
             
             flash('🎉 Welcome! Your account has been created successfully. Please sign in to get started.', 'success')
-            return redirect(url_for('signin'))
+            return redirect(url_for('auth'))
             
         except Exception as e:
             db.session.rollback()
@@ -1524,12 +1597,16 @@ def register():
                 flash('Email or username already exists. Please try another.', 'error')
             else:
                 flash(f'Registration error: {str(e)}', 'error')
-            return redirect(url_for('register'))
+            return redirect(url_for('auth') + '#register')
     
     return render_template('register.html')
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
+    # Redirect GET requests to unified auth page
+    if request.method == 'GET':
+        return redirect(url_for('auth'))
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -1560,7 +1637,7 @@ def signin():
             return redirect(url_for('customer_leads'))
         else:
             flash('Invalid username or password. Please try again.', 'error')
-            return redirect(url_for('signin'))
+            return redirect(url_for('auth'))
     
     return render_template('signin.html')
 
@@ -1569,6 +1646,113 @@ def logout():
     session.clear()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('landing'))
+
+@app.route('/request-password-reset', methods=['POST'])
+def request_password_reset():
+    """Handle password reset requests"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'Email is required'}), 400
+        
+        # Check if user exists
+        result = db.session.execute(
+            text('SELECT id, contact_name FROM leads WHERE email = :email'),
+            {'email': email}
+        ).fetchone()
+        
+        if not result:
+            # Don't reveal if email exists for security
+            return jsonify({'success': True, 'message': 'If that email exists, a reset link has been sent'})
+        
+        # Generate reset token
+        import secrets
+        reset_token = secrets.token_urlsafe(32)
+        expiry = datetime.now() + timedelta(hours=24)
+        
+        # Store token in database
+        db.session.execute(text('''
+            INSERT INTO password_reset_tokens (email, token, expiry)
+            VALUES (:email, :token, :expiry)
+            ON CONFLICT (email) DO UPDATE 
+            SET token = :token, expiry = :expiry, used = FALSE
+        '''), {'email': email, 'token': reset_token, 'expiry': expiry})
+        db.session.commit()
+        
+        # Send reset email
+        reset_link = url_for('reset_password', token=reset_token, _external=True)
+        send_password_reset_email(email, result[1], reset_link)
+        
+        return jsonify({'success': True, 'message': 'Reset link sent'})
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"Password reset error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to process request'}), 500
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password with token"""
+    if request.method == 'GET':
+        # Verify token is valid
+        result = db.session.execute(text('''
+            SELECT email, expiry, used FROM password_reset_tokens 
+            WHERE token = :token
+        '''), {'token': token}).fetchone()
+        
+        if not result or result[2] or datetime.now() > result[1]:
+            flash('This password reset link is invalid or has expired.', 'error')
+            return redirect(url_for('auth'))
+        
+        return render_template('reset_password.html', token=token, email=result[0])
+    
+    else:
+        # Process password reset
+        try:
+            new_password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if not new_password or len(new_password) < 6:
+                flash('Password must be at least 6 characters.', 'error')
+                return redirect(url_for('reset_password', token=token))
+            
+            if new_password != confirm_password:
+                flash('Passwords do not match.', 'error')
+                return redirect(url_for('reset_password', token=token))
+            
+            # Verify token again
+            result = db.session.execute(text('''
+                SELECT email, expiry, used FROM password_reset_tokens 
+                WHERE token = :token
+            '''), {'token': token}).fetchone()
+            
+            if not result or result[2] or datetime.now() > result[1]:
+                flash('This password reset link is invalid or has expired.', 'error')
+                return redirect(url_for('auth'))
+            
+            # Update password
+            password_hash = generate_password_hash(new_password)
+            db.session.execute(text('''
+                UPDATE leads SET password_hash = :password_hash WHERE email = :email
+            '''), {'password_hash': password_hash, 'email': result[0]})
+            
+            # Mark token as used
+            db.session.execute(text('''
+                UPDATE password_reset_tokens SET used = TRUE WHERE token = :token
+            '''), {'token': token})
+            
+            db.session.commit()
+            
+            flash('Password reset successfully! You can now sign in with your new password.', 'success')
+            return redirect(url_for('auth'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Password update error: {e}")
+            flash('Failed to reset password. Please try again.', 'error')
+            return redirect(url_for('reset_password', token=token))
 
 # ============================================================================
 # PAYPAL SUBSCRIPTION ROUTES

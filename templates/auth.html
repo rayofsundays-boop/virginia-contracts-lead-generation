@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In or Register - Virginia Government Contracts{% endblock %}
+
+{% block content %}
+<!-- Auth Hero -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-white">Welcome!</h1>
+        <p class="lead fs-4 text-white">Sign in or create your account to access exclusive contract opportunities</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            
+            <!-- Tab Navigation -->
+            <ul class="nav nav-pills nav-fill mb-4" id="authTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="signin-tab" data-bs-toggle="pill" 
+                            data-bs-target="#signin-panel" type="button" role="tab">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="register-tab" data-bs-toggle="pill" 
+                            data-bs-target="#register-panel" type="button" role="tab">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="authTabContent">
+                
+                <!-- Sign In Panel -->
+                <div class="tab-pane fade show active" id="signin-panel" role="tabpanel">
+                    <div class="card shadow-lg">
+                        <div class="card-body p-5">
+                            <h3 class="text-center mb-4">Sign In to Your Account</h3>
+                            
+                            <form method="POST" action="{{ url_for('signin') }}" id="signin-form">
+                                <div class="mb-4">
+                                    <label for="signin-username" class="form-label">Username or Email</label>
+                                    <input type="text" class="form-control form-control-lg" 
+                                           id="signin-username" name="username" required 
+                                           placeholder="Enter your username or email">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="signin-password" class="form-label">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control form-control-lg" 
+                                               id="signin-password" name="password" required 
+                                               placeholder="Enter your password">
+                                        <button class="btn btn-outline-secondary" type="button" 
+                                                onclick="togglePassword('signin-password', 'signin-eye')">
+                                            <i class="fas fa-eye" id="signin-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4 d-flex justify-content-between align-items-center">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="remember-me">
+                                        <label class="form-check-label" for="remember-me">
+                                            Remember me
+                                        </label>
+                                    </div>
+                                    <a href="#" onclick="showForgotPassword(); return false;" class="text-primary">
+                                        Forgot password?
+                                    </a>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                                </button>
+                                
+                                <div class="text-center">
+                                    <p class="mb-0">
+                                        Don't have an account? 
+                                        <a href="#" onclick="switchToRegister(); return false;" class="fw-bold">Create one now</a>
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Register Panel -->
+                <div class="tab-pane fade" id="register-panel" role="tabpanel">
+                    <div class="card shadow-lg">
+                        <div class="card-body p-5">
+                            <h3 class="text-center mb-4">Create Your Account</h3>
+                            <p class="text-center text-muted mb-4">Join to access exclusive contract opportunities</p>
+                            
+                            <form method="POST" action="{{ url_for('register') }}" id="register-form">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="company_name" class="form-label">Company Name *</label>
+                                        <input type="text" class="form-control" id="company_name" 
+                                               name="company_name" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="contact_name" class="form-label">Contact Name *</label>
+                                        <input type="text" class="form-control" id="contact_name" 
+                                               name="contact_name" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email Address *</label>
+                                        <input type="email" class="form-control" id="email" 
+                                               name="email" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone">
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="reg-username" class="form-label">Username *</label>
+                                        <input type="text" class="form-control" id="reg-username" 
+                                               name="username" required minlength="3" 
+                                               placeholder="Choose a unique username">
+                                        <small class="form-text text-muted">3-20 characters</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="reg-password" class="form-label">Password *</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="reg-password" 
+                                                   name="password" required minlength="6" 
+                                                   placeholder="Minimum 6 characters">
+                                            <button class="btn btn-outline-secondary" type="button" 
+                                                    onclick="togglePassword('reg-password', 'reg-eye')">
+                                                <i class="fas fa-eye" id="reg-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Minimum 6 characters</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="state" class="form-label">State</label>
+                                        <select class="form-select" id="state" name="state">
+                                            <option value="">Select State</option>
+                                            <option value="VA" selected>Virginia</option>
+                                            <option value="NC">North Carolina</option>
+                                            <option value="MD">Maryland</option>
+                                            <option value="DC">Washington DC</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="experience_years" class="form-label">Years of Experience</label>
+                                        <select class="form-select" id="experience_years" name="experience_years">
+                                            <option value="0">Select Experience</option>
+                                            <option value="1">1-2 years</option>
+                                            <option value="3">3-5 years</option>
+                                            <option value="6">6-10 years</option>
+                                            <option value="11">11-15 years</option>
+                                            <option value="16">15+ years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="certifications" class="form-label">Certifications & Licenses</label>
+                                    <textarea class="form-control" id="certifications" name="certifications" 
+                                              rows="2" placeholder="List any relevant certifications..."></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="terms" required>
+                                        <label class="form-check-label" for="terms">
+                                            I agree to receive email notifications about contract opportunities *
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
+                                    <i class="fas fa-user-plus me-2"></i>Create Account
+                                </button>
+                                
+                                <div class="text-center">
+                                    <p class="mb-0">
+                                        Already have an account? 
+                                        <a href="#" onclick="switchToSignIn(); return false;" class="fw-bold">Sign in</a>
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Benefits Section -->
+            <div class="row mt-5">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-0 shadow-sm text-center p-3">
+                        <div class="card-body">
+                            <i class="fas fa-file-contract fa-3x text-primary mb-3"></i>
+                            <h5>50+ Contracts</h5>
+                            <p class="text-muted small">Access exclusive government and commercial opportunities</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-0 shadow-sm text-center p-3">
+                        <div class="card-body">
+                            <i class="fas fa-bell fa-3x text-success mb-3"></i>
+                            <h5>Daily Alerts</h5>
+                            <p class="text-muted small">Get notified about new leads matching your criteria</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-0 shadow-sm text-center p-3">
+                        <div class="card-body">
+                            <i class="fas fa-handshake fa-3x text-warning mb-3"></i>
+                            <h5>Direct Access</h5>
+                            <p class="text-muted small">Contact information and application links included</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="forgot-step-1">
+                    <p>Enter your email address and we'll send you a link to reset your password.</p>
+                    <div class="mb-3">
+                        <label for="forgot-email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="forgot-email" required>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="requestPasswordReset()">
+                        <i class="fas fa-paper-plane me-2"></i>Send Reset Link
+                    </button>
+                </div>
+                <div id="forgot-step-2" style="display: none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Reset link sent! Check your email for instructions.
+                    </div>
+                    <p class="text-muted small">Didn't receive the email? Check your spam folder or try again in a few minutes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 60px 0;
+}
+.nav-pills .nav-link {
+    border-radius: 10px;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.card {
+    border-radius: 15px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+</style>
+
+<script>
+function togglePassword(inputId, eyeId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(eyeId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.classList.remove('fa-eye');
+        eye.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        eye.classList.remove('fa-eye-slash');
+        eye.classList.add('fa-eye');
+    }
+}
+
+function switchToRegister() {
+    document.getElementById('register-tab').click();
+}
+
+function switchToSignIn() {
+    document.getElementById('signin-tab').click();
+}
+
+function showForgotPassword() {
+    const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    modal.show();
+}
+
+function requestPasswordReset() {
+    const email = document.getElementById('forgot-email').value;
+    
+    if (!email) {
+        alert('Please enter your email address');
+        return;
+    }
+    
+    fetch('/request-password-reset', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('forgot-step-1').style.display = 'none';
+            document.getElementById('forgot-step-2').style.display = 'block';
+        } else {
+            alert('Error: ' + (data.message || 'Failed to send reset link'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send reset link. Please try again.');
+    });
+}
+
+// Auto-switch based on URL hash
+if (window.location.hash === '#register') {
+    document.getElementById('register-tab').click();
+}
+</script>
+{% endblock %}

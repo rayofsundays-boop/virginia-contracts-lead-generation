@@ -356,12 +356,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">
+                        <a class="nav-link" href="{{ url_for('auth') }}#register">
                             <i class="fas fa-user-plus"></i> Register
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('signin') }}">
+                        <a class="nav-link" href="{{ url_for('auth') }}">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </a>
                     </li>
@@ -441,6 +441,9 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AI Chatbot Widget -->
+    {% include 'chatbot.html' %}
     
     <!-- Subscription-only: no credits tracking -->
     <script>

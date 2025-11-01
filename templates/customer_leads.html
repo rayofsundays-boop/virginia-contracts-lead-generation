@@ -4,45 +4,106 @@
 
 {% block content %}
 <div class="container-fluid my-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2">
-                    <h2>Customer Leads Portal</h2>
-                    <p class="text-muted mb-0">Access all available leads, request proposal help, and apply directly</p>
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-lg-3 col-xl-2 mb-4">
+            <div class="sidebar-sticky">
+                <h6 class="sidebar-heading px-3 mt-2 mb-3 text-muted">
+                    <i class="fas fa-layer-group me-2"></i>RESOURCES
+                </h6>
+                
+                <!-- All Leads -->
+                <div class="nav flex-column">
+                    <a href="{{ url_for('customer_leads') }}" class="nav-link active">
+                        <i class="fas fa-list me-2"></i>All Leads
+                        <span class="badge bg-primary float-end">{{ all_leads|length if all_leads else 0 }}</span>
+                    </a>
+                    
+                    <a href="{{ url_for('saved_leads') }}" class="nav-link">
+                        <i class="fas fa-bookmark me-2 text-warning"></i>Saved Leads
+                    </a>
                 </div>
-                <div class="text-end">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-bookmark me-1"></i>Saved
-                        </a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fas fa-star me-1"></i>Pro Resources
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('branding_materials') }}">
-                                    <i class="fas fa-palette me-2 text-primary"></i>Branding Materials
-                                </a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('consultations') }}">
-                                    <i class="fas fa-user-tie me-2 text-success"></i>One-on-One Consultations
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}">
-                                    <i class="fas fa-list me-2 text-info"></i>All Leads
-                                </a></li>
-                            </ul>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+                    <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS
+                </h6>
+                
+                <div class="nav flex-column">
+                    <a href="{{ url_for('branding_materials') }}" class="nav-link">
+                        <i class="fas fa-palette me-2"></i>Branding Materials
+                        <span class="badge bg-warning float-end">Pro</span>
+                    </a>
+                    
+                    <a href="{{ url_for('proposal_support') }}" class="nav-link">
+                        <i class="fas fa-file-contract me-2"></i>Proposal Templates
+                    </a>
+                    
+                    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#proposalHelperModal">
+                        <i class="fas fa-edit me-2"></i>Proposal Writer
+                        <span class="badge bg-success float-end">New</span>
+                    </a>
+                </div>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+                    <i class="fas fa-user-graduate me-2"></i>SUPPORT
+                </h6>
+                
+                <div class="nav flex-column">
+                    <a href="{{ url_for('consultations') }}" class="nav-link">
+                        <i class="fas fa-user-tie me-2"></i>Consultations
+                        <span class="badge bg-warning float-end">Pro</span>
+                    </a>
+                    
+                    <a href="#" class="nav-link" onclick="toggleChatbot(); return false;">
+                        <i class="fas fa-comments me-2"></i>AI Assistant
+                        <span class="badge bg-info float-end">24/7</span>
+                    </a>
+                    
+                    <a href="{{ url_for('payment') }}" class="nav-link">
+                        <i class="fas fa-credit-card me-2"></i>Subscription
+                    </a>
+                </div>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+                    <i class="fas fa-chart-line me-2"></i>MY ACTIVITY
+                </h6>
+                
+                <div class="nav flex-column">
+                    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#activityModal">
+                        <i class="fas fa-history me-2"></i>Recent Activity
+                    </a>
+                    
+                    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#notesModal">
+                        <i class="fas fa-sticky-note me-2"></i>My Notes
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9 col-xl-10">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2">
+                            <h2>Customer Leads Portal</h2>
+                            <p class="text-muted mb-0">Access all available leads, request proposal help, and apply directly</p>
                         </div>
-                        <div class="subscription-display d-none d-md-block">
-                            <small class="text-muted">Access:</small><br>
-                            <strong class="text-success" style="font-size: 0.85rem;">Pro Member</strong>
+                        <div class="text-end">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                                    <i class="fas fa-bars me-1"></i>Menu
+                                </button>
+                                <div class="subscription-display d-none d-md-block">
+                                    <small class="text-muted">Access:</small><br>
+                                    <strong class="text-success" style="font-size: 0.85rem;">Pro Member</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
     <!-- Advanced Filters -->
     <div class="row mb-4">
@@ -999,6 +1060,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+    }
+});
+
 // Reset function (for testing or admin purposes)
 function resetApplyClickCount() {
     localStorage.removeItem('applyClickCount');
@@ -1008,4 +1072,106 @@ function resetApplyClickCount() {
     location.reload();
 }
 </script>
+
+<style>
+.sidebar-sticky {
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.nav-link {
+    padding: 0.75rem 1rem;
+    color: #6c757d;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #f8f9fa;
+    color: #667eea;
+}
+
+.nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+}
+
+.nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.nav-link .badge {
+    font-size: 0.65rem;
+}
+
+@media (max-width: 991px) {
+    .sidebar-sticky {
+        position: relative;
+    }
+}
+</style>
+
+<!-- Mobile Sidebar Offcanvas -->
+<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <h6 class="sidebar-heading px-3 mt-2 mb-3 text-muted">
+            <i class="fas fa-layer-group me-2"></i>RESOURCES
+        </h6>
+        
+        <div class="nav flex-column">
+            <a href="{{ url_for('customer_leads') }}" class="nav-link active">
+                <i class="fas fa-list me-2"></i>All Leads
+            </a>
+            <a href="{{ url_for('saved_leads') }}" class="nav-link">
+                <i class="fas fa-bookmark me-2 text-warning"></i>Saved Leads
+            </a>
+        </div>
+        
+        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+            <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS
+        </h6>
+        
+        <div class="nav flex-column">
+            <a href="{{ url_for('branding_materials') }}" class="nav-link">
+                <i class="fas fa-palette me-2"></i>Branding Materials
+            </a>
+            <a href="{{ url_for('proposal_support') }}" class="nav-link">
+                <i class="fas fa-file-contract me-2"></i>Proposal Templates
+            </a>
+        </div>
+        
+        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+            <i class="fas fa-user-graduate me-2"></i>SUPPORT
+        </h6>
+        
+        <div class="nav flex-column">
+            <a href="{{ url_for('consultations') }}" class="nav-link">
+                <i class="fas fa-user-tie me-2"></i>Consultations
+            </a>
+            <a href="#" class="nav-link" onclick="toggleChatbot(); return false;">
+                <i class="fas fa-comments me-2"></i>AI Assistant
+            </a>
+            <a href="{{ url_for('payment') }}" class="nav-link">
+                <i class="fas fa-credit-card me-2"></i>Subscription
+            </a>
+        </div>
+    </div>
+</div>
+
+        </div><!-- Close Main Content col -->
+    </div><!-- Close row -->
+</div><!-- Close container-fluid -->
 {% endblock %}
