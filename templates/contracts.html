@@ -178,51 +178,51 @@
                     </div>
                     <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title">{{ contract[1] }}</h5>
-                            <span class="city-badge">{{ contract[3] }}</span>
+                            <h5 class="card-title">{{ contract[0] }}</h5>
+                            <span class="city-badge">{{ contract[2] }}</span>
                         </div>
                         
                         {% if is_paid_subscriber or is_admin %}
                             <!-- Full Content for Subscribers -->
-                            <p class="card-text">{{ contract[6] }}</p>
+                            <p class="card-text">{{ contract[5] }}</p>
                             
                             <div class="row">
                                 <div class="col-6">
                                     <small class="text-muted">Contract Value:</small><br>
-                                    <strong class="text-success">{{ contract[4] }}</strong>
+                                    <strong class="text-success">{{ contract[3] }}</strong>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Deadline:</small><br>
-                                    <strong class="text-danger">{{ contract[5] }}</strong>
+                                    <strong class="text-danger">{{ contract[4] }}</strong>
                                 </div>
                             </div>
                             
-                            {% if contract[7] %}
+                            {% if contract[6] %}
                             <div class="mt-2">
                                 <small class="text-muted">NAICS Code:</small>
-                                <span class="badge bg-secondary">{{ contract[7] }}</span>
+                                <span class="badge bg-secondary">{{ contract[6] }}</span>
                             </div>
                             {% endif %}
                         {% else %}
                             <!-- Blurred Preview for Non-Subscribers -->
                             <div class="blurred-content">
-                                <p class="card-text">{{ contract[6] }}</p>
+                                <p class="card-text">{{ contract[5] }}</p>
                                 
                                 <div class="row">
                                     <div class="col-6">
                                         <small class="text-muted">Contract Value:</small><br>
-                                        <strong class="text-success">{{ contract[4] }}</strong>
+                                        <strong class="text-success">{{ contract[3] }}</strong>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted">Deadline:</small><br>
-                                        <strong class="text-danger">{{ contract[5] }}</strong>
+                                        <strong class="text-danger">{{ contract[4] }}</strong>
                                     </div>
                                 </div>
                                 
-                                {% if contract[7] %}
+                                {% if contract[6] %}
                                 <div class="mt-2">
                                     <small class="text-muted">NAICS Code:</small>
-                                    <span class="badge bg-secondary">{{ contract[7] }}</span>
+                                    <span class="badge bg-secondary">{{ contract[6] }}</span>
                                 </div>
                                 {% endif %}
                             </div>
@@ -243,15 +243,15 @@
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <div>
                             {% if is_paid_subscriber or is_admin %}
-                                {% if contract[8] %}
-                                    <a href="{{ contract[8] }}" target="_blank" 
+                                {% if contract[7] %}
+                                    <a href="{{ contract[7] }}" target="_blank" 
                                        class="btn btn-success btn-sm" 
                                        rel="noopener noreferrer">
                                         <i class="fas fa-external-link-alt"></i> Apply
                                     </a>
                                 {% endif %}
                                 <button class="btn btn-outline-secondary btn-sm" 
-                                        onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:100] | safe }}', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')">
+                                        onclick="shareContract('{{ contract[0] | safe }}', '{{ contract[5][:100] | safe }}', '{{ contract[1] }}', '{{ contract[3] }}', '{{ contract[4] }}')">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
                             {% else %}
