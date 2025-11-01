@@ -916,9 +916,10 @@ def init_postgres_db():
         
         db.session.commit()
         
-        # Residential leads table (from Zillow/Realtor.com)
+        # Residential leads table (for homeowner cleaning requests)
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS residential_leads
                      (id SERIAL PRIMARY KEY,
+                      homeowner_name TEXT NOT NULL,
                       address TEXT NOT NULL,
                       city TEXT NOT NULL,
                       state TEXT DEFAULT 'VA',
@@ -926,17 +927,16 @@ def init_postgres_db():
                       property_type TEXT,
                       bedrooms INTEGER,
                       bathrooms DECIMAL(3,1),
-                      square_feet INTEGER,
+                      square_footage INTEGER,
+                      contact_email TEXT,
+                      contact_phone TEXT,
                       estimated_value DECIMAL(12,2),
-                      owner_name TEXT,
-                      owner_phone TEXT,
-                      owner_email TEXT,
-                      last_sale_date DATE,
-                      last_sale_price DECIMAL(12,2),
-                      source TEXT,
-                      listing_url TEXT,
+                      cleaning_frequency TEXT,
+                      services_needed TEXT,
+                      special_requirements TEXT,
                       status TEXT DEFAULT 'new',
-                      notes TEXT,
+                      source TEXT,
+                      lead_quality TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
