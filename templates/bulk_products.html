@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Products Marketplace - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div class="text-center">
+            <h1 class="display-2 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                📦 Bulk Products Marketplace
+            </h1>
+            <p class="lead mb-0">Companies looking to purchase cleaning supplies in bulk</p>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="alert alert-info border-info">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How It Works</h5>
+                <p class="mb-0">Businesses post bulk product requests. Suppliers quote directly and fulfill orders. Great opportunity for cleaning companies to sell excess inventory or become a distributor!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('bulk_products') }}">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Product Category</label>
+                                <select class="form-select" name="category">
+                                    <option value="">All Categories</option>
+                                    <option value="disinfectants">Disinfectants</option>
+                                    <option value="floor_care">Floor Care Products</option>
+                                    <option value="paper_goods">Paper Goods</option>
+                                    <option value="equipment">Equipment</option>
+                                    <option value="green_products">Green/Eco Products</option>
+                                    <option value="specialty">Specialty Items</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Quantity Range</label>
+                                <select class="form-select" name="quantity">
+                                    <option value="">Any Quantity</option>
+                                    <option value="small">Small (1-100 units)</option>
+                                    <option value="medium">Medium (100-500 units)</option>
+                                    <option value="large">Large (500-1000 units)</option>
+                                    <option value="xlarge">X-Large (1000+ units)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Urgency</label>
+                                <select class="form-select" name="urgency">
+                                    <option value="">Any Timeline</option>
+                                    <option value="immediate">Immediate</option>
+                                    <option value="this_week">This Week</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter me-2"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3 class="fw-bold mb-0">{{ active_requests }}</h3>
+                            <p class="mb-0 small">Active Requests</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fw-bold mb-0">${{ total_value | comma }}</h3>
+                            <p class="mb-0 small">Total Order Value</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fw-bold mb-0">{{ categories_count }}</h3>
+                            <p class="mb-0 small">Product Categories</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Requests -->
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            {% if requests %}
+                <div class="row g-4 mb-4">
+                    {% for req in requests %}
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow hover-lift">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title mb-0">{{ req.product_name }}</h5>
+                                    {% if req.urgency == 'immediate' %}
+                                        <span class="badge bg-danger">Urgent</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ req.urgency | replace('_', ' ') | title }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <p class="mb-3">{{ req.description }}</p>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Category</small>
+                                        <strong><i class="fas fa-tag me-1"></i>{{ req.category | replace('_', ' ') | title }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Quantity Needed</small>
+                                        <strong><i class="fas fa-boxes me-1"></i>{{ req.quantity }} {{ req.unit }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Target Price</small>
+                                        <strong class="text-success"><i class="fas fa-dollar-sign me-1"></i>{{ req.target_price_per_unit }}/{{ req.unit }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Total Budget</small>
+                                        <strong class="text-primary"><i class="fas fa-calculator me-1"></i>${{ req.total_budget | comma }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Delivery Location</small>
+                                    <strong><i class="fas fa-map-marker-alt me-1"></i>{{ req.city }}, VA {{ req.zip_code }}</strong>
+                                </div>
+
+                                {% if req.specifications %}
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Specifications</small>
+                                    <p class="small mb-0">{{ req.specifications }}</p>
+                                </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Posted</small>
+                                    <strong>{{ req.created_at }}</strong>
+                                </div>
+
+                                {% if is_paid_subscriber or is_admin %}
+                                <div class="alert alert-light border mb-3">
+                                    <strong>Buyer Contact:</strong><br>
+                                    <i class="fas fa-building me-2"></i>{{ req.company_name }}<br>
+                                    <i class="fas fa-user me-2"></i>{{ req.contact_name }}<br>
+                                    <i class="fas fa-envelope me-2"></i><a href="mailto:{{ req.email }}">{{ req.email }}</a><br>
+                                    <i class="fas fa-phone me-2"></i><a href="tel:{{ req.phone }}">{{ req.phone }}</a>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-lg" onclick="openQuoteModal({{ req.id }})">
+                                        <i class="fas fa-file-invoice-dollar me-2"></i>Submit Quote
+                                    </button>
+                                    <a href="mailto:{{ req.email }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-envelope me-2"></i>Contact Buyer
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning mb-3">
+                                    <p class="mb-2"><strong><i class="fas fa-lock me-2"></i>Contact Info Locked</strong></p>
+                                    <p class="small mb-0">Subscribe to access buyer details and submit quotes!</p>
+                                </div>
+                                <a href="{{ url_for('subscribe_page') }}" class="btn btn-warning w-100">
+                                    <i class="fas fa-unlock me-2"></i>Unlock Buyer Info
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-light">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>{{ req.quote_count or 0 }} quotes submitted
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page - 1 }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p == page %}
+                            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                            {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page + 1 }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <h4 class="alert-heading">No Bulk Requests Currently</h4>
+                    <p class="mb-3">Be the first to post a request or check back soon!</p>
+                    <button class="btn btn-primary" onclick="openPostRequestModal()">
+                        <i class="fas fa-plus me-2"></i>Post Bulk Request
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Call to Action for Non-Subscribers -->
+    {% if not is_paid_subscriber and not is_admin %}
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card bg-warning text-dark shadow-lg">
+                <div class="card-body text-center p-5">
+                    <h3 class="mb-3"><i class="fas fa-star me-2"></i>Unlock Full Access</h3>
+                    <p class="lead mb-4">Subscribe to view buyer contact information, submit quotes, and grow your business with bulk orders!</p>
+                    <a href="{{ url_for('subscribe_page') }}" class="btn btn-dark btn-lg px-5">
+                        Subscribe Now - $99/month
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quote Submission Modal -->
+<div class="modal fade" id="quoteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-file-invoice-dollar me-2"></i>Submit Your Quote</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quoteForm" onsubmit="submitQuote(event)">
+                    <input type="hidden" id="quoteRequestId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Your Price Per Unit *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="quotePricePerUnit" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Total Quote Amount *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="quoteTotalAmount" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Delivery Timeline *</label>
+                        <input type="text" class="form-control" id="quoteDeliveryTimeline" 
+                               placeholder="e.g., 3-5 business days" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Brands/Products You Can Supply</label>
+                        <textarea class="form-control" id="quoteBrands" rows="2" 
+                                  placeholder="List specific brands or product names"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Additional Details</label>
+                        <textarea class="form-control" id="quoteDetails" rows="3" 
+                                  placeholder="Shipping terms, minimum order quantities, payment terms, etc."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Quote
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openQuoteModal(requestId) {
+    document.getElementById('quoteRequestId').value = requestId;
+    const modal = new bootstrap.Modal(document.getElementById('quoteModal'));
+    modal.show();
+}
+
+function submitQuote(event) {
+    event.preventDefault();
+    
+    const data = {
+        request_id: document.getElementById('quoteRequestId').value,
+        price_per_unit: document.getElementById('quotePricePerUnit').value,
+        total_amount: document.getElementById('quoteTotalAmount').value,
+        delivery_timeline: document.getElementById('quoteDeliveryTimeline').value,
+        brands: document.getElementById('quoteBrands').value,
+        details: document.getElementById('quoteDetails').value
+    };
+    
+    fetch('/api/submit-bulk-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Quote submitted successfully! The buyer will contact you soon.');
+            bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
+            location.reload();
+        } else {
+            alert('Error submitting quote: ' + result.message);
+        }
+    })
+    .catch(error => {
+        alert('Error submitting quote. Please try again.');
+    });
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+}
+</script>
+{% endblock %}

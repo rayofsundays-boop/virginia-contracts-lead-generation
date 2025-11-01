@@ -26,6 +26,9 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Session configuration - 20 minute timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)
+
 # Admin credentials (bypass paywall)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'VAContracts2024!')
@@ -229,6 +232,35 @@ if not DATABASE_URL or 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
 # Global variables for scheduling
 scheduler_thread = None
 scheduler_running = False
+
+# Session activity tracker - auto logout after 20 minutes of inactivity
+@app.before_request
+def check_session_timeout():
+    """Check if user session has expired due to inactivity"""
+    # Skip timeout check for static files and certain routes
+    if request.endpoint and (request.endpoint.startswith('static') or 
+                             request.endpoint in ['signin', 'register', 'index']):
+        return
+    
+    if 'user_id' in session:
+        session.permanent = True  # Enable permanent session
+        last_activity = session.get('last_activity')
+        
+        if last_activity:
+            # Convert string back to datetime if needed
+            if isinstance(last_activity, str):
+                last_activity = datetime.fromisoformat(last_activity)
+            
+            # Check if 20 minutes have passed
+            if datetime.now() - last_activity > timedelta(minutes=20):
+                # Clear session and redirect to signin
+                user_email = session.get('user_email', 'User')
+                session.clear()
+                flash(f'Your session expired due to inactivity. Please sign in again.', 'info')
+                return redirect(url_for('signin'))
+        
+        # Update last activity time
+        session['last_activity'] = datetime.now().isoformat()
 
 # Login required decorator
 def login_required(f):
@@ -3240,6 +3272,317 @@ def ai_assistant():
 def federal_coming_soon():
     """Coming soon page for federal contracts until November 3"""
     return render_template('federal_coming_soon.html')
+
+@app.route('/ai-proposal-generator')
+@login_required
+def ai_proposal_generator():
+    """AI-powered proposal generator with personalization"""
+    return render_template('ai_proposal_generator.html')
+
+@app.route('/api/get-contracts')
+@login_required
+def get_contracts_api():
+    """API endpoint to get contracts for proposal generator"""
+    try:
+        source = request.args.get('source', '')
+        contracts = []
+        
+        if source == 'federal':
+            result = db.session.execute(text('''
+                SELECT title, agency, deadline, notice_id as id
+                FROM federal_contracts 
+                WHERE posted_date >= DATE('now', '-30 days')
+                ORDER BY posted_date DESC 
+                LIMIT 50
+            '''))
+            contracts = [{'title': r[0], 'agency': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
+            
+        elif source == 'local':
+            result = db.session.execute(text('''
+                SELECT title, location, deadline, id
+                FROM contracts 
+                WHERE posted_date >= DATE('now', '-30 days')
+                ORDER BY posted_date DESC 
+                LIMIT 50
+            '''))
+            contracts = [{'title': r[0], 'location': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
+            
+        elif source == 'commercial':
+            result = db.session.execute(text('''
+                SELECT business_name as title, city as location, start_date as deadline, id
+                FROM commercial_lead_requests 
+                WHERE status = 'open' AND created_at >= DATE('now', '-30 days')
+                ORDER BY created_at DESC 
+                LIMIT 50
+            '''))
+            contracts = [{'title': r[0], 'location': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
+        
+        return jsonify({'success': True, 'contracts': contracts})
+        
+    except Exception as e:
+        print(f"Get contracts error: {e}")
+        return jsonify({'success': False, 'contracts': []}), 500
+
+@app.route('/api/generate-proposal', methods=['POST'])
+@login_required
+def generate_proposal_api():
+    """Generate AI proposal from contract data"""
+    try:
+        config = request.get_json()
+        contract = config.get('contract', {})
+        company_name = config.get('companyName', '[YOUR COMPANY NAME]')
+        years = config.get('yearsInBusiness', '[X]')
+        differentiators = config.get('differentiators', '[YOUR KEY DIFFERENTIATORS]')
+        sections = config.get('sections', {})
+        
+        # Generate proposal content (placeholder - replace with real AI API)
+        proposal_content = generate_proposal_content(contract, company_name, years, differentiators, sections)
+        
+        # Find placeholders that need personalization
+        placeholders = find_placeholders(proposal_content)
+        
+        return jsonify({
+            'success': True,
+            'proposal': {
+                'content': proposal_content,
+                'placeholders': placeholders,
+                'contract_id': contract.get('id'),
+                'generated_at': datetime.now().isoformat()
+            }
+        })
+        
+    except Exception as e:
+        print(f"Generate proposal error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/quick-wins')
+@login_required
+def quick_wins():
+    """Show urgent leads requiring immediate response"""
+    urgency_filter = request.args.get('urgency', '')
+    lead_type_filter = request.args.get('lead_type', '')
+    city_filter = request.args.get('city', '')
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    per_page = 12
+    offset = (page - 1) * per_page
+    
+    # Check if paid subscriber or admin
+    is_admin = session.get('is_admin', False)
+    is_paid = False
+    if not is_admin and 'user_id' in session:
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        if result and result[0] == 'paid':
+            is_paid = True
+    
+    # Build query
+    where_conditions = ["urgency IN ('emergency', 'urgent', 'soon')"]
+    params = {}
+    
+    if urgency_filter:
+        where_conditions.append("urgency = :urgency")
+        params['urgency'] = urgency_filter
+    
+    if city_filter:
+        where_conditions.append("city = :city")
+        params['city'] = city_filter
+    
+    where_clause = " AND ".join(where_conditions)
+    
+    # Get counts
+    emergency_count = db.session.execute(text(
+        "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
+    )).scalar() or 0
+    
+    urgent_count = db.session.execute(text(
+        "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
+    )).scalar() or 0
+    
+    # Get leads
+    total_count = db.session.execute(text(f'''
+        SELECT COUNT(*) FROM commercial_lead_requests WHERE {where_clause} AND status = 'open'
+    '''), params).scalar() or 0
+    
+    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+    
+    params['limit'] = per_page
+    params['offset'] = offset
+    
+    leads = db.session.execute(text(f'''
+        SELECT * FROM commercial_lead_requests 
+        WHERE {where_clause} AND status = 'open'
+        ORDER BY 
+            CASE urgency 
+                WHEN 'emergency' THEN 1
+                WHEN 'urgent' THEN 2
+                WHEN 'soon' THEN 3
+                ELSE 4
+            END,
+            created_at DESC
+        LIMIT :limit OFFSET :offset
+    '''), params).fetchall()
+    
+    return render_template('quick_wins.html',
+                         leads=leads,
+                         emergency_count=emergency_count,
+                         urgent_count=urgent_count,
+                         total_count=total_count,
+                         page=page,
+                         total_pages=total_pages,
+                         is_paid_subscriber=is_paid,
+                         is_admin=is_admin)
+
+@app.route('/bulk-products')
+@login_required
+def bulk_products():
+    """Marketplace for bulk cleaning product requests"""
+    category_filter = request.args.get('category', '')
+    quantity_filter = request.args.get('quantity', '')
+    urgency_filter = request.args.get('urgency', '')
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    per_page = 12
+    offset = (page - 1) * per_page
+    
+    # Check if paid subscriber or admin
+    is_admin = session.get('is_admin', False)
+    is_paid = False
+    if not is_admin and 'user_id' in session:
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        if result and result[0] == 'paid':
+            is_paid = True
+    
+    # Build query
+    where_conditions = ["status = 'open'"]
+    params = {}
+    
+    if category_filter:
+        where_conditions.append("category = :category")
+        params['category'] = category_filter
+    
+    if urgency_filter:
+        where_conditions.append("urgency = :urgency")
+        params['urgency'] = urgency_filter
+    
+    where_clause = " AND ".join(where_conditions)
+    
+    # Get stats
+    active_requests = db.session.execute(text(
+        "SELECT COUNT(*) FROM bulk_product_requests WHERE status = 'open'"
+    )).scalar() or 0
+    
+    total_value = db.session.execute(text(
+        "SELECT SUM(total_budget) FROM bulk_product_requests WHERE status = 'open'"
+    )).scalar() or 0
+    
+    categories_count = db.session.execute(text(
+        "SELECT COUNT(DISTINCT category) FROM bulk_product_requests WHERE status = 'open'"
+    )).scalar() or 0
+    
+    # Get requests
+    total_count = db.session.execute(text(f'''
+        SELECT COUNT(*) FROM bulk_product_requests WHERE {where_clause}
+    '''), params).scalar() or 0
+    
+    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+    
+    params['limit'] = per_page
+    params['offset'] = offset
+    
+    requests_data = db.session.execute(text(f'''
+        SELECT * FROM bulk_product_requests 
+        WHERE {where_clause}
+        ORDER BY 
+            CASE urgency 
+                WHEN 'immediate' THEN 1
+                WHEN 'this_week' THEN 2
+                WHEN 'this_month' THEN 3
+                ELSE 4
+            END,
+            created_at DESC
+        LIMIT :limit OFFSET :offset
+    '''), params).fetchall()
+    
+    return render_template('bulk_products.html',
+                         requests=requests_data,
+                         active_requests=active_requests,
+                         total_value=total_value,
+                         categories_count=categories_count,
+                         page=page,
+                         total_pages=total_pages,
+                         is_paid_subscriber=is_paid,
+                         is_admin=is_admin)
+
+@app.route('/api/submit-bulk-quote', methods=['POST'])
+@login_required
+def submit_bulk_quote():
+    """Submit quote for bulk product request"""
+    try:
+        data = request.get_json()
+        
+        db.session.execute(text('''
+            INSERT INTO bulk_product_quotes
+            (request_id, user_id, price_per_unit, total_amount, delivery_timeline,
+             brands, details, created_at)
+            VALUES (:request_id, :user_id, :price_per_unit, :total_amount, :delivery_timeline,
+                    :brands, :details, CURRENT_TIMESTAMP)
+        '''), {
+            'request_id': data.get('request_id'),
+            'user_id': session['user_id'],
+            'price_per_unit': data.get('price_per_unit'),
+            'total_amount': data.get('total_amount'),
+            'delivery_timeline': data.get('delivery_timeline'),
+            'brands': data.get('brands', ''),
+            'details': data.get('details', '')
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Quote submitted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Submit bulk quote error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Helper function for proposal generation
+def generate_proposal_content(contract, company_name, years, differentiators, sections):
+    """Generate proposal content (placeholder for AI integration)"""
+    content = f"""
+    <div style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1>{company_name}</h1>
+            <h2>Proposal for: {contract.get('title', 'Cleaning Services Contract')}</h2>
+            <p>Solicitation Number: {contract.get('solicitationNumber', contract.get('id', 'N/A'))}</p>
+            <p>Submitted: {datetime.now().strftime('%B %d, %Y')}</p>
+        </div>
+        
+        {('<div style="margin-bottom: 30px;"><h3>EXECUTIVE SUMMARY</h3><p>' + company_name + ' is pleased to submit this proposal for ' + contract.get('title', 'the referenced cleaning services contract') + '. With ' + str(years) + ' years of experience in professional cleaning services, we bring proven expertise and a commitment to excellence. Our key differentiators include: ' + differentiators + '</p><p>[ADD SPECIFIC COMPANY HIGHLIGHTS AND WHY YOU ARE THE BEST CHOICE]</p></div>') if sections.get('executiveSummary') else ''}
+        
+        {('<div style="margin-bottom: 30px;"><h3>TECHNICAL APPROACH</h3><h4>Understanding of Requirements</h4><p>We have carefully reviewed the RFP and understand that the contract requires:</p><ul><li>[LIST KEY REQUIREMENT 1]</li><li>[LIST KEY REQUIREMENT 2]</li><li>[LIST KEY REQUIREMENT 3]</li></ul><h4>Proposed Methodology</h4><p>[DESCRIBE YOUR STEP-BY-STEP CLEANING PROCESS]</p><p>[DETAIL EQUIPMENT AND PRODUCTS TO BE USED]</p><p>[EXPLAIN QUALITY CONTROL MEASURES]</p><h4>Green Cleaning Practices</h4><p>[IF APPLICABLE, DESCRIBE ECO-FRIENDLY APPROACH]</p></div>') if sections.get('technicalApproach') else ''}
+        
+        {('<div style="margin-bottom: 30px;"><h3>STAFFING PLAN</h3><h4>Organizational Structure</h4><p>[INSERT ORGANIZATIONAL CHART HERE]</p><h4>Key Personnel</h4><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f0f0f0;"><th style="border: 1px solid #ddd; padding: 8px;">Name</th><th style="border: 1px solid #ddd; padding: 8px;">Position</th><th style="border: 1px solid #ddd; padding: 8px;">Experience</th><th style="border: 1px solid #ddd; padding: 8px;">Certifications</th></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">[NAME]</td><td style="border: 1px solid #ddd; padding: 8px;">Project Manager</td><td style="border: 1px solid #ddd; padding: 8px;">[X years]</td><td style="border: 1px solid #ddd; padding: 8px;">[LIST CERTS]</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">[NAME]</td><td style="border: 1px solid #ddd; padding: 8px;">Lead Supervisor</td><td style="border: 1px solid #ddd; padding: 8px;">[X years]</td><td style="border: 1px solid #ddd; padding: 8px;">[LIST CERTS]</td></tr></table><h4>Training Programs</h4><p>[DESCRIBE YOUR EMPLOYEE TRAINING APPROACH]</p></div>') if sections.get('staffingPlan') else ''}
+        
+        {('<div style="margin-bottom: 30px;"><h3>PAST PERFORMANCE</h3><h4>Relevant Project Experience</h4><div style="margin-bottom: 20px;"><strong>Project 1: [PROJECT NAME]</strong><br>Client: [CLIENT NAME]<br>Contract Value: $[VALUE]<br>Period: [START DATE] - [END DATE]<br>Scope: [DESCRIBE SIMILAR WORK]<br>Results: [QUANTIFY ACHIEVEMENTS - e.g., 99.5% quality score, zero safety incidents]</div><div style="margin-bottom: 20px;"><strong>Project 2: [PROJECT NAME]</strong><br>Client: [CLIENT NAME]<br>Contract Value: $[VALUE]<br>Period: [START DATE] - [END DATE]<br>Scope: [DESCRIBE SIMILAR WORK]<br>Results: [QUANTIFY ACHIEVEMENTS]</div><div style="margin-bottom: 20px;"><strong>Project 3: [PROJECT NAME]</strong><br>Client: [CLIENT NAME]<br>Contract Value: $[VALUE]<br>Period: [START DATE] - [END DATE]<br>Scope: [DESCRIBE SIMILAR WORK]<br>Results: [QUANTIFY ACHIEVEMENTS]</div></div>') if sections.get('pastPerformance') else ''}
+        
+        {('<div style="margin-bottom: 30px;"><h3>QUALITY CONTROL PLAN</h3><h4>Inspection Procedures</h4><p>[DESCRIBE HOW YOU WILL INSPECT WORK DAILY/WEEKLY]</p><h4>Customer Feedback Mechanisms</h4><p>[EXPLAIN HOW CUSTOMERS CAN REPORT ISSUES]</p><h4>Corrective Action Process</h4><p>[DETAIL STEPS WHEN ISSUES ARE IDENTIFIED]</p><h4>Performance Metrics</h4><ul><li>[METRIC 1: e.g., Response time to complaints < 2 hours]</li><li>[METRIC 2: e.g., Quality audit scores > 95%]</li><li>[METRIC 3: e.g., Customer satisfaction > 90%]</li></ul></div>') if sections.get('qualityControl') else ''}
+        
+        {('<div style="margin-bottom: 30px;"><h3>COMPLIANCE MATRIX</h3><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f0f0f0;"><th style="border: 1px solid #ddd; padding: 8px;">RFP Section</th><th style="border: 1px solid #ddd; padding: 8px;">Requirement</th><th style="border: 1px solid #ddd; padding: 8px;">Proposal Section</th><th style="border: 1px solid #ddd; padding: 8px;">Page #</th></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">[e.g., Section 3.1]</td><td style="border: 1px solid #ddd; padding: 8px;">[REQUIREMENT TEXT]</td><td style="border: 1px solid #ddd; padding: 8px;">[WHERE YOU ADDRESSED IT]</td><td style="border: 1px solid #ddd; padding: 8px;">[PAGE]</td></tr><tr><td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: center;">[ADD ALL RFP REQUIREMENTS HERE]</td></tr></table></div>') if sections.get('compliance') else ''}
+        
+        <div style="margin-top: 40px;">
+            <p><strong>Respectfully Submitted,</strong></p>
+            <p>[YOUR NAME]<br>[YOUR TITLE]<br>{company_name}<br>[CONTACT INFORMATION]</p>
+        </div>
+    </div>
+    """
+    return content
+
+def find_placeholders(content):
+    """Find placeholders that need personalization"""
+    import re
+    placeholders = re.findall(r'\[([^\]]+)\]', content)
+    return list(set(placeholders))  # Remove duplicates
 
 @app.route('/api/consultation-request', methods=['POST'])
 @login_required

@@ -105,24 +105,33 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('toolbox') }}" class="btn btn-success btn-lg">
+                        <a href="{{ url_for('ai_proposal_generator') }}" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="fas fa-magic me-2"></i>AI Proposal Generator
+                        </a>
+                        <a href="{{ url_for('quick_wins') }}" class="btn btn-danger btn-lg">
+                            <i class="fas fa-bolt me-2"></i>Quick Wins <span class="badge bg-light text-danger ms-1">Urgent</span>
+                        </a>
+                        <a href="{{ url_for('toolbox') }}" class="btn btn-success">
                             <i class="fas fa-toolbox me-2"></i>Resource Toolbox
+                        </a>
+                        <a href="{{ url_for('bulk_products') }}" class="btn btn-info">
+                            <i class="fas fa-boxes me-2"></i>Bulk Products
                         </a>
                         {% if is_paid_subscriber or is_admin %}
                         <a href="{{ url_for('pricing_calculator') }}" class="btn btn-primary">
                             <i class="fas fa-calculator me-2"></i>Pricing Calculator
                         </a>
                         {% endif %}
-                        <a href="{{ url_for('ai_assistant') }}" class="btn btn-danger">
+                        <a href="{{ url_for('ai_assistant') }}" class="btn btn-warning">
                             <i class="fas fa-robot me-2"></i>AI Proposal Assistant
                         </a>
-                        <a href="{{ url_for('proposal_support') }}" class="btn btn-warning">
+                        <a href="{{ url_for('proposal_support') }}" class="btn btn-outline-primary">
                             <i class="fas fa-user-tie me-2"></i>Book Consultation
                         </a>
                         <a href="{{ url_for('payment') }}" class="btn btn-outline-primary">
                             <i class="fas fa-badge-check me-2"></i>Manage Subscription
                         </a>
-                        <a href="{{ url_for('landing') }}" class="btn btn-info">
+                        <a href="{{ url_for('landing') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-clipboard-check me-2"></i>Retake Assessment
                         </a>
                         <button class="btn btn-outline-secondary" onclick="updateNotifications()">

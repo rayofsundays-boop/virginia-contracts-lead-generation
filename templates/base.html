@@ -135,6 +135,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{{ url_for('ai_proposal_generator') }}">
+                                    <i class="fas fa-magic me-2"></i>AI Proposal Generator
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{{ url_for('proposal_templates') }}">
                                     <i class="fas fa-file-alt me-2"></i>Proposal Templates
                                 </a>
@@ -180,10 +185,27 @@
                         </ul>
                     </li>
                     {% if session.get('user_email') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('lead_marketplace') }}">
-                            <i class="fas fa-shopping-cart"></i> Lead Marketplace
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="leadsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-fire"></i> Opportunities
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="leadsDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('lead_marketplace') }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>Lead Marketplace
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('quick_wins') }}">
+                                    <i class="fas fa-bolt me-2"></i>Quick Wins <span class="badge bg-danger">Urgent</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('bulk_products') }}">
+                                    <i class="fas fa-boxes me-2"></i>Bulk Products
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
                     <li class="nav-item">

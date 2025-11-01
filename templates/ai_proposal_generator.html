@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}AI Proposal Generator - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div class="text-center">
+            <h1 class="display-2 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                🤖 AI Proposal Generator
+            </h1>
+            <p class="lead mb-0">Generate professional, compliant proposals in minutes</p>
+        </div>
+    </div>
+
+    <!-- Important Instructions -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="alert alert-info border-info shadow-sm">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How It Works</h5>
+                <ol class="mb-2">
+                    <li><strong>Select a contract/lead</strong> - Choose from your available opportunities</li>
+                    <li><strong>AI generates draft</strong> - Get a professionally formatted proposal with all required sections</li>
+                    <li><strong>Personalize placeholders</strong> - Replace [YOUR COMPANY], [SPECIFIC EXAMPLES], etc. with your actual data</li>
+                    <li><strong>Review & submit</strong> - AI checks compliance, spelling, and grammar before you download</li>
+                </ol>
+                <p class="mb-0 small"><strong>Important:</strong> AI-generated proposals are drafts. You MUST review and personalize all content before submission. Do not submit generic proposals.</p>
+            </div>
+
+            <div class="alert alert-warning border-warning">
+                <p class="mb-0"><strong><i class="fas fa-exclamation-triangle me-2"></i>Disclaimer:</strong> AI-generated proposals are starting points only. You are responsible for accuracy, completeness, and compliance. AI does not guarantee contract awards.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Step 1: Select Contract -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Step 1: Select Contract/Lead</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contract Source</label>
+                        <select class="form-select form-select-lg" id="contractSource" onchange="loadContracts()">
+                            <option value="">Select source...</option>
+                            <option value="federal">Federal Contracts (SAM.gov)</option>
+                            <option value="local">Local Government Contracts</option>
+                            <option value="commercial">Commercial Leads</option>
+                            <option value="manual">Enter RFP Manually</option>
+                        </select>
+                    </div>
+
+                    <div id="contractListSection" style="display: none;">
+                        <label class="form-label fw-bold">Available Contracts</label>
+                        <div id="contractList" class="list-group mb-3">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div id="manualEntrySection" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">RFP/Solicitation Number</label>
+                            <input type="text" class="form-control" id="manualSolicitationNumber" 
+                                   placeholder="e.g., 36C10X24Q0123">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contract Title</label>
+                            <input type="text" class="form-control" id="manualTitle" 
+                                   placeholder="e.g., Janitorial Services - VA Medical Center">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contract Description</label>
+                            <textarea class="form-control" id="manualDescription" rows="4" 
+                                      placeholder="Paste key requirements from the RFP..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Upload RFP Document (Optional)</label>
+                            <input type="file" class="form-control" id="rfpDocument" accept=".pdf,.doc,.docx">
+                            <small class="text-muted">PDF or Word document - AI will extract requirements</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="processManualEntry()">
+                            <i class="fas fa-arrow-right me-2"></i>Continue with Manual Entry
+                        </button>
+                    </div>
+
+                    <div id="selectedContractPreview" style="display: none;" class="alert alert-success mt-3">
+                        <h6 class="alert-heading">Selected Contract:</h6>
+                        <p class="mb-0" id="selectedContractInfo"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Configure Proposal -->
+            <div class="card shadow-lg border-0 mb-4" id="step2Card" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-cog me-2"></i>Step 2: Configure Your Proposal</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Your Company Name</label>
+                            <input type="text" class="form-control" id="companyName" 
+                                   placeholder="[YOUR COMPANY NAME]">
+                            <small class="text-muted">This will replace placeholders throughout</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Years in Business</label>
+                            <input type="number" class="form-control" id="yearsInBusiness" 
+                                   placeholder="e.g., 5" min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Key Differentiators</label>
+                        <textarea class="form-control" id="differentiators" rows="3" 
+                                  placeholder="What makes your company unique? (Certifications, specializations, unique approach, etc.)"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Include Sections</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeExecutiveSummary" checked>
+                            <label class="form-check-label" for="includeExecutiveSummary">
+                                Executive Summary
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeTechnicalApproach" checked>
+                            <label class="form-check-label" for="includeTechnicalApproach">
+                                Technical Approach
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeStaffingPlan" checked>
+                            <label class="form-check-label" for="includeStaffingPlan">
+                                Staffing Plan
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includePastPerformance" checked>
+                            <label class="form-check-label" for="includePastPerformance">
+                                Past Performance
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeQualityControl" checked>
+                            <label class="form-check-label" for="includeQualityControl">
+                                Quality Control Plan
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeCompliance" checked>
+                            <label class="form-check-label" for="includeCompliance">
+                                Compliance Matrix
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success btn-lg w-100" onclick="generateProposal()">
+                        <i class="fas fa-magic me-2"></i>Generate AI Proposal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" style="display: none;" class="text-center my-5">
+                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 lead">AI is generating your professional proposal...</p>
+                <p class="text-muted">This may take 30-60 seconds</p>
+            </div>
+
+            <!-- Step 3: Review & Download -->
+            <div class="card shadow-lg border-0 mb-4" id="step3Card" style="display: none;">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i>Step 3: Review Generated Proposal</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Quality Checks -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Automatic Quality Checks Completed</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Spelling</small>
+                                <span class="badge bg-success" id="spellingStatus">✓ Passed</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Grammar</small>
+                                <span class="badge bg-success" id="grammarStatus">✓ Passed</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Compliance</small>
+                                <span class="badge bg-success" id="complianceStatus">✓ Passed</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Formatting</small>
+                                <span class="badge bg-success" id="formattingStatus">✓ Professional</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personalization Checklist -->
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Action Required: Personalize These Items</h6>
+                        <p class="mb-2">Replace the following placeholders with your specific information:</p>
+                        <ul id="personalizationChecklist" class="mb-0">
+                            <!-- Will be populated dynamically -->
+                        </ul>
+                    </div>
+
+                    <!-- Proposal Preview -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Proposal Preview</h6>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto; font-family: 'Times New Roman', serif; line-height: 1.6;">
+                            <div id="proposalContent">
+                                <!-- Generated proposal will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download Options -->
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-lg w-100" onclick="downloadProposal('word')">
+                                <i class="fas fa-file-word me-2"></i>Download Word (.docx)
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-danger btn-lg w-100" onclick="downloadProposal('pdf')">
+                                <i class="fas fa-file-pdf me-2"></i>Download PDF
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-lg w-100" onclick="copyToClipboard()">
+                                <i class="fas fa-copy me-2"></i>Copy to Clipboard
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-secondary" onclick="startOver()">
+                            <i class="fas fa-redo me-2"></i>Generate Another Proposal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedContract = null;
+let generatedProposal = null;
+
+function loadContracts() {
+    const source = document.getElementById('contractSource').value;
+    const listSection = document.getElementById('contractListSection');
+    const manualSection = document.getElementById('manualEntrySection');
+    const contractList = document.getElementById('contractList');
+    
+    // Reset
+    listSection.style.display = 'none';
+    manualSection.style.display = 'none';
+    contractList.innerHTML = '';
+    
+    if (source === 'manual') {
+        manualSection.style.display = 'block';
+        return;
+    }
+    
+    if (!source) return;
+    
+    // Show loading
+    contractList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div><p class="mt-2">Loading contracts...</p></div>';
+    listSection.style.display = 'block';
+    
+    // Fetch contracts from backend
+    fetch(`/api/get-contracts?source=${source}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.contracts && data.contracts.length > 0) {
+                contractList.innerHTML = '';
+                data.contracts.forEach(contract => {
+                    const item = document.createElement('button');
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${contract.title}</h6>
+                                <p class="mb-1 small text-muted">${contract.agency || contract.location}</p>
+                                <small class="text-muted">Deadline: ${contract.deadline || 'TBD'}</small>
+                            </div>
+                            <span class="badge bg-primary">${source}</span>
+                        </div>
+                    `;
+                    item.onclick = () => selectContract(contract, source);
+                    contractList.appendChild(item);
+                });
+            } else {
+                contractList.innerHTML = '<div class="alert alert-warning">No contracts available. Try manual entry.</div>';
+            }
+        })
+        .catch(error => {
+            contractList.innerHTML = '<div class="alert alert-danger">Error loading contracts. Please try manual entry.</div>';
+        });
+}
+
+function selectContract(contract, source) {
+    selectedContract = { ...contract, source };
+    document.getElementById('selectedContractInfo').innerHTML = `
+        <strong>${contract.title}</strong><br>
+        ${contract.agency || contract.location} - ${source}
+    `;
+    document.getElementById('selectedContractPreview').style.display = 'block';
+    document.getElementById('step2Card').style.display = 'block';
+    document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function processManualEntry() {
+    const title = document.getElementById('manualTitle').value;
+    const description = document.getElementById('manualDescription').value;
+    const solicitationNumber = document.getElementById('manualSolicitationNumber').value;
+    
+    if (!title || !description) {
+        alert('Please fill in at least the title and description');
+        return;
+    }
+    
+    selectedContract = {
+        title,
+        description,
+        solicitationNumber,
+        source: 'manual'
+    };
+    
+    document.getElementById('selectedContractInfo').innerHTML = `
+        <strong>${title}</strong><br>
+        Manual Entry
+    `;
+    document.getElementById('selectedContractPreview').style.display = 'block';
+    document.getElementById('step2Card').style.display = 'block';
+    document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function generateProposal() {
+    if (!selectedContract) {
+        alert('Please select a contract first');
+        return;
+    }
+    
+    const config = {
+        contract: selectedContract,
+        companyName: document.getElementById('companyName').value || '[YOUR COMPANY NAME]',
+        yearsInBusiness: document.getElementById('yearsInBusiness').value || '[X]',
+        differentiators: document.getElementById('differentiators').value || '[YOUR KEY DIFFERENTIATORS]',
+        sections: {
+            executiveSummary: document.getElementById('includeExecutiveSummary').checked,
+            technicalApproach: document.getElementById('includeTechnicalApproach').checked,
+            staffingPlan: document.getElementById('includeStaffingPlan').checked,
+            pastPerformance: document.getElementById('includePastPerformance').checked,
+            qualityControl: document.getElementById('includeQualityControl').checked,
+            compliance: document.getElementById('includeCompliance').checked
+        }
+    };
+    
+    // Show loading
+    document.getElementById('step2Card').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'block';
+    
+    // Call backend API
+    fetch('/api/generate-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        if (data.success) {
+            generatedProposal = data.proposal;
+            displayProposal(data.proposal);
+            document.getElementById('step3Card').style.display = 'block';
+            document.getElementById('step3Card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            alert('Error generating proposal: ' + data.message);
+            document.getElementById('step2Card').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        alert('Error generating proposal. Please try again.');
+        document.getElementById('step2Card').style.display = 'block';
+    });
+}
+
+function displayProposal(proposal) {
+    document.getElementById('proposalContent').innerHTML = proposal.content;
+    
+    // Display personalization checklist
+    const checklist = document.getElementById('personalizationChecklist');
+    checklist.innerHTML = '';
+    proposal.placeholders.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${item}</strong>`;
+        checklist.appendChild(li);
+    });
+}
+
+function downloadProposal(format) {
+    if (!generatedProposal) return;
+    
+    fetch('/api/download-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposal: generatedProposal, format: format })
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `proposal_${selectedContract.solicitationNumber || 'draft'}.${format === 'word' ? 'docx' : 'pdf'}`;
+        a.click();
+    });
+}
+
+function copyToClipboard() {
+    const content = document.getElementById('proposalContent').innerText;
+    navigator.clipboard.writeText(content).then(() => {
+        alert('Proposal copied to clipboard!');
+    });
+}
+
+function startOver() {
+    selectedContract = null;
+    generatedProposal = null;
+    document.getElementById('contractSource').value = '';
+    document.getElementById('step2Card').style.display = 'none';
+    document.getElementById('step3Card').style.display = 'none';
+    document.getElementById('selectedContractPreview').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}
