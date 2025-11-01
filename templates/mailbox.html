@@ -4,6 +4,15 @@
 
 {% block content %}
 <div class="container mt-5 pt-5">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('customer_dashboard') }}"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('customer_leads') }}"><i class="fas fa-user-tie me-1"></i>Customer Portal</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-envelope me-1"></i>Mailbox</li>
+        </ol>
+    </nav>
+    
     <div class="row">
         <!-- Mailbox Sidebar -->
         <div class="col-md-3">

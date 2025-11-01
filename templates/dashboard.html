@@ -98,6 +98,36 @@
         </div>
         
         <div class="col-lg-4">
+            {% if session.get('is_admin') %}
+            <!-- Admin Panel Card (Only for Admin) -->
+            <div class="card mb-4 border-danger shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Admin Control Panel</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Access all administrative features and tools</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin_enhanced') }}" class="btn btn-danger btn-lg">
+                            <i class="fas fa-shield-alt me-2"></i>Open Admin Panel
+                        </a>
+                        <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-list me-2"></i>View Customer Leads
+                        </a>
+                        <a href="{{ url_for('mailbox') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-envelope me-2"></i>Admin Mailbox
+                        </a>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Administrator Mode
+                        </small>
+                        <span class="badge bg-danger">Admin</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
             <!-- Account Actions -->
             <div class="card mb-4 border-primary shadow">
                 <div class="card-header bg-primary text-white">
@@ -125,12 +155,14 @@
                         <a href="{{ url_for('ai_assistant') }}" class="btn btn-warning">
                             <i class="fas fa-robot me-2"></i>AI Proposal Assistant
                         </a>
+                        {% if not session.get('is_admin') %}
                         <a href="{{ url_for('proposal_support') }}" class="btn btn-outline-primary">
                             <i class="fas fa-user-tie me-2"></i>Book Consultation
                         </a>
                         <a href="{{ url_for('payment') }}" class="btn btn-outline-primary">
                             <i class="fas fa-badge-check me-2"></i>Manage Subscription
                         </a>
+                        {% endif %}
                         <a href="{{ url_for('landing') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-clipboard-check me-2"></i>Retake Assessment
                         </a>

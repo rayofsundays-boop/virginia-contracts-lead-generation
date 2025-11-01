@@ -4,6 +4,14 @@
 
 {% block content %}
 <div class="container-fluid my-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('customer_dashboard') }}"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-user-tie me-1"></i>Customer Portal</li>
+        </ol>
+    </nav>
+    
     <div class="row">
         <!-- Left Sidebar -->
         <div class="col-lg-3 col-xl-2 mb-4">
@@ -69,6 +77,13 @@
                 </h6>
                 
                 <div class="nav flex-column">
+                    <a href="{{ url_for('mailbox') }}" class="nav-link">
+                        <i class="fas fa-envelope me-2"></i>Mailbox
+                        {% if unread_messages_count and unread_messages_count > 0 %}
+                        <span class="badge bg-danger float-end">{{ unread_messages_count }}</span>
+                        {% endif %}
+                    </a>
+                    
                     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#activityModal">
                         <i class="fas fa-history me-2"></i>Recent Activity
                     </a>

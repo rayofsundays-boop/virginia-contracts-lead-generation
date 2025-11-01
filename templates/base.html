@@ -376,37 +376,12 @@
                     {% endif %}
                     
                     {% if session.get('user_email') %}
-                    <!-- Show Customer Portal only when logged in -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('customer_leads') }}">
-                            <i class="fas fa-user-tie"></i> Customer Portal
-                        </a>
-                    </li>
                     <!-- Partnerships & Resources -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('partnerships') }}">
                             <i class="fas fa-handshake"></i> Partnerships
                         </a>
                     </li>
-                    <!-- Mailbox with unread badge -->
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url_for('mailbox') }}">
-                            <i class="fas fa-envelope"></i> Mailbox
-                            {% if unread_messages_count and unread_messages_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
-                                {{ unread_messages_count }}
-                            </span>
-                            {% endif %}
-                        </a>
-                    </li>
-                    <!-- Admin Panel Link (Only for Admins) -->
-                    {% if session.get('is_admin') %}
-                    <li class="nav-item">
-                        <a class="nav-link bg-danger text-white rounded px-3 mx-1" href="{{ url_for('admin_enhanced') }}" style="font-weight: 600;">
-                            <i class="fas fa-shield-alt"></i> Admin Panel
-                        </a>
-                    </li>
-                    {% endif %}
                     <!-- Visible Sign Out Button -->
                     <li class="nav-item">
                         <a class="nav-link btn btn-outline-light px-3 mx-1" href="{{ url_for('logout') }}" style="border-radius: 50px; font-weight: 600;">
@@ -443,13 +418,15 @@
                             </li>
                             <li><a class="dropdown-item" href="{{ url_for('user_profile') }}"><i class="fas fa-user me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('customer_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Customer Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}"><i class="fas fa-list me-2"></i>My Leads</a></li>
+                            {% if not session.get('is_admin') %}
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}"><i class="fas fa-list me-2"></i>My Leads</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('customer_reviews') }}"><i class="fas fa-star text-warning me-2"></i>Write a Review</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('subscription') }}"><i class="fas fa-crown me-2"></i>Subscription</a></li>
                             {% if session.get('subscription_status') == 'paid' %}
                             <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal"><i class="fas fa-times-circle me-2"></i>Cancel Subscription</a></li>
+                            {% endif %}
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
