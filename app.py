@@ -3194,12 +3194,13 @@ def customer_leads():
         # Check if user is admin - admins get unlimited access
         is_admin = session.get('is_admin', False)
         
-        # Check if user has credits
+        # Check if user has credits or subscription
         user_credits = session.get('credits_balance', 0)
+        subscription_status = session.get('subscription_status', 'free')
         
-        # If no credits and not admin, show payment prompt instead of leads
-        if user_credits == 0 and not is_admin:
-            return render_template('customer_leads.html', all_leads=[], show_payment_prompt=True)
+        # Allow access if user has credits, subscription, or is admin
+        # Free users can still browse leads but need credits to access contact info
+        show_payment_prompt = False
         
         # Get all available leads (government contracts, supply contracts, and commercial)
         government_leads = []
@@ -6801,16 +6802,15 @@ def calculate_estimated_value(data):
 def lead_marketplace():
     """Dashboard for subscribers to view and bid on leads"""
     try:
-        # Check if user has active subscription
+        # Check if user has active subscription or is admin
         user_email = session.get('user_email')
-        user = db.session.execute(
-            text('SELECT * FROM leads WHERE email = :email'),
-            {'email': user_email}
-        ).fetchone()
+        is_admin = session.get('is_admin', False)
+        subscription_status = session.get('subscription_status', 'free')
         
-        if not user or user[15] != 'paid':  # subscription_status column
-            flash('You need an active subscription to access the lead marketplace.', 'warning')
-            return redirect(url_for('register'))
+        # Allow admins and paid subscribers, or show limited view for free users
+        show_upgrade_prompt = False
+        if not is_admin and subscription_status != 'paid':
+            show_upgrade_prompt = True
         
         # Get open commercial lead requests
         requests = db.session.execute(text('''

@@ -103,29 +103,30 @@
         
         /* Professional Navigation Styling */
         .navbar {
-            padding: 0.75rem 0;
+            padding: 0.5rem 0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .navbar-brand {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
             letter-spacing: -0.5px;
             padding: 0.5rem 0;
         }
         
         .navbar-nav {
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: 500;
         }
         
         .nav-link {
-            padding: 0.5rem 1rem !important;
+            padding: 0.4rem 0.6rem !important;
             transition: all 0.3s ease;
             position: relative;
             font-weight: 500;
             letter-spacing: 0.2px;
             white-space: nowrap;
+            font-size: 11pt;
         }
         
         .nav-link:hover {
@@ -395,11 +396,17 @@
                     <!-- Admin Panel Link (Only for Admins) -->
                     {% if session.get('is_admin') %}
                     <li class="nav-item">
-                        <a class="nav-link bg-danger text-white rounded px-3" href="{{ url_for('admin_enhanced') }}" style="font-weight: 600;">
+                        <a class="nav-link bg-danger text-white rounded px-3 mx-1" href="{{ url_for('admin_enhanced') }}" style="font-weight: 600;">
                             <i class="fas fa-shield-alt"></i> Admin Panel
                         </a>
                     </li>
                     {% endif %}
+                    <!-- Visible Sign Out Button -->
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light px-3 mx-1" href="{{ url_for('logout') }}" style="border-radius: 50px; font-weight: 600;">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </a>
+                    </li>
                     <!-- User Profile Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userProfileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="gap: 8px;">
