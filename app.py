@@ -2841,118 +2841,9 @@ def industry_days():
 
 @app.route('/supply-contracts')
 @app.route('/supplies')
-def supply_contracts():
-    """Quick win supply/product contracts for bulk cleaning suppliers"""
-    try:
-        # Check if table exists (compatible with both SQLite and PostgreSQL)
-        try:
-            db.session.execute(text("SELECT 1 FROM supply_contracts LIMIT 1")).fetchone()
-        except Exception:
-            flash('Supply contracts feature is being set up. Check back soon!', 'info')
-            return redirect(url_for('contracts'))
-        
-        # Filters
-        location_filter = request.args.get('location', '')
-        category_filter = request.args.get('category', '')
-        quick_wins_only = request.args.get('quick_wins', '') == 'true'
-        small_biz_only = request.args.get('small_biz', '') == 'true'
-        
-        page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = 12
-        offset = (page - 1) * per_page
-        
-        # Build where conditions
-        where_conditions = ["status = 'open'", "bid_deadline >= CURRENT_DATE"]
-        params = {}
-        
-        if location_filter:
-            where_conditions.append("location ILIKE :location")
-            params['location'] = f'%{location_filter}%'
-        
-        if category_filter:
-            where_conditions.append("product_category = :category")
-            params['category'] = category_filter
-        
-        if quick_wins_only:
-            where_conditions.append("is_quick_win = TRUE")
-        
-        if small_biz_only:
-            where_conditions.append("is_small_business_set_aside = TRUE")
-        
-        where_clause = " AND ".join(where_conditions)
-        
-        # Get total count
-        total = db.session.execute(text(f'''
-            SELECT COUNT(*) FROM supply_contracts WHERE {where_clause}
-        '''), params).scalar() or 0
-        
-        # Get contracts
-        params['limit'] = per_page
-        params['offset'] = offset
-        
-        supply_contracts_list = db.session.execute(text(f'''
-            SELECT 
-                title, agency, location, product_category, estimated_value,
-                bid_deadline, contract_term, website_url, is_quick_win,
-                is_small_business_set_aside, minimum_order, delivery_frequency
-            FROM supply_contracts 
-            WHERE {where_clause}
-            ORDER BY 
-                CASE WHEN is_quick_win THEN 0 ELSE 1 END,
-                bid_deadline ASC
-            LIMIT :limit OFFSET :offset
-        '''), params).fetchall()
-        
-        # Get filter options
-        locations = db.session.execute(text('''
-            SELECT DISTINCT location FROM supply_contracts 
-            WHERE status = 'open' 
-            ORDER BY location
-        ''')).fetchall()
-        
-        categories = db.session.execute(text('''
-            SELECT DISTINCT product_category FROM supply_contracts 
-            WHERE status = 'open'
-            ORDER BY product_category
-        ''')).fetchall()
-        
-        # Pagination
-        total_pages = max(math.ceil(total / per_page), 1)
-        
-        # Check subscription status
-        is_admin = session.get('is_admin', False)
-        is_paid_subscriber = False
-        
-        if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
-            
-            if result and result[0] == 'paid':
-                is_paid_subscriber = True
-        
-        if is_admin:
-            is_paid_subscriber = True
-        
-        return render_template('supply_contracts.html',
-                             contracts=supply_contracts_list,
-                             locations=[loc[0] for loc in locations],
-                             categories=[cat[0] for cat in categories],
-                             current_filters={
-                                 'location': location_filter,
-                                 'category': category_filter,
-                                 'quick_wins': quick_wins_only,
-                                 'small_biz': small_biz_only
-                             },
-                             page=page,
-                             total_pages=total_pages,
-                             total_count=total,
-                             is_paid_subscriber=is_paid_subscriber,
-                             is_admin=is_admin)
-    except Exception as e:
-        print(f"Supply contracts error: {e}")
-        flash('Supply contracts feature is being set up. Check back soon!', 'info')
-        return redirect(url_for('contracts'))
+# DEPRECATED: This route has been merged into quick_wins for better UX
+# The /supply-contracts URL now redirects to quick_wins via the @app.route('/supply-contracts') decorator on quick_wins()
+# Removed duplicate code to simplify maintenance and improve user experience
 
 @app.route('/federal-contracts')
 def federal_contracts():
@@ -6038,13 +5929,21 @@ def generate_proposal_api():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/quick-wins')
+@app.route('/supply-contracts')  # Added redirect route - both URLs work
 @login_required
 def quick_wins():
-    """Show urgent leads and quick win supply contracts requiring immediate response"""
+    """Show urgent leads and quick win supply contracts requiring immediate response
+    
+    This consolidated page combines:
+    - Quick win supply/product contracts
+    - Urgent commercial cleaning requests
+    - Emergency leads requiring immediate response
+    """
     try:
         urgency_filter = request.args.get('urgency', '')
         lead_type_filter = request.args.get('lead_type', '')
         city_filter = request.args.get('city', '')
+        category_filter = request.args.get('category', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
         per_page = 12
         
@@ -6062,20 +5961,31 @@ def quick_wins():
         if is_admin:
             is_paid = True
         
-        # Get quick win supply contracts
-        quick_win_supplies = []
+        # Get ALL supply contracts (not just quick wins) with filters
+        supply_contracts_data = []
         try:
-            quick_win_supplies = db.session.execute(text('''
+            where_conditions = ["status = 'open'"]
+            params = {}
+            
+            if category_filter:
+                where_conditions.append("product_category = :category")
+                params['category'] = category_filter
+            
+            where_clause = " AND ".join(where_conditions)
+            
+            supply_contracts_data = db.session.execute(text(f'''
                 SELECT 
                     id, title, agency, location, product_category, estimated_value,
                     bid_deadline, description, website_url, is_small_business_set_aside,
-                    contact_name, contact_email, contact_phone, 'supply' as lead_source
+                    contact_name, contact_email, contact_phone, is_quick_win
                 FROM supply_contracts 
-                WHERE is_quick_win = TRUE AND status = 'open'
-                ORDER BY bid_deadline ASC
-            ''')).fetchall()
+                WHERE {where_clause}
+                ORDER BY 
+                    CASE WHEN is_quick_win THEN 0 ELSE 1 END,
+                    bid_deadline ASC
+            '''), params).fetchall()
         except Exception as e:
-            print(f"Supply contracts quick wins error: {e}")
+            print(f"Supply contracts error: {e}")
         
         # Get urgent commercial requests
         urgent_commercial = []
@@ -6083,8 +5993,7 @@ def quick_wins():
             urgent_commercial = db.session.execute(text('''
                 SELECT 
                     id, business_name, city, business_type, services_needed,
-                    budget_range, urgency, created_at, contact_person, email, phone,
-                    'commercial' as lead_source
+                    budget_range, urgency, created_at, contact_person, email, phone
                 FROM commercial_lead_requests 
                 WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
                 ORDER BY 
@@ -6098,11 +6007,15 @@ def quick_wins():
         except Exception as e:
             print(f"Commercial requests error: {e}")
         
-        # Combine all quick wins
+        # Combine all leads
         all_quick_wins = []
         
         # Add supply contracts
-        for supply in quick_win_supplies:
+        for supply in supply_contracts_data:
+            # Determine urgency level based on quick_win status and deadline
+            is_quick_win = supply[13] if len(supply) > 13 else False
+            urgency_level = 'quick-win' if is_quick_win else 'normal'
+            
             all_quick_wins.append({
                 'id': f"supply_{supply[0]}",
                 'title': supply[1],
@@ -6117,8 +6030,8 @@ def quick_wins():
                 'contact_name': supply[10] or 'Procurement Office',
                 'email': supply[11] or 'N/A',
                 'phone': supply[12] or 'N/A',
-                'lead_type': 'Supply Contract - Quick Win',
-                'urgency_level': 'quick-win',
+                'lead_type': 'Supply Contract' + (' - Quick Win' if is_quick_win else ''),
+                'urgency_level': urgency_level,
                 'source': 'supply'
             })
         

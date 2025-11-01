@@ -103,30 +103,30 @@
         
         /* Professional Navigation Styling */
         .navbar {
-            padding: 0.5rem 0;
+            padding: 0.4rem 0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .navbar-brand {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            padding: 0.5rem 0;
+            padding: 0.4rem 0;
         }
         
         .navbar-nav {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: 500;
         }
         
         .nav-link {
-            padding: 0.4rem 0.6rem !important;
+            padding: 0.35rem 0.5rem !important;
             transition: all 0.3s ease;
             position: relative;
             font-weight: 500;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             white-space: nowrap;
-            font-size: 11pt;
+            font-size: 10.5pt;
         }
         
         .nav-link:hover {
@@ -136,12 +136,12 @@
         }
         
         .nav-link i {
-            font-size: 0.9rem;
-            margin-right: 0.35rem;
+            font-size: 0.85rem;
+            margin-right: 0.3rem;
         }
         
         .dropdown-menu {
-            font-size: 13pt;
+            font-size: 12pt;
             border: none;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             border-radius: 12px;
@@ -150,19 +150,20 @@
         }
         
         .dropdown-item {
-            padding: 0.6rem 1.25rem;
+            padding: 0.55rem 1.15rem;
             transition: all 0.3s ease;
             font-weight: 500;
+            font-size: 11pt;
         }
         
         .dropdown-item:hover {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding-left: 1.75rem;
+            padding-left: 1.5rem;
         }
         
         .dropdown-item i {
-            width: 20px;
+            width: 18px;
             text-align: center;
         }
         
@@ -170,7 +171,8 @@
             font-weight: 600;
             border-width: 2px;
             transition: all 0.3s ease;
-            font-size: 13pt;
+            font-size: 11pt;
+            padding: 0.35rem 0.75rem;
         }
         
         .btn-outline-light:hover {
@@ -180,8 +182,8 @@
         }
         
         .badge {
-            font-size: 0.65rem;
-            padding: 0.3rem 0.55rem;
+            font-size: 0.6rem;
+            padding: 0.25rem 0.45rem;
             font-weight: 600;
         }
         
@@ -197,7 +199,7 @@
         /* Mobile responsiveness */
         @media (max-width: 1400px) {
             .nav-link {
-                padding: 0.5rem 0.75rem !important;
+                padding: 0.4rem 0.6rem !important;
                 font-size: 13pt;
             }
         }
@@ -305,7 +307,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle btn btn-warning btn-sm mx-2 text-dark fw-bold" href="#" id="requestDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 13pt;">
+                        <a class="nav-link dropdown-toggle btn btn-warning btn-sm mx-1 text-dark fw-bold" href="#" id="requestDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 10.5pt; padding: 0.35rem 0.75rem;">
                             <i class="fas fa-star"></i> Need Cleaning?
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="requestDropdown">
@@ -327,10 +329,10 @@
                             </li>
                         </ul>
                     </li>
-                    <!-- Quick Wins - Prominent Link for All Users -->
+                    <!-- Quick Wins - Prominent Link (includes Supply Contracts & Urgent Leads) -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('quick_wins') }}" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 50px; padding: 8px 20px; font-weight: bold;">
-                            <i class="fas fa-bolt me-1"></i>Quick Wins <span class="badge bg-white text-danger">HOT</span>
+                        <a class="nav-link" href="{{ url_for('quick_wins') }}" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 50px; padding: 6px 16px; font-weight: bold; font-size: 10pt;">
+                            <i class="fas fa-bolt me-1"></i>Quick Wins <span class="badge bg-white text-danger" style="font-size: 0.55rem; padding: 0.2rem 0.35rem;">HOT</span>
                         </a>
                     </li>
                     
@@ -353,11 +355,6 @@
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('industry_days') }}">
                                     <i class="fas fa-calendar-alt me-2"></i>Industry Days & Events
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('supply_contracts') }}">
-                                    <i class="fas fa-boxes me-2"></i>Supply Contracts (Quick Wins)
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
@@ -385,7 +382,7 @@
                     {% if session.get('user_email') %}
                     <!-- Visible Sign Out Button -->
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light px-3 mx-1" href="{{ url_for('logout') }}" style="border-radius: 50px; font-weight: 600;">
+                        <a class="nav-link btn btn-outline-light px-2 mx-1" href="{{ url_for('logout') }}" style="border-radius: 50px; font-weight: 600; font-size: 10pt; padding: 0.3rem 0.7rem;">
                             <i class="fas fa-sign-out-alt"></i> Sign Out
                         </a>
                     </li>
@@ -436,7 +433,7 @@
                     {% else %}
                     <!-- Show Register/Sign In button for non-authenticated users -->
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light px-3 mx-2" href="{{ url_for('auth') }}" style="border-radius: 50px;">
+                        <a class="nav-link btn btn-outline-light px-2 mx-1" href="{{ url_for('auth') }}" style="border-radius: 50px; font-size: 10pt; padding: 0.3rem 0.7rem;">
                             <i class="fas fa-user-plus"></i> Register / Sign In
                         </a>
                     </li>
