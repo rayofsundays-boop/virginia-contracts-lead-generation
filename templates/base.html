@@ -100,26 +100,145 @@
         .external-link-btn {
             font-weight: 600;
         }
+        
+        /* Professional Navigation Styling */
+        .navbar {
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .navbar-brand {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            padding: 0.5rem 0;
+        }
+        
+        .navbar-nav {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.25rem !important;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .nav-link:hover {
+            transform: translateY(-2px);
+            color: rgba(255,255,255,0.9) !important;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .nav-link i {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+        
+        .dropdown-menu {
+            font-size: 1rem;
+            border: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            padding: 0.75rem 0;
+            margin-top: 0.5rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding-left: 2rem;
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .btn-outline-light {
+            font-weight: 600;
+            border-width: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: white;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+        }
+        
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.35rem 0.65rem;
+            font-weight: 600;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 991px) {
+            .navbar-nav {
+                padding: 1rem 0;
+            }
+            .nav-link {
+                padding: 0.75rem 1rem !important;
+            }
+            .nav-link::after {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">VA Contract Hub</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-award me-2"></i>VA Contract Hub
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contracts') }}">Local Government</a>
+                        <a class="nav-link" href="{{ url_for('contracts') }}">
+                            <i class="fas fa-landmark"></i> Local Government
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('federal_contracts') }}">Federal</a>
+                        <a class="nav-link" href="{{ url_for('federal_contracts') }}">
+                            <i class="fas fa-flag-usa"></i> Federal
+                        </a>
                     </li>
                     <!-- <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('commercial_contracts') }}">Commercial</a>
@@ -214,13 +333,19 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('landing') }}">Assessment</a>
+                        <a class="nav-link" href="{{ url_for('landing') }}">
+                            <i class="fas fa-clipboard-check"></i> Assessment
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                        <a class="nav-link" href="{{ url_for('register') }}">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('signin') }}">Sign In</a>
+                        <a class="nav-link" href="{{ url_for('signin') }}">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </a>
                     </li>
                     
                 </ul>
