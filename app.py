@@ -3807,11 +3807,6 @@ def pricing_calculator():
     
     return render_template('pricing_calculator.html')
 
-@app.route('/proposal-support')
-def proposal_support():
-    """Proposal support services with consultation booking"""
-    return render_template('proposal_support.html')
-
 @app.route('/ai-assistant')
 @login_required
 def ai_assistant():
