@@ -104,6 +104,51 @@
     </div>
 </section>
 
+<!-- Client Request CTA Section -->
+<section class="py-5 bg-gradient" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-white">
+                <h2 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-star-of-life me-2"></i>Need Professional Cleaning Services?
+                </h2>
+                <p class="lead mb-4">
+                    Connect with verified cleaning contractors in your area! Submit your request and get responses from qualified professionals.
+                </p>
+                <ul class="list-unstyled fs-5">
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Free to submit</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Multiple contractor quotes</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Quick response time</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Licensed & insured professionals</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-lg border-0" style="transform: translateY(-10px);">
+                    <div class="card-body p-4 text-center">
+                        <h4 class="fw-bold mb-3">Get Started Now</h4>
+                        <p class="text-muted mb-4">Choose your service type:</p>
+                        <div class="d-grid gap-3">
+                            <a href="{{ url_for('submit_residential_cleaning_request') }}" 
+                               class="btn btn-lg btn-primary">
+                                <i class="fas fa-home me-2"></i>Homeowner Request
+                                <small class="d-block mt-1" style="font-size: 0.8rem;">Residential Cleaning Services</small>
+                            </a>
+                            <a href="{{ url_for('submit_cleaning_request') }}" 
+                               class="btn btn-lg btn-success">
+                                <i class="fas fa-building me-2"></i>Business Request
+                                <small class="d-block mt-1" style="font-size: 0.8rem;">Commercial Cleaning Services</small>
+                            </a>
+                        </div>
+                        <p class="text-muted mt-3 mb-0" style="font-size: 0.85rem;">
+                            <i class="fas fa-shield-alt me-1"></i>Your information is secure and confidential
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Category Cards with 3D Effect -->
 <section class="container py-5 mt-4">
     <div class="text-center mb-5">

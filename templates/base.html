@@ -299,20 +299,26 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle btn btn-outline-light btn-sm mx-2" href="#" id="requestDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-plus-circle"></i> Request Cleaning
+                        <a class="nav-link dropdown-toggle btn btn-warning btn-sm mx-2 text-dark fw-bold" href="#" id="requestDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 13pt;">
+                            <i class="fas fa-star"></i> Need Cleaning?
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="requestDropdown">
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('submit_residential_cleaning_request') }}">
-                                    <i class="fas fa-home me-2"></i>Residential Cleaning
+                                    <i class="fas fa-home me-2"></i>Homeowner - Find Cleaner
                                 </a>
                             </li>
-                            <!-- <li>
+                            <li>
                                 <a class="dropdown-item" href="{{ url_for('submit_cleaning_request') }}">
-                                    <i class="fas fa-building me-2"></i>Commercial Cleaning
+                                    <i class="fas fa-building me-2"></i>Business - Find Cleaner
                                 </a>
-                            </li> -->
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-success fw-bold" href="{{ url_for('customer_leads') }}">
+                                    <i class="fas fa-briefcase me-2"></i>Contractors - Find Clients
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {% if session.get('user_email') %}
