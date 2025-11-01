@@ -879,6 +879,81 @@ Virginia Contracts Team
         print(f"Failed to send password reset email: {e}")
         return False
 
+def send_all_existing_leads_email():
+    """Send all existing customer/lead data to info@eliteecocareservices.com"""
+    try:
+        # Get all leads from database
+        leads = db.session.execute(text('''
+            SELECT company_name, contact_name, email, phone, state, 
+                   experience_years, certifications, registration_date, 
+                   subscription_status, credits_balance
+            FROM leads 
+            ORDER BY registration_date DESC
+        ''')).fetchall()
+        
+        if not leads:
+            return {'success': False, 'message': 'No leads found in database'}
+        
+        # Build email body
+        subject = f"📊 Complete Lead Database Export - {len(leads)} Total Registrations"
+        
+        body = f"""
+COMPLETE LEAD DATABASE EXPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Total Registrations: {len(leads)}
+
+{'='*80}
+ALL REGISTERED LEADS:
+{'='*80}
+
+"""
+        
+        for idx, lead in enumerate(leads, 1):
+            company_name, contact_name, email, phone, state, experience, certs, reg_date, sub_status, credits = lead
+            body += f"""
+LEAD #{idx}
+-------------------------------------------
+Company: {company_name}
+Contact: {contact_name}
+Email: {email}
+Phone: {phone or 'Not provided'}
+State: {state}
+Experience: {experience} years
+Certifications: {certs or 'None listed'}
+Registration Date: {reg_date}
+Subscription Status: {sub_status}
+Credits Balance: {credits}
+
+"""
+        
+        body += f"""
+{'='*80}
+SUMMARY:
+{'='*80}
+Total Leads: {len(leads)}
+Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+This is a complete export of all customer/lead data from the Virginia Government Contracts Lead Generation System.
+
+---
+Virginia Government Contracts Lead Generation System
+        """
+        
+        msg = Message(
+            subject=subject,
+            recipients=['info@eliteecocareservices.com'],
+            body=body
+        )
+        
+        mail.send(msg)
+        print(f"✅ Successfully sent {len(leads)} leads to info@eliteecocareservices.com")
+        return {'success': True, 'count': len(leads)}
+        
+    except Exception as e:
+        print(f"❌ Failed to send existing leads email: {e}")
+        return {'success': False, 'error': str(e)}
+
 # Database setup
 def get_db_connection():
     db_path = os.environ.get('DATABASE_URL', 'leads.db')
@@ -2950,6 +3025,67 @@ def send_proposal_help_notification(request_data, request_id):
     except Exception as e:
         print(f"Error sending proposal help notification: {e}")
         return False
+
+@app.route('/send-existing-leads', methods=['GET'])
+def send_existing_leads():
+    """Send all existing customer data to info@eliteecocareservices.com"""
+    try:
+        result = send_all_existing_leads_email()
+        if result['success']:
+            return f"""
+            <html>
+            <head>
+                <title>Lead Data Sent</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 40px; text-align: center; }}
+                    .success {{ color: #28a745; font-size: 24px; margin: 20px 0; }}
+                    .info {{ color: #666; font-size: 16px; }}
+                    .back {{ display: inline-block; margin-top: 30px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; }}
+                </style>
+            </head>
+            <body>
+                <h1>✅ Success!</h1>
+                <p class="success">Sent {result['count']} leads to info@eliteecocareservices.com</p>
+                <p class="info">Check your email inbox for the complete database export.</p>
+                <a href="/" class="back">← Back to Home</a>
+            </body>
+            </html>
+            """
+        else:
+            return f"""
+            <html>
+            <head>
+                <title>Error</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 40px; text-align: center; }}
+                    .error {{ color: #dc3545; font-size: 24px; margin: 20px 0; }}
+                    .back {{ display: inline-block; margin-top: 30px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; }}
+                </style>
+            </head>
+            <body>
+                <h1>❌ Error</h1>
+                <p class="error">{result.get('message', result.get('error', 'Unknown error'))}</p>
+                <a href="/" class="back">← Back to Home</a>
+            </body>
+            </html>
+            """
+    except Exception as e:
+        return f"""
+        <html>
+        <head>
+            <title>Error</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; padding: 40px; text-align: center; }}
+                .error {{ color: #dc3545; }}
+            </style>
+        </head>
+        <body>
+            <h1>❌ Error</h1>
+            <p class="error">{str(e)}</p>
+            <a href="/">← Back to Home</a>
+        </body>
+        </html>
+        """
 
 @app.route('/admin')
 def admin_dashboard():
