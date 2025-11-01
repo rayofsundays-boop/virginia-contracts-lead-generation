@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Panel - Enhanced{% endblock %}
+
+{% block content %}
+<style>
+.admin-sidebar {
+    height: calc(100vh - 100px);
+    position: sticky;
+    top: 80px;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 15px 20px;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    color: white;
+    background: rgba(255,255,255,0.1);
+    border-left-color: #3498db;
+}
+
+.admin-sidebar .nav-link i {
+    width: 25px;
+    margin-right: 10px;
+}
+
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.badge-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-2 p-0">
+            <div class="admin-sidebar">
+                <div class="p-4 text-center border-bottom" style="background: rgba(0,0,0,0.2);">
+                    <i class="fas fa-shield-alt fa-3x text-white mb-2"></i>
+                    <h5 class="text-white mb-1">Admin Panel</h5>
+                    <small class="text-white-50">{{ session.get('user_email') }}</small>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if section == 'dashboard' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>Dashboard
+                    </a>
+                    <a class="nav-link {% if section == 'users' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='users') }}">
+                        <i class="fas fa-users"></i>User Management
+                    </a>
+                    <a class="nav-link {% if section == 'messages' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='messages') }}">
+                        <i class="fas fa-envelope"></i>Messages
+                        {% if unread_admin_messages > 0 %}
+                        <span class="badge bg-danger">{{ unread_admin_messages }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link {% if section == 'proposals' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='proposals') }}">
+                        <i class="fas fa-file-alt"></i>Proposal Reviews
+                        {% if pending_proposals > 0 %}
+                        <span class="badge bg-warning">{{ pending_proposals }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link {% if section == 'analytics' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='analytics') }}">
+                        <i class="fas fa-chart-line"></i>Analytics & Metrics
+                    </a>
+                    <a class="nav-link {% if section == 'revenue' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='revenue') }}">
+                        <i class="fas fa-dollar-sign"></i>Revenue & Sales
+                    </a>
+                    <a class="nav-link {% if section == 'surveys' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='surveys') }}">
+                        <i class="fas fa-poll"></i>User Surveys
+                    </a>
+                    <a class="nav-link {% if section == 'logs' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='logs') }}">
+                        <i class="fas fa-history"></i>Activity Logs
+                    </a>
+                    <a class="nav-link {% if section == 'settings' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='settings') }}">
+                        <i class="fas fa-cog"></i>Settings
+                    </a>
+                    <div class="dropdown-divider bg-white-50"></div>
+                    <a class="nav-link" href="{{ url_for('mailbox') }}">
+                        <i class="fas fa-inbox"></i>My Mailbox
+                    </a>
+                    <a class="nav-link" href="{{ url_for('customer_leads') }}">
+                        <i class="fas fa-home"></i>Main Site
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+            {% if section == 'dashboard' %}
+            {% include 'admin_sections/dashboard.html' %}
+            
+            {% elif section == 'users' %}
+            {% include 'admin_sections/users.html' %}
+            
+            {% elif section == 'messages' %}
+            {% include 'admin_sections/messages.html' %}
+            
+            {% elif section == 'proposals' %}
+            {% include 'admin_sections/proposals.html' %}
+            
+            {% elif section == 'analytics' %}
+            {% include 'admin_sections/analytics.html' %}
+            
+            {% elif section == 'revenue' %}
+            {% include 'admin_sections/revenue.html' %}
+            
+            {% elif section == 'surveys' %}
+            {% include 'admin_sections/surveys.html' %}
+            
+            {% elif section == 'logs' %}
+            {% include 'admin_sections/logs.html' %}
+            
+            {% elif section == 'settings' %}
+            {% include 'admin_sections/settings.html' %}
+            
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh stats every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

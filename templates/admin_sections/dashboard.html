@@ -1,0 +1,206 @@
+<!-- Dashboard Section -->
+<div class="dashboard-header mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+    <p class="text-muted">Overview of system metrics and activity</p>
+</div>
+
+<!-- Quick Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h3 class="mb-0">{{ stats.total_users }}</h3>
+                <p class="text-muted mb-0">Total Users</p>
+                <small class="text-success">
+                    <i class="fas fa-arrow-up"></i> {{ stats.new_users_30d }} this month
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-crown fa-3x text-warning mb-3"></i>
+                <h3 class="mb-0">{{ stats.paid_subscribers }}</h3>
+                <p class="text-muted mb-0">Paid Subscribers</p>
+                <small class="text-muted">
+                    {{ stats.free_users }} free users
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-dollar-sign fa-3x text-success mb-3"></i>
+                <h3 class="mb-0">${{ "{:,.2f}".format(stats.revenue_30d or 0) }}</h3>
+                <p class="text-muted mb-0">Revenue (30 days)</p>
+                <small class="text-muted">
+                    ${{ "{:,.2f}".format((stats.revenue_30d or 0) * 12) }} projected annual
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-eye fa-3x text-info mb-3"></i>
+                <h3 class="mb-0">{{ stats.page_views_24h }}</h3>
+                <p class="text-muted mb-0">Page Views (24h)</p>
+                <small class="text-muted">
+                    {{ stats.active_users_24h }} active users
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>User Growth (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="userGrowthChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Subscription Split</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="subscriptionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Registrations</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.company_name or 'N/A' }}</td>
+                                <td>
+                                    {% if user.subscription_status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Free</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">No recent registrations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Pending Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_enhanced', section='proposals') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-alt me-2 text-primary"></i>Proposal Reviews</span>
+                        <span class="badge bg-warning">{{ pending_proposals }}</span>
+                    </a>
+                    <a href="{{ url_for('admin_enhanced', section='messages') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-envelope me-2 text-info"></i>Unread Messages</span>
+                        <span class="badge bg-info">{{ unread_admin_messages }}</span>
+                    </a>
+                    <a href="{{ url_for('admin_enhanced', section='users') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-clock me-2 text-success"></i>New Users (7d)</span>
+                        <span class="badge bg-success">{{ stats.new_users_7d }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// User Growth Chart
+const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+new Chart(userGrowthCtx, {
+    type: 'line',
+    data: {
+        labels: {{ growth_labels|tojson }},
+        datasets: [{
+            label: 'New Users',
+            data: {{ growth_data|tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Subscription Pie Chart
+const subscriptionCtx = document.getElementById('subscriptionChart').getContext('2d');
+new Chart(subscriptionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Paid', 'Free'],
+        datasets: [{
+            data: [{{ stats.paid_subscribers }}, {{ stats.free_users }}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(108, 117, 125, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true
+    }
+});
+</script>

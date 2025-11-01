@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Mailbox - Internal Messages{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row">
+        <!-- Mailbox Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#composeModal">
+                        <i class="fas fa-edit me-2"></i>Compose
+                    </button>
+                    
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('mailbox', folder='inbox') }}" class="list-group-item list-group-item-action {% if folder == 'inbox' %}active{% endif %}">
+                            <i class="fas fa-inbox me-2"></i>Inbox
+                            {% if unread_count > 0 %}
+                            <span class="badge bg-danger float-end">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('mailbox', folder='sent') }}" class="list-group-item list-group-item-action {% if folder == 'sent' %}active{% endif %}">
+                            <i class="fas fa-paper-plane me-2"></i>Sent
+                        </a>
+                        {% if session.get('is_admin') %}
+                        <a href="{{ url_for('mailbox', folder='admin') }}" class="list-group-item list-group-item-action {% if folder == 'admin' %}active{% endif %}">
+                            <i class="fas fa-shield-alt me-2"></i>Admin Broadcasts
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mailbox Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>
+                        {% if folder == 'inbox' %}Inbox{% elif folder == 'sent' %}Sent Messages{% elif folder == 'admin' %}Admin Broadcasts{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%"></th>
+                                    <th style="width: 25%">{% if folder == 'sent' %}To{% else %}From{% endif %}</th>
+                                    <th style="width: 45%">Subject</th>
+                                    <th style="width: 25%">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for msg in messages %}
+                                <tr onclick="window.location='{{ url_for('view_message', message_id=msg.id) }}';" style="cursor: pointer;" class="{% if not msg.is_read and folder == 'inbox' %}table-primary fw-bold{% endif %}">
+                                    <td>
+                                        {% if msg.is_admin_message %}
+                                        <i class="fas fa-shield-alt text-danger" title="Admin Message"></i>
+                                        {% elif not msg.is_read and folder == 'inbox' %}
+                                        <i class="fas fa-circle text-primary" title="Unread"></i>
+                                        {% else %}
+                                        <i class="fas fa-envelope-open text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if folder == 'sent' %}
+                                            {{ msg.recipient_email }}
+                                        {% else %}
+                                            {{ msg.sender_email }}
+                                            {% if msg.is_admin_message %}
+                                            <span class="badge bg-danger ms-1">Admin</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ msg.subject|truncate(50) }}</td>
+                                    <td class="text-muted small">{{ msg.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if total_pages > 1 %}
+                    <nav aria-label="Message pagination">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('mailbox', folder=folder, page=page-1) }}">Previous</a>
+                            </li>
+                            {% for p in range(1, total_pages + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('mailbox', folder=folder, page=p) }}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('mailbox', folder=folder, page=page+1) }}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">No messages in this folder</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Compose Message Modal -->
+<div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="composeModalLabel">
+                    <i class="fas fa-edit me-2"></i>Compose Message
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('send_message') }}">
+                <div class="modal-body">
+                    {% if session.get('is_admin') %}
+                    <div class="mb-3">
+                        <label class="form-label">Message Type</label>
+                        <select class="form-select" name="message_type" id="messageType">
+                            <option value="individual">Individual User</option>
+                            <option value="broadcast">Broadcast to All Users</option>
+                            <option value="paid_only">Paid Subscribers Only</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3" id="recipientField">
+                        <label for="recipient" class="form-label">To <span class="text-danger">*</span></label>
+                        {% if session.get('is_admin') %}
+                        <select class="form-select" name="recipient_id" id="recipient">
+                            <option value="">Select a user...</option>
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}">{{ user.email }} - {{ user.company_name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" class="form-control" value="Support Team (Admin)" readonly>
+                        <input type="hidden" name="recipient_id" value="admin">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="subject" id="subject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="body" class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="body" id="body" rows="8" required></textarea>
+                    </div>
+                    
+                    {% if session.get('is_admin') %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Admin Tip:</strong> Messages sent by admins will be marked with an admin badge.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+{% if session.get('is_admin') %}
+// Show/hide recipient field based on message type
+document.getElementById('messageType').addEventListener('change', function() {
+    const recipientField = document.getElementById('recipientField');
+    if (this.value === 'individual') {
+        recipientField.style.display = 'block';
+        document.getElementById('recipient').required = true;
+    } else {
+        recipientField.style.display = 'none';
+        document.getElementById('recipient').required = false;
+    }
+});
+{% endif %}
+</script>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(0,123,255,0.1);
+}
+
+.fw-bold {
+    font-weight: 600 !important;
+}
+</style>
+{% endblock %}

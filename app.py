@@ -15,6 +15,8 @@ from functools import wraps
 from lead_generator import LeadGenerator
 import paypalrestsdk
 import math
+import string
+import random
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -91,6 +93,30 @@ def _acquire_background_lock():
     except Exception as e:
         # If file exists, another worker already started background jobs
         return False
+
+# Context processor for global template variables
+@app.context_processor
+def inject_unread_messages():
+    """Inject unread message count into all templates"""
+    if 'user_id' in session:
+        try:
+            unread_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM messages 
+                WHERE recipient_id = :user_id AND is_read = FALSE
+            '''), {'user_id': session['user_id']}).scalar() or 0
+            return dict(unread_messages_count=unread_count)
+        except:
+            return dict(unread_messages_count=0)
+    return dict(unread_messages_count=0)
+
+# Helper function for generating temporary passwords
+def generate_temp_password(length=12):
+    """Generate a random temporary password"""
+    characters = string.ascii_letters + string.digits + "!@#$%"
+    return ''.join(random.choice(characters) for i in range(length))
+
+# Add to Jinja environment
+app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
 
 # Custom Jinja filters
 @app.template_filter('comma')
@@ -3950,6 +3976,208 @@ def admin_dashboard():
         flash('Error loading admin dashboard', 'error')
         return redirect(url_for('index'))
 
+@app.route('/admin-enhanced')
+@login_required
+def admin_enhanced():
+    """Enhanced admin panel with left sidebar"""
+    if not session.get('is_admin'):
+        flash('Admin access required', 'error')
+        return redirect(url_for('index'))
+    
+    section = request.args.get('section', 'dashboard')
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    
+    # Get common stats
+    stats_result = db.session.execute(text('''
+        SELECT * FROM admin_dashboard_stats
+    ''')).fetchone()
+    
+    stats = {
+        'paid_subscribers': stats_result[0] if stats_result else 0,
+        'free_users': stats_result[1] if stats_result else 0,
+        'new_users_30d': stats_result[2] if stats_result else 0,
+        'revenue_30d': stats_result[3] if stats_result else 0,
+        'page_views_24h': stats_result[4] if stats_result else 0,
+        'active_users_24h': stats_result[5] if stats_result else 0,
+        'total_users': (stats_result[0] if stats_result else 0) + (stats_result[1] if stats_result else 0),
+        'new_users_7d': db.session.execute(text('''
+            SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
+        ''')).scalar() or 0
+    }
+    
+    # Get unread admin messages count
+    unread_admin_messages = db.session.execute(text('''
+        SELECT COUNT(*) FROM messages 
+        WHERE recipient_id = :user_id AND is_read = FALSE
+    '''), {'user_id': session['user_id']}).scalar() or 0
+    
+    # Get pending proposals count
+    pending_proposals = db.session.execute(text('''
+        SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
+    ''')).scalar() or 0
+    
+    context = {
+        'section': section,
+        'stats': stats,
+        'unread_admin_messages': unread_admin_messages,
+        'pending_proposals': pending_proposals,
+        'page': page
+    }
+    
+    # Section-specific data
+    if section == 'dashboard':
+        # Recent users
+        context['recent_users'] = db.session.execute(text('''
+            SELECT * FROM leads 
+            WHERE is_admin = FALSE
+            ORDER BY created_at DESC 
+            LIMIT 10
+        ''')).fetchall()
+        
+        # Growth data for chart (last 30 days)
+        growth_data = db.session.execute(text('''
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM leads
+            WHERE created_at > NOW() - INTERVAL '30 days'
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        ''')).fetchall()
+        
+        context['growth_labels'] = [row[0].strftime('%m/%d') for row in growth_data]
+        context['growth_data'] = [row[1] for row in growth_data]
+        
+    elif section == 'users':
+        search = request.args.get('search', '')
+        status = request.args.get('status', '')
+        sort = request.args.get('sort', 'recent')
+        per_page = 20
+        offset = (page - 1) * per_page
+        
+        # Build query
+        where_conditions = ["is_admin = FALSE"]
+        params = {}
+        
+        if search:
+            where_conditions.append("(email ILIKE :search OR company_name ILIKE :search)")
+            params['search'] = f'%{search}%'
+        
+        if status:
+            where_conditions.append("subscription_status = :status")
+            params['status'] = status
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Sorting
+        if sort == 'recent':
+            order_by = 'created_at DESC'
+        elif sort == 'oldest':
+            order_by = 'created_at ASC'
+        else:  # email
+            order_by = 'email ASC'
+        
+        total_count = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM leads WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        context['users'] = db.session.execute(text(f'''
+            SELECT * FROM leads 
+            WHERE {where_clause}
+            ORDER BY {order_by}
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        context['search'] = search
+        context['status'] = status
+        context['sort'] = sort
+        context['total_pages'] = total_pages
+        
+    return render_template('admin_enhanced.html', **context)
+
+@app.route('/admin/reset-password', methods=['POST'])
+@login_required
+def admin_reset_password():
+    """Admin reset user password"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Admin access required'}), 403
+    
+    try:
+        user_id = request.form.get('user_id')
+        new_password = request.form.get('new_password')
+        send_email = request.form.get('send_email') == 'on'
+        
+        # Hash password
+        from werkzeug.security import generate_password_hash
+        hashed_password = generate_password_hash(new_password)
+        
+        # Update password
+        db.session.execute(text('''
+            UPDATE leads 
+            SET password = :password 
+            WHERE id = :user_id
+        '''), {'password': hashed_password, 'user_id': user_id})
+        
+        # Log action
+        db.session.execute(text('''
+            INSERT INTO admin_actions 
+            (admin_id, action_type, target_user_id, action_details)
+            VALUES (:admin_id, 'password_reset', :user_id, 'Admin reset user password')
+        '''), {'admin_id': session['user_id'], 'user_id': user_id})
+        
+        db.session.commit()
+        
+        # TODO: Send email if requested
+        
+        flash('Password reset successfully', 'success')
+        return redirect(url_for('admin_enhanced', section='users'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Password reset error: {e}")
+        flash('Error resetting password', 'error')
+        return redirect(url_for('admin_enhanced', section='users'))
+
+@app.route('/admin/toggle-subscription', methods=['POST'])
+@login_required
+def admin_toggle_subscription():
+    """Admin toggle user subscription status"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Admin access required'}), 403
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        new_status = data.get('new_status')
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET subscription_status = :status 
+            WHERE id = :user_id
+        '''), {'status': new_status, 'user_id': user_id})
+        
+        # Log action
+        db.session.execute(text('''
+            INSERT INTO admin_actions 
+            (admin_id, action_type, target_user_id, action_details)
+            VALUES (:admin_id, 'subscription_change', :user_id, :details)
+        '''), {
+            'admin_id': session['user_id'],
+            'user_id': user_id,
+            'details': f'Changed subscription to {new_status}'
+        })
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Subscription updated'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/admin/manual-update', methods=['POST'])
 def manual_update():
     """Manually trigger lead updates"""
@@ -5123,6 +5351,265 @@ def submit_bulk_request():
         print(f"Submit bulk request error: {e}")
         flash('An error occurred while submitting your request. Please try again.', 'danger')
         return redirect(url_for('bulk_purchasing'))
+
+@app.route('/mailbox')
+@login_required
+def mailbox():
+    """Internal messaging system mailbox"""
+    folder = request.args.get('folder', 'inbox')
+    page = max(int(request.args.get('page', 1) or 1), 1)
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    user_id = session['user_id']
+    is_admin = session.get('is_admin', False)
+    
+    # Get unread count
+    unread_count = db.session.execute(text('''
+        SELECT COUNT(*) FROM messages 
+        WHERE recipient_id = :user_id AND is_read = FALSE
+    '''), {'user_id': user_id}).scalar() or 0
+    
+    # Get messages based on folder
+    if folder == 'inbox':
+        query = '''
+            SELECT m.*, 
+                   sender.email as sender_email,
+                   recipient.email as recipient_email
+            FROM messages m
+            JOIN leads sender ON m.sender_id = sender.id
+            JOIN leads recipient ON m.recipient_id = recipient.id
+            WHERE m.recipient_id = :user_id
+            ORDER BY m.created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''
+        count_query = 'SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id'
+    elif folder == 'sent':
+        query = '''
+            SELECT m.*, 
+                   sender.email as sender_email,
+                   recipient.email as recipient_email
+            FROM messages m
+            JOIN leads sender ON m.sender_id = sender.id
+            JOIN leads recipient ON m.recipient_id = recipient.id
+            WHERE m.sender_id = :user_id
+            ORDER BY m.created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''
+        count_query = 'SELECT COUNT(*) FROM messages WHERE sender_id = :user_id'
+    elif folder == 'admin' and is_admin:
+        query = '''
+            SELECT m.*, 
+                   sender.email as sender_email,
+                   recipient.email as recipient_email
+            FROM messages m
+            JOIN leads sender ON m.sender_id = sender.id
+            JOIN leads recipient ON m.recipient_id = recipient.id
+            WHERE m.is_admin_message = TRUE
+            ORDER BY m.created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''
+        count_query = 'SELECT COUNT(*) FROM messages WHERE is_admin_message = TRUE'
+    else:
+        return redirect(url_for('mailbox'))
+    
+    total_count = db.session.execute(text(count_query), {'user_id': user_id}).scalar() or 0
+    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+    
+    messages = db.session.execute(text(query), {
+        'user_id': user_id,
+        'limit': per_page,
+        'offset': offset
+    }).fetchall()
+    
+    # Get all users for admin compose
+    all_users = []
+    if is_admin:
+        all_users = db.session.execute(text('''
+            SELECT id, email, company_name FROM leads 
+            WHERE is_admin = FALSE 
+            ORDER BY email
+        ''')).fetchall()
+    
+    return render_template('mailbox.html',
+                         messages=messages,
+                         folder=folder,
+                         page=page,
+                         total_pages=total_pages,
+                         unread_count=unread_count,
+                         all_users=all_users)
+
+@app.route('/mailbox/message/<int:message_id>')
+@login_required
+def view_message(message_id):
+    """View a specific message"""
+    user_id = session['user_id']
+    
+    # Get message
+    message = db.session.execute(text('''
+        SELECT m.*, 
+               sender.email as sender_email,
+               recipient.email as recipient_email
+        FROM messages m
+        JOIN leads sender ON m.sender_id = sender.id
+        JOIN leads recipient ON m.recipient_id = recipient.id
+        WHERE m.id = :message_id 
+        AND (m.sender_id = :user_id OR m.recipient_id = :user_id)
+    '''), {'message_id': message_id, 'user_id': user_id}).fetchone()
+    
+    if not message:
+        flash('Message not found', 'error')
+        return redirect(url_for('mailbox'))
+    
+    # Mark as read if recipient
+    if message.recipient_id == user_id and not message.is_read:
+        db.session.execute(text('''
+            UPDATE messages 
+            SET is_read = TRUE, read_at = CURRENT_TIMESTAMP 
+            WHERE id = :message_id
+        '''), {'message_id': message_id})
+        db.session.commit()
+    
+    is_sender = message.sender_id == user_id
+    
+    return render_template('view_message.html', 
+                         message=message,
+                         is_sender=is_sender)
+
+@app.route('/send-message', methods=['POST'])
+@login_required
+def send_message():
+    """Send a message"""
+    try:
+        user_id = session['user_id']
+        is_admin = session.get('is_admin', False)
+        
+        message_type = request.form.get('message_type', 'individual')
+        recipient_id = request.form.get('recipient_id')
+        subject = request.form.get('subject')
+        body = request.form.get('body')
+        parent_message_id = request.form.get('parent_message_id')
+        
+        # Admin broadcast messages
+        if is_admin and message_type in ['broadcast', 'paid_only']:
+            if message_type == 'broadcast':
+                recipients = db.session.execute(text('''
+                    SELECT id FROM leads WHERE is_admin = FALSE
+                ''')).fetchall()
+            else:  # paid_only
+                recipients = db.session.execute(text('''
+                    SELECT id FROM leads 
+                    WHERE is_admin = FALSE AND subscription_status = 'paid'
+                ''')).fetchall()
+            
+            # Send to all recipients
+            for recipient in recipients:
+                db.session.execute(text('''
+                    INSERT INTO messages 
+                    (sender_id, recipient_id, subject, body, is_admin_message, parent_message_id)
+                    VALUES (:sender_id, :recipient_id, :subject, :body, TRUE, :parent_message_id)
+                '''), {
+                    'sender_id': user_id,
+                    'recipient_id': recipient[0],
+                    'subject': subject,
+                    'body': body,
+                    'parent_message_id': parent_message_id
+                })
+            
+            db.session.commit()
+            flash(f'Broadcast message sent to {len(recipients)} users', 'success')
+        else:
+            # Individual message
+            if recipient_id == 'admin':
+                # Send to first admin user
+                admin_user = db.session.execute(text('''
+                    SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1
+                ''')).fetchone()
+                recipient_id = admin_user[0] if admin_user else None
+            
+            if not recipient_id:
+                flash('Invalid recipient', 'error')
+                return redirect(url_for('mailbox'))
+            
+            db.session.execute(text('''
+                INSERT INTO messages 
+                (sender_id, recipient_id, subject, body, is_admin_message, parent_message_id)
+                VALUES (:sender_id, :recipient_id, :subject, :body, :is_admin_message, :parent_message_id)
+            '''), {
+                'sender_id': user_id,
+                'recipient_id': recipient_id,
+                'subject': subject,
+                'body': body,
+                'is_admin_message': is_admin,
+                'parent_message_id': parent_message_id
+            })
+            
+            db.session.commit()
+            flash('Message sent successfully', 'success')
+        
+        return redirect(url_for('mailbox', folder='sent'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Send message error: {e}")
+        flash('Error sending message', 'error')
+        return redirect(url_for('mailbox'))
+
+@app.route('/survey')
+@login_required
+def survey():
+    """Post-registration survey"""
+    # Check if user already completed survey
+    existing = db.session.execute(text('''
+        SELECT id FROM user_surveys WHERE user_id = :user_id
+    '''), {'user_id': session['user_id']}).fetchone()
+    
+    if existing:
+        flash('You have already completed the survey. Thank you!', 'info')
+        return redirect(url_for('customer_leads'))
+    
+    return render_template('survey.html')
+
+@app.route('/submit-survey', methods=['POST'])
+@login_required
+def submit_survey():
+    """Handle survey submission"""
+    try:
+        # Get all form data
+        how_found_us = request.form.get('how_found_us')
+        service_type = ', '.join(request.form.getlist('service_type'))
+        interested_features = ', '.join(request.form.getlist('interested_features'))
+        company_size = request.form.get('company_size')
+        annual_revenue_range = request.form.get('annual_revenue_range')
+        suggestions = request.form.get('suggestions', '')
+        
+        # Insert survey
+        db.session.execute(text('''
+            INSERT INTO user_surveys 
+            (user_id, how_found_us, service_type, interested_features, 
+             company_size, annual_revenue_range, suggestions)
+            VALUES (:user_id, :how_found_us, :service_type, :interested_features,
+                    :company_size, :annual_revenue_range, :suggestions)
+        '''), {
+            'user_id': session['user_id'],
+            'how_found_us': how_found_us,
+            'service_type': service_type,
+            'interested_features': interested_features,
+            'company_size': company_size,
+            'annual_revenue_range': annual_revenue_range,
+            'suggestions': suggestions
+        })
+        
+        db.session.commit()
+        
+        flash('Thank you for completing the survey! Your feedback helps us serve you better.', 'success')
+        return redirect(url_for('customer_leads'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Survey submission error: {e}")
+        flash('Error submitting survey', 'error')
+        return redirect(url_for('survey'))
 
 # Helper function for proposal generation
 def generate_proposal_content(contract, company_name, years, differentiators, sections):

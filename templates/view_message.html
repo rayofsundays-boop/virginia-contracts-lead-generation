@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}{{ message.subject }} - Mailbox{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Back Button -->
+            <div class="mb-3">
+                <a href="{{ url_for('mailbox') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Mailbox
+                </a>
+            </div>
+            
+            <!-- Message Card -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            {% if message.is_admin_message %}
+                            <i class="fas fa-shield-alt me-2"></i>
+                            {% else %}
+                            <i class="fas fa-envelope me-2"></i>
+                            {% endif %}
+                            {{ message.subject }}
+                        </h4>
+                        <button class="btn btn-sm btn-light" onclick="window.print();">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Message Header -->
+                    <div class="message-header mb-4 pb-3 border-bottom">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>From:</strong> 
+                                    {{ message.sender_email }}
+                                    {% if message.is_admin_message %}
+                                    <span class="badge bg-danger ms-2">Admin</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>To:</strong> {{ message.recipient_email }}
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-2">
+                                    <strong>Date:</strong> {{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                </p>
+                                {% if message.read_at and message.read_at != message.created_at %}
+                                <p class="mb-2 text-muted small">
+                                    <strong>Read:</strong> {{ message.read_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Body -->
+                    <div class="message-body">
+                        <div style="white-space: pre-wrap; line-height: 1.6;">{{ message.body }}</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            {% if is_sender %}
+                            <span class="text-muted">
+                                <i class="fas fa-check-circle text-success me-1"></i>
+                                Sent to {{ message.recipient_email }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if not is_sender %}
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal">
+                                <i class="fas fa-reply me-2"></i>Reply
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="replyModalLabel">
+                    <i class="fas fa-reply me-2"></i>Reply to: {{ message.subject }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('send_message') }}">
+                <input type="hidden" name="recipient_id" value="{{ message.sender_id }}">
+                <input type="hidden" name="subject" value="Re: {{ message.subject }}">
+                <input type="hidden" name="parent_message_id" value="{{ message.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>To:</strong> {{ message.sender_email }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Subject:</strong> Re: {{ message.subject }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reply_body" class="form-label">Your Reply <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="body" id="reply_body" rows="8" required></textarea>
+                    </div>
+                    <div class="alert alert-light border">
+                        <small class="text-muted">
+                            <strong>Original Message:</strong><br>
+                            From: {{ message.sender_email }}<br>
+                            Date: {{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}<br>
+                            <hr class="my-2">
+                            {{ message.body|truncate(200) }}
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-footer, nav, footer {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

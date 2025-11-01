@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome Survey - Help Us Serve You Better{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-2"><i class="fas fa-clipboard-list me-2"></i>Welcome! Let's Get to Know You</h2>
+                    <p class="mb-0">Help us tailor our services to your needs (2 minutes)</p>
+                </div>
+                <div class="card-body p-5">
+                    <form method="POST" action="{{ url_for('submit_survey') }}">
+                        <!-- How did you find us? -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">How did you hear about us?</label>
+                            <select class="form-select" name="how_found_us" required>
+                                <option value="">Select an option...</option>
+                                <option value="Google Search">Google Search</option>
+                                <option value="Social Media">Social Media (Facebook, LinkedIn, etc.)</option>
+                                <option value="Referral">Referral from a colleague/friend</option>
+                                <option value="Industry Event">Industry Event/Conference</option>
+                                <option value="Advertisement">Online Advertisement</option>
+                                <option value="Government Website">Government Contracting Website</option>
+                                <option value="Email">Email Newsletter</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Service Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">What type of cleaning services do you provide?</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Commercial Cleaning" id="service1">
+                                        <label class="form-check-label" for="service1">Commercial Cleaning</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Government Facilities" id="service2">
+                                        <label class="form-check-label" for="service2">Government Facilities</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Janitorial Services" id="service3">
+                                        <label class="form-check-label" for="service3">Janitorial Services</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Carpet Cleaning" id="service4">
+                                        <label class="form-check-label" for="service4">Carpet/Floor Care</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Window Cleaning" id="service5">
+                                        <label class="form-check-label" for="service5">Window Cleaning</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Eco-Friendly Cleaning" id="service6">
+                                        <label class="form-check-label" for="service6">Eco-Friendly/Green Cleaning</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Post-Construction" id="service7">
+                                        <label class="form-check-label" for="service7">Post-Construction Cleanup</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="service_type" value="Specialty Services" id="service8">
+                                        <label class="form-check-label" for="service8">Specialty Services</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Features interested in -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Which features are you most interested in?</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Government Contracts" id="feature1">
+                                        <label class="form-check-label" for="feature1">Government Contract Leads</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Commercial Leads" id="feature2">
+                                        <label class="form-check-label" for="feature2">Commercial Lead Marketplace</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Quick Wins" id="feature3">
+                                        <label class="form-check-label" for="feature3">Quick Wins (Urgent Leads)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Proposal Help" id="feature4">
+                                        <label class="form-check-label" for="feature4">Proposal Assistance</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="AI Pricing" id="feature5">
+                                        <label class="form-check-label" for="feature5">AI Pricing Calculator</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Templates" id="feature6">
+                                        <label class="form-check-label" for="feature6">Proposal Templates</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Training" id="feature7">
+                                        <label class="form-check-label" for="feature7">Training & Webinars</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interested_features" value="Alerts" id="feature8">
+                                        <label class="form-check-label" for="feature8">Real-time Opportunity Alerts</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Size -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Company Size (Employees)</label>
+                            <select class="form-select" name="company_size" required>
+                                <option value="">Select...</option>
+                                <option value="1-5">1-5 employees (Small)</option>
+                                <option value="6-20">6-20 employees (Medium)</option>
+                                <option value="21-50">21-50 employees (Large)</option>
+                                <option value="51-100">51-100 employees</option>
+                                <option value="100+">100+ employees (Enterprise)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Annual Revenue -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Approximate Annual Revenue</label>
+                            <select class="form-select" name="annual_revenue_range" required>
+                                <option value="">Select...</option>
+                                <option value="Under $100K">Under $100,000</option>
+                                <option value="$100K - $500K">$100,000 - $500,000</option>
+                                <option value="$500K - $1M">$500,000 - $1,000,000</option>
+                                <option value="$1M - $5M">$1,000,000 - $5,000,000</option>
+                                <option value="$5M+">Over $5,000,000</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Suggestions -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Suggestions for Improvement</label>
+                            <textarea class="form-control" name="suggestions" rows="4" 
+                                      placeholder="What features would you like to see? How can we better serve you?"></textarea>
+                        </div>
+                        
+                        <!-- Submit -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-check-circle me-2"></i>Submit Survey
+                            </button>
+                            <br>
+                            <a href="{{ url_for('customer_leads') }}" class="btn btn-link mt-2">
+                                Skip for now
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

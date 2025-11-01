@@ -360,6 +360,17 @@
                             <i class="fas fa-user-tie"></i> Customer Portal
                         </a>
                     </li>
+                    <!-- Mailbox with unread badge -->
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{{ url_for('mailbox') }}">
+                            <i class="fas fa-envelope"></i> Mailbox
+                            {% if unread_messages_count and unread_messages_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                                {{ unread_messages_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
                     <!-- Signed in as notification -->
                     <li class="nav-item">
                         <span class="nav-link text-white-50 pe-none" style="font-size: 11pt;">
@@ -456,6 +467,53 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Session Timeout Script -->
+    {% if session.get('user_email') %}
+    <script>
+        // Session timeout after 20 minutes of inactivity
+        let timeoutWarning;
+        let timeoutLogout;
+        const TIMEOUT_DURATION = 20 * 60 * 1000; // 20 minutes
+        const WARNING_DURATION = 2 * 60 * 1000; // 2 minutes before timeout
+        
+        function resetTimer() {
+            clearTimeout(timeoutWarning);
+            clearTimeout(timeoutLogout);
+            
+            // Show warning 2 minutes before logout
+            timeoutWarning = setTimeout(() => {
+                showTimeoutWarning();
+            }, TIMEOUT_DURATION - WARNING_DURATION);
+            
+            // Auto-logout after 20 minutes
+            timeoutLogout = setTimeout(() => {
+                logout();
+            }, TIMEOUT_DURATION);
+        }
+        
+        function showTimeoutWarning() {
+            if (confirm('Your session will expire in 2 minutes due to inactivity. Click OK to stay signed in.')) {
+                resetTimer();
+            }
+        }
+        
+        function logout() {
+            alert('Your session has expired due to inactivity. You will be logged out.');
+            window.location.href = '/logout?reason=timeout';
+        }
+        
+        // Track user activity
+        document.addEventListener('mousemove', resetTimer);
+        document.addEventListener('mousedown', resetTimer);
+        document.addEventListener('keypress', resetTimer);
+        document.addEventListener('scroll', resetTimer);
+        document.addEventListener('touchstart', resetTimer);
+        
+        // Start timer when page loads
+        resetTimer();
+    </script>
+    {% endif %}
     
     <!-- AI Chatbot Widget -->
     {% include 'chatbot.html' %}
