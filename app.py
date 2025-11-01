@@ -3028,7 +3028,38 @@ def send_proposal_help_notification(request_data, request_id):
 
 @app.route('/send-existing-leads', methods=['GET'])
 def send_existing_leads():
-    """Send all existing customer data to info@eliteecocareservices.com"""
+    """Send all existing customer data to info@eliteecocareservices.com - ADMIN ONLY"""
+    # Check if user is admin
+    if not session.get('is_admin'):
+        return """
+        <html>
+        <head>
+            <title>Admin Authentication Required</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f5f5f5; }
+                .auth-box { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                h1 { color: #dc3545; }
+                input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+                button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+                button:hover { background: #5568d3; }
+                .back { display: inline-block; margin-top: 20px; color: #667eea; text-decoration: none; }
+            </style>
+        </head>
+        <body>
+            <div class="auth-box">
+                <h1>🔒 Admin Access Required</h1>
+                <p>Please sign in as administrator to access this function.</p>
+                <form action="/admin-login" method="POST">
+                    <input type="password" name="admin_password" placeholder="Admin Password" required>
+                    <input type="hidden" name="redirect_to" value="/send-existing-leads">
+                    <button type="submit">Sign In</button>
+                </form>
+                <a href="/" class="back">← Back to Home</a>
+            </div>
+        </body>
+        </html>
+        """, 401
+    
     try:
         result = send_all_existing_leads_email()
         if result['success']:
@@ -3047,7 +3078,7 @@ def send_existing_leads():
                 <h1>✅ Success!</h1>
                 <p class="success">Sent {result['count']} leads to info@eliteecocareservices.com</p>
                 <p class="info">Check your email inbox for the complete database export.</p>
-                <a href="/" class="back">← Back to Home</a>
+                <a href="/admin-panel" class="back">← Back to Admin Panel</a>
             </body>
             </html>
             """
@@ -3065,7 +3096,7 @@ def send_existing_leads():
             <body>
                 <h1>❌ Error</h1>
                 <p class="error">{result.get('message', result.get('error', 'Unknown error'))}</p>
-                <a href="/" class="back">← Back to Home</a>
+                <a href="/admin-panel" class="back">← Back to Admin Panel</a>
             </body>
             </html>
             """
@@ -3082,10 +3113,256 @@ def send_existing_leads():
         <body>
             <h1>❌ Error</h1>
             <p class="error">{str(e)}</p>
-            <a href="/">← Back to Home</a>
+            <a href="/admin-panel">← Back to Admin Panel</a>
         </body>
         </html>
         """
+
+@app.route('/admin-login', methods=['POST'])
+def admin_login():
+    """Admin authentication"""
+    password = request.form.get('admin_password')
+    redirect_to = request.form.get('redirect_to', '/admin-panel')
+    
+    # Check admin password (you should change this!)
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    
+    if password == ADMIN_PASSWORD:
+        session['is_admin'] = True
+        flash('Admin authentication successful!', 'success')
+        return redirect(redirect_to)
+    else:
+        flash('Invalid admin password', 'error')
+        return redirect('/')
+
+@app.route('/admin-panel')
+def admin_panel():
+    """Admin control panel"""
+    if not session.get('is_admin'):
+        return redirect('/')
+    
+    try:
+        # Get user count
+        user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar()
+        
+        # Get all users for password reset
+        users = db.session.execute(text('''
+            SELECT id, email, contact_name, company_name, subscription_status, created_at
+            FROM leads 
+            ORDER BY created_at DESC
+            LIMIT 50
+        ''')).fetchall()
+        
+        return f"""
+        <html>
+        <head>
+            <title>Admin Panel</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <style>
+                body {{ background: #f5f5f5; padding: 20px; }}
+                .admin-header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }}
+                .card {{ border: none; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }}
+                .btn-custom {{ background: #667eea; color: white; }}
+                .btn-custom:hover {{ background: #5568d3; color: white; }}
+                .user-row {{ padding: 10px; border-bottom: 1px solid #eee; }}
+                .user-row:hover {{ background: #f8f9fa; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="admin-header">
+                    <h1><i class="fas fa-shield-alt me-2"></i>Admin Control Panel</h1>
+                    <p class="mb-0">Manage users, export data, and reset passwords</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                                <h3>{user_count}</h3>
+                                <p class="text-muted">Total Users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <a href="/send-existing-leads" class="text-decoration-none">
+                                    <i class="fas fa-download fa-3x text-success mb-3"></i>
+                                    <h5>Export All Leads</h5>
+                                    <p class="text-muted">Email complete database</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <a href="/admin-logout" class="text-decoration-none">
+                                    <i class="fas fa-sign-out-alt fa-3x text-danger mb-3"></i>
+                                    <h5>Logout</h5>
+                                    <p class="text-muted">Sign out of admin</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-key me-2"></i>User Password Management</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Email</th>
+                                        <th>Name</th>
+                                        <th>Company</th>
+                                        <th>Status</th>
+                                        <th>Registered</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {''.join([f'''
+                                    <tr>
+                                        <td>{user[0]}</td>
+                                        <td>{user[1]}</td>
+                                        <td>{user[2]}</td>
+                                        <td>{user[3]}</td>
+                                        <td><span class="badge bg-{"success" if user[4] == "active" else "secondary"}">{user[4]}</span></td>
+                                        <td>{str(user[5])[:10] if user[5] else "N/A"}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning" onclick="resetPassword('{user[1]}', '{user[2]}')">
+                                                <i class="fas fa-key"></i> Reset Password
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    ''' for user in users])}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+            function resetPassword(email, name) {{
+                if (confirm('Reset password for ' + name + ' (' + email + ')?')) {{
+                    fetch('/admin-reset-password', {{
+                        method: 'POST',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                        }},
+                        body: JSON.stringify({{ email: email }})
+                    }})
+                    .then(response => response.json())
+                    .then(data => {{
+                        if (data.success) {{
+                            alert('✅ Password reset successful!\\n\\nNew Password: ' + data.new_password + '\\n\\nUser has been notified via email.');
+                        }} else {{
+                            alert('❌ Error: ' + data.error);
+                        }}
+                    }})
+                    .catch(error => {{
+                        alert('❌ Error: ' + error);
+                    }});
+                }}
+            }}
+            </script>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"<h1>Error loading admin panel</h1><p>{str(e)}</p><a href='/'>Back to Home</a>"
+
+@app.route('/admin-reset-password', methods=['POST'])
+def admin_reset_password():
+    """Admin function to reset user password"""
+    if not session.get('is_admin'):
+        return jsonify({{'success': False, 'error': 'Unauthorized'}}), 401
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({{'success': False, 'error': 'Email required'}})
+        
+        # Check if user exists
+        user = db.session.execute(
+            text('SELECT id, contact_name FROM leads WHERE email = :email'),
+            {{'email': email}}
+        ).fetchone()
+        
+        if not user:
+            return jsonify({{'success': False, 'error': 'User not found'}})
+        
+        # Generate new random password
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits
+        new_password = ''.join(secrets.choice(alphabet) for i in range(12))
+        
+        # Hash the new password
+        password_hash = generate_password_hash(new_password)
+        
+        # Update password in database
+        db.session.execute(
+            text('UPDATE leads SET password_hash = :password_hash WHERE email = :email'),
+            {{'email': email, 'password_hash': password_hash}}
+        )
+        db.session.commit()
+        
+        # Send email to user with new password
+        try:
+            subject = "Your Password Has Been Reset - Virginia Contracts"
+            body = f"""
+Hello {{user[1]}},
+
+Your password has been reset by an administrator.
+
+New Login Credentials:
+Email: {{email}}
+Password: {{new_password}}
+
+For security, please sign in and change your password immediately.
+
+Sign in here: {{request.host_url}}auth
+
+If you did not request this password reset, please contact support immediately at info@eliteecocareservices.com
+
+Best regards,
+Virginia Contract Leads Team
+            """
+            
+            msg = Message(subject=subject, recipients=[email], body=body)
+            mail.send(msg)
+            
+        except Exception as e:
+            print(f"Failed to send password reset email: {{e}}")
+        
+        return jsonify({{
+            'success': True,
+            'new_password': new_password,
+            'message': 'Password reset successfully'
+        }})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({{'success': False, 'error': str(e)}}), 500
+
+@app.route('/admin-logout')
+def admin_logout():
+    """Logout from admin panel"""
+    session.pop('is_admin', None)
+    flash('Logged out of admin panel', 'info')
+    return redirect('/')
 
 @app.route('/admin')
 def admin_dashboard():
