@@ -42,30 +42,115 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Filter Government Contracts</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter by City</h5>
                 </div>
                 <div class="card-body">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Location:</label>
-                            <select name="location" class="form-select">
-                                <option value="">All Locations</option>
-                                {% for location in locations %}
-                                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
-                                        {{ location }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                    <!-- City Tabs -->
+                    <ul class="nav nav-pills mb-4 flex-wrap city-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if not current_filter %}active{% endif %}" 
+                               href="{{ url_for('contracts') }}">
+                                <i class="fas fa-th me-1"></i> All Cities
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Virginia Beach' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Virginia Beach') }}">
+                                <i class="fas fa-city me-1"></i> Virginia Beach
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Norfolk' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Norfolk') }}">
+                                <i class="fas fa-anchor me-1"></i> Norfolk
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Chesapeake' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Chesapeake') }}">
+                                <i class="fas fa-city me-1"></i> Chesapeake
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Newport News' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Newport News') }}">
+                                <i class="fas fa-ship me-1"></i> Newport News
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Hampton' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Hampton') }}">
+                                <i class="fas fa-landmark me-1"></i> Hampton
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Portsmouth' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Portsmouth') }}">
+                                <i class="fas fa-water me-1"></i> Portsmouth
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Suffolk' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Suffolk') }}">
+                                <i class="fas fa-tree me-1"></i> Suffolk
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link {% if current_filter == 'Williamsburg' %}active{% endif %}" 
+                               href="{{ url_for('contracts', location='Williamsburg') }}">
+                                <i class="fas fa-monument me-1"></i> Williamsburg
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Advanced Filter Dropdown -->
+                    <div class="accordion" id="advancedFilter">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filterOptions">
+                                    <i class="fas fa-sliders-h me-2"></i> Advanced Filters
+                                </button>
+                            </h2>
+                            <div id="filterOptions" class="accordion-collapse collapse" data-bs-parent="#advancedFilter">
+                                <div class="accordion-body">
+                                    <form method="GET" class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Custom Location:</label>
+                                            <select name="location" class="form-select">
+                                                <option value="">All Locations</option>
+                                                {% for location in locations %}
+                                                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
+                                                        {{ location }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Contract Type:</label>
+                                            <select name="type" class="form-select">
+                                                <option value="">All Types</option>
+                                                <option value="maintenance">Maintenance</option>
+                                                <option value="cleaning">Cleaning Services</option>
+                                                <option value="janitorial">Janitorial</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary me-2">
+                                                <i class="fas fa-search me-1"></i> Apply
+                                            </button>
+                                            {% if current_filter %}
+                                                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-times me-1"></i> Clear
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Apply Filter</button>
-                            {% if current_filter %}
-                                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">Clear</a>
-                            {% endif %}
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,53 +171,102 @@
         <div class="row">
             {% for contract in contracts %}
             <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 contract-card">
+                <div class="card h-100 contract-card {% if not is_paid_subscriber and not is_admin %}locked-contract{% endif %}">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 text-primary">{{ contract[2] }}</h6>
                         <span class="badge bg-info">Government</span>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body position-relative">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title">{{ contract[1] }}</h5>
                             <span class="city-badge">{{ contract[3] }}</span>
                         </div>
-                        <p class="card-text">{{ contract[6] }}</p>
                         
-                        <div class="row">
-                            <div class="col-6">
-                                <small class="text-muted">Contract Value:</small><br>
-                                <strong class="text-success">{{ contract[4] }}</strong>
+                        {% if is_paid_subscriber or is_admin %}
+                            <!-- Full Content for Subscribers -->
+                            <p class="card-text">{{ contract[6] }}</p>
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Contract Value:</small><br>
+                                    <strong class="text-success">{{ contract[4] }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Deadline:</small><br>
+                                    <strong class="text-danger">{{ contract[5] }}</strong>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <small class="text-muted">Deadline:</small><br>
-                                <strong class="text-danger">{{ contract[5] }}</strong>
+                            
+                            {% if contract[7] %}
+                            <div class="mt-2">
+                                <small class="text-muted">NAICS Code:</small>
+                                <span class="badge bg-secondary">{{ contract[7] }}</span>
                             </div>
-                        </div>
-                        
-                        {% if contract[7] %}
-                        <div class="mt-2">
-                            <small class="text-muted">NAICS Code:</small>
-                            <span class="badge bg-secondary">{{ contract[7] }}</span>
-                        </div>
+                            {% endif %}
+                        {% else %}
+                            <!-- Blurred Preview for Non-Subscribers -->
+                            <div class="blurred-content">
+                                <p class="card-text">{{ contract[6] }}</p>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Contract Value:</small><br>
+                                        <strong class="text-success">{{ contract[4] }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Deadline:</small><br>
+                                        <strong class="text-danger">{{ contract[5] }}</strong>
+                                    </div>
+                                </div>
+                                
+                                {% if contract[7] %}
+                                <div class="mt-2">
+                                    <small class="text-muted">NAICS Code:</small>
+                                    <span class="badge bg-secondary">{{ contract[7] }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Unlock Overlay -->
+                            <div class="unlock-overlay">
+                                <div class="unlock-content">
+                                    <i class="fas fa-lock fa-3x mb-3"></i>
+                                    <h5>Subscribe to Unlock</h5>
+                                    <p class="small mb-3">Get full access to all contract details</p>
+                                    <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-star me-1"></i> Upgrade Now
+                                    </a>
+                                </div>
+                            </div>
                         {% endif %}
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <div>
-                            {% if contract[8] %}
-                                <a href="{{ contract[8] }}" target="_blank" 
-                                   class="btn btn-success btn-sm" 
-                                   rel="noopener noreferrer">
-                                    <i class="fas fa-external-link-alt"></i> Apply
-                                </a>
+                            {% if is_paid_subscriber or is_admin %}
+                                {% if contract[8] %}
+                                    <a href="{{ contract[8] }}" target="_blank" 
+                                       class="btn btn-success btn-sm" 
+                                       rel="noopener noreferrer">
+                                        <i class="fas fa-external-link-alt"></i> Apply
+                                    </a>
+                                {% endif %}
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:100] | safe }}', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm disabled" disabled>
+                                    <i class="fas fa-lock"></i> Locked
+                                </button>
                             {% endif %}
-                            <button class="btn btn-outline-secondary btn-sm" 
-                                    onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:100] | safe }}', '{{ contract[2] }}', '{{ contract[4] }}', '{{ contract[5] }}')">
-                                <i class="fas fa-share-alt"></i> Share
-                            </button>
                         </div>
                         <div class="text-end">
                             <small class="text-muted">Access:</small><br>
-                            <strong class="text-success">Included</strong>
+                            {% if is_paid_subscriber or is_admin %}
+                                <strong class="text-success"><i class="fas fa-check-circle"></i> Included</strong>
+                            {% else %}
+                                <strong class="text-warning"><i class="fas fa-lock"></i> Subscribe</strong>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -264,26 +398,145 @@ function shareContract(title, description, agency, value, deadline) {
     margin-bottom: 0;
 }
 
+/* City Tabs Styling */
+.city-tabs {
+    gap: 8px;
+}
+
+.city-tabs .nav-link {
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 500;
+    color: #495057;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.city-tabs .nav-link:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.city-tabs .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.city-tabs .nav-link i {
+    font-size: 0.9rem;
+}
+
+/* Contract Card Styling */
 .contract-card {
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .contract-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* Locked Contract Styling */
+.locked-contract .card-body {
+    position: relative;
+}
+
+.blurred-content {
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+}
+
+.unlock-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 10;
+    max-width: 90%;
+}
+
+.unlock-content i {
+    color: #ffc107;
+    animation: pulse 2s infinite;
+}
+
+.unlock-content h5 {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.unlock-content p {
+    color: #666;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
 }
 
 .city-badge {
-    background: #007bff;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     color: white;
-    padding: 4px 12px;
+    padding: 5px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .card-footer {
     border-top: 1px solid rgba(0,0,0,.125);
+    background: #f8f9fa;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .city-tabs .nav-link {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+    
+    .city-tabs .nav-link i {
+        display: none;
+    }
+    
+    .unlock-overlay {
+        padding: 20px;
+    }
+    
+    .unlock-content h5 {
+        font-size: 1rem;
+    }
+}
+
+/* Advanced Filter Accordion */
+.accordion-button:not(.collapsed) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
 }
 </style>
 {% endblock %}
