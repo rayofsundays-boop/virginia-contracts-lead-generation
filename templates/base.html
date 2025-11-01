@@ -349,6 +349,11 @@
                                     <i class="fas fa-calendar-alt me-2"></i>Industry Days & Events
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('supply_contracts') }}">
+                                    <i class="fas fa-boxes me-2"></i>Supply Contracts (Quick Wins)
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('bulk_products') }}">
@@ -482,31 +487,80 @@
     <!-- Session Timeout Script -->
     {% if session.get('user_email') %}
     <script>
-        // Session timeout after 20 minutes of inactivity
+        // Session timeout after 30 minutes of inactivity
         let timeoutWarning;
         let timeoutLogout;
-        const TIMEOUT_DURATION = 20 * 60 * 1000; // 20 minutes
-        const WARNING_DURATION = 2 * 60 * 1000; // 2 minutes before timeout
+        const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes
+        const WARNING_DURATION = 5 * 60 * 1000; // 5 minutes before timeout
         
         function resetTimer() {
             clearTimeout(timeoutWarning);
             clearTimeout(timeoutLogout);
             
-            // Show warning 2 minutes before logout
+            // Show warning 5 minutes before logout
             timeoutWarning = setTimeout(() => {
                 showTimeoutWarning();
             }, TIMEOUT_DURATION - WARNING_DURATION);
             
-            // Auto-logout after 20 minutes
+            // Auto-logout after 30 minutes
             timeoutLogout = setTimeout(() => {
                 logout();
             }, TIMEOUT_DURATION);
         }
         
         function showTimeoutWarning() {
-            if (confirm('Your session will expire in 2 minutes due to inactivity. Click OK to stay signed in.')) {
-                resetTimer();
+            // Create a better warning modal instead of alert
+            const warningDiv = document.createElement('div');
+            warningDiv.id = 'timeoutWarning';
+            warningDiv.innerHTML = `
+                <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-warning" style="border-width: 3px;">
+                            <div class="modal-header bg-warning text-dark">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Session Expiring Soon
+                                </h5>
+                            </div>
+                            <div class="modal-body text-center">
+                                <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                                <h5>Your session will expire in <span id="countdown">5:00</span></h5>
+                                <p class="text-muted">You will be automatically logged out due to inactivity.</p>
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button class="btn btn-primary btn-lg" onclick="staySignedIn()">
+                                    <i class="fas fa-check-circle"></i> Stay Signed In
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(warningDiv);
+            
+            // Countdown timer
+            let timeLeft = 300; // 5 minutes
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                const countdownEl = document.getElementById('countdown');
+                if (countdownEl) {
+                    countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+        
+        function staySignedIn() {
+            const warningDiv = document.getElementById('timeoutWarning');
+            if (warningDiv) {
+                warningDiv.remove();
             }
+            resetTimer();
+            // Ping server to keep session alive
+            fetch('/api/keep-alive', { method: 'POST' });
         }
         
         function logout() {
@@ -520,6 +574,7 @@
         document.addEventListener('keypress', resetTimer);
         document.addEventListener('scroll', resetTimer);
         document.addEventListener('touchstart', resetTimer);
+        document.addEventListener('click', resetTimer);
         
         // Start timer when page loads
         resetTimer();

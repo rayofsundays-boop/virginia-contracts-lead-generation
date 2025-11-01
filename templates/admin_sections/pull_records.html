@@ -1,0 +1,236 @@
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="fas fa-file-export text-info"></i> Pull Records & Export Data</h2>
+
+    <!-- Export Options -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> User Records</h5>
+                </div>
+                <div class="card-body">
+                    <p>Export all user data including subscription status, registration dates, and activity.</p>
+                    <form action="/api/admin/export-users" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Format</label>
+                            <select name="format" class="form-select">
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel (.xlsx)</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Filter</label>
+                            <select name="filter" class="form-select">
+                                <option value="all">All Users</option>
+                                <option value="paid">Paid Subscribers Only</option>
+                                <option value="free">Free Users Only</option>
+                                <option value="active">Active (30 days)</option>
+                                <option value="inactive">Inactive (90+ days)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">
+                            <i class="fas fa-download"></i> Export Users
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-hand-holding-usd"></i> Revenue Records</h5>
+                </div>
+                <div class="card-body">
+                    <p>Export payment transactions, subscriptions, and revenue data.</p>
+                    <form action="/api/admin/export-revenue" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <select name="date_range" class="form-select">
+                                <option value="all_time">All Time</option>
+                                <option value="this_month">This Month</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="this_quarter">This Quarter</option>
+                                <option value="this_year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Include</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="include_refunds" checked>
+                                <label class="form-check-label">Refunds</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="include_pending" checked>
+                                <label class="form-check-label">Pending Payments</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-download"></i> Export Revenue
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Lead Records</h5>
+                </div>
+                <div class="card-body">
+                    <p>Export all customer leads with contact info and status.</p>
+                    <form action="/api/admin/export-leads" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Lead Type</label>
+                            <select name="lead_type" class="form-select">
+                                <option value="all">All Leads</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="residential">Residential</option>
+                                <option value="government">Government</option>
+                                <option value="supply">Supply Contracts</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="all">All Status</option>
+                                <option value="new">New</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="qualified">Qualified</option>
+                                <option value="converted">Converted</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-download"></i> Export Leads
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Query Tool -->
+    <div class="card shadow mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-code"></i> Advanced Custom Query</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Direct database queries. Use with caution. READ-ONLY mode enforced.
+            </div>
+            <form id="customQueryForm" onsubmit="executeQuery(event)">
+                <div class="mb-3">
+                    <label class="form-label">SQL Query (SELECT statements only)</label>
+                    <textarea class="form-control font-monospace" rows="5" id="customQuery" placeholder="SELECT * FROM leads WHERE..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-play"></i> Execute Query
+                </button>
+            </form>
+            <div id="queryResults" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Recent Exports -->
+    <div class="card shadow mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-history"></i> Recent Exports</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Export Type</th>
+                            <th>Records</th>
+                            <th>Format</th>
+                            <th>Exported By</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_exports %}
+                            {% for export in recent_exports %}
+                            <tr>
+                                <td>{{ export.timestamp.strftime('%m/%d/%Y %I:%M %p') if export.timestamp else 'N/A' }}</td>
+                                <td><span class="badge bg-info">{{ export.type }}</span></td>
+                                <td>{{ export.record_count }}</td>
+                                <td>{{ export.format | upper }}</td>
+                                <td>{{ export.admin_email }}</td>
+                                <td>
+                                    {% if export.file_path %}
+                                    <a href="{{ export.file_path }}" class="btn btn-sm btn-success" download>
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">Expired</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No recent exports found.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function executeQuery(event) {
+    event.preventDefault();
+    const query = document.getElementById('customQuery').value;
+    const resultsDiv = document.getElementById('queryResults');
+    
+    // Validate query starts with SELECT
+    if (!query.trim().toUpperCase().startsWith('SELECT')) {
+        resultsDiv.innerHTML = '<div class="alert alert-danger">Only SELECT queries are allowed for security.</div>';
+        return;
+    }
+    
+    resultsDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Executing query...</div>';
+    
+    fetch('/api/admin/custom-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            let html = `<div class="alert alert-success">Query executed successfully. ${data.results.length} rows returned.</div>`;
+            if (data.results.length > 0) {
+                html += '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
+                Object.keys(data.results[0]).forEach(key => {
+                    html += `<th>${key}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                data.results.forEach(row => {
+                    html += '<tr>';
+                    Object.values(row).forEach(val => {
+                        html += `<td>${val !== null ? val : 'NULL'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+            resultsDiv.innerHTML = html;
+        } else {
+            resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+        }
+    })
+    .catch(err => {
+        resultsDiv.innerHTML = '<div class="alert alert-danger">Error executing query.</div>';
+    });
+}
+</script>

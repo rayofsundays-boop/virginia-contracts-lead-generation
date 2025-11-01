@@ -1,0 +1,533 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-alt text-primary"></i> Proposal Writer Portal</h2>
+        <div>
+            <span class="badge bg-warning fs-6 me-2">{{ pending_proposals or 0 }} Pending</span>
+            <span class="badge bg-success fs-6">{{ completed_proposals or 0 }} Completed</span>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body">
+                    <h3>{{ pending_proposals or 0 }}</h3>
+                    <p class="mb-0"><i class="fas fa-clock"></i> Pending Review</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h3>{{ in_progress or 0 }}</h3>
+                    <p class="mb-0"><i class="fas fa-pencil-alt"></i> In Progress</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h3>{{ completed_proposals or 0 }}</h3>
+                    <p class="mb-0"><i class="fas fa-check-circle"></i> Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <h3>${{ total_earnings or 0 }}</h3>
+                    <p class="mb-0"><i class="fas fa-dollar-sign"></i> Total Earnings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#pending">
+                <i class="fas fa-clock"></i> Pending ({{ pending_proposals or 0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#in-progress">
+                <i class="fas fa-pencil-alt"></i> In Progress ({{ in_progress or 0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#completed">
+                <i class="fas fa-check-circle"></i> Completed ({{ completed_proposals or 0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#payments">
+                <i class="fas fa-money-bill-wave"></i> Payments
+            </a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Pending Proposals -->
+        <div class="tab-pane fade show active" id="pending">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Proposals Awaiting Review</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_list %}
+                        {% for proposal in pending_list %}
+                        <div class="border-bottom p-4 proposal-item">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="mb-1">{{ proposal.title }}</h5>
+                                            <div class="text-muted mb-2">
+                                                <i class="fas fa-user"></i> {{ proposal.client_name }} 
+                                                <span class="mx-2">|</span>
+                                                <i class="fas fa-calendar"></i> Submitted: {{ proposal.submitted_date.strftime('%m/%d/%Y') if proposal.submitted_date else 'N/A' }}
+                                                <span class="mx-2">|</span>
+                                                <i class="fas fa-clock"></i> Deadline: <strong class="text-danger">{{ proposal.deadline.strftime('%m/%d/%Y') if proposal.deadline else 'None' }}</strong>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-warning">PENDING</span>
+                                    </div>
+                                    <p class="mb-2"><strong>Description:</strong> {{ proposal.description }}</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary me-1"><i class="fas fa-tag"></i> {{ proposal.contract_type }}</span>
+                                        <span class="badge bg-info me-1"><i class="fas fa-dollar-sign"></i> ${{ "{:,.0f}".format(proposal.contract_value) if proposal.contract_value else 'TBD' }}</span>
+                                        <span class="badge bg-primary"><i class="fas fa-map-marker-alt"></i> {{ proposal.location }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light h-100">
+                                        <div class="card-body">
+                                            <h6 class="mb-2">Proposal Fee</h6>
+                                            <h4 class="text-success mb-3">${{ "{:.2f}".format(proposal.writer_fee) if proposal.writer_fee else '0.00' }}</h4>
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-primary btn-sm" onclick="viewProposal({{ proposal.id }})">
+                                                    <i class="fas fa-eye"></i> View Details
+                                                </button>
+                                                <button class="btn btn-success btn-sm" onclick="acceptProposal({{ proposal.id }})">
+                                                    <i class="fas fa-check"></i> Accept & Start
+                                                </button>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="declineProposal({{ proposal.id }})">
+                                                    <i class="fas fa-times"></i> Decline
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                            <p>No pending proposals at this time.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="tab-pane fade" id="in-progress">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Active Proposals</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if in_progress_list %}
+                        {% for proposal in in_progress_list %}
+                        <div class="border-bottom p-4 proposal-item">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="mb-1">{{ proposal.title }}</h5>
+                                            <div class="text-muted mb-2">
+                                                <i class="fas fa-user"></i> {{ proposal.client_name }}
+                                                <span class="mx-2">|</span>
+                                                <i class="fas fa-calendar"></i> Started: {{ proposal.started_date.strftime('%m/%d/%Y') if proposal.started_date else 'N/A' }}
+                                                <span class="mx-2">|</span>
+                                                <i class="fas fa-hourglass-half"></i> Time Left: <strong>{{ proposal.days_remaining or 0 }} days</strong>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-info">IN PROGRESS</span>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="progress mb-3" style="height: 25px;">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ proposal.progress or 0 }}%">
+                                            {{ proposal.progress or 0 }}% Complete
+                                        </div>
+                                    </div>
+
+                                    <!-- Comments/Feedback Section -->
+                                    <div class="mb-2">
+                                        <strong>Latest Comment:</strong>
+                                        <div class="alert alert-light mb-2 mt-1">
+                                            {{ proposal.latest_comment or 'No comments yet.' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light h-100">
+                                        <div class="card-body">
+                                            <h6 class="mb-2">Fee: ${{ "{:.2f}".format(proposal.writer_fee) }}</h6>
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-primary btn-sm" onclick="openWorkspace({{ proposal.id }})">
+                                                    <i class="fas fa-edit"></i> Continue Working
+                                                </button>
+                                                <button class="btn btn-outline-info btn-sm" onclick="addComment({{ proposal.id }})">
+                                                    <i class="fas fa-comment"></i> Add Comment
+                                                </button>
+                                                <button class="btn btn-success btn-sm" onclick="markComplete({{ proposal.id }})">
+                                                    <i class="fas fa-check-circle"></i> Mark Complete
+                                                </button>
+                                                <button class="btn btn-outline-warning btn-sm" onclick="requestRevision({{ proposal.id }})">
+                                                    <i class="fas fa-redo"></i> Request Revision
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-clipboard fa-3x mb-3 d-block"></i>
+                            <p>No active proposals.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed -->
+        <div class="tab-pane fade" id="completed">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-double"></i> Completed Proposals</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Completion Date</th>
+                                    <th>Proposal</th>
+                                    <th>Client</th>
+                                    <th>Fee</th>
+                                    <th>Payment Status</th>
+                                    <th>Rating</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if completed_list %}
+                                    {% for proposal in completed_list %}
+                                    <tr>
+                                        <td>{{ proposal.completed_date.strftime('%m/%d/%Y') if proposal.completed_date else 'N/A' }}</td>
+                                        <td>
+                                            <strong>{{ proposal.title }}</strong>
+                                            <br><small class="text-muted">{{ proposal.contract_type }}</small>
+                                        </td>
+                                        <td>{{ proposal.client_name }}</td>
+                                        <td><strong class="text-success">${{ "{:.2f}".format(proposal.writer_fee) }}</strong></td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if proposal.payment_status == 'paid' %}bg-success
+                                                {% elif proposal.payment_status == 'pending' %}bg-warning
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ proposal.payment_status | upper }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if proposal.client_rating %}
+                                            <div>
+                                                {% for i in range(proposal.client_rating) %}
+                                                <i class="fas fa-star text-warning"></i>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted">No rating</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-info" onclick="viewProposal({{ proposal.id }})" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-success" onclick="downloadProposal({{ proposal.id }})" title="Download">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            No completed proposals yet.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div class="tab-pane fade" id="payments">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-check-alt"></i> Payment History</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Proposal</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Transaction ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if payment_history %}
+                                    {% for payment in payment_history %}
+                                    <tr>
+                                        <td>{{ payment.payment_date.strftime('%m/%d/%Y') if payment.payment_date else 'N/A' }}</td>
+                                        <td>{{ payment.proposal_title }}</td>
+                                        <td><strong class="text-success">${{ "{:.2f}".format(payment.amount) }}</strong></td>
+                                        <td>{{ payment.payment_method }}</td>
+                                        <td>
+                                            <span class="badge bg-success">PAID</span>
+                                        </td>
+                                        <td><code>{{ payment.transaction_id }}</code></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            No payment history yet.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-muted">Total Earned</h6>
+                            <h3 class="text-success">${{ total_earned or 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted">Pending Payments</h6>
+                            <h3 class="text-warning">${{ pending_payments or 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6 class="text-muted">This Month</h6>
+                            <h3 class="text-info">${{ this_month_earnings or 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <h6 class="text-muted">Avg Per Proposal</h6>
+                            <h3 class="text-primary">${{ avg_per_proposal or 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Proposal Workspace Modal -->
+<div class="modal fade" id="workspaceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Proposal Workspace</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="workspaceContent">
+                <!-- Workspace content loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveProposal()">
+                    <i class="fas fa-save"></i> Save Draft
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitForReview()">
+                    <i class="fas fa-paper-plane"></i> Submit for Review
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentProposalId = null;
+
+function viewProposal(id) {
+    window.location.href = `/admin/proposal/${id}/view`;
+}
+
+function acceptProposal(id) {
+    if (confirm('Accept this proposal and start working on it?')) {
+        fetch(`/api/admin/proposal/${id}/accept`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Proposal accepted! Redirecting to workspace...');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+    }
+}
+
+function declineProposal(id) {
+    const reason = prompt('Please provide a reason for declining:');
+    if (!reason) return;
+    
+    fetch(`/api/admin/proposal/${id}/decline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Proposal declined.');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+
+function openWorkspace(id) {
+    currentProposalId = id;
+    const modal = new bootstrap.Modal(document.getElementById('workspaceModal'));
+    
+    fetch(`/api/admin/proposal/${id}/workspace`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('workspaceContent').innerHTML = data.html;
+            modal.show();
+        });
+}
+
+function addComment(id) {
+    const comment = prompt('Enter your comment or question for the client:');
+    if (!comment) return;
+    
+    fetch(`/api/admin/proposal/${id}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: comment })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Comment added successfully.');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+
+function markComplete(id) {
+    if (confirm('Mark this proposal as complete and submit to client?')) {
+        fetch(`/api/admin/proposal/${id}/complete`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Proposal marked as complete! Payment will be processed.');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+    }
+}
+
+function requestRevision(id) {
+    const details = prompt('What revisions are needed from the client?');
+    if (!details) return;
+    
+    fetch(`/api/admin/proposal/${id}/request-revision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ details: details })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Revision request sent to client.');
+            location.reload();
+        }
+    });
+}
+
+function downloadProposal(id) {
+    window.location.href = `/api/admin/proposal/${id}/download`;
+}
+
+function saveProposal() {
+    // Implement save functionality
+    alert('Proposal saved as draft.');
+}
+
+function submitForReview() {
+    if (confirm('Submit this proposal for client review?')) {
+        fetch(`/api/admin/proposal/${currentProposalId}/submit-review`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Proposal submitted for review!');
+                    location.reload();
+                }
+            });
+    }
+}
+</script>
+
+<style>
+.proposal-item {
+    transition: background-color 0.2s;
+}
+.proposal-item:hover {
+    background-color: #f8f9fa;
+}
+</style>

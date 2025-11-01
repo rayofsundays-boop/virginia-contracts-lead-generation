@@ -1,0 +1,375 @@
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="fas fa-undo-alt text-danger"></i> Refund Payments</h2>
+
+    <!-- Quick Refund Tool -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Process Refund</h5>
+        </div>
+        <div class="card-body">
+            <form id="refundForm" onsubmit="processRefund(event)">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">User Email or Transaction ID</label>
+                        <input type="text" class="form-control" id="refundSearch" placeholder="user@example.com or TXN12345" required>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="searchPayments()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Refund Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="refundAmount" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Refund Type</label>
+                        <select class="form-select" id="refundType" required>
+                            <option value="">Select...</option>
+                            <option value="full">Full Refund</option>
+                            <option value="partial">Partial Refund</option>
+                            <option value="prorate">Prorated Refund</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-undo"></i> Process
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Reason for Refund</label>
+                    <textarea class="form-control" id="refundReason" rows="2" placeholder="Explain reason for refund..." required></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyUser" checked>
+                    <label class="form-check-label" for="notifyUser">
+                        Send refund confirmation email to user
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="cancelSubscription">
+                    <label class="form-check-label" for="cancelSubscription">
+                        Cancel user's subscription
+                    </label>
+                </div>
+            </form>
+            <div id="refundResult" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Payment Search Results -->
+    <div class="card shadow mb-4" id="paymentSearchCard" style="display:none;">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-search"></i> Payment Search Results</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Select</th>
+                            <th>Transaction ID</th>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentSearchResults"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Refunds -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Refunds</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Request Date</th>
+                            <th>User</th>
+                            <th>Original Payment</th>
+                            <th>Refund Amount</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if pending_refunds %}
+                            {% for refund in pending_refunds %}
+                            <tr>
+                                <td>{{ refund.request_date.strftime('%m/%d/%Y') if refund.request_date else 'N/A' }}</td>
+                                <td>
+                                    <strong>{{ refund.user_name }}</strong><br>
+                                    <small class="text-muted">{{ refund.user_email }}</small>
+                                </td>
+                                <td>
+                                    <div><strong>${{ "{:.2f}".format(refund.original_amount) }}</strong></div>
+                                    <small class="text-muted">{{ refund.transaction_id }}</small>
+                                </td>
+                                <td><strong class="text-danger">${{ "{:.2f}".format(refund.refund_amount) }}</strong></td>
+                                <td>{{ refund.reason }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if refund.status == 'pending' %}bg-warning
+                                        {% elif refund.status == 'approved' %}bg-success
+                                        {% elif refund.status == 'denied' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ refund.status | upper }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success" onclick="approveRefund({{ refund.id }})" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger" onclick="denyRefund({{ refund.id }})" title="Deny">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No pending refund requests.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund History -->
+    <div class="card shadow">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-history"></i> Refund History</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadRefundHistory()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="exportRefunds()">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Transaction ID</th>
+                            <th>User</th>
+                            <th>Original Amount</th>
+                            <th>Refunded</th>
+                            <th>Type</th>
+                            <th>Processed By</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refundHistoryTable">
+                        {% if refund_history %}
+                            {% for refund in refund_history %}
+                            <tr>
+                                <td>{{ refund.refund_date.strftime('%m/%d/%Y') if refund.refund_date else 'N/A' }}</td>
+                                <td><code>{{ refund.transaction_id }}</code></td>
+                                <td>
+                                    <strong>{{ refund.user_name }}</strong><br>
+                                    <small class="text-muted">{{ refund.user_email }}</small>
+                                </td>
+                                <td>${{ "{:.2f}".format(refund.original_amount) }}</td>
+                                <td><strong class="text-danger">${{ "{:.2f}".format(refund.refund_amount) }}</strong></td>
+                                <td><span class="badge bg-info">{{ refund.refund_type }}</span></td>
+                                <td>{{ refund.admin_email }}</td>
+                                <td><small>{{ refund.reason }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    No refund history found.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body">
+                    <h3>${{ total_refunded or 0 }}</h3>
+                    <p class="mb-0">Total Refunded (All Time)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body">
+                    <h3>{{ refunds_this_month or 0 }}</h3>
+                    <p class="mb-0">Refunds This Month</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h3>{{ pending_count or 0 }}</h3>
+                    <p class="mb-0">Pending Requests</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h3>{{ refund_rate or 0 }}%</h3>
+                    <p class="mb-0">Refund Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function searchPayments() {
+    const search = document.getElementById('refundSearch').value;
+    const card = document.getElementById('paymentSearchCard');
+    const tbody = document.getElementById('paymentSearchResults');
+    
+    fetch(`/api/admin/search-payments?q=${encodeURIComponent(search)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.payments && data.payments.length > 0) {
+                card.style.display = 'block';
+                tbody.innerHTML = data.payments.map(payment => `
+                    <tr>
+                        <td>
+                            <input type="radio" name="selectedPayment" value="${payment.id}" 
+                                   onchange="selectPayment('${payment.transaction_id}', ${payment.amount})">
+                        </td>
+                        <td><code>${payment.transaction_id}</code></td>
+                        <td>${payment.date}</td>
+                        <td>${payment.user_name}<br><small>${payment.user_email}</small></td>
+                        <td><strong>$${payment.amount.toFixed(2)}</strong></td>
+                        <td><span class="badge bg-primary">${payment.type}</span></td>
+                        <td><span class="badge bg-${payment.status === 'completed' ? 'success' : 'warning'}">${payment.status}</span></td>
+                    </tr>
+                `).join('');
+            } else {
+                alert('No payments found for this search.');
+            }
+        });
+}
+
+function selectPayment(transactionId, amount) {
+    document.getElementById('refundAmount').value = amount.toFixed(2);
+}
+
+function processRefund(event) {
+    event.preventDefault();
+    const resultDiv = document.getElementById('refundResult');
+    
+    const data = {
+        search: document.getElementById('refundSearch').value,
+        amount: parseFloat(document.getElementById('refundAmount').value),
+        type: document.getElementById('refundType').value,
+        reason: document.getElementById('refundReason').value,
+        notify_user: document.getElementById('notifyUser').checked,
+        cancel_subscription: document.getElementById('cancelSubscription').checked
+    };
+    
+    if (!confirm(`Are you sure you want to refund $${data.amount.toFixed(2)}?`)) {
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing refund...</div>';
+    
+    fetch('/api/admin/process-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(response => {
+        if (response.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> <strong>Refund Processed Successfully!</strong>
+                    <div class="mt-2">
+                        <div>Transaction ID: <code>${response.transaction_id}</code></div>
+                        <div>Refund Amount: <strong>$${response.amount.toFixed(2)}</strong></div>
+                        ${response.email_sent ? '<div>Confirmation email sent to user.</div>' : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('refundForm').reset();
+            setTimeout(() => loadRefundHistory(), 1000);
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ${response.error}</div>`;
+        }
+    })
+    .catch(err => {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Error processing refund.</div>';
+    });
+}
+
+function approveRefund(refundId) {
+    if (!confirm('Approve this refund request?')) return;
+    
+    fetch(`/api/admin/approve-refund/${refundId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Refund approved and processed.');
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+}
+
+function denyRefund(refundId) {
+    const reason = prompt('Enter reason for denial:');
+    if (!reason) return;
+    
+    fetch(`/api/admin/deny-refund/${refundId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Refund request denied.');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+
+function loadRefundHistory() {
+    location.reload();
+}
+
+function exportRefunds() {
+    window.location.href = '/api/admin/export-refunds';
+}
+</script>

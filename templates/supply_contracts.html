@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Cleaning Supplies Procurement - Quick Wins{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <h1 class="display-4">
+                <i class="fas fa-boxes"></i> Cleaning Supplies Procurement
+            </h1>
+            <p class="lead text-muted">
+                Quick Win Opportunities for Bulk Product Suppliers
+            </p>
+            <div class="alert alert-success">
+                <i class="fas fa-bolt"></i> <strong>{{ total_count }}</strong> supply contracts available
+                {% if current_filters.quick_wins %}
+                    <span class="badge bg-warning text-dark ms-2">
+                        <i class="fas fa-zap"></i> Quick Wins Only
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-filter"></i> Filter Opportunities
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('supply_contracts') }}">
+                <div class="row g-3">
+                    <!-- Location Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Location
+                        </label>
+                        <select name="location" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Cities</option>
+                            {% for location in locations %}
+                            <option value="{{ location }}" {% if current_filters.location == location %}selected{% endif %}>
+                                {{ location }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-tag"></i> Product Category
+                        </label>
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}" {% if current_filters.category == category %}selected{% endif %}>
+                                {{ category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Quick Wins Toggle -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-bolt"></i> Quick Wins
+                        </label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="quickWinsToggle" 
+                                   name="quick_wins" value="true" 
+                                   {% if current_filters.quick_wins %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="form-check-label" for="quickWinsToggle">
+                                Short deadline contracts
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Small Business Set-Aside -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-briefcase"></i> Set-Asides
+                        </label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="smallBizToggle" 
+                                   name="small_biz" value="true" 
+                                   {% if current_filters.small_biz %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="form-check-label" for="smallBizToggle">
+                                Small business only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clear Filters -->
+                {% if current_filters.location or current_filters.category or current_filters.quick_wins or current_filters.small_biz %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <a href="{{ url_for('supply_contracts') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times"></i> Clear All Filters
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Contracts Grid -->
+    <div class="row">
+        {% if contracts %}
+            {% for contract in contracts %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm {% if contract[8] %}border-warning{% endif %}">
+                    <!-- Quick Win Badge -->
+                    {% if contract[8] %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-bolt"></i> Quick Win
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-1">{{ contract[0] }}</h5>
+                        <p class="text-muted mb-0">
+                            <small>
+                                <i class="fas fa-building"></i> {{ contract[1] }}
+                            </small>
+                        </p>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Location & Category -->
+                        <p class="mb-2">
+                            <i class="fas fa-map-marker-alt text-danger"></i>
+                            <strong>{{ contract[2] }}</strong>
+                        </p>
+                        <p class="mb-2">
+                            <span class="badge bg-info text-dark">
+                                <i class="fas fa-tag"></i> {{ contract[3] }}
+                            </span>
+                        </p>
+
+                        <!-- Value & Deadline -->
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Est. Value</small>
+                                <p class="mb-0 fw-bold text-success">
+                                    {% if contract[4] %}
+                                        ${{ "{:,.0f}".format(contract[4]) }}
+                                    {% else %}
+                                        TBD
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Deadline</small>
+                                <p class="mb-0 fw-bold text-danger">
+                                    {{ contract[5].strftime('%b %d, %Y') if contract[5] else 'TBD' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Contract Term -->
+                        {% if contract[6] %}
+                        <p class="mb-2">
+                            <i class="fas fa-calendar-alt"></i>
+                            <small>Term: {{ contract[6] }}</small>
+                        </p>
+                        {% endif %}
+
+                        <!-- Badges -->
+                        <div class="mb-3">
+                            {% if contract[9] %}
+                            <span class="badge bg-primary me-1">
+                                <i class="fas fa-briefcase"></i> Small Business Set-Aside
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Delivery Info for Paid Subscribers -->
+                        {% if is_paid_subscriber or is_admin %}
+                        <div class="alert alert-light border mb-0 p-2">
+                            <small>
+                                {% if contract[10] %}
+                                <div><i class="fas fa-shopping-cart"></i> Min Order: <strong>{{ contract[10] }}</strong></div>
+                                {% endif %}
+                                {% if contract[11] %}
+                                <div><i class="fas fa-truck"></i> Delivery: <strong>{{ contract[11] }}</strong></div>
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer bg-white">
+                        {% if is_paid_subscriber or is_admin %}
+                            <!-- Full Access for Subscribers -->
+                            {% if contract[7] and contract[7]|length > 0 %}
+                                <a href="{{ contract[7] }}" target="_blank" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-external-link-alt"></i> View Opportunity
+                                </a>
+                            {% else %}
+                                <span class="btn btn-outline-warning btn-sm w-100" title="URL not available">
+                                    <i class="fas fa-exclamation-triangle"></i> No URL
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <!-- Paywall for Non-Subscribers -->
+                            <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-sm w-100">
+                                <i class="fas fa-lock"></i> Upgrade to View
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i>
+                    No supply contracts found matching your filters.
+                    <a href="{{ url_for('supply_contracts') }}" class="alert-link">Clear filters</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Contract pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- Previous -->
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page - 1 }}&location={{ current_filters.location }}&category={{ current_filters.category }}&quick_wins={{ 'true' if current_filters.quick_wins else '' }}&small_biz={{ 'true' if current_filters.small_biz else '' }}">
+                    Previous
+                </a>
+            </li>
+
+            <!-- Page Numbers -->
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <li class="page-item active">
+                    <span class="page-link">{{ p }}</span>
+                </li>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ p }}&location={{ current_filters.location }}&category={{ current_filters.category }}&quick_wins={{ 'true' if current_filters.quick_wins else '' }}&small_biz={{ 'true' if current_filters.small_biz else '' }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Next -->
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page + 1 }}&location={{ current_filters.location }}&category={{ current_filters.category }}&quick_wins={{ 'true' if current_filters.quick_wins else '' }}&small_biz={{ 'true' if current_filters.small_biz else '' }}">
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Info Section for Non-Subscribers -->
+    {% if not is_paid_subscriber and not is_admin %}
+    <div class="card border-warning mt-5">
+        <div class="card-body text-center">
+            <h4 class="text-warning mb-3">
+                <i class="fas fa-crown"></i> Unlock All Supply Contracts
+            </h4>
+            <p class="mb-3">
+                Get instant access to contact information, full requirements, and direct application links 
+                for all <strong>{{ total_count }}</strong> supply opportunities.
+            </p>
+            <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
+                <i class="fas fa-arrow-up"></i> Upgrade to Premium - $29/month
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Wins Explainer -->
+    <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-lightbulb"></i> What are "Quick Wins"?
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-check-circle text-success"></i> Quick Win Contracts Include:</h6>
+                    <ul>
+                        <li><strong>Short deadlines</strong> (2-4 weeks)</li>
+                        <li><strong>Smaller dollar amounts</strong> ($10K-$150K)</li>
+                        <li><strong>Standing orders</strong> (ongoing relationships)</li>
+                        <li><strong>Emergency procurements</strong> (fast turnaround)</li>
+                        <li><strong>Small business set-asides</strong></li>
+                        <li><strong>Pilot programs</strong> (foot in the door)</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-star text-warning"></i> Perfect For:</h6>
+                    <ul>
+                        <li>New suppliers breaking into government market</li>
+                        <li>Companies with inventory ready to ship</li>
+                        <li>Local/regional distributors</li>
+                        <li>Businesses seeking faster cash flow</li>
+                        <li>Building track record for larger contracts</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="alert alert-success mt-3 mb-0">
+                <i class="fas fa-info-circle"></i> <strong>Pro Tip:</strong> Quick wins often lead to multi-year contracts!
+                Many agencies start with trial periods before committing to larger purchases.
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Categories Guide -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-th-large"></i> Product Categories Available
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-spray-can text-primary"></i> Cleaning Chemicals</h6>
+                    <small class="text-muted">
+                        All-purpose cleaners, disinfectants, degreasers, floor care, glass cleaners
+                    </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-toilet-paper text-primary"></i> Paper Products</h6>
+                    <small class="text-muted">
+                        Toilet paper, paper towels, napkins, tissues, hand towels
+                    </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-leaf text-success"></i> Eco-Friendly Products</h6>
+                    <small class="text-muted">
+                        Green Seal certified, EPA Safer Choice, biodegradable options
+                    </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-broom text-primary"></i> Janitorial Equipment</h6>
+                    <small class="text-muted">
+                        Mops, brooms, buckets, carts, vacuums, floor machines
+                    </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-shield-alt text-danger"></i> PPE & Safety</h6>
+                    <small class="text-muted">
+                        Gloves, masks, goggles, aprons, safety equipment
+                    </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6><i class="fas fa-trash text-primary"></i> Waste Management</h6>
+                    <small class="text-muted">
+                        Trash bags, can liners, recycling supplies
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.border-warning .card-header {
+    background-color: #fff3cd;
+}
+</style>
+{% endblock %}

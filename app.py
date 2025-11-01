@@ -2341,6 +2341,121 @@ def industry_days():
         flash('Industry days feature is being set up. Check back soon!', 'info')
         return redirect(url_for('customer_leads'))
 
+@app.route('/supply-contracts')
+@app.route('/supplies')
+def supply_contracts():
+    """Quick win supply/product contracts for bulk cleaning suppliers"""
+    try:
+        # Check if table exists (compatible with both SQLite and PostgreSQL)
+        try:
+            db.session.execute(text("SELECT 1 FROM supply_contracts LIMIT 1")).fetchone()
+        except Exception:
+            flash('Supply contracts feature is being set up. Check back soon!', 'info')
+            return redirect(url_for('contracts'))
+        
+        # Filters
+        location_filter = request.args.get('location', '')
+        category_filter = request.args.get('category', '')
+        quick_wins_only = request.args.get('quick_wins', '') == 'true'
+        small_biz_only = request.args.get('small_biz', '') == 'true'
+        
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = 12
+        offset = (page - 1) * per_page
+        
+        # Build where conditions
+        where_conditions = ["status = 'open'", "bid_deadline >= CURRENT_DATE"]
+        params = {}
+        
+        if location_filter:
+            where_conditions.append("location ILIKE :location")
+            params['location'] = f'%{location_filter}%'
+        
+        if category_filter:
+            where_conditions.append("product_category = :category")
+            params['category'] = category_filter
+        
+        if quick_wins_only:
+            where_conditions.append("is_quick_win = TRUE")
+        
+        if small_biz_only:
+            where_conditions.append("is_small_business_set_aside = TRUE")
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get total count
+        total = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM supply_contracts WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        # Get contracts
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        supply_contracts_list = db.session.execute(text(f'''
+            SELECT 
+                title, agency, location, product_category, estimated_value,
+                bid_deadline, contract_term, website_url, is_quick_win,
+                is_small_business_set_aside, minimum_order, delivery_frequency
+            FROM supply_contracts 
+            WHERE {where_clause}
+            ORDER BY 
+                CASE WHEN is_quick_win THEN 0 ELSE 1 END,
+                bid_deadline ASC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        # Get filter options
+        locations = db.session.execute(text('''
+            SELECT DISTINCT location FROM supply_contracts 
+            WHERE status = 'open' 
+            ORDER BY location
+        ''')).fetchall()
+        
+        categories = db.session.execute(text('''
+            SELECT DISTINCT product_category FROM supply_contracts 
+            WHERE status = 'open'
+            ORDER BY product_category
+        ''')).fetchall()
+        
+        # Pagination
+        total_pages = max(math.ceil(total / per_page), 1)
+        
+        # Check subscription status
+        is_admin = session.get('is_admin', False)
+        is_paid_subscriber = False
+        
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            
+            if result and result[0] == 'paid':
+                is_paid_subscriber = True
+        
+        if is_admin:
+            is_paid_subscriber = True
+        
+        return render_template('supply_contracts.html',
+                             contracts=supply_contracts_list,
+                             locations=[loc[0] for loc in locations],
+                             categories=[cat[0] for cat in categories],
+                             current_filters={
+                                 'location': location_filter,
+                                 'category': category_filter,
+                                 'quick_wins': quick_wins_only,
+                                 'small_biz': small_biz_only
+                             },
+                             page=page,
+                             total_pages=total_pages,
+                             total_count=total,
+                             is_paid_subscriber=is_paid_subscriber,
+                             is_admin=is_admin)
+    except Exception as e:
+        print(f"Supply contracts error: {e}")
+        flash('Supply contracts feature is being set up. Check back soon!', 'info')
+        return redirect(url_for('contracts'))
+
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""

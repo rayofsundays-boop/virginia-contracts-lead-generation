@@ -59,12 +59,46 @@
                 </div>
                 
                 <nav class="nav flex-column">
+                    <!-- Overview -->
+                    <div class="px-3 py-2 text-white-50" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Overview
+                    </div>
                     <a class="nav-link {% if section == 'dashboard' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='dashboard') }}">
                         <i class="fas fa-tachometer-alt"></i>Dashboard
                     </a>
-                    <a class="nav-link {% if section == 'users' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='users') }}">
-                        <i class="fas fa-users"></i>User Management
+                    <a class="nav-link {% if section == 'all-leads' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='all-leads') }}">
+                        <i class="fas fa-database"></i>All Customer Leads
                     </a>
+                    
+                    <!-- User Management -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        User Management
+                    </div>
+                    <a class="nav-link {% if section == 'users' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='users') }}">
+                        <i class="fas fa-users"></i>All Users
+                    </a>
+                    <a class="nav-link {% if section == 'password-resets' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='password-resets') }}">
+                        <i class="fas fa-key"></i>Password Resets
+                    </a>
+                    <a class="nav-link {% if section == 'pull-records' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='pull-records') }}">
+                        <i class="fas fa-file-export"></i>Pull Records
+                    </a>
+                    
+                    <!-- Financial -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Financial
+                    </div>
+                    <a class="nav-link {% if section == 'revenue' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='revenue') }}">
+                        <i class="fas fa-dollar-sign"></i>Revenue & Sales
+                    </a>
+                    <a class="nav-link {% if section == 'refunds' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='refunds') }}">
+                        <i class="fas fa-undo-alt"></i>Refund Payments
+                    </a>
+                    
+                    <!-- Content & Communication -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Communication
+                    </div>
                     <a class="nav-link {% if section == 'messages' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='messages') }}">
                         <i class="fas fa-envelope"></i>Messages
                         {% if unread_admin_messages > 0 %}
@@ -72,16 +106,26 @@
                         {% endif %}
                     </a>
                     <a class="nav-link {% if section == 'proposals' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='proposals') }}">
-                        <i class="fas fa-file-alt"></i>Proposal Reviews
+                        <i class="fas fa-file-alt"></i>Proposal Writer Portal
                         {% if pending_proposals > 0 %}
                         <span class="badge bg-warning">{{ pending_proposals }}</span>
                         {% endif %}
                     </a>
+                    
+                    <!-- Branding & Resources -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Branding & Resources
+                    </div>
+                    <a class="nav-link" href="https://www.canva.com" target="_blank">
+                        <i class="fas fa-palette"></i>Branding Materials <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                    </a>
+                    
+                    <!-- Analytics -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Analytics
+                    </div>
                     <a class="nav-link {% if section == 'analytics' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='analytics') }}">
                         <i class="fas fa-chart-line"></i>Analytics & Metrics
-                    </a>
-                    <a class="nav-link {% if section == 'revenue' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='revenue') }}">
-                        <i class="fas fa-dollar-sign"></i>Revenue & Sales
                     </a>
                     <a class="nav-link {% if section == 'surveys' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='surveys') }}">
                         <i class="fas fa-poll"></i>User Surveys
@@ -89,9 +133,15 @@
                     <a class="nav-link {% if section == 'logs' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='logs') }}">
                         <i class="fas fa-history"></i>Activity Logs
                     </a>
+                    
+                    <!-- Settings -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        Settings
+                    </div>
                     <a class="nav-link {% if section == 'settings' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='settings') }}">
-                        <i class="fas fa-cog"></i>Settings
+                        <i class="fas fa-cog"></i>System Settings
                     </a>
+                    
                     <div class="dropdown-divider bg-white-50"></div>
                     <a class="nav-link" href="{{ url_for('mailbox') }}">
                         <i class="fas fa-inbox"></i>My Mailbox
@@ -108,8 +158,23 @@
             {% if section == 'dashboard' %}
             {% include 'admin_sections/dashboard.html' %}
             
+            {% elif section == 'all-leads' %}
+            {% include 'admin_sections/all_leads.html' %}
+            
             {% elif section == 'users' %}
             {% include 'admin_sections/users.html' %}
+            
+            {% elif section == 'password-resets' %}
+            {% include 'admin_sections/password_resets.html' %}
+            
+            {% elif section == 'pull-records' %}
+            {% include 'admin_sections/pull_records.html' %}
+            
+            {% elif section == 'revenue' %}
+            {% include 'admin_sections/revenue.html' %}
+            
+            {% elif section == 'refunds' %}
+            {% include 'admin_sections/refunds.html' %}
             
             {% elif section == 'messages' %}
             {% include 'admin_sections/messages.html' %}
@@ -119,9 +184,6 @@
             
             {% elif section == 'analytics' %}
             {% include 'admin_sections/analytics.html' %}
-            
-            {% elif section == 'revenue' %}
-            {% include 'admin_sections/revenue.html' %}
             
             {% elif section == 'surveys' %}
             {% include 'admin_sections/surveys.html' %}
