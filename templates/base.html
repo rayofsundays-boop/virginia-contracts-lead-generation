@@ -353,6 +353,12 @@
                             <i class="fas fa-user-tie"></i> Customer Portal
                         </a>
                     </li>
+                    <!-- Signed in as notification -->
+                    <li class="nav-item">
+                        <span class="nav-link text-white-50 pe-none" style="font-size: 11pt;">
+                            <i class="fas fa-user-check me-1"></i>Signed in as: <strong class="text-white">{{ session.get('user_email') }}</strong>
+                        </span>
+                    </li>
                     {% else %}
                     <!-- Show Register/Sign In button for non-authenticated users -->
                     <li class="nav-item">
