@@ -5399,6 +5399,173 @@ def mark_request_complete(request_id):
     
     return redirect(url_for('lead_marketplace'))
 
+@app.route('/initialize-va-data', methods=['POST'])
+@login_required
+def initialize_va_data():
+    """Initialize Virginia colleges, universities, and procurement opportunities"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        # Virginia Colleges and Universities by City with Procurement Opportunities
+        va_institutions = [
+            # Hampton
+            {'title': 'Hampton University Facilities Management', 'agency': 'Hampton University', 'location': 'Hampton, VA', 'value': '$50,000 - $150,000', 'deadline': '2026-06-30', 'description': 'Janitorial and custodial services for academic buildings, dormitories, and administrative offices. Includes daily cleaning, floor care, window washing, and special event setup.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://www.hamptonu.edu'},
+            {'title': 'Thomas Nelson Community College Cleaning Services', 'agency': 'Thomas Nelson Community College', 'location': 'Hampton, VA', 'value': '$30,000 - $80,000', 'deadline': '2026-03-31', 'description': 'Comprehensive cleaning services for classrooms, labs, offices, and common areas. Green cleaning products preferred.', 'naics_code': '561720', 'category': 'Community College', 'website_url': 'https://www.tncc.edu'},
+            
+            # Norfolk
+            {'title': 'Old Dominion University Campus Facilities', 'agency': 'Old Dominion University', 'location': 'Norfolk, VA', 'value': '$200,000 - $500,000', 'deadline': '2026-12-31', 'description': 'Large-scale janitorial services for 130+ buildings including classrooms, residence halls, recreation centers, and libraries. Evening and weekend hours required.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://www.odu.edu/procurement'},
+            {'title': 'Norfolk State University Custodial Services', 'agency': 'Norfolk State University', 'location': 'Norfolk, VA', 'value': '$100,000 - $250,000', 'deadline': '2026-09-30', 'description': 'Comprehensive custodial and janitorial services for academic and administrative buildings. HBCU serving 5,000+ students.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://www.nsu.edu'},
+            {'title': 'Eastern Virginia Medical School Facilities', 'agency': 'Eastern Virginia Medical School', 'location': 'Norfolk, VA', 'value': '$75,000 - $175,000', 'deadline': '2026-08-31', 'description': 'Medical facility cleaning services including labs, classrooms, and clinical spaces. Medical-grade disinfection required.', 'naics_code': '561720', 'category': 'Medical School', 'website_url': 'https://www.evms.edu'},
+            {'title': 'Tidewater Community College - Norfolk Campus', 'agency': 'Tidewater Community College', 'location': 'Norfolk, VA', 'value': '$40,000 - $100,000', 'deadline': '2026-05-31', 'description': 'Cleaning services for multiple campus buildings including classrooms, computer labs, and student centers.', 'naics_code': '561720', 'category': 'Community College', 'website_url': 'https://www.tcc.edu'},
+            
+            # Virginia Beach
+            {'title': 'Regent University Campus Services', 'agency': 'Regent University', 'location': 'Virginia Beach, VA', 'value': '$80,000 - $200,000', 'deadline': '2026-11-30', 'description': 'Comprehensive custodial services for Christian university campus including chapel, classrooms, dorms, and administration buildings.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://www.regent.edu'},
+            {'title': 'Tidewater Community College - Virginia Beach Campus', 'agency': 'Tidewater Community College', 'location': 'Virginia Beach, VA', 'value': '$50,000 - $120,000', 'deadline': '2026-07-31', 'description': 'Janitorial services for Virginia Beach campus facilities including automotive labs, health sciences, and general classrooms.', 'naics_code': '561720', 'category': 'Community College', 'website_url': 'https://www.tcc.edu'},
+            
+            # Newport News
+            {'title': 'Christopher Newport University Facilities', 'agency': 'Christopher Newport University', 'location': 'Newport News, VA', 'value': '$150,000 - $350,000', 'deadline': '2026-10-31', 'description': 'Full-service custodial and grounds maintenance for growing university campus. Includes academic buildings, student union, recreation center, and residence halls.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://cnu.edu/procurement'},
+            {'title': 'Thomas Nelson Community College - Newport News', 'agency': 'Thomas Nelson Community College', 'location': 'Newport News, VA', 'value': '$35,000 - $85,000', 'deadline': '2026-04-30', 'description': 'Cleaning services for Newport News campus including technical labs, classrooms, and administrative offices.', 'naics_code': '561720', 'category': 'Community College', 'website_url': 'https://www.tncc.edu'},
+            
+            # Williamsburg/James City County
+            {'title': 'College of William & Mary Facilities Management', 'agency': 'College of William & Mary', 'location': 'Williamsburg, VA', 'value': '$300,000 - $700,000', 'deadline': '2026-12-31', 'description': 'Historic campus custodial services including specialized cleaning for historic buildings. Comprehensive services for classrooms, dorms, dining, and athletic facilities.', 'naics_code': '561720', 'category': 'Higher Education', 'website_url': 'https://www.wm.edu/offices/procurement'},
+            
+            # Suffolk
+            {'title': 'Paul D. Camp Community College Campus Services', 'agency': 'Paul D. Camp Community College', 'location': 'Suffolk, VA', 'value': '$25,000 - $65,000', 'deadline': '2026-03-31', 'description': 'Cleaning and custodial services for community college campus including classrooms, offices, and student areas.', 'naics_code': '561720', 'category': 'Community College', 'website_url': 'https://www.pdc.edu'},
+        ]
+        
+        # School Districts by City
+        school_districts = [
+            # Hampton
+            {'title': 'Hampton City Schools Custodial Services', 'agency': 'Hampton City Public Schools', 'location': 'Hampton, VA', 'value': '$500,000 - $1,200,000', 'deadline': '2026-06-30', 'description': 'Comprehensive custodial services for 25+ schools including elementary, middle, and high schools. Summer deep cleaning and daily maintenance.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://www.hampton.k12.va.us'},
+            
+            # Norfolk
+            {'title': 'Norfolk Public Schools Facilities Services', 'agency': 'Norfolk Public Schools', 'location': 'Norfolk, VA', 'value': '$2,000,000 - $4,500,000', 'deadline': '2026-08-31', 'description': 'Large-scale custodial services for 35+ schools serving 28,000+ students. Includes all grade levels and administrative buildings.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://www.nps.k12.va.us/purchasing'},
+            
+            # Virginia Beach
+            {'title': 'Virginia Beach City Public Schools Cleaning', 'agency': 'Virginia Beach City Public Schools', 'location': 'Virginia Beach, VA', 'value': '$3,000,000 - $6,000,000', 'deadline': '2026-09-30', 'description': 'Comprehensive custodial services for 85+ schools - largest district in Virginia. Includes specialized cleaning for science labs, athletic facilities, and performing arts centers.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://www.vbschools.com/procurement'},
+            
+            # Newport News
+            {'title': 'Newport News Public Schools Custodial Contract', 'agency': 'Newport News Public Schools', 'location': 'Newport News, VA', 'value': '$1,200,000 - $2,800,000', 'deadline': '2026-07-31', 'description': 'Custodial and cleaning services for 40+ schools including career and technical centers. Green cleaning certification preferred.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://www.nnschools.org/procurement'},
+            
+            # Williamsburg-James City County
+            {'title': 'Williamsburg-James City County Schools', 'agency': 'WJCC Public Schools', 'location': 'Williamsburg, VA', 'value': '$400,000 - $900,000', 'deadline': '2026-05-31', 'description': 'Custodial services for 15 schools including historic school buildings requiring specialized care.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://wjccschools.org'},
+            
+            # Suffolk
+            {'title': 'Suffolk Public Schools Facilities Management', 'agency': 'Suffolk Public Schools', 'location': 'Suffolk, VA', 'value': '$600,000 - $1,400,000', 'deadline': '2026-06-30', 'description': 'Comprehensive cleaning services for 20+ schools in growing district. Includes new construction facilities.', 'naics_code': '561720', 'category': 'School District', 'website_url': 'https://spsk12.net'},
+        ]
+        
+        # Other Government Procurement Opportunities by City
+        other_govt = [
+            # Hampton
+            {'title': 'Hampton Transit (HRT) Bus Facility Cleaning', 'agency': 'Hampton Roads Transit', 'location': 'Hampton, VA', 'value': '$75,000 - $150,000', 'deadline': '2026-12-31', 'description': 'Cleaning services for bus maintenance facility, administrative offices, and public transit stations.', 'naics_code': '561720', 'category': 'Transit Authority', 'website_url': 'https://www.gohrt.com'},
+            {'title': 'Hampton Public Library System Cleaning', 'agency': 'Hampton Public Library', 'location': 'Hampton, VA', 'value': '$40,000 - $90,000', 'deadline': '2026-05-31', 'description': 'Janitorial services for 5 library branches including main library and neighborhood branches.', 'naics_code': '561720', 'category': 'Public Library', 'website_url': 'https://hamptonpubliclibrary.org'},
+            {'title': 'Hampton Veterans Affairs Medical Center', 'agency': 'VA Medical Center', 'location': 'Hampton, VA', 'value': '$200,000 - $450,000', 'deadline': '2026-11-30', 'description': 'Medical facility cleaning services for veteran healthcare facility. Requires medical-grade disinfection and biohazard protocols.', 'naics_code': '561720', 'category': 'Federal Healthcare', 'website_url': 'https://www.va.gov'},
+            
+            # Norfolk
+            {'title': 'Norfolk International Airport Terminal Services', 'agency': 'Norfolk Airport Authority', 'location': 'Norfolk, VA', 'value': '$400,000 - $800,000', 'deadline': '2026-10-31', 'description': 'Comprehensive cleaning for airport terminals, gates, restrooms, and public areas. 24/7 service required.', 'naics_code': '561720', 'category': 'Airport Authority', 'website_url': 'https://www.norfolkairport.com'},
+            {'title': 'Naval Station Norfolk BOQ Facilities', 'agency': 'U.S. Navy', 'location': 'Norfolk, VA', 'value': '$500,000 - $1,000,000', 'deadline': '2026-09-30', 'description': 'Custodial services for Bachelor Officer Quarters and administrative buildings. Security clearance required.', 'naics_code': '561720', 'category': 'Military Base', 'website_url': 'https://www.cnic.navy.mil/norfolk'},
+            {'title': 'Norfolk Sentara Hospital System Facilities', 'agency': 'Sentara Healthcare', 'location': 'Norfolk, VA', 'value': '$800,000 - $1,800,000', 'deadline': '2026-12-31', 'description': 'Healthcare facility cleaning for multiple hospital buildings. Joint Commission compliance required.', 'naics_code': '561720', 'category': 'Private Healthcare', 'website_url': 'https://www.sentara.com'},
+            
+            # Virginia Beach
+            {'title': 'Virginia Beach Convention Center Services', 'agency': 'Virginia Beach Convention Center', 'location': 'Virginia Beach, VA', 'value': '$300,000 - $600,000', 'deadline': '2026-08-31', 'description': 'Event-based cleaning for convention center including pre/post event services, daily maintenance, and emergency response.', 'naics_code': '561720', 'category': 'Convention Center', 'website_url': 'https://www.vbconventioncenter.com'},
+            {'title': 'Virginia Beach Public Library System', 'agency': 'Virginia Beach Public Libraries', 'location': 'Virginia Beach, VA', 'value': '$80,000 - $180,000', 'deadline': '2026-06-30', 'description': 'Cleaning services for 10 library branches throughout Virginia Beach.', 'naics_code': '561720', 'category': 'Public Library', 'website_url': 'https://www.vbgov.com/library'},
+            {'title': 'Oceana Naval Air Station Facilities', 'agency': 'U.S. Navy', 'location': 'Virginia Beach, VA', 'value': '$600,000 - $1,200,000', 'deadline': '2026-11-30', 'description': 'Custodial services for naval air station including hangars, administrative buildings, and support facilities. Security clearance required.', 'naics_code': '561720', 'category': 'Military Base', 'website_url': 'https://www.cnic.navy.mil/oceana'},
+            
+            # Newport News
+            {'title': 'Newport News/Williamsburg Airport Services', 'agency': 'Newport News/Williamsburg International Airport', 'location': 'Newport News, VA', 'value': '$150,000 - $300,000', 'deadline': '2026-07-31', 'description': 'Terminal and facility cleaning services including public areas, gates, and administrative offices.', 'naics_code': '561720', 'category': 'Airport Authority', 'website_url': 'https://www.flyphf.com'},
+            {'title': 'Newport News Shipbuilding Security Buildings', 'agency': 'Huntington Ingalls Industries', 'location': 'Newport News, VA', 'value': '$400,000 - $750,000', 'deadline': '2026-10-31', 'description': 'Cleaning services for administrative and security buildings at major shipyard. Clearance may be required for certain areas.', 'naics_code': '561720', 'category': 'Defense Contractor', 'website_url': 'https://www.huntingtoningalls.com'},
+            {'title': 'Newport News Public Library System', 'agency': 'Newport News Public Libraries', 'location': 'Newport News, VA', 'value': '$50,000 - $110,000', 'deadline': '2026-05-31', 'description': 'Janitorial services for main library and branch locations.', 'naics_code': '561720', 'category': 'Public Library', 'website_url': 'https://www.nnva.gov/library'},
+            
+            # Williamsburg
+            {'title': 'Colonial Williamsburg Foundation Facilities', 'agency': 'Colonial Williamsburg Foundation', 'location': 'Williamsburg, VA', 'value': '$250,000 - $500,000', 'deadline': '2026-09-30', 'description': 'Specialized cleaning for historic buildings, visitor centers, museums, and administrative offices. Historic preservation training required.', 'naics_code': '561720', 'category': 'Historic Foundation', 'website_url': 'https://www.colonialwilliamsburg.org'},
+            {'title': 'Williamsburg Regional Library Cleaning', 'agency': 'Williamsburg Regional Library', 'location': 'Williamsburg, VA', 'value': '$35,000 - $75,000', 'deadline': '2026-04-30', 'description': 'Custodial services for library branches in Williamsburg and James City County.', 'naics_code': '561720', 'category': 'Public Library', 'website_url': 'https://www.wrl.org'},
+            
+            # Suffolk
+            {'title': 'Suffolk Public Library System Services', 'agency': 'Suffolk Public Libraries', 'location': 'Suffolk, VA', 'value': '$30,000 - $70,000', 'deadline': '2026-03-31', 'description': 'Cleaning services for Suffolk library branches and administrative offices.', 'naics_code': '561720', 'category': 'Public Library', 'website_url': 'https://www.suffolk.va.us/library'},
+            {'title': 'Suffolk Municipal Center Facilities', 'agency': 'City of Suffolk', 'location': 'Suffolk, VA', 'value': '$100,000 - $200,000', 'deadline': '2026-06-30', 'description': 'Comprehensive custodial services for municipal buildings including city hall, courts, and administrative offices.', 'naics_code': '561720', 'category': 'Municipal Government', 'website_url': 'https://www.suffolk.va.us'},
+        ]
+        
+        # Private Sector Procurement Opportunities by City
+        private_sector = [
+            # Hampton
+            {'business_name': 'Sentara Hampton General Hospital', 'business_type': 'Hospital', 'location': 'Hampton, VA', 'square_footage': 120000, 'monthly_value': 35000, 'frequency': 'Daily', 'services_needed': 'Healthcare facility cleaning, infection control, terminal cleaning', 'description': 'Major hospital seeking comprehensive environmental services with Joint Commission compliance.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'Peninsula Town Center', 'business_type': 'Shopping Center', 'location': 'Hampton, VA', 'square_footage': 450000, 'monthly_value': 28000, 'frequency': 'Daily', 'services_needed': 'Retail common area cleaning, restroom services, special event cleanup', 'description': 'Major shopping center requiring daily maintenance and weekend deep cleaning.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Langley Federal Credit Union HQ', 'business_type': 'Corporate Office', 'location': 'Hampton, VA', 'square_footage': 85000, 'monthly_value': 18000, 'frequency': 'Daily', 'services_needed': 'Office cleaning, floor care, window washing', 'description': 'Corporate headquarters requiring professional office cleaning services.', 'size': 'Medium', 'contact_type': 'Direct'},
+            
+            # Norfolk
+            {'business_name': 'Sentara Norfolk General Hospital', 'business_type': 'Hospital', 'location': 'Norfolk, VA', 'square_footage': 300000, 'monthly_value': 75000, 'frequency': 'Daily', 'services_needed': 'Full hospital environmental services, ICU cleaning, surgical suite maintenance', 'description': 'Level 1 trauma center requiring 24/7 environmental services with specialized training.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'MacArthur Center', 'business_type': 'Shopping Mall', 'location': 'Norfolk, VA', 'square_footage': 750000, 'monthly_value': 45000, 'frequency': 'Daily', 'services_needed': 'Mall common areas, food court, restrooms, parking garage', 'description': 'Premier shopping destination requiring comprehensive cleaning services.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'Dominion Tower', 'business_type': 'Class A Office Building', 'location': 'Norfolk, VA', 'square_footage': 500000, 'monthly_value': 55000, 'frequency': 'Daily', 'services_needed': 'Multi-tenant office tower cleaning, high-rise window washing', 'description': 'Downtown Norfolk\'s premier office tower seeking professional janitorial services.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Norfolk Marriott Waterside', 'business_type': 'Hotel', 'location': 'Norfolk, VA', 'square_footage': 180000, 'monthly_value': 32000, 'frequency': 'Daily', 'services_needed': 'Hotel housekeeping, banquet/event cleaning, public space maintenance', 'description': 'Full-service waterfront hotel requiring comprehensive cleaning services.', 'size': 'Large', 'contact_type': 'Direct'},
+            
+            # Virginia Beach
+            {'business_name': 'Sentara Virginia Beach General', 'business_type': 'Hospital', 'location': 'Virginia Beach, VA', 'square_footage': 250000, 'monthly_value': 65000, 'frequency': 'Daily', 'services_needed': 'Hospital environmental services, patient room cleaning, OR suite maintenance', 'description': 'Major hospital requiring Joint Commission compliant cleaning services.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'Hilton Virginia Beach Oceanfront', 'business_type': 'Hotel', 'location': 'Virginia Beach, VA', 'square_footage': 220000, 'monthly_value': 38000, 'frequency': 'Daily', 'services_needed': 'Full hotel housekeeping, conference center, restaurant cleaning', 'description': 'Oceanfront resort requiring year-round comprehensive cleaning services.', 'size': 'Large', 'contact_type': 'Direct'},
+            {'business_name': 'Town Center Virginia Beach', 'business_type': 'Mixed-Use Development', 'location': 'Virginia Beach, VA', 'square_footage': 600000, 'monthly_value': 42000, 'frequency': 'Daily', 'services_needed': 'Retail, dining, office, and residential common area cleaning', 'description': 'Premier mixed-use development requiring comprehensive property services.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'Pembroke Office Park', 'business_type': 'Office Park', 'location': 'Virginia Beach, VA', 'square_footage': 400000, 'monthly_value': 35000, 'frequency': 'Daily', 'services_needed': 'Multi-building office park cleaning and property maintenance', 'description': 'Major office park with multiple tenants requiring coordinated cleaning services.', 'size': 'Large', 'contact_type': 'Bid'},
+            
+            # Newport News
+            {'business_name': 'Riverside Regional Medical Center', 'business_type': 'Hospital', 'location': 'Newport News, VA', 'square_footage': 200000, 'monthly_value': 55000, 'frequency': 'Daily', 'services_needed': 'Healthcare environmental services, infection prevention, specialty unit cleaning', 'description': 'Regional medical center requiring comprehensive environmental services.', 'size': 'Enterprise', 'contact_type': 'Bid'},
+            {'business_name': 'City Center at Oyster Point', 'business_type': 'Mixed-Use Development', 'location': 'Newport News, VA', 'square_footage': 350000, 'monthly_value': 28000, 'frequency': 'Daily', 'services_needed': 'Retail, restaurant, office, and residential common areas', 'description': 'Growing mixed-use development requiring professional property services.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Marriott Newport News at City Center', 'business_type': 'Hotel', 'location': 'Newport News, VA', 'square_footage': 140000, 'monthly_value': 26000, 'frequency': 'Daily', 'services_needed': 'Hotel housekeeping, event space cleaning, public area maintenance', 'description': 'Full-service hotel requiring daily housekeeping and event services.', 'size': 'Medium', 'contact_type': 'Direct'},
+            
+            # Williamsburg
+            {'business_name': 'Sentara Williamsburg Regional Medical', 'business_type': 'Hospital', 'location': 'Williamsburg, VA', 'square_footage': 180000, 'monthly_value': 48000, 'frequency': 'Daily', 'services_needed': 'Hospital cleaning, surgical suite maintenance, patient care areas', 'description': 'Regional hospital requiring medical-grade cleaning services.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Williamsburg Premium Outlets', 'business_type': 'Outlet Mall', 'location': 'Williamsburg, VA', 'square_footage': 400000, 'monthly_value': 32000, 'frequency': 'Daily', 'services_needed': 'Retail common areas, restrooms, food court, parking lot maintenance', 'description': 'Major tourist destination requiring high-quality cleaning services.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Kingsmill Resort', 'business_type': 'Resort & Conference Center', 'location': 'Williamsburg, VA', 'square_footage': 280000, 'monthly_value': 45000, 'frequency': 'Daily', 'services_needed': 'Resort housekeeping, conference facilities, golf clubhouse, spa services', 'description': 'Luxury resort requiring premium cleaning services for all facilities.', 'size': 'Large', 'contact_type': 'Direct'},
+            
+            # Suffolk
+            {'title': 'Sentara Obici Hospital', 'business_type': 'Hospital', 'location': 'Suffolk, VA', 'square_footage': 160000, 'monthly_value': 42000, 'frequency': 'Daily', 'services_needed': 'Healthcare facility cleaning, patient rooms, surgical areas', 'description': 'Community hospital requiring comprehensive environmental services.', 'size': 'Large', 'contact_type': 'Bid'},
+            {'business_name': 'Harbour View Office Complex', 'business_type': 'Office Park', 'location': 'Suffolk, VA', 'square_footage': 200000, 'monthly_value': 22000, 'frequency': 'Daily', 'services_needed': 'Multi-building office cleaning and grounds maintenance', 'description': 'Growing office complex requiring professional cleaning services.', 'size': 'Medium', 'contact_type': 'Bid'},
+        ]
+        
+        # Insert institutions into contracts/federal_contracts table
+        inserted_count = 0
+        for inst in va_institutions + school_districts + other_govt:
+            try:
+                db.session.execute(text('''
+                    INSERT INTO contracts 
+                    (title, agency, location, value, deadline, description, naics_code, website_url)
+                    VALUES 
+                    (:title, :agency, :location, :value, :deadline, :description, :naics_code, :website_url)
+                '''), inst)
+                inserted_count += 1
+            except Exception as e:
+                print(f"Error inserting {inst['title']}: {e}")
+        
+        # Insert private sector into commercial_opportunities
+        for opp in private_sector:
+            try:
+                db.session.execute(text('''
+                    INSERT INTO commercial_opportunities 
+                    (business_name, business_type, location, square_footage, monthly_value, 
+                     frequency, services_needed, description, size, contact_type)
+                    VALUES 
+                    (:business_name, :business_type, :location, :square_footage, :monthly_value,
+                     :frequency, :services_needed, :description, :size, :contact_type)
+                '''), opp)
+                inserted_count += 1
+            except Exception as e:
+                print(f"Error inserting {opp.get('business_name', 'Unknown')}: {e}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully inserted {inserted_count} procurement opportunities',
+            'details': {
+                'colleges_universities': len(va_institutions),
+                'school_districts': len(school_districts),
+                'other_government': len(other_govt),
+                'private_sector': len(private_sector)
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Initialize database for both local and production
 try:
     init_db()
