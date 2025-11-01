@@ -1756,7 +1756,7 @@ def signin():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Check for admin login first
+        # Check for admin login first (hardcoded superadmin)
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['is_admin'] = True
             session['username'] = 'Admin'
@@ -1764,9 +1764,9 @@ def signin():
             flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
             return redirect(url_for('contracts'))
         
-        # Get user from database
+        # Get user from database (including is_admin flag)
         result = db.session.execute(
-            text('SELECT id, username, email, password_hash, contact_name, credits_balance FROM leads WHERE username = :username OR email = :username'),
+            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin FROM leads WHERE username = :username OR email = :username'),
             {'username': username}
         ).fetchone()
         
@@ -1777,8 +1777,14 @@ def signin():
             session['email'] = result[2]
             session['name'] = result[4]
             session['credits_balance'] = result[5]
+            session['is_admin'] = bool(result[6])  # Set admin status from database
             
-            flash(f'Welcome back, {result[4]}! 🎉', 'success')
+            # Show appropriate welcome message
+            if session['is_admin']:
+                flash(f'Welcome back, {result[4]}! You have admin privileges. 🔑', 'success')
+            else:
+                flash(f'Welcome back, {result[4]}! 🎉', 'success')
+            
             return redirect(url_for('customer_leads'))
         else:
             flash('Invalid username or password. Please try again.', 'error')
@@ -4607,6 +4613,51 @@ def admin_stats():
             
     except Exception as e:
         print(f"Stats error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/admin/toggle-admin-privilege', methods=['POST'])
+@login_required
+def toggle_admin_privilege():
+    """Grant or revoke admin privileges for a user"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Admin access required'}), 403
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        grant_admin = data.get('grant_admin', False)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        # Update user's admin status
+        db.session.execute(
+            text('UPDATE leads SET is_admin = :is_admin WHERE id = :user_id'),
+            {'is_admin': grant_admin, 'user_id': user_id}
+        )
+        db.session.commit()
+        
+        # Get user details
+        user = db.session.execute(
+            text('SELECT email, contact_name FROM leads WHERE id = :user_id'),
+            {'user_id': user_id}
+        ).fetchone()
+        
+        action = 'granted to' if grant_admin else 'revoked from'
+        message = f"Admin privileges {action} {user[1]} ({user[0]})"
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'is_admin': grant_admin
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Toggle admin error: {e}")
         return jsonify({
             'success': False,
             'message': f'Error: {str(e)}'
