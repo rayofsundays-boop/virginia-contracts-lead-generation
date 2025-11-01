@@ -375,13 +375,14 @@
                     </li>
                     {% endif %}
                     
-                    {% if session.get('user_email') %}
-                    <!-- Partnerships & Resources -->
+                    <!-- Partnerships & Resources - Available to Everyone -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('partnerships') }}">
                             <i class="fas fa-handshake"></i> Partnerships
                         </a>
                     </li>
+                    
+                    {% if session.get('user_email') %}
                     <!-- Visible Sign Out Button -->
                     <li class="nav-item">
                         <a class="nav-link btn btn-outline-light px-3 mx-1" href="{{ url_for('logout') }}" style="border-radius: 50px; font-weight: 600;">

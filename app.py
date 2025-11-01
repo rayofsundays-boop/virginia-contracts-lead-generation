@@ -5819,9 +5819,8 @@ def proposal_templates():
     return render_template('proposal_templates.html')
 
 @app.route('/partnerships')
-@login_required
 def partnerships():
-    """Partnership resources - PTAC, SBA, GSA certification guides"""
+    """Partnership resources - PTAC, SBA, GSA certification guides - Public access"""
     return render_template('partnerships.html')
 
 @app.route('/subscription')
