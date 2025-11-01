@@ -2137,6 +2137,18 @@ def contracts():
 def educational_contracts():
     """College and university procurement opportunities"""
     try:
+        # Check if table exists
+        table_check = db.session.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'educational_contracts'
+            )
+        """)).scalar()
+        
+        if not table_check:
+            flash('Educational contracts feature is being set up. Check back soon!', 'info')
+            return redirect(url_for('contracts'))
+        
         institution_filter = request.args.get('institution', '')
         city_filter = request.args.get('city', '')
         category_filter = request.args.get('category', '')
@@ -2234,6 +2246,18 @@ def educational_contracts():
 def industry_days():
     """Industry days and procurement events for subscribers"""
     try:
+        # Check if table exists
+        table_check = db.session.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'industry_days'
+            )
+        """)).scalar()
+        
+        if not table_check:
+            flash('Industry days feature is being set up. Check back soon!', 'info')
+            return redirect(url_for('customer_leads'))
+        
         city_filter = request.args.get('city', '')
         event_type_filter = request.args.get('event_type', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
