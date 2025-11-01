@@ -1,7 +1,7 @@
 import os
 import json
 import urllib.parse
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -11,7 +11,7 @@ import threading
 import schedule
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
+from functools import wraps, lru_cache
 from lead_generator import LeadGenerator
 import paypalrestsdk
 import math
@@ -28,8 +28,11 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
-# Session configuration - 20 minute timeout
+# Session configuration
+# Regular users: 20 minutes
+# Admin users: 8 hours (extended for admin workflow)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)
+app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=8)
 
 # Admin credentials (bypass paywall)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -114,6 +117,81 @@ def generate_temp_password(length=12):
     """Generate a random temporary password"""
     characters = string.ascii_letters + string.digits + "!@#$%"
     return ''.join(random.choice(characters) for i in range(length))
+
+# ========================================
+# ADMIN OPTIMIZATION HELPERS
+# ========================================
+
+def admin_required(f):
+    """
+    Decorator to require admin access for routes.
+    Use this instead of manual session.get('is_admin') checks.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            flash('Admin access required. Please sign in as administrator.', 'error')
+            return redirect(url_for('auth'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def log_admin_action(action_type, details, target_user_id=None):
+    """
+    Log all admin actions for audit trail and compliance.
+    
+    Args:
+        action_type: Type of action (e.g., 'user_deleted', 'password_reset', 'subscription_change')
+        details: Description of what was done
+        target_user_id: ID of user affected by the action (if applicable)
+    """
+    try:
+        db.session.execute(text('''
+            INSERT INTO admin_actions 
+            (admin_id, action_type, target_user_id, action_details, ip_address, user_agent, timestamp)
+            VALUES (:admin_id, :action_type, :target_user_id, :details, :ip, :user_agent, NOW())
+        '''), {
+            'admin_id': session.get('user_id'),
+            'action_type': action_type,
+            'target_user_id': target_user_id,
+            'details': details,
+            'ip': request.remote_addr,
+            'user_agent': request.user_agent.string[:255] if request.user_agent else 'Unknown'
+        })
+        db.session.commit()
+    except Exception as e:
+        print(f"Admin action logging error: {e}")
+        # Don't fail the main operation if logging fails
+        db.session.rollback()
+
+@lru_cache(maxsize=10)
+def get_admin_stats_cached(cache_timestamp):
+    """
+    Cached admin statistics to reduce database load.
+    Cache key is timestamp rounded to 5-minute intervals.
+    
+    Args:
+        cache_timestamp: Timestamp rounded to 5-minute bucket (for cache invalidation)
+    
+    Returns:
+        Tuple of admin dashboard statistics
+    """
+    try:
+        stats_result = db.session.execute(text('''
+            SELECT 
+                COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as paid_subscribers,
+                COUNT(CASE WHEN subscription_status = 'free' THEN 1 END) as free_users,
+                COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
+                COALESCE(SUM(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 97 ELSE 0 END), 0) as revenue_30d,
+                0 as page_views_24h,
+                COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 day' THEN 1 END) as active_users_24h
+            FROM leads 
+            WHERE is_admin = FALSE
+        ''')).fetchone()
+        return stats_result
+    except Exception as e:
+        print(f"Error fetching cached admin stats: {e}")
+        # Return default values if query fails
+        return (0, 0, 0, 0, 0, 0)
 
 # Add to Jinja environment
 app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
@@ -1802,6 +1880,10 @@ def signin():
         
         # Check for admin login first (hardcoded superadmin)
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            # Set permanent session with extended timeout for admin
+            session.permanent = True
+            app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
+            
             session['user_id'] = 1  # Set admin user_id
             session['is_admin'] = True
             session['username'] = 'Admin'
@@ -1809,6 +1891,10 @@ def signin():
             session['user_email'] = 'admin@vacontracts.com'
             session['email'] = 'admin@vacontracts.com'
             session['subscription_status'] = 'paid'  # Admin has full access
+            
+            # Log admin login
+            log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
+            
             flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
             return redirect(url_for('contracts'))
         
@@ -4777,19 +4863,15 @@ def admin_dashboard():
 
 @app.route('/admin-enhanced')
 @login_required
+@admin_required
 def admin_enhanced():
     """Enhanced admin panel with left sidebar"""
-    if not session.get('is_admin'):
-        flash('Admin access required', 'error')
-        return redirect(url_for('index'))
-    
     section = request.args.get('section', 'dashboard')
     page = max(int(request.args.get('page', 1) or 1), 1)
     
-    # Get common stats
-    stats_result = db.session.execute(text('''
-        SELECT * FROM admin_dashboard_stats
-    ''')).fetchone()
+    # Get cached stats (5-minute cache buckets)
+    cache_timestamp = int(datetime.now().timestamp() / 300)  # Round to 5-minute intervals
+    stats_result = get_admin_stats_cached(cache_timestamp)
     
     stats = {
         'paid_subscribers': stats_result[0] if stats_result else 0,
@@ -4899,11 +4981,9 @@ def admin_enhanced():
 
 @app.route('/admin/reset-password', methods=['POST'])
 @login_required
+@admin_required
 def admin_reset_password():
     """Admin reset user password"""
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Admin access required'}), 403
-    
     try:
         user_id = request.form.get('user_id')
         new_password = request.form.get('new_password')
@@ -4920,12 +5000,8 @@ def admin_reset_password():
             WHERE id = :user_id
         '''), {'password': hashed_password, 'user_id': user_id})
         
-        # Log action
-        db.session.execute(text('''
-            INSERT INTO admin_actions 
-            (admin_id, action_type, target_user_id, action_details)
-            VALUES (:admin_id, 'password_reset', :user_id, 'Admin reset user password')
-        '''), {'admin_id': session['user_id'], 'user_id': user_id})
+        # Log action with new logging function
+        log_admin_action('password_reset', f'Reset password for user ID {user_id}', user_id)
         
         db.session.commit()
         
@@ -4942,11 +5018,9 @@ def admin_reset_password():
 
 @app.route('/admin/toggle-subscription', methods=['POST'])
 @login_required
+@admin_required
 def admin_toggle_subscription():
     """Admin toggle user subscription status"""
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Admin access required'}), 403
-    
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -4958,16 +5032,8 @@ def admin_toggle_subscription():
             WHERE id = :user_id
         '''), {'status': new_status, 'user_id': user_id})
         
-        # Log action
-        db.session.execute(text('''
-            INSERT INTO admin_actions 
-            (admin_id, action_type, target_user_id, action_details)
-            VALUES (:admin_id, 'subscription_change', :user_id, :details)
-        '''), {
-            'admin_id': session['user_id'],
-            'user_id': user_id,
-            'details': f'Changed subscription to {new_status}'
-        })
+        # Log action with new logging function
+        log_admin_action('subscription_change', f'Changed subscription to {new_status}', user_id)
         
         db.session.commit()
         
@@ -5099,11 +5165,9 @@ def admin_stats():
 
 @app.route('/admin/toggle-admin-privilege', methods=['POST'])
 @login_required
+@admin_required
 def toggle_admin_privilege():
     """Grant or revoke admin privileges for a user"""
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Admin access required'}), 403
-    
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -5117,7 +5181,6 @@ def toggle_admin_privilege():
             text('UPDATE leads SET is_admin = :is_admin WHERE id = :user_id'),
             {'is_admin': grant_admin, 'user_id': user_id}
         )
-        db.session.commit()
         
         # Get user details
         user = db.session.execute(
@@ -5127,6 +5190,11 @@ def toggle_admin_privilege():
         
         action = 'granted to' if grant_admin else 'revoked from'
         message = f"Admin privileges {action} {user[1]} ({user[0]})"
+        
+        # Log action with new logging function
+        log_admin_action('admin_privilege_toggle', message, user_id)
+        
+        db.session.commit()
         
         return jsonify({
             'success': True,
