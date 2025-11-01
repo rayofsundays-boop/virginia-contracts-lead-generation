@@ -6902,37 +6902,55 @@ def lead_marketplace():
         if not is_admin and subscription_status != 'paid':
             show_upgrade_prompt = True
         
-        # Get open commercial lead requests
-        requests = db.session.execute(text('''
-            SELECT * FROM commercial_lead_requests 
-            WHERE status = 'open' 
-            ORDER BY created_at DESC
-        ''')).fetchall()
+        # Get open commercial lead requests (with fallback if table doesn't exist)
+        requests = []
+        try:
+            requests = db.session.execute(text('''
+                SELECT * FROM commercial_lead_requests 
+                WHERE status = 'open' 
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching commercial_lead_requests: {e}")
+            # Table might not exist yet - continue without these leads
         
-        # Get user's bids
-        my_bids = db.session.execute(text('''
-            SELECT b.*, clr.business_name, clr.city 
-            FROM bids b
-            JOIN commercial_lead_requests clr ON b.request_id = clr.id
-            WHERE b.user_email = :email
-            ORDER BY b.submitted_at DESC
-        '''), {'email': user_email}).fetchall()
+        # Get user's bids (with fallback)
+        my_bids = []
+        try:
+            my_bids = db.session.execute(text('''
+                SELECT b.*, clr.business_name, clr.city 
+                FROM bids b
+                JOIN commercial_lead_requests clr ON b.request_id = clr.id
+                WHERE b.user_email = :email
+                ORDER BY b.submitted_at DESC
+            '''), {'email': user_email}).fetchall()
+        except Exception as e:
+            print(f"Error fetching bids: {e}")
+            # Table might not exist yet - continue without bids
         
         # Get residential leads
-        residential = db.session.execute(text('''
-            SELECT * FROM residential_leads 
-            WHERE status = 'new'
-            ORDER BY estimated_value DESC
-            LIMIT 50
-        ''')).fetchall()
+        residential = []
+        try:
+            residential = db.session.execute(text('''
+                SELECT * FROM residential_leads 
+                WHERE status = 'new'
+                ORDER BY estimated_value DESC
+                LIMIT 50
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Error fetching residential_leads: {e}")
+            # Continue without residential leads
         
         return render_template('lead_marketplace.html', 
                              requests=requests, 
                              my_bids=my_bids,
                              residential=residential)
     except Exception as e:
-        flash(f'Error loading marketplace: {str(e)}', 'danger')
-        return redirect(url_for('home'))
+        print(f"Lead marketplace error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Lead marketplace is being set up. Please check back soon!', 'info')
+        return redirect(url_for('customer_leads'))
 
 @app.route('/submit-bid/<int:request_id>', methods=['POST'])
 @login_required
