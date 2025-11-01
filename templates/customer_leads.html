@@ -7,19 +7,36 @@
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-2">
                     <h2>Customer Leads Portal</h2>
-                    <p class="text-muted">Access all available leads, request proposal help, and apply directly</p>
+                    <p class="text-muted mb-0">Access all available leads, request proposal help, and apply directly</p>
                 </div>
                 <div class="text-end">
-                    <div class="d-flex align-items-center gap-3">
-                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning">
-                            <i class="fas fa-bookmark me-2"></i>Saved Leads
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-bookmark me-1"></i>Saved
                         </a>
-                        <div class="subscription-display">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-star me-1"></i>Pro Resources
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('branding_materials') }}">
+                                    <i class="fas fa-palette me-2 text-primary"></i>Branding Materials
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('consultations') }}">
+                                    <i class="fas fa-user-tie me-2 text-success"></i>One-on-One Consultations
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}">
+                                    <i class="fas fa-list me-2 text-info"></i>All Leads
+                                </a></li>
+                            </ul>
+                        </div>
+                        <div class="subscription-display d-none d-md-block">
                             <small class="text-muted">Access:</small><br>
-                            <strong class="text-success">Included with subscription</strong>
+                            <strong class="text-success" style="font-size: 0.85rem;">Pro Member</strong>
                         </div>
                     </div>
                 </div>

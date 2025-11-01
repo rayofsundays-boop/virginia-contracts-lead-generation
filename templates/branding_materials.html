@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Branding Materials - Government Cleaning Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary mb-2">
+                <i class="fas fa-palette me-2"></i>Branding Materials
+            </h1>
+            <p class="lead text-muted">Professional branding assets for your cleaning business</p>
+            <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Portal
+            </a>
+        </div>
+    </div>
+
+    {% if not is_subscriber %}
+    <!-- Non-Subscriber Paywall -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-warning shadow-lg">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-5x text-warning"></i>
+                    </div>
+                    <h2 class="text-warning mb-3">Subscriber Exclusive Content</h2>
+                    <p class="lead mb-4">Upgrade to access professional branding materials including:</p>
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-8">
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Logo packages in multiple formats</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Business card and letterhead templates</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Social media graphics</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Presentation and proposal templates</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Marketing materials and flyers</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Brand guidelines and color palettes</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('payment') }}" class="btn btn-warning btn-lg px-5">
+                        <i class="fas fa-star me-2"></i>Upgrade to Pro Access
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Subscriber Content -->
+    {% for category_group in materials %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">
+                <i class="fas fa-folder-open me-2 text-primary"></i>{{ category_group.category }}
+            </h3>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        {% for item in category_group.items %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-box bg-primary bg-opacity-10 rounded p-3 me-3">
+                            <i class="fas {{ item.icon }} fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">{{ item.name }}</h5>
+                            <p class="card-text text-muted small">{{ item.description }}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="downloadMaterial('{{ item.name }}')">
+                        <i class="fas fa-download me-2"></i>Download
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Additional Resources -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-info-circle me-2 text-info"></i>Usage Guidelines</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">✓ Do's</h6>
+                            <ul class="small">
+                                <li>Use materials for your cleaning business marketing</li>
+                                <li>Customize templates with your company information</li>
+                                <li>Maintain consistent branding across all materials</li>
+                                <li>Follow color and font guidelines</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger">✗ Don'ts</h6>
+                            <ul class="small">
+                                <li>Do not redistribute or resell these materials</li>
+                                <li>Do not alter logos beyond customization guidelines</li>
+                                <li>Do not use for non-cleaning business purposes</li>
+                                <li>Do not share access with non-subscribers</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Section -->
+    <div class="row mt-4 mb-5">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading"><i class="fas fa-question-circle me-2"></i>Need Help?</h5>
+                <p class="mb-0">Having trouble with downloads or need custom branding assistance? 
+                    <a href="{{ url_for('consultations') }}" class="alert-link">Schedule a one-on-one consultation</a> 
+                    or contact our support team.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+}
+.icon-box {
+    min-width: 70px;
+    text-align: center;
+}
+</style>
+
+<script>
+function downloadMaterial(materialName) {
+    // In production, this would trigger actual file download
+    // For now, show a message
+    alert('Download functionality will be implemented in production.\n\nMaterial: ' + materialName + '\n\nThis will download the file to your computer.');
+    
+    // Example of how download would work in production:
+    // window.location.href = '/download-material?name=' + encodeURIComponent(materialName);
+    
+    // Track download event
+    console.log('Material download requested:', materialName);
+}
+</script>
+{% endblock %}

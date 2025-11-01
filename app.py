@@ -2449,6 +2449,168 @@ def saved_leads():
         print(f"Error loading saved leads: {e}")
         return render_template('saved_leads.html', saved_leads=[])
 
+@app.route('/branding-materials')
+@login_required
+def branding_materials():
+    """Subscriber-exclusive branding materials"""
+    user_email = session.get('user_email')
+    
+    # Check if user is subscriber (you may need to adjust this based on your subscription logic)
+    result = db.session.execute(text('''
+        SELECT subscription_status FROM customers 
+        WHERE email = :email
+    '''), {'email': user_email}).fetchone()
+    
+    if not result or result[0] != 'active':
+        return render_template('branding_materials.html', is_subscriber=False)
+    
+    # Define branding materials available for download
+    materials = [
+        {
+            'category': 'Logos & Identity',
+            'items': [
+                {'name': 'Company Logo Package', 'description': 'High-res logos in PNG, SVG, and AI formats', 'icon': 'fa-image'},
+                {'name': 'Brand Color Palette', 'description': 'Official color codes and usage guidelines', 'icon': 'fa-palette'},
+                {'name': 'Typography Guide', 'description': 'Approved fonts and text styling', 'icon': 'fa-font'}
+            ]
+        },
+        {
+            'category': 'Business Cards & Stationery',
+            'items': [
+                {'name': 'Business Card Templates', 'description': 'Editable templates for Canva and Adobe', 'icon': 'fa-id-card'},
+                {'name': 'Letterhead Templates', 'description': 'Professional letterhead designs', 'icon': 'fa-file-lines'},
+                {'name': 'Email Signature', 'description': 'HTML email signature code', 'icon': 'fa-envelope'}
+            ]
+        },
+        {
+            'category': 'Marketing Materials',
+            'items': [
+                {'name': 'Flyer Templates', 'description': 'Print and digital flyer designs', 'icon': 'fa-file-pdf'},
+                {'name': 'Social Media Graphics', 'description': 'Templates for Facebook, LinkedIn, Instagram', 'icon': 'fa-share-nodes'},
+                {'name': 'Brochure Templates', 'description': 'Tri-fold and bi-fold brochure designs', 'icon': 'fa-book'}
+            ]
+        },
+        {
+            'category': 'Presentation Materials',
+            'items': [
+                {'name': 'PowerPoint Templates', 'description': 'Professional presentation decks', 'icon': 'fa-presentation'},
+                {'name': 'Proposal Cover Pages', 'description': 'Impressive proposal first pages', 'icon': 'fa-file-contract'},
+                {'name': 'Case Study Templates', 'description': 'Success story layouts', 'icon': 'fa-chart-line'}
+            ]
+        }
+    ]
+    
+    return render_template('branding_materials.html', materials=materials, is_subscriber=True)
+
+@app.route('/proposal-support')
+@login_required
+def proposal_support():
+    """Subscriber-exclusive proposal writing support"""
+    user_email = session.get('user_email')
+    
+    # Check if user is subscriber
+    result = db.session.execute(text('''
+        SELECT subscription_status FROM customers 
+        WHERE email = :email
+    '''), {'email': user_email}).fetchone()
+    
+    if not result or result[0] != 'active':
+        return render_template('proposal_support.html', is_subscriber=False)
+    
+    # Define proposal resources
+    resources = [
+        {
+            'category': 'Proposal Templates',
+            'items': [
+                {'name': 'Government Contract Proposal', 'description': 'Comprehensive template for federal/state contracts', 'icon': 'fa-file-contract', 'type': 'template'},
+                {'name': 'Commercial Cleaning Proposal', 'description': 'Business-focused proposal template', 'icon': 'fa-building', 'type': 'template'},
+                {'name': 'Residential Cleaning Quote', 'description': 'Simple quote template for homeowners', 'icon': 'fa-home', 'type': 'template'},
+                {'name': 'RFP Response Template', 'description': 'Structured RFP response framework', 'icon': 'fa-file-alt', 'type': 'template'}
+            ]
+        },
+        {
+            'category': 'Writing Guides',
+            'items': [
+                {'name': 'Proposal Writing 101', 'description': 'Step-by-step guide to writing winning proposals', 'icon': 'fa-book', 'type': 'guide'},
+                {'name': 'Government Contract Guide', 'description': 'Navigating federal contracting requirements', 'icon': 'fa-landmark', 'type': 'guide'},
+                {'name': 'Pricing Strategy Guide', 'description': 'How to price your cleaning services competitively', 'icon': 'fa-dollar-sign', 'type': 'guide'},
+                {'name': 'Common Mistakes to Avoid', 'description': 'Top proposal pitfalls and how to avoid them', 'icon': 'fa-exclamation-triangle', 'type': 'guide'}
+            ]
+        },
+        {
+            'category': 'Sample Proposals',
+            'items': [
+                {'name': 'Winning Government Proposal', 'description': 'Real example of a successful federal contract bid', 'icon': 'fa-trophy', 'type': 'sample'},
+                {'name': 'Commercial Office Cleaning', 'description': 'Sample proposal for corporate clients', 'icon': 'fa-briefcase', 'type': 'sample'},
+                {'name': 'School Cleaning Contract', 'description': 'Educational facility proposal example', 'icon': 'fa-school', 'type': 'sample'},
+                {'name': 'Hospital Cleaning Bid', 'description': 'Healthcare facility proposal sample', 'icon': 'fa-hospital', 'type': 'sample'}
+            ]
+        },
+        {
+            'category': 'Tools & Checklists',
+            'items': [
+                {'name': 'Proposal Checklist', 'description': 'Ensure you include everything required', 'icon': 'fa-tasks', 'type': 'tool'},
+                {'name': 'Pricing Calculator', 'description': 'Interactive tool to calculate competitive bids', 'icon': 'fa-calculator', 'type': 'tool'},
+                {'name': 'Requirements Tracker', 'description': 'Track RFP requirements and responses', 'icon': 'fa-list-check', 'type': 'tool'},
+                {'name': 'Timeline Planner', 'description': 'Plan your proposal submission timeline', 'icon': 'fa-calendar-alt', 'type': 'tool'}
+            ]
+        }
+    ]
+    
+    return render_template('proposal_support.html', resources=resources, is_subscriber=True)
+
+@app.route('/consultations')
+@login_required
+def consultations():
+    """Subscriber-exclusive one-on-one consultation scheduling"""
+    user_email = session.get('user_email')
+    
+    # Check if user is subscriber
+    result = db.session.execute(text('''
+        SELECT subscription_status, name FROM customers 
+        WHERE email = :email
+    '''), {'email': user_email}).fetchone()
+    
+    if not result or result[0] != 'active':
+        return render_template('consultations.html', is_subscriber=False, user_name='')
+    
+    # Available consultation types
+    consultation_types = [
+        {
+            'title': 'Proposal Review Session',
+            'duration': '60 minutes',
+            'description': 'Get expert feedback on your proposal before submission',
+            'icon': 'fa-file-contract',
+            'color': 'primary'
+        },
+        {
+            'title': 'Bidding Strategy Call',
+            'duration': '45 minutes',
+            'description': 'Develop a winning strategy for specific opportunities',
+            'icon': 'fa-chess',
+            'color': 'success'
+        },
+        {
+            'title': 'Business Development Coaching',
+            'duration': '60 minutes',
+            'description': 'Long-term growth strategies for government contracting',
+            'icon': 'fa-chart-line',
+            'color': 'info'
+        },
+        {
+            'title': 'Quick Questions Session',
+            'duration': '30 minutes',
+            'description': 'Fast answers to specific questions',
+            'icon': 'fa-question-circle',
+            'color': 'warning'
+        }
+    ]
+    
+    return render_template('consultations.html', 
+                         consultation_types=consultation_types, 
+                         is_subscriber=True, 
+                         user_name=result[1])
+
 @app.route('/request-proposal-help', methods=['POST'])
 def request_proposal_help():
     """Handle proposal help requests from customers"""

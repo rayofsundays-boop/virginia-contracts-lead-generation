@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}One-on-One Consultations - Government Cleaning Contracts{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary mb-2">
+                <i class="fas fa-user-tie me-2"></i>One-on-One Consultations
+            </h1>
+            <p class="lead text-muted">Get personalized expert guidance for your cleaning business</p>
+            <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Portal
+            </a>
+        </div>
+    </div>
+
+    {% if not is_subscriber %}
+    <!-- Non-Subscriber Paywall -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-warning shadow-lg">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-5x text-warning"></i>
+                    </div>
+                    <h2 class="text-warning mb-3">Subscriber Exclusive Benefit</h2>
+                    <p class="lead mb-4">Upgrade to unlock personalized consultation sessions:</p>
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-8">
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>One-on-one video calls with experienced contractors</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Proposal review and feedback sessions</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Bidding strategy development</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Business growth coaching</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Flexible scheduling to fit your calendar</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Follow-up email summaries after each session</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('payment') }}" class="btn btn-warning btn-lg px-5">
+                        <i class="fas fa-star me-2"></i>Upgrade to Pro Access
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Subscriber Content -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading"><i class="fas fa-calendar-check me-2"></i>Welcome, {{ user_name }}!</h5>
+                <p class="mb-0">Select a consultation type below and choose a time that works for you. You'll receive a calendar invite and video call link.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultation Types -->
+    <div class="row g-4 mb-5">
+        {% for consult in consultation_types %}
+        <div class="col-12 col-md-6">
+            <div class="card h-100 shadow-sm hover-card border-{{ consult.color }} border-3">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-box bg-{{ consult.color }} bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas {{ consult.icon }} fa-2x text-{{ consult.color }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="card-title mb-1">{{ consult.title }}</h4>
+                            <p class="text-muted mb-2">
+                                <i class="far fa-clock me-1"></i>{{ consult.duration }}
+                            </p>
+                            <p class="card-text">{{ consult.description }}</p>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-{{ consult.color }} btn-lg" onclick="scheduleConsultation('{{ consult.title }}', '{{ consult.duration }}')">
+                            <i class="fas fa-calendar-plus me-2"></i>Schedule Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">How It Works</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="text-center">
+                <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <h3 class="mb-0">1</h3>
+                </div>
+                <h5>Choose Session Type</h5>
+                <p class="text-muted">Select the consultation that fits your needs</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="text-center">
+                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <h3 class="mb-0">2</h3>
+                </div>
+                <h5>Pick a Time</h5>
+                <p class="text-muted">View available slots and book what works for you</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="text-center">
+                <div class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <h3 class="mb-0">3</h3>
+                </div>
+                <h5>Get Confirmation</h5>
+                <p class="text-muted">Receive calendar invite and video call link</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="text-center">
+                <div class="rounded-circle bg-warning text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <h3 class="mb-0">4</h3>
+                </div>
+                <h5>Join the Call</h5>
+                <p class="text-muted">Meet with your expert at the scheduled time</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">What Subscribers Say</h3>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-light border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic">"The proposal review session was invaluable. The expert caught issues I never would have noticed and helped me win my first federal contract!"</p>
+                    <p class="mb-0"><strong>- Sarah M., Cleaning Business Owner</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-light border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic">"I had so many questions about bidding strategy. The consultation gave me a clear roadmap and confidence to pursue larger contracts."</p>
+                    <p class="mb-0"><strong>- James T., Commercial Cleaner</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-light border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic">"The business development coaching helped me scale from 2 contracts to 8 in just 6 months. Worth every penny of my subscription!"</p>
+                    <p class="mb-0"><strong>- Maria R., Facility Services</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            How many consultations can I schedule per month?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Pro subscribers can schedule up to 2 consultations per month at no additional cost. Additional sessions available at discounted rates.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Who are the consultants?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Our consultants are experienced cleaning business owners and government contracting professionals with proven track records of winning federal and state contracts.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Can I reschedule or cancel?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! You can reschedule or cancel up to 24 hours before your appointment with no penalty. Please provide at least 24 hours notice.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            What if I need more time?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You can book back-to-back sessions or extend your session time for an additional fee. Just let us know your needs when scheduling.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-primary text-center">
+                <h5 class="alert-heading"><i class="fas fa-headset me-2"></i>Need Help Right Now?</h5>
+                <p class="mb-3">Have urgent questions? Contact our support team for immediate assistance.</p>
+                <button class="btn btn-primary" onclick="alert('Support contact: support@vacontracthub.com')">
+                    <i class="fas fa-envelope me-2"></i>Contact Support
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+}
+.icon-box {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+function scheduleConsultation(type, duration) {
+    // In production, this would open a calendar booking widget (e.g., Calendly)
+    alert('Consultation Booking\n\n' +
+          'Type: ' + type + '\n' +
+          'Duration: ' + duration + '\n\n' +
+          'In production, this will open a calendar widget where you can:\n' +
+          '- View available time slots\n' +
+          '- Select your preferred date/time\n' +
+          '- Add consultation notes\n' +
+          '- Receive calendar invite and video call link\n\n' +
+          'Integration with Calendly, Google Calendar, or similar coming soon!');
+    
+    // Example of how this would work in production:
+    // window.open('https://calendly.com/your-account/consultation-' + type.replace(/\s+/g, '-').toLowerCase(), '_blank');
+    
+    console.log('Consultation requested:', type, duration);
+}
+</script>
+{% endblock %}
