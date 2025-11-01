@@ -2761,18 +2761,21 @@ def branding_materials():
     """Subscriber-exclusive branding materials"""
     user_email = session.get('user_email')
     
-    # Check if user is subscriber (check leads table for subscription_status)
-    try:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads 
-            WHERE email = :email
-        '''), {'email': user_email}).fetchone()
-        
-        if not result or result[0] != 'active':
-            return render_template('branding_materials.html', is_subscriber=False, materials=[], color_palettes=[])
-    except Exception as e:
-        print(f"Error checking subscription: {e}")
-        # Continue anyway and show materials
+    # For now, show materials to all logged-in users
+    # TODO: Add proper subscription check when payment system is fully implemented
+    is_subscriber = True
+    
+    # Optional: Check subscription status if you want to enforce it
+    # try:
+    #     result = db.session.execute(text('''
+    #         SELECT subscription_status FROM leads 
+    #         WHERE email = :email
+    #     '''), {'email': user_email}).fetchone()
+    #     
+    #     if result and result[0] == 'active':
+    #         is_subscriber = True
+    # except Exception as e:
+    #     print(f"Error checking subscription: {e}")
     
     # Define branding materials available for download
     materials = [
@@ -2841,18 +2844,20 @@ def proposal_support():
     """Subscriber-exclusive proposal writing support"""
     user_email = session.get('user_email')
     
-    # Check if user is subscriber (check leads table)
-    try:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads 
-            WHERE email = :email
-        '''), {'email': user_email}).fetchone()
-        
-        if not result or result[0] != 'active':
-            return render_template('proposal_support.html', is_subscriber=False, resources=[])
-    except Exception as e:
-        print(f"Error checking subscription: {e}")
-        # Continue anyway and show resources
+    # For now, show resources to all logged-in users
+    is_subscriber = True
+    
+    # Optional: Check subscription status if you want to enforce it
+    # try:
+    #     result = db.session.execute(text('''
+    #         SELECT subscription_status FROM leads 
+    #         WHERE email = :email
+    #     '''), {'email': user_email}).fetchone()
+    #     
+    #     if result and result[0] == 'active':
+    #         is_subscriber = True
+    # except Exception as e:
+    #     print(f"Error checking subscription: {e}")
     
     # Define proposal resources
     resources = [
@@ -2902,18 +2907,34 @@ def consultations():
     """Subscriber-exclusive one-on-one consultation scheduling with Ray Matthews"""
     user_email = session.get('user_email')
     
-    # Check if user is subscriber (check leads table)
+    # For now, show consultations to all logged-in users
+    is_subscriber = True
+    user_name = 'User'
+    
+    # Get user name from database
     try:
         result = db.session.execute(text('''
-            SELECT subscription_status, contact_name FROM leads 
+            SELECT contact_name FROM leads 
             WHERE email = :email
         '''), {'email': user_email}).fetchone()
         
-        if not result or result[0] != 'active':
-            return render_template('consultations.html', is_subscriber=False, user_name='', specialist={})
+        if result and result[0]:
+            user_name = result[0]
     except Exception as e:
-        print(f"Error checking subscription: {e}")
-        result = (None, 'User')  # Default values
+        print(f"Error getting user name: {e}")
+    
+    # Optional: Check subscription status if you want to enforce it
+    # try:
+    #     result = db.session.execute(text('''
+    #         SELECT subscription_status, contact_name FROM leads 
+    #         WHERE email = :email
+    #     '''), {'email': user_email}).fetchone()
+    #     
+    #     if result and result[0] == 'active':
+    #         is_subscriber = True
+    #         user_name = result[1] if result[1] else 'User'
+    # except Exception as e:
+    #     print(f"Error checking subscription: {e}")
     
     # Specialist information
     specialist = {
@@ -2961,12 +2982,10 @@ def consultations():
         }
     ]
     
-    user_name = result[1] if result and len(result) > 1 else 'User'
-    
     return render_template('consultations.html', 
                          consultation_types=consultation_types,
                          specialist=specialist,
-                         is_subscriber=True, 
+                         is_subscriber=is_subscriber, 
                          user_name=user_name)
 
 @app.route('/request-proposal-help', methods=['POST'])
