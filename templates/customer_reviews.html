@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Reviews - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-star text-warning me-3"></i>Customer Reviews
+                </h1>
+                <p class="lead text-muted">Share your experience and help us improve our service</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h4 class="mb-0">
+                        <i class="fas fa-comment-dots me-2"></i>Write Your Review
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    {% if session.get('user_email') %}
+                    <form method="POST" action="{{ url_for('submit_review') }}" id="reviewForm">
+                        <!-- Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">How would you rate our service? *</label>
+                            <div class="star-rating" id="starRating">
+                                <input type="hidden" name="rating" id="ratingValue" value="0" required>
+                                <div class="stars">
+                                    <i class="far fa-star" data-rating="1"></i>
+                                    <i class="far fa-star" data-rating="2"></i>
+                                    <i class="far fa-star" data-rating="3"></i>
+                                    <i class="far fa-star" data-rating="4"></i>
+                                    <i class="far fa-star" data-rating="5"></i>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    Click to rate from 1 to 5 stars
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Review Title -->
+                        <div class="mb-4">
+                            <label for="reviewTitle" class="form-label fw-bold">Review Title *</label>
+                            <input type="text" class="form-control form-control-lg" id="reviewTitle" name="review_title" 
+                                   placeholder="Summarize your experience in one line" required maxlength="255">
+                            <small class="text-muted">Example: "Great lead quality!" or "Excellent customer service"</small>
+                        </div>
+
+                        <!-- Review Text -->
+                        <div class="mb-4">
+                            <label for="reviewText" class="form-label fw-bold">Your Review *</label>
+                            <textarea class="form-control" id="reviewText" name="review_text" rows="6" 
+                                      placeholder="Share your experience with VA Contracts Lead Generation. What did you like? What could we improve?" 
+                                      required></textarea>
+                            <small class="text-muted">Minimum 50 characters</small>
+                        </div>
+
+                        <!-- Would Recommend -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Would you recommend our service to others?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="would_recommend" id="recommendYes" value="yes" checked>
+                                <label class="form-check-label" for="recommendYes">
+                                    <i class="fas fa-thumbs-up text-success me-2"></i>Yes, I would recommend it
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="would_recommend" id="recommendNo" value="no">
+                                <label class="form-check-label" for="recommendNo">
+                                    <i class="fas fa-thumbs-down text-danger me-2"></i>No, I would not recommend it
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Allow Public Display -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Display Preferences</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="allow_public" id="allowPublic" value="yes">
+                                <label class="form-check-label" for="allowPublic">
+                                    Allow my review to be displayed publicly (subject to admin approval)
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>Your email will never be shared publicly. Only your business name may be displayed.
+                            </small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Review
+                            </button>
+                            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <!-- Not Logged In -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Please sign in to write a review.</strong>
+                        <p class="mb-3 mt-2">You must be a registered user to submit a review.</p>
+                        <a href="{{ url_for('auth') }}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-question-circle text-info me-2"></i>Why Your Review Matters
+                    </h6>
+                    <ul class="mb-0">
+                        <li class="mb-2">Help us improve our service quality</li>
+                        <li class="mb-2">Share your success stories with other businesses</li>
+                        <li class="mb-2">Guide future feature development</li>
+                        <li>Your feedback is sent directly to our admin team</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-rating .stars {
+        font-size: 3rem;
+        cursor: pointer;
+        display: inline-block;
+    }
+    
+    .star-rating .stars i {
+        color: #ddd;
+        transition: color 0.2s;
+        margin: 0 5px;
+    }
+    
+    .star-rating .stars i:hover,
+    .star-rating .stars i.active {
+        color: #ffc107;
+    }
+    
+    .star-rating .stars i.fas {
+        color: #ffc107;
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+</style>
+
+<script>
+    // Star rating functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-rating .stars i');
+        const ratingInput = document.getElementById('ratingValue');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+                
+                // Update star display
+                stars.forEach(s => {
+                    const starRating = parseInt(s.getAttribute('data-rating'));
+                    if (starRating <= rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+            
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const rating = this.getAttribute('data-rating');
+                stars.forEach(s => {
+                    const starRating = parseInt(s.getAttribute('data-rating'));
+                    if (starRating <= rating) {
+                        s.classList.add('active');
+                    }
+                });
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                stars.forEach(s => {
+                    s.classList.remove('active');
+                });
+            });
+        });
+        
+        // Form validation
+        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+            const rating = document.getElementById('ratingValue').value;
+            const reviewText = document.getElementById('reviewText').value;
+            
+            if (rating === '0' || rating === '') {
+                e.preventDefault();
+                alert('Please select a star rating before submitting.');
+                return false;
+            }
+            
+            if (reviewText.length < 50) {
+                e.preventDefault();
+                alert('Please write at least 50 characters for your review.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

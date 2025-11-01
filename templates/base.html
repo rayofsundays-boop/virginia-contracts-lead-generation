@@ -427,6 +427,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('customer_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Customer Dashboard</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}"><i class="fas fa-list me-2"></i>My Leads</a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('customer_reviews') }}"><i class="fas fa-star text-warning me-2"></i>Write a Review</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('subscription') }}"><i class="fas fa-crown me-2"></i>Subscription</a></li>
                             {% if session.get('subscription_status') == 'paid' %}
                             <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal"><i class="fas fa-times-circle me-2"></i>Cancel Subscription</a></li>

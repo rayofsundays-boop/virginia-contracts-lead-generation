@@ -127,7 +127,51 @@ def comma_filter(value):
     except (ValueError, TypeError):
         return value
 
-# Email configuration
+@app.template_filter('currency')
+def currency_filter(value):
+    """Format number as US dollar currency with proper punctuation"""
+    try:
+        # Remove any existing dollar signs, commas, or spaces
+        if isinstance(value, str):
+            value = value.replace('$', '').replace(',', '').replace(' ', '').strip()
+        
+        # Convert to float
+        amount = float(value)
+        
+        # Format with comma separators and 2 decimal places
+        return "${:,.2f}".format(amount)
+    except (ValueError, TypeError):
+        # If conversion fails, try to return original with at least a $ sign
+        if value:
+            return f"${value}"
+        return "$0.00"
+
+@app.template_filter('safe_url')
+def safe_url_filter(url, default_system='sam.gov'):
+    """Ensure URL is valid and defaults to bid management system if empty/invalid"""
+    if not url or url.strip() == '':
+        # Default to SAM.gov contract opportunities
+        return 'https://sam.gov/content/opportunities'
+    
+    url = url.strip()
+    
+    # Check if URL has a protocol, if not add https://
+    if not url.startswith(('http://', 'https://', '//')):
+        url = 'https://' + url
+    
+    # Validate that it's a proper URL
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        if parsed.scheme and parsed.netloc:
+            return url
+    except:
+        pass
+    
+    # If validation fails, return default
+    return 'https://sam.gov/content/opportunities'
+
+# Add to Jinja environment
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -2058,6 +2102,101 @@ def cancel_subscription():
             'success': False,
             'message': str(e)
         }), 500
+
+@app.route('/customer-reviews')
+def customer_reviews():
+    """Display customer review submission page"""
+    return render_template('customer_reviews.html')
+
+@app.route('/submit-review', methods=['POST'])
+@login_required
+def submit_review():
+    """Handle customer review submissions and send to admin mailbox"""
+    try:
+        # Get form data
+        rating = request.form.get('rating', '0')
+        review_title = request.form.get('review_title', '').strip()
+        review_text = request.form.get('review_text', '').strip()
+        would_recommend = request.form.get('would_recommend', 'no')
+        allow_public = request.form.get('allow_public', 'no')
+        
+        # Get user info
+        user_email = session.get('user_email', 'Anonymous')
+        user_id = session.get('user_id')
+        
+        # Get user details from database
+        user_result = db.session.execute(text('''
+            SELECT business_name, contact_name FROM leads WHERE id = :user_id
+        '''), {'user_id': user_id}).fetchone()
+        
+        business_name = user_result[0] if user_result and user_result[0] else 'N/A'
+        contact_name = user_result[1] if user_result and user_result[1] else 'N/A'
+        
+        # Store review in database
+        db.session.execute(text('''
+            INSERT INTO customer_reviews 
+            (user_id, user_email, business_name, rating, review_title, review_text, 
+             would_recommend, allow_public, created_at)
+            VALUES (:user_id, :user_email, :business_name, :rating, :review_title, 
+                    :review_text, :would_recommend, :allow_public, CURRENT_TIMESTAMP)
+        '''), {
+            'user_id': user_id,
+            'user_email': user_email,
+            'business_name': business_name,
+            'rating': int(rating),
+            'review_title': review_title,
+            'review_text': review_text,
+            'would_recommend': would_recommend == 'yes',
+            'allow_public': allow_public == 'yes'
+        })
+        db.session.commit()
+        
+        # Send notification to admin mailbox
+        stars = '⭐' * int(rating)
+        recommend_text = '✅ Yes' if would_recommend == 'yes' else '❌ No'
+        public_text = '✅ Yes' if allow_public == 'yes' else '❌ No'
+        
+        try:
+            # Create message in admin mailbox
+            db.session.execute(text('''
+                INSERT INTO messages 
+                (sender_id, recipient_id, subject, body, is_admin, created_at, is_read)
+                VALUES (:sender_id, NULL, :subject, :body, TRUE, CURRENT_TIMESTAMP, FALSE)
+            '''), {
+                'sender_id': user_id,
+                'subject': f'⭐ New Customer Review - {rating}/5 Stars',
+                'body': f'''
+NEW CUSTOMER REVIEW SUBMITTED
+
+Rating: {stars} ({rating}/5)
+Review Title: {review_title}
+
+Business: {business_name}
+Contact: {contact_name}
+Email: {user_email}
+
+Would Recommend: {recommend_text}
+Allow Public Display: {public_text}
+
+Review:
+{review_text}
+
+Submitted: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+                '''
+            })
+            db.session.commit()
+        except Exception as email_error:
+            print(f"Error sending review to admin: {email_error}")
+            # Don't fail the whole operation if email fails
+        
+        flash('Thank you for your review! Your feedback has been submitted successfully.', 'success')
+        return redirect(url_for('customer_dashboard'))
+        
+    except Exception as e:
+        print(f"Error submitting review: {e}")
+        db.session.rollback()
+        flash('Error submitting review. Please try again.', 'error')
+        return redirect(url_for('customer_reviews'))
 
 @app.route('/request-password-reset', methods=['POST'])
 def request_password_reset():

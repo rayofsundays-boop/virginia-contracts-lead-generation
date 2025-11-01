@@ -189,7 +189,7 @@
                             <div class="row">
                                 <div class="col-6">
                                     <small class="text-muted">Contract Value:</small><br>
-                                    <strong class="text-success">{{ contract[3] }}</strong>
+                                    <strong class="text-success">{{ contract[3] | currency }}</strong>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Deadline:</small><br>
@@ -211,7 +211,7 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <small class="text-muted">Contract Value:</small><br>
-                                        <strong class="text-success">{{ contract[3] }}</strong>
+                                        <strong class="text-success">{{ contract[3] | currency }}</strong>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted">Deadline:</small><br>
@@ -243,20 +243,13 @@
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <div>
                             {% if is_paid_subscriber or is_admin %}
-                                {% if contract[7] and contract[7]|length > 0 %}
-                                    <a href="{{ contract[7] }}" target="_blank" 
-                                       class="btn btn-success btn-sm" 
-                                       rel="noopener noreferrer">
-                                        <i class="fas fa-external-link-alt"></i> Apply Now
-                                    </a>
-                                {% else %}
-                                    <span class="btn btn-outline-warning btn-sm" 
-                                          title="URL not available - contact agency directly">
-                                        <i class="fas fa-info-circle"></i> No URL
-                                    </span>
-                                {% endif %}
+                                <a href="{{ contract[7] | safe_url }}" target="_blank" 
+                                   class="btn btn-success btn-sm" 
+                                   rel="noopener noreferrer">
+                                    <i class="fas fa-external-link-alt"></i> Apply Now
+                                </a>
                                 <button class="btn btn-outline-secondary btn-sm" 
-                                        onclick="shareContract('{{ contract[0] | safe }}', '{{ contract[5][:100] | safe }}', '{{ contract[1] }}', '{{ contract[3] }}', '{{ contract[4] }}')">
+                                        onclick="shareContract('{{ contract[0] | safe }}', '{{ contract[5][:100] | safe }}', '{{ contract[1] }}', '{{ contract[3] | currency }}', '{{ contract[4] }}')">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
                             {% else %}
