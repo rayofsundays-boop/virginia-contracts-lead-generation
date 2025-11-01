@@ -564,6 +564,15 @@ scheduler_running = False
 
 # Session activity tracker - auto logout after 20 minutes of inactivity
 @app.before_request
+def handle_failed_transactions():
+    """Rollback any failed transactions before processing requests"""
+    try:
+        # Check if there's a failed transaction and rollback
+        db.session.rollback()
+    except:
+        pass
+
+@app.before_request
 def check_session_timeout():
     """Check if user session has expired due to inactivity"""
     # Skip timeout check for static files and certain routes
@@ -590,6 +599,15 @@ def check_session_timeout():
         
         # Update last activity time
         session['last_activity'] = datetime.now().isoformat()
+
+@app.after_request
+def cleanup_session(response):
+    """Ensure database session is properly cleaned up after each request"""
+    try:
+        db.session.remove()
+    except:
+        pass
+    return response
 
 # Login required decorator
 def login_required(f):
@@ -1759,6 +1777,12 @@ def index():
     init_attempted = request.args.get('init_attempted', '0')
     
     try:
+        # Rollback any failed transactions first
+        try:
+            db.session.rollback()
+        except:
+            pass
+        
         # Use global cache key for homepage (not user-specific)
         cache_key = 'homepage_global'
         cache_data = get_dashboard_cache(cache_key)
@@ -1817,12 +1841,31 @@ def index():
                              commercial_opportunities=commercial_opportunities,
                              commercial_count=commercial_count)
     except Exception as e:
+        # Rollback failed transaction
+        try:
+            db.session.rollback()
+        except:
+            pass
+            
         # Log the full error
         import traceback
         print(f"Index route error: {e}")
         print(traceback.format_exc())
         
         error_str = str(e).lower()
+        
+        # Check for transaction errors specifically
+        if "transaction is aborted" in error_str or "infailedsqltransaction" in error_str:
+            print("⚠️ Transaction error detected - forcing rollback and retry")
+            try:
+                db.session.rollback()
+                db.session.close()
+            except:
+                pass
+            # Redirect to retry
+            if init_attempted == '0':
+                return redirect(url_for('index', init_attempted='1'))
+        
         # Check for missing tables in both SQLite and PostgreSQL
         if ("no such table" in error_str or "does not exist" in error_str or "relation" in error_str) and init_attempted == '0':
             try:
