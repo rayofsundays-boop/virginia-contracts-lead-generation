@@ -79,8 +79,8 @@
                     <div class="row text-center">
                         <div class="col-md-4">
                             <h5 class="text-primary">Monthly Cost</h5>
-                            <p class="fs-4">$25</p>
-                            <small>Less than 1 hour of labor</small>
+                            <p class="fs-4">$99</p>
+                            <small>Less than 2 hours of labor</small>
                         </div>
                         <div class="col-md-4">
                             <h5 class="text-warning">Typical Win</h5>
@@ -124,10 +124,11 @@
                 <div class="pricing-summary mb-4">
                     <h3 class="text-center">Virginia Contract Leads</h3>
                     <div class="text-center my-3">
-                        <span class="display-4 fw-bold text-success">$25</span>
+                        <span class="display-4 fw-bold text-success">$99</span>
                         <span class="fs-5">/month</span>
                     </div>
                     <p class="text-center text-muted">Billed monthly • Cancel anytime</p>
+                    <p class="text-center text-success mb-0"><strong>Save $238/year with annual plan: $950/year</strong></p>
                     
                     <div class="mt-3">
                         <small class="text-muted">
@@ -212,7 +213,7 @@
                             <h5>Order Summary</h5>
                             <div class="d-flex justify-content-between">
                                 <span>Monthly Subscription</span>
-                                <span>$25.00</span>
+                                <span>$99.00</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span>Proposal Support</span>
@@ -221,7 +222,7 @@
                             <hr>
                             <div class="d-flex justify-content-between fw-bold">
                                 <span>Total Today</span>
-                                <span id="total-cost">$25.00</span>
+                                <span id="total-cost">$99.00</span>
                             </div>
                             <small class="text-muted">Next billing: <span id="next-billing-date"></span></small>
                         </div>
@@ -230,7 +231,8 @@
                         <div class="alert alert-info mt-3">
                             <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Subscription Terms</h6>
                             <ul class="mb-0 small">
-                                <li><strong>Automatic Monthly Renewal:</strong> Your subscription renews automatically at $25/month</li>
+                                <li><strong>Automatic Monthly Renewal:</strong> Your subscription renews automatically at $99/month</li>
+                                <li><strong>Annual Option:</strong> Save $238/year with annual plan: $950/year (billed annually)</li>
                                 <li><strong>Recurring Billing:</strong> Charged on the same date each month</li>
                                 <li><strong>Cancel Anytime:</strong> Cancel from account settings before next billing cycle</li>
                                 <li><strong>Non-Refundable:</strong> All subscription fees are non-refundable</li>
@@ -249,7 +251,7 @@
                         <div class="form-check mt-3">
                             <input class="form-check-input" type="checkbox" id="terms-payment" required>
                             <label class="form-check-label" for="terms-payment">
-                                I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this is a recurring monthly subscription that auto-renews at $25/month and can be cancelled anytime. All fees are non-refundable.
+                                I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this is a recurring monthly subscription that auto-renews at $99/month and can be cancelled anytime. All fees are non-refundable.
                             </label>
                         </div>
 
@@ -262,7 +264,7 @@
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success btn-lg" id="submit-payment">
-                                🚀 Start Unlimited Access - $25/month
+                                🚀 Start Unlimited Access - $99/month
                             </button>
                             <small class="text-center text-muted">
                                 Cancel anytime • No setup fees • 100% satisfaction guarantee
@@ -365,20 +367,20 @@
                         } else {
                             alert('Payment processed but subscription setup failed. Please contact support.');
                             submitButton.disabled = false;
-                            submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                            submitButton.innerHTML = '🚀 Start Unlimited Access - $99/month';
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('Payment processed but there was an error. Please contact support.');
                         submitButton.disabled = false;
-                        submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                        submitButton.innerHTML = '🚀 Start Unlimited Access - $99/month';
                     });
                 } else {
                     // Simulate payment failure
                     alert('Payment failed. Please check your card details and try again.');
                     submitButton.disabled = false;
-                    submitButton.innerHTML = '🚀 Start Unlimited Access - $25/month';
+                    submitButton.innerHTML = '🚀 Start Unlimited Access - $99/month';
                 }
             }, 2000);
         });
