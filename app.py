@@ -1802,6 +1802,7 @@ def signin():
         
         # Check for admin login first (hardcoded superadmin)
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['user_id'] = 1  # Set admin user_id
             session['is_admin'] = True
             session['username'] = 'Admin'
             session['name'] = 'Administrator'
@@ -3431,31 +3432,9 @@ def customer_leads():
             }
             all_leads.append(lead_dict)
         
-        # Pagination for combined leads
-        page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = int(request.args.get('per_page', 12) or 12)
-        per_page = min(max(per_page, 6), 48)
+        # Send ALL leads to client - let JavaScript handle filtering and pagination
+        # No server-side pagination - client filters on the fly
         total = len(all_leads)
-        pages = max(math.ceil(total / per_page), 1)
-        start = (page - 1) * per_page
-        end = start + per_page
-        leads_page = all_leads[start:end]
-
-        args_base = dict(request.args)
-        args_base.pop('page', None)
-        args_base.pop('per_page', None)
-        prev_url = url_for('customer_leads', page=page-1, per_page=per_page, **args_base) if page > 1 else None
-        next_url = url_for('customer_leads', page=page+1, per_page=per_page, **args_base) if page < pages else None
-        pagination = {
-            'page': page,
-            'per_page': per_page,
-            'total': total,
-            'pages': pages,
-            'has_prev': page > 1,
-            'has_next': page < pages,
-            'prev_url': prev_url,
-            'next_url': next_url
-        }
         
         # Get Quick Wins counts for promotion banner
         emergency_count = db.session.execute(text(
@@ -3467,14 +3446,16 @@ def customer_leads():
         )).scalar() or 0
 
         return render_template('customer_leads.html', 
-                             all_leads=leads_page, 
-                             pagination=pagination,
+                             all_leads=all_leads,  # Send ALL leads, not paginated
+                             total_leads=total,
                              emergency_count=emergency_count,
                              urgent_count=urgent_count)
         
     except Exception as e:
         print(f"Customer leads error: {e}")
-        return render_template('customer_leads.html', all_leads=[], pagination={'page':1,'per_page':12,'total':0,'pages':1,'has_prev':False,'has_next':False,'prev_url':None,'next_url':None})
+        import traceback
+        traceback.print_exc()
+        return render_template('customer_leads.html', all_leads=[], total_leads=0, emergency_count=0, urgent_count=0)
 
 def calculate_days_left(deadline_str):
     """Calculate days remaining until deadline"""

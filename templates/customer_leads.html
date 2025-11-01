@@ -403,10 +403,13 @@
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
-    <div class="row">
-        <div class="col-12">
-            {% include 'components/pagination.html' %}
+    <!-- Results Summary Footer -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <p class="text-muted">
+                Showing <span id="visibleCount">{{ all_leads|length }}</span> of <span id="totalCount">{{ all_leads|length }}</span> leads
+            </p>
+            <small class="text-muted">All leads loaded. Use filters above to refine results.</small>
         </div>
     </div>
 </div>
@@ -664,7 +667,12 @@ function applyFilters() {
         if (show) visibleCount++;
     });
     
+    // Update both result counters
     document.getElementById('resultsCount').textContent = visibleCount;
+    const visibleCountEl = document.getElementById('visibleCount');
+    if (visibleCountEl) {
+        visibleCountEl.textContent = visibleCount;
+    }
 }
 
 function parseContractValue(valueStr) {
@@ -695,6 +703,33 @@ function clearAllFilters() {
     document.getElementById('categoryFilter').value = '';
     document.getElementById('searchInput').value = '';
     applyFilters();
+}
+
+function applySorting() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.getElementById('leadsContainer');
+    const cards = Array.from(container.querySelectorAll('.lead-card'));
+    
+    cards.sort((a, b) => {
+        switch(sortBy) {
+            case 'newest':
+                return 0; // Keep original order (already newest first from backend)
+            case 'value-high':
+                return parseContractValue(b.dataset.value) - parseContractValue(a.dataset.value);
+            case 'value-low':
+                return parseContractValue(a.dataset.value) - parseContractValue(b.dataset.value);
+            case 'deadline':
+                // Sort by deadline (if available in dataset)
+                return 0; // TODO: implement if deadline data is available
+            case 'location':
+                return (a.dataset.location || '').localeCompare(b.dataset.location || '');
+            default:
+                return 0;
+        }
+    });
+    
+    // Re-append sorted cards
+    cards.forEach(card => container.appendChild(card));
 }
 
 function filterByCategory(category) {
