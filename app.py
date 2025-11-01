@@ -2079,11 +2079,29 @@ def contracts():
             'next_url': next_url
         }
         
+        # Check if user is admin or paid subscriber
+        is_admin = session.get('is_admin', False)
+        is_paid_subscriber = False
+        
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            
+            if result and result[0] == 'paid':
+                is_paid_subscriber = True
+        
+        # Admin gets full access automatically
+        if is_admin:
+            is_paid_subscriber = True
+        
         return render_template('contracts.html', 
                                contracts=rows, 
                                locations=locations, 
                                current_filter=location_filter,
-                               pagination=pagination)
+                               pagination=pagination,
+                               is_paid_subscriber=is_paid_subscriber,
+                               is_admin=is_admin)
     except Exception as e:
         msg = f"<h1>Contracts Page Error</h1><p>{str(e)}</p>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
@@ -2110,22 +2128,25 @@ def federal_contracts():
     is_paid_subscriber = False
     clicks_remaining = 3
     
-    if not is_admin:
+    # Admin gets unlimited access
+    if is_admin:
+        is_paid_subscriber = True
+        clicks_remaining = 999  # Unlimited for admin
+    elif 'user_id' in session:
         # Check if paid subscriber
-        if 'user_id' in session:
-            user_id = session['user_id']
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': user_id}).fetchone()
-            
-            if result and result[0] == 'paid':
-                is_paid_subscriber = True
+        user_id = session['user_id']
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': user_id}).fetchone()
         
-        # Track clicks for non-subscribers
-        if not is_paid_subscriber:
-            if 'contract_clicks' not in session:
-                session['contract_clicks'] = 0
-            clicks_remaining = max(0, 3 - session['contract_clicks'])
+        if result and result[0] == 'paid':
+            is_paid_subscriber = True
+    
+    # Track clicks for non-subscribers (not admin)
+    if not is_paid_subscriber and not is_admin:
+        if 'contract_clicks' not in session:
+            session['contract_clicks'] = 0
+        clicks_remaining = max(0, 3 - session['contract_clicks'])
     
     try:
         # Build dynamic filter with SQLAlchemy text
@@ -2852,7 +2873,7 @@ def branding_materials():
         {'name': 'Sunny Yellow', 'colors': ['#FFB703', '#FB8500', '#219EBC', '#023047', '#8ECAE6'], 'category': 'Warm Tones'}
     ]
     
-    return render_template('branding_materials.html', materials=materials, color_palettes=color_palettes, is_subscriber=True)
+    return render_template('branding_materials.html', materials=materials, color_palettes=color_palettes, is_subscriber=True, is_admin=session.get('is_admin', False))
 
 @app.route('/proposal-support')
 @login_required
@@ -2915,7 +2936,7 @@ def proposal_support():
         }
     ]
     
-    return render_template('proposal_support.html', resources=resources, is_subscriber=True)
+    return render_template('proposal_support.html', resources=resources, is_subscriber=True, is_admin=session.get('is_admin', False))
 
 @app.route('/consultations')
 @login_required
@@ -3002,7 +3023,8 @@ def consultations():
                          consultation_types=consultation_types,
                          specialist=specialist,
                          is_subscriber=is_subscriber, 
-                         user_name=user_name)
+                         user_name=user_name,
+                         is_admin=session.get('is_admin', False))
 
 @app.route('/request-proposal-help', methods=['POST'])
 def request_proposal_help():
