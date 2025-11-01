@@ -4027,52 +4027,6 @@ def unsave_lead():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/saved-leads')
-@login_required
-def saved_leads():
-    """View user's saved leads"""
-    try:
-        user_email = session.get('user_email')
-        
-        saved = db.session.execute(text('''
-            SELECT id, lead_type, lead_id, lead_title, lead_data, notes, status, saved_at
-            FROM saved_leads
-            WHERE user_email = :user_email
-            ORDER BY saved_at DESC
-        '''), {'user_email': user_email}).fetchall()
-        
-        saved_leads_list = []
-        for s in saved:
-            lead_data = json.loads(s[4]) if s[4] else {}
-            
-            # Create object with attributes for template access
-            class SavedLead:
-                def __init__(self, id, lead_type, lead_id, lead_title, lead_data, notes, status, saved_at):
-                    self.id = id
-                    self.lead_type = lead_type
-                    self.lead_id = lead_id
-                    self.lead_title = lead_title
-                    self.lead_data = lead_data
-                    self.notes = notes
-                    self.status = status
-                    self.saved_at = saved_at
-            
-            saved_leads_list.append(SavedLead(
-                id=s[0],
-                lead_type=s[1],
-                lead_id=s[2],
-                lead_title=s[3],
-                lead_data=lead_data,
-                notes=s[5],
-                status=s[6],
-                saved_at=s[7]
-            ))
-        
-        return render_template('saved_leads.html', saved_leads=saved_leads_list)
-    except Exception as e:
-        print(f"Error loading saved leads: {e}")
-        return render_template('saved_leads.html', saved_leads=[])
-
 @app.route('/branding-materials')
 @login_required
 def branding_materials():
