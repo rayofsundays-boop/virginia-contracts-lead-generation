@@ -1,417 +1,453 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Lead Management{% endblock %}
+{% block title %}Admin Dashboard - Virginia Contract Leads{% endblock %}
 
 {% block content %}
 <div class="container-fluid my-4">
-    <!-- Page Header -->
+    <div class="admin-header p-4 mb-4 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h1><i class="fas fa-shield-alt me-2"></i>Admin Control Panel</h1>
+        <p class="mb-0">Full system access - Manage users, payments, and leads</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                    <h3>{{ user_count }}</h3>
+                    <small class="text-muted">Total Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h3>{{ paid_count }}</h3>
+                    <small class="text-muted">Paid Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-exclamation-circle fa-2x text-warning mb-2"></i>
+                    <h3>{{ unpaid_count }}</h3>
+                    <small class="text-muted">Unpaid Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-file-contract fa-2x text-info mb-2"></i>
+                    <h3>{{ gov_contracts }}</h3>
+                    <small class="text-muted">Gov Contracts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-briefcase fa-2x text-purple mb-2"></i>
+                    <h3>{{ commercial_leads }}</h3>
+                    <small class="text-muted">Commercial Leads</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <a href="{{ url_for('admin_logout') }}" class="text-decoration-none text-danger">
+                        <i class="fas fa-sign-out-alt fa-2x mb-2"></i>
+                        <h6>Logout</h6>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2><i class="fas fa-cogs"></i> Admin Dashboard</h2>
-                    <p class="text-muted">Lead management and system controls</p>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
-                <div>
-                    <span class="badge bg-{{ 'success' if scheduler_running else 'warning' }} fs-6">
-                        <i class="fas fa-{{ 'play' if scheduler_running else 'pause' }}"></i>
-                        Scheduler {{ 'Running' if scheduler_running else 'Stopped' }}
-                    </span>
+                <div class="card-body">
+                    <button class="btn btn-success me-2 mb-2" onclick="showUploadLeadModal('government')">
+                        <i class="fas fa-upload me-2"></i>Upload Government Contract
+                    </button>
+                    <button class="btn btn-info me-2 mb-2" onclick="showUploadLeadModal('commercial')">
+                        <i class="fas fa-building me-2"></i>Upload Commercial Lead
+                    </button>
+                    <a href="/send-existing-leads" class="btn btn-warning me-2 mb-2">
+                        <i class="fas fa-download me-2"></i>Export All User Data
+                    </a>
+                    <a href="/customer_leads" class="btn btn-secondary me-2 mb-2">
+                        <i class="fas fa-eye me-2"></i>View Customer Portal
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card text-center bg-primary text-white">
-                <div class="card-body">
-                    <i class="fas fa-building fa-2x mb-2"></i>
-                    <h4>{{ stats.total_government if stats else 0 }}</h4>
-                    <p class="mb-0">Government Contracts</p>
-                </div>
-            </div>
+    <!-- User Management Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>User Account Management</h5>
+            <input type="text" id="searchUsers" class="form-control form-control-sm" style="max-width: 300px;" placeholder="Search users...">
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center bg-info text-white">
-                <div class="card-body">
-                    <i class="fas fa-briefcase fa-2x mb-2"></i>
-                    <h4>{{ stats.total_commercial if stats else 0 }}</h4>
-                    <p class="mb-0">Commercial Opportunities</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center bg-success text-white">
-                <div class="card-body">
-                    <i class="fas fa-chart-line fa-2x mb-2"></i>
-                    <h4>{{ stats.total_leads if stats else 0 }}</h4>
-                    <p class="mb-0">Total Active Leads</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center bg-warning text-white">
-                <div class="card-body">
-                    <i class="fas fa-clock fa-2x mb-2"></i>
-                    <h4>{{ stats.recent_government if stats else 0 }}</h4>
-                    <p class="mb-0">Recent (7 days)</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Control Panel -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-plus-circle"></i> Manual Lead Generation</h5>
-                </div>
-                <div class="card-body">
-                    <form id="manualUpdateForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Government Contracts:</label>
-                                <input type="number" class="form-control" id="govCount" value="5" min="1" max="20">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Commercial Opportunities:</label>
-                                <input type="number" class="form-control" id="commercialCount" value="10" min="1" max="50">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-magic"></i> Generate New Leads
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-robot"></i> Automation Controls</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Daily Auto-Update Status:</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-success btn-sm" onclick="controlScheduler('start')" 
-                                    {{ 'disabled' if scheduler_running else '' }}>
-                                <i class="fas fa-play"></i> Start Scheduler
-                            </button>
-                            <button class="btn btn-warning btn-sm" onclick="controlScheduler('stop')"
-                                    {{ 'disabled' if not scheduler_running else '' }}>
-                                <i class="fas fa-pause"></i> Stop Scheduler
-                            </button>
-                        </div>
-                        <small class="text-muted">Auto-updates run daily at 6:00 AM</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Database Cleanup:</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="cleanupDays" value="90" min="30" max="365">
-                            <button class="btn btn-outline-danger" onclick="cleanupOldLeads()">
-                                <i class="fas fa-trash"></i> Cleanup Old Leads
-                            </button>
-                        </div>
-                        <small class="text-muted">Remove leads older than specified days</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-landmark"></i> Recent Government Contracts</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_gov %}
-                        <div class="list-group list-group-flush">
-                            {% for contract in recent_gov %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-fill">
-                                        <h6 class="mb-1">{{ contract[0] }}</h6>
-                                        <p class="mb-1 text-muted">{{ contract[1] }}</p>
-                                        <small class="text-success">{{ contract[3] }} • {{ contract[2] }}</small>
-                                    </div>
-                                    <small class="text-muted">{{ contract[4] }}</small>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="usersTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Phone</th>
+                            <th>State</th>
+                            <th>Payment Status</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="user-row">
+                            <td>{{ user[0] }}</td>
+                            <td>{{ user[1] }}</td>
+                            <td>{{ user[2] or 'N/A' }}</td>
+                            <td>{{ user[3] or 'N/A' }}</td>
+                            <td>{{ user[6] or 'N/A' }}</td>
+                            <td>{{ user[7] or 'N/A' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user[4] == 'active' else 'secondary' }}">
+                                    {{ user[4] or 'inactive' }}
+                                </span>
+                            </td>
+                            <td>{{ user[5][:10] if user[5] else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="resetPassword('{{ user[1] }}', '{{ user[2] or 'User' }}')" title="Reset Password">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button class="btn btn-{{ 'secondary' if user[4] == 'active' else 'success' }}" 
+                                            onclick="togglePaymentStatus({{ user[0] }}, '{{ user[1] }}', '{{ 'inactive' if user[4] == 'active' else 'active' }}')" 
+                                            title="Toggle Payment Status">
+                                        <i class="fas fa-{{ 'times' if user[4] == 'active' else 'check' }}-circle"></i>
+                                    </button>
+                                    <button class="btn btn-info" onclick="viewUserDetails({{ user[0] }})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteUser({{ user[0] }}, '{{ user[1] }}')" title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No recent government contracts found.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-building"></i> Recent Commercial Opportunities</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_commercial %}
-                        <div class="list-group list-group-flush">
-                            {% for opportunity in recent_commercial %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-fill">
-                                        <h6 class="mb-1">{{ opportunity[0] }}</h6>
-                                        <p class="mb-1 text-muted">{{ opportunity[1]|title }}</p>
-                                        <small class="text-success">${{ opportunity[3] }}/month • {{ opportunity[2] }}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No recent commercial opportunities found.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Activity Log -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-list"></i> System Activity Log</h5>
-                </div>
-                <div class="card-body">
-                    <div id="activityLog">
-                        <p class="text-muted">System activity will appear here...</p>
-                    </div>
-                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Success/Error Modals -->
-<div class="modal fade" id="resultModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Upload Lead Modal -->
+<div class="modal fade" id="uploadLeadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="resultModalTitle">Operation Result</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-upload me-2"></i><span id="modalTitle">Upload Lead</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p id="resultModalMessage"></p>
+                <form id="uploadLeadForm">
+                    <input type="hidden" id="leadType">
+                    
+                    <!-- Government Contract Fields -->
+                    <div id="govFields">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Contract Title *</label>
+                                <input type="text" class="form-control" id="govTitle" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Agency *</label>
+                                <input type="text" class="form-control" id="govAgency" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location *</label>
+                                <input type="text" class="form-control" id="govLocation" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Value</label>
+                                <input type="text" class="form-control" id="govValue" placeholder="$50,000 - $100,000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Deadline</label>
+                                <input type="date" class="form-control" id="govDeadline">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NAICS Code</label>
+                                <input type="text" class="form-control" id="govNaics" placeholder="561720">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Set Aside</label>
+                                <select class="form-select" id="govSetAside">
+                                    <option value="">None</option>
+                                    <option value="Small Business">Small Business</option>
+                                    <option value="8(a)">8(a)</option>
+                                    <option value="HUBZone">HUBZone</option>
+                                    <option value="WOSB">WOSB</option>
+                                    <option value="SDVOSB">SDVOSB</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Solicitation Number</label>
+                                <input type="text" class="form-control" id="govSolNumber">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Posted Date</label>
+                                <input type="date" class="form-control" id="govPostedDate">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" id="govDescription" rows="4" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Commercial Lead Fields -->
+                    <div id="commercialFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Business Name *</label>
+                                <input type="text" class="form-control" id="commBusinessName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Type *</label>
+                                <input type="text" class="form-control" id="commBusinessType" placeholder="Office, Retail, Hospital, etc.">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location *</label>
+                                <input type="text" class="form-control" id="commLocation" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Square Footage</label>
+                                <input type="number" class="form-control" id="commSqft" placeholder="5000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Monthly Value</label>
+                                <input type="number" class="form-control" id="commValue" placeholder="2500">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Frequency *</label>
+                                <select class="form-select" id="commFrequency">
+                                    <option value="Daily">Daily</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Bi-Weekly">Bi-Weekly</option>
+                                    <option value="Monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Size Category</label>
+                                <select class="form-select" id="commSize">
+                                    <option value="Small">Small</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Large">Large</option>
+                                    <option value="Enterprise">Enterprise</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Services Needed *</label>
+                                <input type="text" class="form-control" id="commServices" placeholder="General cleaning, floor care, window washing">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Contact Type</label>
+                                <select class="form-select" id="commContactType">
+                                    <option value="Direct">Direct Contact</option>
+                                    <option value="Portal">Through Portal</option>
+                                    <option value="Bid">Bid Required</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="commDescription" rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitLead()">
+                    <i class="fas fa-upload me-2"></i>Upload Lead
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Manual update form submission
-document.getElementById('manualUpdateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// Search functionality
+document.getElementById('searchUsers').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.user-row');
     
-    const govCount = document.getElementById('govCount').value;
-    const commercialCount = document.getElementById('commercialCount').value;
-    
-    // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    submitBtn.disabled = true;
-    
-    fetch('/admin/manual-update', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            government_count: parseInt(govCount),
-            commercial_count: parseInt(commercialCount)
-        })
-    })
-    .then(response => response.json())
-    .then(result => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        
-        if (result.success) {
-            showResultModal('Success!', result.message, 'success');
-            logActivity(`✅ Manual update: ${result.government_added} govt + ${result.commercial_added} commercial leads added`);
-            updateStats();
-        } else {
-            showResultModal('Error', result.message, 'error');
-            logActivity(`❌ Manual update failed: ${result.message}`);
-        }
-    })
-    .catch(error => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        showResultModal('Error', 'Network error occurred', 'error');
-        logActivity(`❌ Network error during manual update`);
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
     });
 });
 
-function controlScheduler(action) {
-    fetch('/admin/scheduler-control', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: action })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showResultModal('Success!', result.message, 'success');
-            logActivity(`🔧 Scheduler ${action}ed`);
-        } else {
-            showResultModal('Error', result.message, 'error');
-        }
-    })
-    .catch(error => {
-        showResultModal('Error', 'Network error occurred', 'error');
-    });
-}
-
-function cleanupOldLeads() {
-    const days = document.getElementById('cleanupDays').value;
-    
-    if (confirm(`Are you sure you want to delete leads older than ${days} days?`)) {
-        fetch('/admin/cleanup-leads', {
+// Reset password function
+function resetPassword(email, name) {
+    if (confirm(`Reset password for ${name} (${email})?`)) {
+        fetch('/admin-reset-password', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ days_old: parseInt(days) })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
         })
         .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showResultModal('Success!', result.message, 'success');
-                logActivity(`🧹 Database cleanup: leads older than ${days} days removed`);
-                updateStats();
+        .then(data => {
+            if (data.success) {
+                alert(`✅ Password reset successful!\n\nNew Password: ${data.new_password}\n\nUser has been notified via email.`);
             } else {
-                showResultModal('Error', result.message, 'error');
+                alert(`❌ Error: ${data.error}`);
             }
         })
-        .catch(error => {
-            showResultModal('Error', 'Network error occurred', 'error');
-        });
+        .catch(error => alert(`❌ Error: ${error}`));
     }
 }
 
-function showResultModal(title, message, type) {
-    document.getElementById('resultModalTitle').textContent = title;
-    document.getElementById('resultModalMessage').textContent = message;
-    
-    const modal = document.getElementById('resultModal');
-    const modalHeader = modal.querySelector('.modal-header');
-    modalHeader.className = `modal-header bg-${type === 'success' ? 'success' : 'danger'} text-white`;
-    
-    new bootstrap.Modal(modal).show();
-}
-
-function logActivity(message) {
-    const activityLog = document.getElementById('activityLog');
-    const timestamp = new Date().toLocaleString();
-    const logEntry = document.createElement('div');
-    logEntry.className = 'mb-1';
-    logEntry.innerHTML = `<small class="text-muted">${timestamp}</small> - ${message}`;
-    
-    if (activityLog.children.length === 1 && activityLog.children[0].textContent.includes('System activity will appear here')) {
-        activityLog.innerHTML = '';
-    }
-    
-    activityLog.insertBefore(logEntry, activityLog.firstChild);
-    
-    // Keep only last 10 entries
-    while (activityLog.children.length > 10) {
-        activityLog.removeChild(activityLog.lastChild);
-    }
-}
-
-function updateStats() {
-    fetch('/admin/stats')
+// Toggle payment status
+function togglePaymentStatus(userId, email, newStatus) {
+    const action = newStatus === 'active' ? 'mark as PAID' : 'mark as UNPAID';
+    if (confirm(`${action} for ${email}?`)) {
+        fetch('/admin-update-payment-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, status: newStatus })
+        })
         .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                // Update stat cards
-                const stats = result.stats;
-                document.querySelector('.bg-primary h4').textContent = stats.total_government;
-                document.querySelector('.bg-info h4').textContent = stats.total_commercial;
-                document.querySelector('.bg-success h4').textContent = stats.total_leads;
-                document.querySelector('.bg-warning h4').textContent = stats.recent_government;
+        .then(data => {
+            if (data.success) {
+                alert('✅ Payment status updated!');
+                location.reload();
+            } else {
+                alert(`❌ Error: ${data.error}`);
             }
         })
-        .catch(error => {
-            console.error('Error updating stats:', error);
-        });
+        .catch(error => alert(`❌ Error: ${error}`));
+    }
 }
 
-// Auto-refresh stats every 30 seconds
-setInterval(updateStats, 30000);
+// Delete user
+function deleteUser(userId, email) {
+    if (confirm(`⚠️ PERMANENTLY DELETE ${email}?\n\nThis will remove all user data including saved leads, notes, and activity. This action cannot be undone!`)) {
+        if (confirm('Are you absolutely sure?')) {
+            fetch('/admin-delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ User deleted successfully');
+                    location.reload();
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+            })
+            .catch(error => alert(`❌ Error: ${error}`));
+        }
+    }
+}
 
-// Log initial page load
-document.addEventListener('DOMContentLoaded', function() {
-    logActivity('📊 Admin dashboard loaded');
-});
+// Show upload lead modal
+function showUploadLeadModal(type) {
+    document.getElementById('leadType').value = type;
+    document.getElementById('modalTitle').textContent = type === 'government' ? 'Upload Government Contract' : 'Upload Commercial Lead';
+    
+    if (type === 'government') {
+        document.getElementById('govFields').style.display = 'block';
+        document.getElementById('commercialFields').style.display = 'none';
+    } else {
+        document.getElementById('govFields').style.display = 'none';
+        document.getElementById('commercialFields').style.display = 'block';
+    }
+    
+    new bootstrap.Modal(document.getElementById('uploadLeadModal')).show();
+}
+
+// Submit lead
+function submitLead() {
+    const leadType = document.getElementById('leadType').value;
+    let data = { lead_type: leadType };
+    
+    if (leadType === 'government') {
+        data = {
+            ...data,
+            title: document.getElementById('govTitle').value,
+            agency: document.getElementById('govAgency').value,
+            location: document.getElementById('govLocation').value,
+            value: document.getElementById('govValue').value,
+            deadline: document.getElementById('govDeadline').value,
+            description: document.getElementById('govDescription').value,
+            naics_code: document.getElementById('govNaics').value,
+            set_aside: document.getElementById('govSetAside').value,
+            posted_date: document.getElementById('govPostedDate').value,
+            solicitation_number: document.getElementById('govSolNumber').value
+        };
+    } else {
+        data = {
+            ...data,
+            business_name: document.getElementById('commBusinessName').value,
+            business_type: document.getElementById('commBusinessType').value,
+            location: document.getElementById('commLocation').value,
+            square_footage: document.getElementById('commSqft').value,
+            monthly_value: document.getElementById('commValue').value,
+            frequency: document.getElementById('commFrequency').value,
+            services_needed: document.getElementById('commServices').value,
+            contact_type: document.getElementById('commContactType').value,
+            description: document.getElementById('commDescription').value,
+            size: document.getElementById('commSize').value
+        };
+    }
+    
+    fetch('/admin-upload-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Lead uploaded successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('uploadLeadModal')).hide();
+            document.getElementById('uploadLeadForm').reset();
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    })
+    .catch(error => alert(`❌ Error: ${error}`));
+}
+
+function viewUserDetails(userId) {
+    alert('User details viewer coming soon!');
+}
 </script>
 
 <style>
-.card {
-    transition: transform 0.2s;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.list-group-item {
-    border-left: none;
-    border-right: none;
-}
-
-.list-group-item:first-child {
-    border-top: none;
-}
-
-.list-group-item:last-child {
-    border-bottom: none;
-}
-
-#activityLog {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.bg-success, .bg-primary, .bg-info, .bg-warning {
-    background: linear-gradient(45deg, var(--bs-primary), var(--bs-primary-dark)) !important;
-}
-
-.bg-info {
-    background: linear-gradient(45deg, var(--bs-info), var(--bs-info-dark)) !important;
-}
-
-.bg-success {
-    background: linear-gradient(45deg, var(--bs-success), var(--bs-success-dark)) !important;
-}
-
-.bg-warning {
-    background: linear-gradient(45deg, var(--bs-warning), var(--bs-warning-dark)) !important;
-}
+.text-purple { color: #764ba2; }
+.user-row:hover { background-color: #f8f9fa; }
+.btn-group-sm .btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
 </style>
+
 {% endblock %}

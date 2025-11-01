@@ -3217,148 +3217,41 @@ def admin_login():
 
 @app.route('/admin-panel')
 def admin_panel():
-    """Admin control panel"""
+    """Enhanced Admin control panel with full account management"""
     if not session.get('is_admin'):
         return redirect('/')
     
     try:
-        # Get user count
-        user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar()
+        # Get comprehensive statistics
+        user_count = db.session.execute(text('SELECT COUNT(*) FROM leads')).scalar() or 0
         
-        # Get all users for password reset
+        paid_count = db.session.execute(text('''
+            SELECT COUNT(*) FROM leads WHERE subscription_status = 'active'
+        ''')).scalar() or 0
+        
+        unpaid_count = user_count - paid_count
+        
+        # Get all users with full details
         users = db.session.execute(text('''
-            SELECT id, email, contact_name, company_name, subscription_status, created_at
+            SELECT id, email, contact_name, company_name, subscription_status, 
+                   created_at, phone, state, certifications
             FROM leads 
             ORDER BY created_at DESC
-            LIMIT 50
         ''')).fetchall()
         
-        return f"""
-        <html>
-        <head>
-            <title>Admin Panel</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-            <style>
-                body {{ background: #f5f5f5; padding: 20px; }}
-                .admin-header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }}
-                .card {{ border: none; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }}
-                .btn-custom {{ background: #667eea; color: white; }}
-                .btn-custom:hover {{ background: #5568d3; color: white; }}
-                .user-row {{ padding: 10px; border-bottom: 1px solid #eee; }}
-                .user-row:hover {{ background: #f8f9fa; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="admin-header">
-                    <h1><i class="fas fa-shield-alt me-2"></i>Admin Control Panel</h1>
-                    <p class="mb-0">Manage users, export data, and reset passwords</p>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                                <h3>{user_count}</h3>
-                                <p class="text-muted">Total Users</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <a href="/send-existing-leads" class="text-decoration-none">
-                                    <i class="fas fa-download fa-3x text-success mb-3"></i>
-                                    <h5>Export All Leads</h5>
-                                    <p class="text-muted">Email complete database</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <a href="/admin-logout" class="text-decoration-none">
-                                    <i class="fas fa-sign-out-alt fa-3x text-danger mb-3"></i>
-                                    <h5>Logout</h5>
-                                    <p class="text-muted">Sign out of admin</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0"><i class="fas fa-key me-2"></i>User Password Management</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Email</th>
-                                        <th>Name</th>
-                                        <th>Company</th>
-                                        <th>Status</th>
-                                        <th>Registered</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {''.join([f'''
-                                    <tr>
-                                        <td>{user[0]}</td>
-                                        <td>{user[1]}</td>
-                                        <td>{user[2]}</td>
-                                        <td>{user[3]}</td>
-                                        <td><span class="badge bg-{"success" if user[4] == "active" else "secondary"}">{user[4]}</span></td>
-                                        <td>{str(user[5])[:10] if user[5] else "N/A"}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning" onclick="resetPassword('{user[1]}', '{user[2]}')">
-                                                <i class="fas fa-key"></i> Reset Password
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    ''' for user in users])}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <script>
-            function resetPassword(email, name) {{
-                if (confirm('Reset password for ' + name + ' (' + email + ')?')) {{
-                    fetch('/admin-reset-password', {{
-                        method: 'POST',
-                        headers: {{
-                            'Content-Type': 'application/json',
-                        }},
-                        body: JSON.stringify({{ email: email }})
-                    }})
-                    .then(response => response.json())
-                    .then(data => {{
-                        if (data.success) {{
-                            alert('✅ Password reset successful!\\n\\nNew Password: ' + data.new_password + '\\n\\nUser has been notified via email.');
-                        }} else {{
-                            alert('❌ Error: ' + data.error);
-                        }}
-                    }})
-                    .catch(error => {{
-                        alert('❌ Error: ' + error);
-                    }});
-                }}
-            }}
-            </script>
-        </body>
-        </html>
-        """
+        # Get contract counts
+        gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM government_contracts')).scalar() or 0
+        commercial_leads = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
+        
+        return render_template('admin_dashboard.html',
+                             user_count=user_count,
+                             paid_count=paid_count,
+                             unpaid_count=unpaid_count,
+                             users=users,
+                             gov_contracts=gov_contracts,
+                             commercial_leads=commercial_leads)
     except Exception as e:
+        print(f"Error loading admin panel: {e}")
         return f"<h1>Error loading admin panel</h1><p>{str(e)}</p><a href='/'>Back to Home</a>"
 
 @app.route('/admin-reset-password', methods=['POST'])
@@ -3443,6 +3336,122 @@ def admin_logout():
     session.pop('is_admin', None)
     flash('Logged out of admin panel', 'info')
     return redirect('/')
+
+@app.route('/admin-update-payment-status', methods=['POST'])
+def admin_update_payment_status():
+    """Admin function to update user payment status"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        status = data.get('status')  # 'active' or 'inactive'
+        
+        if not user_id or not status:
+            return jsonify({'success': False, 'error': 'User ID and status required'})
+        
+        # Update subscription status
+        db.session.execute(
+            text('UPDATE leads SET subscription_status = :status WHERE id = :user_id'),
+            {'status': status, 'user_id': user_id}
+        )
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Payment status updated to {status}'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating payment status: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin-upload-lead', methods=['POST'])
+def admin_upload_lead():
+    """Admin function to manually upload a contract lead"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        lead_type = data.get('lead_type')  # 'government' or 'commercial'
+        
+        if lead_type == 'government':
+            # Insert government contract
+            db.session.execute(text('''
+                INSERT INTO government_contracts 
+                (title, agency, location, value, deadline, description, naics_code, 
+                 set_aside, posted_date, solicitation_number)
+                VALUES (:title, :agency, :location, :value, :deadline, :description, 
+                        :naics, :set_aside, :posted_date, :sol_number)
+            '''), {
+                'title': data.get('title'),
+                'agency': data.get('agency'),
+                'location': data.get('location'),
+                'value': data.get('value'),
+                'deadline': data.get('deadline'),
+                'description': data.get('description'),
+                'naics': data.get('naics_code'),
+                'set_aside': data.get('set_aside'),
+                'posted_date': data.get('posted_date'),
+                'sol_number': data.get('solicitation_number')
+            })
+        elif lead_type == 'commercial':
+            # Insert commercial opportunity
+            db.session.execute(text('''
+                INSERT INTO commercial_opportunities 
+                (business_name, business_type, location, square_footage, monthly_value, 
+                 frequency, services_needed, contact_type, description, size)
+                VALUES (:biz_name, :biz_type, :location, :sqft, :value, :frequency, 
+                        :services, :contact, :description, :size)
+            '''), {
+                'biz_name': data.get('business_name'),
+                'biz_type': data.get('business_type'),
+                'location': data.get('location'),
+                'sqft': data.get('square_footage'),
+                'value': data.get('monthly_value'),
+                'frequency': data.get('frequency'),
+                'services': data.get('services_needed'),
+                'contact': data.get('contact_type'),
+                'description': data.get('description'),
+                'size': data.get('size')
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Invalid lead type'})
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'{lead_type.title()} lead uploaded successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error uploading lead: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin-delete-user', methods=['POST'])
+def admin_delete_user():
+    """Admin function to delete a user account"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'User ID required'})
+        
+        # Delete user and related data
+        db.session.execute(text('DELETE FROM saved_leads WHERE user_email = (SELECT email FROM leads WHERE id = :user_id)'), {'user_id': user_id})
+        db.session.execute(text('DELETE FROM user_activity WHERE user_email = (SELECT email FROM leads WHERE id = :user_id)'), {'user_id': user_id})
+        db.session.execute(text('DELETE FROM user_notes WHERE user_email = (SELECT email FROM leads WHERE id = :user_id)'), {'user_id': user_id})
+        db.session.execute(text('DELETE FROM leads WHERE id = :user_id'), {'user_id': user_id})
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'User deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # Helper function to log user activity
 def log_activity(user_email, action_type, description, reference_id=None, reference_type=None):
