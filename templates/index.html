@@ -113,6 +113,249 @@
     <div class="container">
         <div class="row align-items-center text-white">
             <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2 class="display-5 fw-bold mb-4">🔓 Why Subscribe?</h2>
+                <p class="lead mb-4">Join hundreds of Virginia cleaning businesses growing their revenue with exclusive subscriber benefits:</p>
+                <ul class="list-unstyled fs-5">
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Unlimited Contract Access</strong> - No more 3-click limits, browse everything</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Real Commercial Leads</strong> - Direct contact info for businesses actively hiring cleaners</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Pricing Calculator</strong> - Build accurate competitive bids instantly</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Proposal Support Tools</strong> - Templates, guides, and AI assistance</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Resource Toolbox</strong> - Pricing guides, capability statements, expert templates</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>AI Emergency Assistant</strong> - 24/7 last-minute proposal help</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Priority Support</strong> - Get answers when you need them</li>
+                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Email Alerts</strong> - Be first to know about new opportunities</li>
+                </ul>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg me-3 mb-3">
+                    <i class="fas fa-star me-2"></i>Start Free Trial
+                </a>
+                <a href="#roi-calculator" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill mb-3">
+                    <i class="fas fa-calculator me-2"></i>See ROI
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <!-- Value Proposition Boxes -->
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark shadow-lg h-100">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-trophy text-warning mb-3" style="font-size: 2.5rem;"></i>
+                                <h5 class="fw-bold mb-2">Win More Contracts</h5>
+                                <p class="small mb-0">Subscribers win 3x more contracts than free users with our tools and support</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark shadow-lg h-100">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-clock text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                <h5 class="fw-bold mb-2">Save Time</h5>
+                                <p class="small mb-0">Cut proposal prep time by 60% with templates and AI assistance</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark shadow-lg h-100">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-chart-line text-success mb-3" style="font-size: 2.5rem;"></i>
+                                <h5 class="fw-bold mb-2">Grow Revenue</h5>
+                                <p class="small mb-0">Average subscriber lands $180K in contracts in first year</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark shadow-lg h-100">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-handshake text-info mb-3" style="font-size: 2.5rem;"></i>
+                                <h5 class="fw-bold mb-2">Expert Support</h5>
+                                <p class="small mb-0">Access proposal specialists and AI chatbot for guidance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ROI Calculator Section -->
+<section class="bg-light py-5" id="roi-calculator">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5 text-center">
+                        <h2 class="fw-bold mb-4">💰 Return on Investment Calculator</h2>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <p class="mb-2">Average Contract Value</p>
+                                        <h2 class="display-4 mb-0">$3,500<small class="fs-5">/mo</small></h2>
+                                        <small>Based on typical commercial contracts</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <p class="mb-2">Subscription Cost</p>
+                                        <h2 class="display-4 mb-0">$99<small class="fs-5">/mo</small></h2>
+                                        <small>All features included</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-success mb-4">
+                            <h4 class="alert-heading mb-3">
+                                <i class="fas fa-calculator me-2"></i>Break-Even Analysis
+                            </h4>
+                            <p class="mb-2 lead"><strong>Just ONE contract pays for your subscription for 35 months!</strong></p>
+                            <hr>
+                            <div class="row text-start">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Year 1 Potential:</strong></p>
+                                    <ul class="mb-0">
+                                        <li>Land 2-3 contracts = $84K-$126K revenue</li>
+                                        <li>Subscription cost = $1,188</li>
+                                        <li><strong>Net benefit = $83K-$125K</strong></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Time Savings:</strong></p>
+                                    <ul class="mb-0">
+                                        <li>60% less proposal prep time</li>
+                                        <li>80% less lead research time</li>
+                                        <li>Value: $500-800/month in labor</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="display-6 fw-bold text-primary">3,500%</div>
+                                <p class="text-muted mb-0">Average ROI</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="display-6 fw-bold text-success">14 days</div>
+                                <p class="text-muted mb-0">Avg. time to first contract</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="display-6 fw-bold text-info">92%</div>
+                                <p class="text-muted mb-0">Subscriber satisfaction</p>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('register') }}" class="btn btn-success btn-lg px-5 py-3 mt-3">
+                            Start Your Free Trial Today <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                        <p class="small text-muted mt-3 mb-0">No credit card required • Cancel anytime • 7-day money-back guarantee</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Service Valuation Tool Section -->
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold mb-3">📊 Service Valuation Estimator</h2>
+                <p class="lead text-muted">Instantly estimate contract values for different facility types</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-building text-primary mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="card-title fw-bold">Office Buildings</h5>
+                            <p class="text-muted small mb-3">10,000-50,000 sq ft</p>
+                            <div class="h3 text-primary mb-2">$2,500-$8,000</div>
+                            <p class="small text-muted mb-3">per month</p>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2">✓ Daily cleaning</li>
+                                <li class="mb-2">✓ Restroom services</li>
+                                <li class="mb-2">✓ Floor care</li>
+                                <li class="mb-2">✓ Break room cleaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-hospital text-success mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="card-title fw-bold">Medical Facilities</h5>
+                            <p class="text-muted small mb-3">5,000-20,000 sq ft</p>
+                            <div class="h3 text-success mb-2">$4,000-$12,000</div>
+                            <p class="small text-muted mb-3">per month</p>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2">✓ Medical-grade cleaning</li>
+                                <li class="mb-2">✓ Disinfection protocols</li>
+                                <li class="mb-2">✓ Biohazard disposal</li>
+                                <li class="mb-2">✓ Compliance standards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-school text-warning mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="card-title fw-bold">Schools</h5>
+                            <p class="text-muted small mb-3">50,000-200,000 sq ft</p>
+                            <div class="h3 text-warning mb-2">$8,000-$25,000</div>
+                            <p class="small text-muted mb-3">per month</p>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2">✓ Classroom cleaning</li>
+                                <li class="mb-2">✓ Cafeteria services</li>
+                                <li class="mb-2">✓ Gym floor care</li>
+                                <li class="mb-2">✓ Daily/deep cleaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-info h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-landmark text-info mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="card-title fw-bold">Government</h5>
+                            <p class="text-muted small mb-3">20,000-100,000 sq ft</p>
+                            <div class="h3 text-info mb-2">$6,000-$20,000</div>
+                            <p class="small text-muted mb-3">per month</p>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2">✓ Security clearances</li>
+                                <li class="mb-2">✓ Compliance certs</li>
+                                <li class="mb-2">✓ Specialized training</li>
+                                <li class="mb-2">✓ Public area cleaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-5">
+                <p class="lead mb-3">Want precise pricing for your specific bids?</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 me-3 mb-3">
+                    <i class="fas fa-calculator me-2"></i>Try Our Pricing Calculator
+                </a>
+                <a href="{{ url_for('proposal_support') }}" class="btn btn-outline-primary btn-lg px-5 py-3 mb-3">
+                    <i class="fas fa-user-tie me-2"></i>Get Expert Help
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Original Subscriber Benefits Section (keeping for ad placement) -->
+<section class="bg-gradient py-5 d-none" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row align-items-center text-white">
+            <div class="col-lg-6 mb-4 mb-lg-0">
                 <h2 class="display-5 fw-bold mb-4">🔓 Unlock Hidden Perks</h2>
                 <p class="lead mb-4">Subscribe today and gain exclusive access to features that put you ahead of the competition:</p>
                 <ul class="list-unstyled fs-5">

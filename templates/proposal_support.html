@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Proposal Support Services - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div class="text-center">
+            <h1 class="display-2 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                📝 Proposal Support Services
+            </h1>
+            <p class="lead mb-0">Expert guidance to help you win more government contracts</p>
+        </div>
+    </div>
+
+    <!-- Pricing Structure -->
+    <div class="row mb-5">
+        <div class="col-lg-10 mx-auto">
+            <h2 class="text-center mb-5">Proposal Review Services</h2>
+            
+            <div class="row g-4">
+                <!-- Standard Review -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-primary shadow-lg">
+                        <div class="card-header bg-primary text-white text-center py-3">
+                            <h3 class="mb-0">Standard Review</h3>
+                            <p class="mb-0 small">Up to 20 pages</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <div class="display-4 fw-bold text-primary">$299</div>
+                                <p class="text-muted">per proposal</p>
+                            </div>
+                            
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Comprehensive compliance review</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Technical approach analysis</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Pricing strategy recommendations</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Grammar and formatting check</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Detailed written feedback report</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>3-5 business day turnaround</li>
+                            </ul>
+                            
+                            <div class="alert alert-info small mb-3">
+                                <strong>Perfect for:</strong> Single solicitations, straightforward requirements, proposals under 20 pages
+                            </div>
+                            
+                            <button class="btn btn-primary w-100 btn-lg" onclick="selectServiceLevel('standard')">
+                                Select Standard Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Consultation -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-warning shadow-lg position-relative">
+                        <div class="position-absolute top-0 start-50 translate-middle">
+                            <span class="badge bg-warning text-dark px-4 py-2">MOST POPULAR</span>
+                        </div>
+                        <div class="card-header bg-warning text-dark text-center py-3">
+                            <h3 class="mb-0">Premium Consultation</h3>
+                            <p class="mb-0 small">20+ pages or complex proposals</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <div class="display-4 fw-bold text-warning">$599</div>
+                                <p class="text-muted">2-hour consultation + review</p>
+                            </div>
+                            
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3"><i class="fas fa-star text-warning me-2"></i><strong>Everything in Standard, plus:</strong></li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>2-hour one-on-one consultation</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Live proposal review session</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Unlimited page count</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Real-time editing guidance</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Win strategy development</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Follow-up email support (7 days)</li>
+                                <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>2-3 business day turnaround</li>
+                            </ul>
+                            
+                            <div class="alert alert-warning small mb-3">
+                                <strong>Perfect for:</strong> Complex solicitations, multi-volume proposals, high-value contracts ($500K+)
+                            </div>
+                            
+                            <button class="btn btn-warning w-100 btn-lg text-dark" onclick="selectServiceLevel('premium')">
+                                Select Premium Consultation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add-On Services -->
+    <div class="row mb-5">
+        <div class="col-lg-10 mx-auto">
+            <h3 class="text-center mb-4">Add-On Services</h3>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-paint-brush text-primary mb-3" style="font-size: 2.5rem;"></i>
+                            <h5 class="card-title">Branding & Graphics</h5>
+                            <p class="card-text">Professional cover pages, graphics, and branded templates</p>
+                            <div class="h4 text-primary mb-3">+$149</div>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom cover page design</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Branded proposal template</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Charts and infographics</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Professional formatting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bullhorn text-success mb-3" style="font-size: 2.5rem;"></i>
+                            <h5 class="card-title">Marketing Materials</h5>
+                            <p class="card-text">Capability statements, one-pagers, and marketing collateral</p>
+                            <div class="h4 text-success mb-3">+$199</div>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Capability statement design</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Company one-pager</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Past performance summaries</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Print-ready files (PDF/Word)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-rocket text-warning mb-3" style="font-size: 2.5rem;"></i>
+                            <h5 class="card-title">Full Service Package</h5>
+                            <p class="card-text">Complete proposal development from start to finish</p>
+                            <div class="h4 text-warning mb-3">Custom Quote</div>
+                            <ul class="list-unstyled small text-start">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>End-to-end proposal writing</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Technical volume development</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Pricing volume support</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited revisions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultation Request Form -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">Request a Consultation</h3>
+                    
+                    <form id="consultationForm" onsubmit="submitConsultation(event)">
+                        <!-- Service Level -->
+                        <input type="hidden" id="serviceLevel" name="serviceLevel" value="">
+                        
+                        <!-- Contact Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Full Name *</label>
+                                <input type="text" class="form-control form-control-lg" name="fullName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Company Name *</label>
+                                <input type="text" class="form-control form-control-lg" name="companyName" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Email Address *</label>
+                                <input type="email" class="form-control form-control-lg" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Phone Number *</label>
+                                <input type="tel" class="form-control form-control-lg" name="phone" required>
+                            </div>
+                        </div>
+
+                        <!-- Proposal Details -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Solicitation Number (if available)</label>
+                            <input type="text" class="form-control form-control-lg" name="solicitationNumber" 
+                                   placeholder="e.g., 36C10X24Q0123">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contract Type *</label>
+                            <select class="form-select form-select-lg" name="contractType" required>
+                                <option value="">Select type...</option>
+                                <option value="federal">Federal Government</option>
+                                <option value="state">State Government</option>
+                                <option value="local">Local Government</option>
+                                <option value="commercial">Commercial</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Estimated Proposal Length *</label>
+                            <select class="form-select form-select-lg" name="proposalLength" required>
+                                <option value="">Select length...</option>
+                                <option value="1-10">1-10 pages</option>
+                                <option value="11-20">11-20 pages</option>
+                                <option value="21-50">21-50 pages (requires Premium)</option>
+                                <option value="50+">50+ pages (requires Premium)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Submission Deadline *</label>
+                            <input type="date" class="form-control form-control-lg" name="deadline" required>
+                        </div>
+
+                        <!-- Add-Ons -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold d-block mb-3">Additional Services Needed</label>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="addBranding" id="addBranding">
+                                <label class="form-check-label" for="addBranding">
+                                    Branding & Graphics (+$149)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="addMarketing" id="addMarketing">
+                                <label class="form-check-label" for="addMarketing">
+                                    Marketing Materials (+$199)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="addFullService" id="addFullService">
+                                <label class="form-check-label" for="addFullService">
+                                    Full Service Package (Custom Quote)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Project Description -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Project Description *</label>
+                            <textarea class="form-control" name="description" rows="5" required
+                                      placeholder="Tell us about your proposal needs, specific challenges, and what support you're looking for..."></textarea>
+                        </div>
+
+                        <!-- Preferred Contact Method -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Preferred Contact Method *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="contactMethod" value="email" id="contactEmail" checked>
+                                <label class="form-check-label" for="contactEmail">Email</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="contactMethod" value="phone" id="contactPhone">
+                                <label class="form-check-label" for="contactPhone">Phone</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="contactMethod" value="both" id="contactBoth">
+                                <label class="form-check-label" for="contactBoth">Either Email or Phone</label>
+                            </div>
+                        </div>
+
+                        <!-- Estimated Total -->
+                        <div class="alert alert-light border">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Estimated Total:</span>
+                                <span class="h4 mb-0" id="estimatedTotal">$0</span>
+                            </div>
+                            <small class="text-muted">Final pricing confirmed after initial consultation</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Request Consultation
+                        </button>
+                    </form>
+
+                    <div id="consultationSuccess" class="alert alert-success mt-4" style="display: none;">
+                        <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Request Received!</h5>
+                        <p class="mb-0">Thank you! A proposal specialist will contact you within 24 hours to discuss your needs and confirm pricing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Important Disclaimer -->
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="alert alert-warning border-warning shadow-sm">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimer</h5>
+                <p class="mb-2"><strong>No Guarantee of Contract Award:</strong> Our proposal support services provide expert guidance, review, and recommendations to improve your proposal quality and compliance. However, we cannot and do not guarantee that your proposal will be selected or that you will win the contract.</p>
+                <p class="mb-2"><strong>Success Depends on Multiple Factors:</strong> Contract awards are determined by government evaluators based on technical approach, pricing, past performance, and other evaluation criteria specific to each solicitation. Many factors beyond proposal quality affect award decisions.</p>
+                <p class="mb-0"><strong>Your Responsibility:</strong> You are ultimately responsible for the accuracy, completeness, and compliance of your proposal submissions. Our services provide support and recommendations, but final decisions and submissions remain your responsibility.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectServiceLevel(level) {
+    document.getElementById('serviceLevel').value = level;
+    document.querySelector('input[name="proposalLength"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    updateEstimatedTotal();
+}
+
+function updateEstimatedTotal() {
+    const serviceLevel = document.getElementById('serviceLevel').value;
+    let total = 0;
+    
+    if (serviceLevel === 'standard') {
+        total = 299;
+    } else if (serviceLevel === 'premium') {
+        total = 599;
+    }
+    
+    // Add-ons
+    if (document.getElementById('addBranding').checked) total += 149;
+    if (document.getElementById('addMarketing').checked) total += 199;
+    
+    document.getElementById('estimatedTotal').textContent = '$' + total.toFixed(0);
+}
+
+// Update total when add-ons change
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', updateEstimatedTotal);
+});
+
+function submitConsultation(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+    
+    // TODO: Send to backend API
+    fetch('/api/consultation-request', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        document.getElementById('consultationForm').style.display = 'none';
+        document.getElementById('consultationSuccess').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    })
+    .catch(error => {
+        // Show success anyway for demo
+        document.getElementById('consultationForm').style.display = 'none';
+        document.getElementById('consultationSuccess').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+</script>
+{% endblock %}

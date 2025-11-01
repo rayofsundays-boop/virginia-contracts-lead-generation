@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}AI Proposal Assistant - Emergency Help - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div class="text-center">
+            <h1 class="display-2 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                🚨 AI Proposal Assistant
+            </h1>
+            <p class="lead mb-3">Last-Minute Proposal Help - Available 24/7</p>
+            <span class="badge bg-danger fs-5 px-4 py-2">EMERGENCY SUPPORT</span>
+        </div>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="alert alert-warning border-warning shadow-sm">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimer</h5>
+                <p class="mb-0"><strong>AI-Generated Guidance Only:</strong> This AI assistant provides general guidance and suggestions based on government contracting best practices. Recommendations do not guarantee contract awards or proposal success. Always verify AI suggestions with official RFP requirements and consult with qualified proposal professionals for critical submissions. You are responsible for the accuracy and compliance of your final proposal.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Chat Interface -->
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><i class="fas fa-robot me-2"></i>AI Proposal Assistant</h4>
+                            <small>Powered by advanced AI - Instant answers to your proposal questions</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-success">
+                                <i class="fas fa-circle pulse-dot me-1"></i>Online
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area -->
+                <div class="card-body" style="height: 500px; overflow-y: auto;" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="message-wrapper mb-3">
+                        <div class="d-flex">
+                            <div class="avatar bg-primary text-white rounded-circle me-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content bg-light rounded-3 p-3" style="max-width: 75%;">
+                                <p class="mb-2"><strong>AI Assistant</strong></p>
+                                <p class="mb-0">👋 Hello! I'm your AI Proposal Assistant. I can help you with:</p>
+                                <ul class="mb-0 mt-2">
+                                    <li>Understanding RFP requirements</li>
+                                    <li>Structuring proposal sections</li>
+                                    <li>Compliance checklist guidance</li>
+                                    <li>Pricing strategy advice</li>
+                                    <li>Past performance formatting</li>
+                                    <li>Technical approach recommendations</li>
+                                    <li>Last-minute troubleshooting</li>
+                                </ul>
+                                <p class="mb-0 mt-2">What can I help you with today?</p>
+                                <small class="text-muted">Just now</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Start Buttons -->
+                    <div class="text-center mb-4" id="quickStartButtons">
+                        <p class="text-muted mb-3">Or try these common questions:</p>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            <button class="btn btn-sm btn-outline-primary" onclick="askQuestion('How do I structure a technical approach?')">
+                                Technical Approach
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="askQuestion('What should I include in past performance?')">
+                                Past Performance
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="askQuestion('How do I price a government cleaning contract?')">
+                                Pricing Strategy
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="askQuestion('What is a compliance matrix?')">
+                                Compliance Matrix
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages will be appended here -->
+                </div>
+
+                <!-- Chat Input -->
+                <div class="card-footer bg-light">
+                    <form id="chatForm" onsubmit="sendMessage(event)">
+                        <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" id="userMessage" 
+                                   placeholder="Ask me anything about your proposal..." 
+                                   required autocomplete="off">
+                            <button class="btn btn-primary px-4" type="submit" id="sendButton">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-lock me-1"></i>Your conversations are private and not stored
+                    </small>
+                </div>
+            </div>
+
+            <!-- Usage Tips -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-lightbulb me-2 text-warning"></i>Tips for Better Results</h6>
+                    <ul class="small mb-0">
+                        <li>Be specific about your question or challenge</li>
+                        <li>Mention the type of contract (federal, state, local, commercial)</li>
+                        <li>Include relevant details like page limits or special requirements</li>
+                        <li>Ask follow-up questions to dive deeper into topics</li>
+                        <li>Reference specific RFP section numbers when applicable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - Resources -->
+        <div class="col-lg-4">
+            <!-- Quick Links -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-external-link-alt me-2 text-primary"></i>Quick Resources
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('proposal_templates') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-alt me-2"></i>Proposal Templates
+                        </a>
+                        <a href="{{ url_for('pricing_guide') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-dollar-sign me-2"></i>Pricing Guide
+                        </a>
+                        <a href="{{ url_for('capability_statement') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-id-card me-2"></i>Capability Statement
+                        </a>
+                        <a href="{{ url_for('proposal_support') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-user-tie me-2"></i>Expert Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Need More Help? -->
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-tie text-warning mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="card-title">Need Human Expert?</h5>
+                    <p class="small mb-3">For complex proposals or guaranteed compliance review, connect with our proposal specialists.</p>
+                    <a href="{{ url_for('proposal_support') }}" class="btn btn-warning w-100">
+                        <i class="fas fa-phone me-2"></i>Book Consultation
+                    </a>
+                    <small class="text-muted d-block mt-2">Starting at $299</small>
+                </div>
+            </div>
+
+            <!-- Disclaimer Box -->
+            <div class="alert alert-danger mt-4 small">
+                <p class="mb-2"><strong><i class="fas fa-shield-alt me-2"></i>Remember:</strong></p>
+                <ul class="mb-0 ps-3">
+                    <li>AI provides general guidance only</li>
+                    <li>Always verify with RFP requirements</li>
+                    <li>No guarantee of contract wins</li>
+                    <li>Final responsibility is yours</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let messageCount = 0;
+
+function sendMessage(event) {
+    event.preventDefault();
+    const messageInput = document.getElementById('userMessage');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Hide quick start buttons after first message
+    if (messageCount === 0) {
+        document.getElementById('quickStartButtons').style.display = 'none';
+    }
+    
+    messageCount++;
+    
+    // Display user message
+    appendMessage('user', message);
+    messageInput.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Simulate AI response (in production, call actual AI API)
+    setTimeout(() => {
+        hideTypingIndicator();
+        const aiResponse = generateAIResponse(message);
+        appendMessage('ai', aiResponse);
+    }, 2000 + Math.random() * 1000); // Random delay 2-3 seconds
+}
+
+function askQuestion(question) {
+    document.getElementById('userMessage').value = question;
+    document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+}
+
+function appendMessage(sender, text) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = 'message-wrapper mb-3';
+    
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    if (sender === 'user') {
+        messageWrapper.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div class="message-content bg-primary text-white rounded-3 p-3" style="max-width: 75%;">
+                    <p class="mb-0">${escapeHtml(text)}</p>
+                    <small class="opacity-75 d-block mt-1">${timestamp}</small>
+                </div>
+                <div class="avatar bg-secondary text-white rounded-circle ms-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        `;
+    } else {
+        messageWrapper.innerHTML = `
+            <div class="d-flex">
+                <div class="avatar bg-primary text-white rounded-circle me-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content bg-light rounded-3 p-3" style="max-width: 75%;">
+                    <p class="mb-0">${formatAIMessage(text)}</p>
+                    <small class="text-muted d-block mt-1">${timestamp}</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageWrapper);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    const typingIndicator = document.createElement('div');
+    typingIndicator.id = 'typingIndicator';
+    typingIndicator.className = 'message-wrapper mb-3';
+    typingIndicator.innerHTML = `
+        <div class="d-flex">
+            <div class="avatar bg-primary text-white rounded-circle me-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content bg-light rounded-3 p-3">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(typingIndicator);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+function generateAIResponse(userMessage) {
+    // This is a placeholder. In production, call actual AI API (OpenAI, Claude, etc.)
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('technical approach') || lowerMessage.includes('technical') || lowerMessage.includes('approach')) {
+        return `Great question! Here's how to structure a strong technical approach:\n\n1. **Understanding of Requirements**\n   - Demonstrate you read and understood the RFP\n   - Restate key objectives in your own words\n\n2. **Methodology**\n   - Explain your step-by-step cleaning process\n   - Include quality control measures\n   - Detail equipment and products used\n\n3. **Staffing Plan**\n   - Organizational chart\n   - Key personnel qualifications\n   - Training programs\n\n4. **Schedule & Timeline**\n   - Cleaning frequency and timing\n   - Response time for emergencies\n   - Transition plan if incumbent\n\n5. **Quality Assurance**\n   - Inspection procedures\n   - Customer feedback mechanisms\n   - Corrective action processes\n\nWould you like me to elaborate on any specific section?`;
+    }
+    
+    if (lowerMessage.includes('past performance') || lowerMessage.includes('references') || lowerMessage.includes('experience')) {
+        return `Past performance is critical! Here's what to include:\n\n**For Each Reference:**\n- Client name and contact information\n- Contract number and value\n- Period of performance (start/end dates)\n- Scope of work (be specific about similarities to current RFP)\n- Square footage and facility type\n- Key accomplishments or metrics\n- Any awards or recognition received\n\n**Best Practices:**\n✓ Use 3-5 most relevant contracts\n✓ Choose projects similar in scope/size/complexity\n✓ Federal experience for federal bids (if you have it)\n✓ Include current contracts, not just completed\n✓ Quantify results: "99.8% quality scores over 3 years"\n✓ Get permission from references before listing\n\nNeed help formatting a specific reference?`;
+    }
+    
+    if (lowerMessage.includes('pric') || lowerMessage.includes('cost') || lowerMessage.includes('bid')) {
+        return `Pricing government contracts requires strategy! Here's my guidance:\n\n**Key Factors:**\n1. **Labor Costs** (typically 70-80% of total)\n   - Check for prevailing wage requirements (Davis-Bacon)\n   - Virginia living wage: $18.50-$22/hr for commercial cleaning\n   - Include benefits, taxes, workers comp\n\n2. **Materials & Supplies** (5-10%)\n   - Cleaning products, paper goods, trash bags\n   - Factor in green/eco-friendly if required\n\n3. **Equipment** (amortized)\n   - Vacuums, buffers, carpet cleaners\n   - Replacement/maintenance costs\n\n4. **Overhead** (15-20%)\n   - Management, supervision\n   - Insurance, bonding\n   - Administrative costs\n\n5. **Profit Margin** (8-12% for competitive bids)\n\n**Strategy Tips:**\n- Don't be the lowest bidder (raises red flags)\n- Match pricing to your technical approach quality\n- Consider life of contract for multi-year awards\n\nWant to use our pricing calculator? I can guide you there!`;
+    }
+    
+    if (lowerMessage.includes('compliance') || lowerMessage.includes('matrix') || lowerMessage.includes('requirements')) {
+        return `A compliance matrix is your best friend! Here's why:\n\n**What is it?**\nA table that cross-references every RFP requirement with where you addressed it in your proposal.\n\n**Format:**\n| RFP Section | Requirement | Proposal Section | Page # |\n|-------------|-------------|------------------|--------|\n| M.1 | Cleaning frequency | Technical Approach, Section 2.1 | 5 |\n| M.2 | Quality control plan | Quality Assurance, Section 3 | 12 |\n\n**Why Use It?**\n✓ Ensures you don't miss any requirements\n✓ Makes evaluator's job easier (they like that!)\n✓ Shows attention to detail\n✓ Can be used as your internal checklist\n\n**Pro Tip:** Create the matrix FIRST, before writing. Use it as your outline!\n\nWould you like help creating one for your specific RFP?`;
+    }
+    
+    if (lowerMessage.includes('deadline') || lowerMessage.includes('last minute') || lowerMessage.includes('emergency') || lowerMessage.includes('urgent')) {
+        return `Under tight deadline pressure? I can help! Here's a priority checklist:\n\n**CRITICAL (Must-Have):**\n☐ All forms completed and signed\n☐ Pricing volume submitted correctly\n☐ Past performance references included\n☐ Technical approach addresses all requirements\n☐ Submitted before deadline (aim for 2 hours early!)\n\n**HIGH PRIORITY:**\n☐ Compliance matrix completed\n☐ Executive summary written\n☐ Quality control plan described\n☐ Staffing plan with org chart\n\n**IF TIME PERMITS:**\n☐ Professional formatting and graphics\n☐ Cover letter\n☐ Additional certifications\n\n**Quick Wins:**\n- Use templates from our Resource Toolbox\n- Focus on compliance over perfection\n- Have someone else proofread ASAP\n- Test your upload/submission process NOW\n\nHow many hours until your deadline? I can help you prioritize!`;
+    }
+    
+    // Default response
+    return `Thanks for your question! I'd be happy to help with that.\n\nFor the most accurate and detailed guidance on "${userMessage}", I recommend:\n\n1. **Check our Resource Toolbox** - We have templates and guides that might answer this\n2. **Review the specific RFP** - Every solicitation has unique requirements\n3. **Consider expert consultation** - For complex or high-value proposals\n\nCan you provide more details about:\n- What type of contract is this? (Federal/State/Local/Commercial)\n- What specific aspect are you struggling with?\n- Any page limits or special requirements?\n\nThe more specific you are, the better I can help!`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatAIMessage(text) {
+    // Convert markdown-style formatting to HTML
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+    text = text.replace(/\n/g, '<br>'); // Line breaks
+    text = text.replace(/✓/g, '<span class="text-success">✓</span>'); // Check marks
+    text = text.replace(/☐/g, '<span class="text-muted">☐</span>'); // Checkboxes
+    return text;
+}
+
+// Scroll to bottom on load
+window.addEventListener('load', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+</script>
+
+<style>
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #999;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.pulse-dot {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.message-content {
+    word-wrap: break-word;
+}
+
+#chatMessages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chatMessages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#chatMessages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+{% endblock %}

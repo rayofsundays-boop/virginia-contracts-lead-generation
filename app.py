@@ -1742,6 +1742,12 @@ def contracts():
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
+    # Redirect to coming soon page until November 3, 2025
+    from datetime import datetime
+    launch_date = datetime(2025, 11, 3, 0, 0, 0)
+    if datetime.now() < launch_date:
+        return redirect(url_for('federal_coming_soon'))
+    
     department_filter = request.args.get('department', '')
     set_aside_filter = request.args.get('set_aside', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
@@ -3197,6 +3203,112 @@ def analyze_proposal_compliance(rfp_path, proposal_path):
             'Insurance certificates (mention where they will be provided)'
         ]
     }
+
+@app.route('/pricing-calculator')
+@login_required
+def pricing_calculator():
+    """Interactive pricing calculator for subscribers"""
+    # Check if user is paid subscriber or admin
+    is_admin = session.get('is_admin', False)
+    is_paid = False
+    
+    if not is_admin and 'user_id' in session:
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        if result and result[0] == 'paid':
+            is_paid = True
+    
+    if not is_admin and not is_paid:
+        flash('Pricing Calculator is available to paid subscribers only. Subscribe to unlock this powerful tool!', 'warning')
+        return redirect(url_for('subscribe_page'))
+    
+    return render_template('pricing_calculator.html')
+
+@app.route('/proposal-support')
+def proposal_support():
+    """Proposal support services with consultation booking"""
+    return render_template('proposal_support.html')
+
+@app.route('/ai-assistant')
+@login_required
+def ai_assistant():
+    """AI chatbot for last-minute proposal help"""
+    return render_template('ai_assistant.html')
+
+@app.route('/federal-coming-soon')
+def federal_coming_soon():
+    """Coming soon page for federal contracts until November 3"""
+    return render_template('federal_coming_soon.html')
+
+@app.route('/api/consultation-request', methods=['POST'])
+@login_required
+def consultation_request():
+    """Handle consultation request submissions"""
+    try:
+        data = request.get_json()
+        
+        # Store consultation request in database
+        db.session.execute(text('''
+            INSERT INTO consultation_requests 
+            (user_id, full_name, company_name, email, phone, solicitation_number,
+             contract_type, proposal_length, deadline, add_branding, add_marketing,
+             add_full_service, description, contact_method, service_level, created_at)
+            VALUES (:user_id, :full_name, :company_name, :email, :phone, :solicitation_number,
+                    :contract_type, :proposal_length, :deadline, :add_branding, :add_marketing,
+                    :add_full_service, :description, :contact_method, :service_level, CURRENT_TIMESTAMP)
+        '''), {
+            'user_id': session['user_id'],
+            'full_name': data.get('fullName'),
+            'company_name': data.get('companyName'),
+            'email': data.get('email'),
+            'phone': data.get('phone'),
+            'solicitation_number': data.get('solicitationNumber', ''),
+            'contract_type': data.get('contractType'),
+            'proposal_length': data.get('proposalLength'),
+            'deadline': data.get('deadline'),
+            'add_branding': data.get('addBranding', False),
+            'add_marketing': data.get('addMarketing', False),
+            'add_full_service': data.get('addFullService', False),
+            'description': data.get('description'),
+            'contact_method': data.get('contactMethod'),
+            'service_level': data.get('serviceLevel', '')
+        })
+        db.session.commit()
+        
+        # TODO: Send notification email to admin/proposal specialists
+        
+        return jsonify({'success': True, 'message': 'Consultation request received'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Consultation request error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/notify-launch', methods=['POST'])
+def notify_launch():
+    """Store email for federal contracts launch notification"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'Email required'}), 400
+        
+        # Store email for notification
+        db.session.execute(text('''
+            INSERT INTO launch_notifications (email, created_at)
+            VALUES (:email, CURRENT_TIMESTAMP)
+            ON CONFLICT (email) DO NOTHING
+        '''), {'email': email})
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'You will be notified on launch day'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Launch notification error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============================================================================
 # NEW LEAD GENERATION SYSTEM

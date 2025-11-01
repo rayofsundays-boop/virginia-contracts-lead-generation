@@ -108,7 +108,18 @@
                         <a href="{{ url_for('toolbox') }}" class="btn btn-success btn-lg">
                             <i class="fas fa-toolbox me-2"></i>Resource Toolbox
                         </a>
-                        <a href="{{ url_for('payment') }}" class="btn btn-warning">
+                        {% if is_paid_subscriber or is_admin %}
+                        <a href="{{ url_for('pricing_calculator') }}" class="btn btn-primary">
+                            <i class="fas fa-calculator me-2"></i>Pricing Calculator
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('ai_assistant') }}" class="btn btn-danger">
+                            <i class="fas fa-robot me-2"></i>AI Proposal Assistant
+                        </a>
+                        <a href="{{ url_for('proposal_support') }}" class="btn btn-warning">
+                            <i class="fas fa-user-tie me-2"></i>Book Consultation
+                        </a>
+                        <a href="{{ url_for('payment') }}" class="btn btn-outline-primary">
                             <i class="fas fa-badge-check me-2"></i>Manage Subscription
                         </a>
                         <a href="{{ url_for('landing') }}" class="btn btn-info">

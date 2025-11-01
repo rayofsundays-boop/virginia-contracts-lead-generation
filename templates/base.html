@@ -125,6 +125,44 @@
                         <a class="nav-link" href="{{ url_for('commercial_contracts') }}">Commercial</a>
                     </li>
                     <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-toolbox"></i> Resources
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="resourcesDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('toolbox') }}">
+                                    <i class="fas fa-toolbox me-2"></i>Resource Toolbox
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('proposal_templates') }}">
+                                    <i class="fas fa-file-alt me-2"></i>Proposal Templates
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ai_assistant') }}">
+                                    <i class="fas fa-robot me-2"></i>AI Assistant
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('proposal_support') }}">
+                                    <i class="fas fa-user-tie me-2"></i>Expert Consultation
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pricing_calculator') }}">
+                                    <i class="fas fa-calculator me-2"></i>Pricing Calculator <span class="badge bg-primary">Pro</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pricing_guide') }}">
+                                    <i class="fas fa-dollar-sign me-2"></i>Pricing Guide <span class="badge bg-primary">Pro</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle btn btn-outline-light btn-sm mx-2" href="#" id="requestDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-plus-circle"></i> Request Cleaning
                         </a>

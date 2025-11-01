@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing Calculator - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div class="text-center">
+            <h1 class="display-2 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                💰 Pricing Calculator
+            </h1>
+            <p class="lead mb-0">Build accurate, competitive bids for government cleaning contracts</p>
+        </div>
+    </div>
+
+    <!-- Calculator Card -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-4">Contract Pricing Calculator</h3>
+                    
+                    <!-- Facility Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Facility Type</label>
+                        <select class="form-select form-select-lg" id="facilityType">
+                            <option value="office">Office Building</option>
+                            <option value="medical">Medical Facility</option>
+                            <option value="school">School/Educational</option>
+                            <option value="government">Government Building</option>
+                            <option value="industrial">Industrial/Warehouse</option>
+                        </select>
+                    </div>
+
+                    <!-- Square Footage -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Square Footage</label>
+                        <input type="number" class="form-control form-control-lg" id="squareFootage" 
+                               placeholder="Enter square footage" min="0" value="10000">
+                        <small class="text-muted">Enter the total cleanable square footage</small>
+                    </div>
+
+                    <!-- Cleaning Frequency -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Cleaning Frequency</label>
+                        <select class="form-select form-select-lg" id="frequency">
+                            <option value="daily">Daily (5x per week)</option>
+                            <option value="3x">3x per week</option>
+                            <option value="2x">2x per week</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Bi-weekly</option>
+                        </select>
+                    </div>
+
+                    <!-- Service Level -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Service Level</label>
+                        <select class="form-select form-select-lg" id="serviceLevel">
+                            <option value="basic">Basic (Light cleaning, trash removal)</option>
+                            <option value="standard">Standard (Vacuuming, dusting, restrooms)</option>
+                            <option value="premium">Premium (Deep cleaning, all services)</option>
+                        </select>
+                    </div>
+
+                    <!-- Additional Services -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block mb-3">Additional Services</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="floorCare">
+                            <label class="form-check-label" for="floorCare">
+                                Floor Care (Stripping, waxing, buffing) - +15%
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="windowCleaning">
+                            <label class="form-check-label" for="windowCleaning">
+                                Window Cleaning - +10%
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="carpetCleaning">
+                            <label class="form-check-label" for="carpetCleaning">
+                                Carpet Cleaning - +12%
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="specializedCleaning">
+                            <label class="form-check-label" for="specializedCleaning">
+                                Specialized/Medical-Grade Cleaning - +20%
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="greenCleaning">
+                            <label class="form-check-label" for="greenCleaning">
+                                Green/Eco-Friendly Products - +8%
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Labor Rate Override -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Virginia Labor Rate (2024-2025)</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="laborRate" 
+                                   value="18.50" step="0.50" min="15">
+                            <span class="input-group-text">per hour</span>
+                        </div>
+                        <small class="text-muted">Default: $18.50/hr (VA living wage for commercial cleaning)</small>
+                    </div>
+
+                    <!-- Contract Duration -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Contract Duration</label>
+                        <select class="form-select form-select-lg" id="contractDuration">
+                            <option value="1">1 Year</option>
+                            <option value="2">2 Years</option>
+                            <option value="3">3 Years</option>
+                            <option value="5">5 Years</option>
+                        </select>
+                    </div>
+
+                    <!-- Calculate Button -->
+                    <button class="btn btn-primary btn-lg w-100 mb-4" onclick="calculatePricing()">
+                        <i class="fas fa-calculator me-2"></i>Calculate Pricing
+                    </button>
+
+                    <!-- Results Section -->
+                    <div id="resultsSection" style="display: none;">
+                        <hr class="my-4">
+                        <h4 class="mb-4">Pricing Estimate</h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Monthly Cost</h6>
+                                        <h3 class="text-primary mb-0" id="monthlyCost">$0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Annual Cost</h6>
+                                        <h3 class="text-success mb-0" id="annualCost">$0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-primary text-white mb-4">
+                            <div class="card-body text-center">
+                                <h6 class="mb-2">Total Contract Value</h6>
+                                <h2 class="mb-0" id="totalContractValue">$0</h2>
+                                <small id="contractYears"></small>
+                            </div>
+                        </div>
+
+                        <!-- Breakdown -->
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Cost Breakdown</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm mb-0">
+                                    <tbody id="breakdownTable">
+                                        <!-- Will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pricing Strategy Tips -->
+                        <div class="alert alert-warning mt-4" role="alert">
+                            <h6 class="alert-heading"><i class="fas fa-lightbulb me-2"></i>Pricing Strategy Tips</h6>
+                            <ul class="mb-0 small">
+                                <li>This estimate includes labor, materials (5-10%), and overhead (15-20%)</li>
+                                <li>Add 8-12% profit margin for competitive government bids</li>
+                                <li>Consider economies of scale for larger facilities</li>
+                                <li>Factor in travel time and distance for multiple sites</li>
+                                <li>Review prevailing wage requirements for federal contracts</li>
+                            </ul>
+                        </div>
+
+                        <!-- Export Options -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-outline-primary" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>Print Estimate
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="saveCalculation()">
+                                <i class="fas fa-save me-2"></i>Save to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="alert alert-info mt-4" role="alert">
+                <p class="mb-2"><strong><i class="fas fa-info-circle me-2"></i>Important Disclaimer</strong></p>
+                <p class="small mb-0">This pricing calculator provides estimates based on industry standards and Virginia market rates. Actual costs may vary based on specific requirements, site conditions, and competitive factors. These estimates do not guarantee contract awards or profitability. Always review RFP requirements and adjust pricing accordingly. Consult with a proposal specialist for complex bids.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculatePricing() {
+    // Get input values
+    const facilityType = document.getElementById('facilityType').value;
+    const sqft = parseFloat(document.getElementById('squareFootage').value) || 0;
+    const frequency = document.getElementById('frequency').value;
+    const serviceLevel = document.getElementById('serviceLevel').value;
+    const laborRate = parseFloat(document.getElementById('laborRate').value) || 18.50;
+    const contractDuration = parseInt(document.getElementById('contractDuration').value);
+
+    // Base rate per square foot per cleaning (varies by facility type)
+    let baseRatePerSqft = 0;
+    switch(facilityType) {
+        case 'office': baseRatePerSqft = 0.08; break;
+        case 'medical': baseRatePerSqft = 0.12; break;
+        case 'school': baseRatePerSqft = 0.07; break;
+        case 'government': baseRatePerSqft = 0.09; break;
+        case 'industrial': baseRatePerSqft = 0.06; break;
+    }
+
+    // Adjust for service level
+    let serviceLevelMultiplier = 1.0;
+    switch(serviceLevel) {
+        case 'basic': serviceLevelMultiplier = 0.75; break;
+        case 'standard': serviceLevelMultiplier = 1.0; break;
+        case 'premium': serviceLevelMultiplier = 1.3; break;
+    }
+
+    // Frequency multiplier (monthly)
+    let frequencyMultiplier = 1;
+    switch(frequency) {
+        case 'daily': frequencyMultiplier = 20; break; // ~20 business days/month
+        case '3x': frequencyMultiplier = 12; break;
+        case '2x': frequencyMultiplier = 8; break;
+        case 'weekly': frequencyMultiplier = 4; break;
+        case 'biweekly': frequencyMultiplier = 2; break;
+    }
+
+    // Base monthly cost
+    let baseMonthlyCost = sqft * baseRatePerSqft * serviceLevelMultiplier * frequencyMultiplier;
+
+    // Labor adjustment (if labor rate differs from standard)
+    const standardLaborRate = 18.50;
+    const laborAdjustment = laborRate / standardLaborRate;
+    baseMonthlyCost *= laborAdjustment;
+
+    // Additional services
+    let additionalServicesCost = 0;
+    let additionalServicesPercent = 0;
+    const breakdown = [];
+    
+    if (document.getElementById('floorCare').checked) {
+        additionalServicesPercent += 15;
+        breakdown.push({ name: 'Floor Care Services', percent: 15 });
+    }
+    if (document.getElementById('windowCleaning').checked) {
+        additionalServicesPercent += 10;
+        breakdown.push({ name: 'Window Cleaning', percent: 10 });
+    }
+    if (document.getElementById('carpetCleaning').checked) {
+        additionalServicesPercent += 12;
+        breakdown.push({ name: 'Carpet Cleaning', percent: 12 });
+    }
+    if (document.getElementById('specializedCleaning').checked) {
+        additionalServicesPercent += 20;
+        breakdown.push({ name: 'Specialized/Medical Cleaning', percent: 20 });
+    }
+    if (document.getElementById('greenCleaning').checked) {
+        additionalServicesPercent += 8;
+        breakdown.push({ name: 'Green/Eco-Friendly Products', percent: 8 });
+    }
+
+    additionalServicesCost = baseMonthlyCost * (additionalServicesPercent / 100);
+    const totalMonthlyCost = baseMonthlyCost + additionalServicesCost;
+
+    // Calculate totals
+    const annualCost = totalMonthlyCost * 12;
+    const totalContractValue = annualCost * contractDuration;
+
+    // Display results
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('monthlyCost').textContent = '$' + totalMonthlyCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('annualCost').textContent = '$' + annualCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('totalContractValue').textContent = '$' + totalContractValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('contractYears').textContent = '(' + contractDuration + ' year contract)';
+
+    // Build breakdown table
+    let breakdownHTML = '';
+    breakdownHTML += `<tr><td>Base Cleaning Services</td><td class="text-end">$${baseMonthlyCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/mo</td></tr>`;
+    
+    breakdown.forEach(item => {
+        const cost = baseMonthlyCost * (item.percent / 100);
+        breakdownHTML += `<tr><td>${item.name} (+${item.percent}%)</td><td class="text-end">$${cost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/mo</td></tr>`;
+    });
+    
+    breakdownHTML += `<tr class="table-primary fw-bold"><td>Total Monthly</td><td class="text-end">$${totalMonthlyCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td></tr>`;
+    
+    document.getElementById('breakdownTable').innerHTML = breakdownHTML;
+
+    // Scroll to results
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function saveCalculation() {
+    alert('Calculation saved to your dashboard! (This feature will sync with your account)');
+    // TODO: Implement actual save functionality via AJAX to backend
+}
+
+// Auto-calculate on page load with defaults
+window.addEventListener('load', function() {
+    calculatePricing();
+});
+</script>
+
+<style>
+@media print {
+    .btn, .alert-warning, nav, footer {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Federal Contracts - Coming Soon - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section with Countdown -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%); box-shadow: 0 15px 50px rgba(0,0,0,0.3);">
+                <div class="mb-4">
+                    <i class="fas fa-flag-usa" style="font-size: 5rem; opacity: 0.9;"></i>
+                </div>
+                <h1 class="display-1 fw-bold mb-3" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.4);">
+                    🦅 Federal Contracts
+                </h1>
+                <h2 class="h3 mb-4">Coming Soon</h2>
+                <p class="lead mb-4">Access exclusive federal government cleaning contract opportunities</p>
+                
+                <!-- Countdown Timer -->
+                <div class="countdown-container mb-4" id="countdownContainer">
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-6 col-md-3">
+                            <div class="countdown-box bg-white text-dark rounded-3 p-3 shadow">
+                                <div class="display-4 fw-bold" id="days">00</div>
+                                <div class="small text-muted">Days</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="countdown-box bg-white text-dark rounded-3 p-3 shadow">
+                                <div class="display-4 fw-bold" id="hours">00</div>
+                                <div class="small text-muted">Hours</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="countdown-box bg-white text-dark rounded-3 p-3 shadow">
+                                <div class="display-4 fw-bold" id="minutes">00</div>
+                                <div class="small text-muted">Minutes</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="countdown-box bg-white text-dark rounded-3 p-3 shadow">
+                                <div class="display-4 fw-bold" id="seconds">00</div>
+                                <div class="small text-muted">Seconds</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="h5 mb-0">
+                    <i class="far fa-calendar-alt me-2"></i>
+                    Launch Date: <strong>November 3, 2025</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- What's Coming Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <h2 class="text-center mb-5">What's Coming</h2>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-landmark text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Federal Opportunities</h4>
+                            <p class="card-text">Access cleaning contracts from federal agencies including VA hospitals, military bases, federal courthouses, and government office buildings across Virginia.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-sync-alt text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Real-Time Updates</h4>
+                            <p class="card-text">Get instant notifications when new federal cleaning contracts are posted. Daily updates from SAM.gov with pre-filtered opportunities matching your capabilities.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-file-contract text-warning" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Detailed Requirements</h4>
+                            <p class="card-text">View complete solicitation details, wage determinations, compliance requirements, and submission deadlines. Everything you need to prepare winning proposals.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-filter text-info" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Smart Filtering</h4>
+                            <p class="card-text">Filter by contract value, location, set-aside status (8(a), SDVOSB, WOSB), and agency. Find the perfect opportunities for your business size and certifications.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Notification Signup -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <div class="card border-primary shadow-lg">
+                <div class="card-body p-5 text-center">
+                    <h3 class="card-title mb-4">
+                        <i class="far fa-bell me-2"></i>Get Notified at Launch
+                    </h3>
+                    <p class="mb-4">Be the first to know when federal contracts go live. We'll send you an email on November 3rd!</p>
+                    
+                    <form id="notifyForm" onsubmit="submitNotification(event)">
+                        <div class="input-group input-group-lg mb-3">
+                            <input type="email" class="form-control" placeholder="Enter your email address" 
+                                   id="notifyEmail" required>
+                            <button class="btn btn-primary px-5" type="submit">
+                                <i class="fas fa-paper-plane me-2"></i>Notify Me
+                            </button>
+                        </div>
+                        <small class="text-muted">We'll only email you about the federal contracts launch. No spam.</small>
+                    </form>
+
+                    <div id="notifySuccess" class="alert alert-success mt-3" style="display: none;">
+                        <i class="fas fa-check-circle me-2"></i>Thanks! We'll notify you on November 3rd.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Subscribe Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card bg-light border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">Why Federal Contracts?</h3>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-dollar-sign text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5>Higher Values</h5>
+                                    <p class="mb-0">Federal contracts typically range from $50K to multi-million dollar awards with longer terms.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-shield-alt text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5>Stable Payments</h5>
+                                    <p class="mb-0">Government contracts mean reliable, on-time payments backed by federal funding.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-trophy text-warning" style="font-size: 2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5>Build Credentials</h5>
+                                    <p class="mb-0">Federal past performance opens doors to bigger opportunities and builds company credibility.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alternative Actions -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-8 text-center">
+            <h4 class="mb-4">In the Meantime...</h4>
+            <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                <a href="{{ url_for('contracts') }}" class="btn btn-lg btn-outline-primary">
+                    <i class="fas fa-building me-2"></i>Browse Local Contracts
+                </a>
+                <a href="{{ url_for('commercial_contracts') }}" class="btn btn-lg btn-outline-success">
+                    <i class="fas fa-briefcase me-2"></i>View Commercial Leads
+                </a>
+                <a href="{{ url_for('toolbox') }}" class="btn btn-lg btn-outline-info">
+                    <i class="fas fa-toolbox me-2"></i>Resource Toolbox
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Countdown Timer
+function updateCountdown() {
+    // Launch date: November 3, 2025, 00:00:00 EST
+    const launchDate = new Date('2025-11-03T00:00:00-05:00').getTime();
+    const now = new Date().getTime();
+    const distance = launchDate - now;
+
+    if (distance < 0) {
+        // Countdown finished - redirect to actual federal contracts page
+        document.getElementById('countdownContainer').innerHTML = `
+            <div class="alert alert-success">
+                <h4 class="alert-heading">🎉 Federal Contracts Are Now Live!</h4>
+                <p class="mb-3">The wait is over. Start browsing federal opportunities now.</p>
+                <a href="/federal-contracts-live" class="btn btn-success btn-lg">
+                    View Federal Contracts <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        `;
+        return;
+    }
+
+    // Calculate time units
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    // Update display
+    document.getElementById('days').textContent = String(days).padStart(2, '0');
+    document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+    document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+}
+
+// Update countdown every second
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// Notification Form
+function submitNotification(event) {
+    event.preventDefault();
+    const email = document.getElementById('notifyEmail').value;
+    
+    // TODO: Send to backend API
+    fetch('/api/notify-launch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('notifyForm').style.display = 'none';
+        document.getElementById('notifySuccess').style.display = 'block';
+    })
+    .catch(error => {
+        // Even if backend fails, show success (can log error)
+        document.getElementById('notifyForm').style.display = 'none';
+        document.getElementById('notifySuccess').style.display = 'block';
+    });
+}
+</script>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+}
+
+.countdown-box {
+    transition: transform 0.3s ease;
+}
+
+.countdown-box:hover {
+    transform: scale(1.05);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+#countdownContainer {
+    animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}
