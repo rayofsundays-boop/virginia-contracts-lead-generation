@@ -21,11 +21,21 @@ The app will now deploy successfully and show "feature is being set up" messages
 1. Log into your Render dashboard
 2. Go to your PostgreSQL database
 3. Click on "Connect" and choose "psql" command
-4. Open `migrations/deploy_educational_and_industry_tables.sql` in this folder
-5. Copy the entire SQL script
-6. Paste it into the psql terminal and press Enter
-7. Verify: `SELECT COUNT(*) FROM educational_contracts;` (should return 13)
-8. Verify: `SELECT COUNT(*) FROM industry_days;` (should return 12)
+4. Run each migration file in order:
+
+**Step 1: Add Educational Contracts & Industry Days**
+```sql
+-- Copy and paste contents of: migrations/deploy_educational_and_industry_tables.sql
+```
+Verify: `SELECT COUNT(*) FROM educational_contracts;` (should return 13)
+Verify: `SELECT COUNT(*) FROM industry_days;` (should return 12)
+
+**Step 2: Populate Virginia Cleaning Contracts**
+```sql
+-- Copy and paste contents of: migrations/populate_virginia_contracts.sql
+```
+Verify: `SELECT COUNT(*) FROM contracts;` (should return 50+)
+Verify: `SELECT COUNT(*), location FROM contracts GROUP BY location;` (shows contracts by city)
 
 ### Option 2: Using Render Shell
 ```bash
