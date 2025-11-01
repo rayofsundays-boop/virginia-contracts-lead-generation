@@ -1,4 +1,4 @@
--- Run: migrations/add_portal_optimization_tables.sqlimport os
+import os
 import json
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
