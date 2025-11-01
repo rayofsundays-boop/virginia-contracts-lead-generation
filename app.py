@@ -2133,6 +2133,190 @@ def contracts():
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
         return msg
 
+@app.route('/educational-contracts')
+def educational_contracts():
+    """College and university procurement opportunities"""
+    try:
+        institution_filter = request.args.get('institution', '')
+        city_filter = request.args.get('city', '')
+        category_filter = request.args.get('category', '')
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = 12
+        offset = (page - 1) * per_page
+        
+        # Build where conditions
+        where_conditions = ["status = 'open'"]
+        params = {}
+        
+        if institution_filter:
+            where_conditions.append("LOWER(institution_name) LIKE LOWER(:institution)")
+            params['institution'] = f"%{institution_filter}%"
+        
+        if city_filter:
+            where_conditions.append("city = :city")
+            params['city'] = city_filter
+        
+        if category_filter:
+            where_conditions.append("category = :category")
+            params['category'] = category_filter
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get total count
+        total = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM educational_contracts WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        # Get contracts
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        contracts = db.session.execute(text(f'''
+            SELECT * FROM educational_contracts 
+            WHERE {where_clause}
+            ORDER BY bid_deadline ASC, created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        # Get filter options
+        institutions = db.session.execute(text('''
+            SELECT DISTINCT institution_name FROM educational_contracts 
+            WHERE status = 'open' ORDER BY institution_name
+        ''')).fetchall()
+        
+        cities = db.session.execute(text('''
+            SELECT DISTINCT city FROM educational_contracts 
+            WHERE status = 'open' ORDER BY city
+        ''')).fetchall()
+        
+        categories = db.session.execute(text('''
+            SELECT DISTINCT category FROM educational_contracts 
+            WHERE status = 'open' ORDER BY category
+        ''')).fetchall()
+        
+        total_pages = math.ceil(total / per_page) if total > 0 else 1
+        
+        # Check subscription status
+        is_admin = session.get('is_admin', False)
+        is_paid_subscriber = False
+        
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            if result and result[0] == 'paid':
+                is_paid_subscriber = True
+        
+        if is_admin:
+            is_paid_subscriber = True
+        
+        return render_template('educational_contracts.html',
+                             contracts=contracts,
+                             institutions=[i[0] for i in institutions],
+                             cities=[c[0] for c in cities],
+                             categories=[cat[0] for cat in categories],
+                             current_filters={
+                                 'institution': institution_filter,
+                                 'city': city_filter,
+                                 'category': category_filter
+                             },
+                             page=page,
+                             total_pages=total_pages,
+                             total_count=total,
+                             is_paid_subscriber=is_paid_subscriber,
+                             is_admin=is_admin)
+    except Exception as e:
+        print(f"Educational contracts error: {e}")
+        flash('Educational contracts feature is being set up. Check back soon!', 'info')
+        return redirect(url_for('contracts'))
+
+@app.route('/industry-days')
+def industry_days():
+    """Industry days and procurement events for subscribers"""
+    try:
+        city_filter = request.args.get('city', '')
+        event_type_filter = request.args.get('event_type', '')
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = 10
+        offset = (page - 1) * per_page
+        
+        # Build where conditions
+        where_conditions = ["status = 'upcoming'", "event_date >= CURRENT_DATE"]
+        params = {}
+        
+        if city_filter:
+            where_conditions.append("city = :city")
+            params['city'] = city_filter
+        
+        if event_type_filter:
+            where_conditions.append("event_type = :event_type")
+            params['event_type'] = event_type_filter
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get total count
+        total = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM industry_days WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        # Get events
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        events = db.session.execute(text(f'''
+            SELECT * FROM industry_days 
+            WHERE {where_clause}
+            ORDER BY event_date ASC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        # Get filter options
+        cities = db.session.execute(text('''
+            SELECT DISTINCT city FROM industry_days 
+            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            ORDER BY city
+        ''')).fetchall()
+        
+        event_types = db.session.execute(text('''
+            SELECT DISTINCT event_type FROM industry_days 
+            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            ORDER BY event_type
+        ''')).fetchall()
+        
+        total_pages = math.ceil(total / per_page) if total > 0 else 1
+        
+        # Check subscription status
+        is_admin = session.get('is_admin', False)
+        is_paid_subscriber = False
+        
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            if result and result[0] == 'paid':
+                is_paid_subscriber = True
+        
+        if is_admin:
+            is_paid_subscriber = True
+        
+        return render_template('industry_days.html',
+                             events=events,
+                             cities=[c[0] for c in cities],
+                             event_types=[et[0] for et in event_types],
+                             current_filters={
+                                 'city': city_filter,
+                                 'event_type': event_type_filter
+                             },
+                             page=page,
+                             total_pages=total_pages,
+                             total_count=total,
+                             is_paid_subscriber=is_paid_subscriber,
+                             is_admin=is_admin)
+    except Exception as e:
+        print(f"Industry days error: {e}")
+        flash('Industry days feature is being set up. Check back soon!', 'info')
+        return redirect(url_for('customer_leads'))
+
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
@@ -5098,83 +5282,88 @@ def generate_proposal_api():
 @login_required
 def quick_wins():
     """Show urgent leads requiring immediate response"""
-    urgency_filter = request.args.get('urgency', '')
-    lead_type_filter = request.args.get('lead_type', '')
-    city_filter = request.args.get('city', '')
-    page = max(int(request.args.get('page', 1) or 1), 1)
-    per_page = 12
-    offset = (page - 1) * per_page
-    
-    # Check if paid subscriber or admin
-    is_admin = session.get('is_admin', False)
-    is_paid = False
-    if not is_admin and 'user_id' in session:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads WHERE id = :user_id
-        '''), {'user_id': session['user_id']}).fetchone()
-        if result and result[0] == 'paid':
+    try:
+        urgency_filter = request.args.get('urgency', '')
+        lead_type_filter = request.args.get('lead_type', '')
+        city_filter = request.args.get('city', '')
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = 12
+        offset = (page - 1) * per_page
+        
+        # Check if paid subscriber or admin
+        is_admin = session.get('is_admin', False)
+        is_paid = False
+        if not is_admin and 'user_id' in session:
+            result = db.session.execute(text('''
+                SELECT subscription_status FROM leads WHERE id = :user_id
+            '''), {'user_id': session['user_id']}).fetchone()
+            if result and result[0] == 'paid':
+                is_paid = True
+        
+        # Admin gets full access
+        if is_admin:
             is_paid = True
-    
-    # Admin gets full access
-    if is_admin:
-        is_paid = True
-    
-    # Build query
-    where_conditions = ["urgency IN ('emergency', 'urgent', 'soon')"]
-    params = {}
-    
-    if urgency_filter:
-        where_conditions.append("urgency = :urgency")
-        params['urgency'] = urgency_filter
-    
-    if city_filter:
-        where_conditions.append("city = :city")
-        params['city'] = city_filter
-    
-    where_clause = " AND ".join(where_conditions)
-    
-    # Get counts
-    emergency_count = db.session.execute(text(
-        "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
-    )).scalar() or 0
-    
-    urgent_count = db.session.execute(text(
-        "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
-    )).scalar() or 0
-    
-    # Get leads
-    total_count = db.session.execute(text(f'''
-        SELECT COUNT(*) FROM commercial_lead_requests WHERE {where_clause} AND status = 'open'
-    '''), params).scalar() or 0
-    
-    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-    
-    params['limit'] = per_page
-    params['offset'] = offset
-    
-    leads = db.session.execute(text(f'''
-        SELECT * FROM commercial_lead_requests 
-        WHERE {where_clause} AND status = 'open'
-        ORDER BY 
-            CASE urgency 
-                WHEN 'emergency' THEN 1
-                WHEN 'urgent' THEN 2
-                WHEN 'soon' THEN 3
-                ELSE 4
-            END,
-            created_at DESC
-        LIMIT :limit OFFSET :offset
-    '''), params).fetchall()
-    
-    return render_template('quick_wins.html',
-                         leads=leads,
-                         emergency_count=emergency_count,
-                         urgent_count=urgent_count,
-                         total_count=total_count,
-                         page=page,
-                         total_pages=total_pages,
-                         is_paid_subscriber=is_paid,
-                         is_admin=is_admin)
+        
+        # Build query
+        where_conditions = ["urgency IN ('emergency', 'urgent', 'soon')"]
+        params = {}
+        
+        if urgency_filter:
+            where_conditions.append("urgency = :urgency")
+            params['urgency'] = urgency_filter
+        
+        if city_filter:
+            where_conditions.append("city = :city")
+            params['city'] = city_filter
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get counts
+        emergency_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
+        )).scalar() or 0
+        
+        urgent_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
+        )).scalar() or 0
+        
+        # Get leads
+        total_count = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM commercial_lead_requests WHERE {where_clause} AND status = 'open'
+        '''), params).scalar() or 0
+        
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        leads = db.session.execute(text(f'''
+            SELECT * FROM commercial_lead_requests 
+            WHERE {where_clause} AND status = 'open'
+            ORDER BY 
+                CASE urgency 
+                    WHEN 'emergency' THEN 1
+                    WHEN 'urgent' THEN 2
+                    WHEN 'soon' THEN 3
+                    ELSE 4
+                END,
+                created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        return render_template('quick_wins.html',
+                             leads=leads,
+                             emergency_count=emergency_count,
+                             urgent_count=urgent_count,
+                             total_count=total_count,
+                             page=page,
+                             total_pages=total_pages,
+                             is_paid_subscriber=is_paid,
+                             is_admin=is_admin)
+    except Exception as e:
+        print(f"Quick Wins error: {e}")
+        flash('Quick Wins feature is currently being set up. Please check back soon.', 'info')
+        return redirect(url_for('customer_leads'))
 
 @app.route('/bulk-products')
 @login_required

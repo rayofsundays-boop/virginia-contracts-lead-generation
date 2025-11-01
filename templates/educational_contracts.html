@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}College & University Procurement - Virginia Contracts{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="fas fa-graduation-cap me-2 text-primary"></i>College & University Procurement Opportunities
+                    </h2>
+                    <p class="text-muted mb-0">Cleaning and janitorial contracts from Virginia colleges and universities</p>
+                </div>
+                <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Portal
+                </a>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-university fa-2x text-primary mb-2"></i>
+                            <h4 class="mb-0">{{ total_count }}</h4>
+                            <small class="text-muted">Active Opportunities</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
+                            <h4 class="mb-0">{{ cities|length }}</h4>
+                            <small class="text-muted">Cities Covered</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-briefcase fa-2x text-info mb-2"></i>
+                            <h4 class="mb-0">{{ institutions|length }}</h4>
+                            <small class="text-muted">Institutions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('educational_contracts') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-university me-2"></i>Institution</label>
+                    <select name="institution" class="form-select">
+                        <option value="">All Institutions</option>
+                        {% for inst in institutions %}
+                        <option value="{{ inst }}" {% if current_filters.institution == inst %}selected{% endif %}>{{ inst }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-map-marker-alt me-2"></i>City</label>
+                    <select name="city" class="form-select">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                        <option value="{{ city }}" {% if current_filters.city == city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-tag me-2"></i>Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if current_filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <a href="{{ url_for('educational_contracts') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo me-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Contracts List -->
+    {% if contracts %}
+    <div class="row g-4">
+        {% for contract in contracts %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0 hover-card">
+                <div class="card-body">
+                    <div class="row align-items-start">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="me-3">
+                                    <i class="fas fa-graduation-cap fa-2x text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ contract.opportunity_title }}</h5>
+                                    <p class="text-muted mb-2">
+                                        <strong>{{ contract.institution_name }}</strong>
+                                        {% if contract.institution_type %}
+                                        <span class="badge bg-info ms-2">{{ contract.institution_type }}</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i>{{ contract.city }}, VA
+                                        {% if contract.county %}
+                                        <span class="text-muted ms-2">({{ contract.county }})</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if contract.description %}
+                                    <p class="mb-2 text-muted">{{ contract.description|truncate(200) }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if is_paid_subscriber or is_admin %}
+                            <!-- Contact Information (Subscribers Only) -->
+                            <div class="alert alert-success border-0 mb-0">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong><i class="fas fa-user me-2"></i>Contact:</strong> {{ contract.contact_name or 'See procurement office' }}</p>
+                                        {% if contract.contact_title %}
+                                        <p class="mb-1"><strong><i class="fas fa-briefcase me-2"></i>Title:</strong> {{ contract.contact_title }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if contract.contact_email %}
+                                        <p class="mb-1"><strong><i class="fas fa-envelope me-2"></i>Email:</strong> <a href="mailto:{{ contract.contact_email }}">{{ contract.contact_email }}</a></p>
+                                        {% endif %}
+                                        {% if contract.contact_phone %}
+                                        <p class="mb-1"><strong><i class="fas fa-phone me-2"></i>Phone:</strong> <a href="tel:{{ contract.contact_phone }}">{{ contract.contact_phone }}</a></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <!-- Paywall for Contact Info -->
+                            <div class="alert alert-warning border-0 mb-0">
+                                <i class="fas fa-lock me-2"></i>
+                                <strong>Contact information available for subscribers.</strong>
+                                <a href="{{ url_for('register') }}" class="btn btn-sm btn-warning ms-2">Upgrade Now</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="details-box bg-light p-3 rounded">
+                                {% if contract.estimated_value %}
+                                <p class="mb-2">
+                                    <strong><i class="fas fa-dollar-sign me-2 text-success"></i>Est. Value:</strong><br>
+                                    <span class="fs-5 text-success">${{ "{:,.0f}".format(contract.estimated_value) }}</span>
+                                </p>
+                                {% endif %}
+                                {% if contract.contract_term %}
+                                <p class="mb-2">
+                                    <strong><i class="fas fa-calendar me-2 text-info"></i>Term:</strong> {{ contract.contract_term }}
+                                </p>
+                                {% endif %}
+                                {% if contract.bid_deadline %}
+                                <p class="mb-2">
+                                    <strong><i class="fas fa-clock me-2 text-danger"></i>Deadline:</strong><br>
+                                    {{ contract.bid_deadline.strftime('%B %d, %Y') }}
+                                </p>
+                                {% endif %}
+                                {% if contract.category %}
+                                <p class="mb-2">
+                                    <span class="badge bg-primary">{{ contract.category }}</span>
+                                </p>
+                                {% endif %}
+                                {% if contract.website_url %}
+                                <a href="{{ contract.website_url }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                    <i class="fas fa-external-link-alt me-2"></i>Visit Website
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('educational_contracts', page=page-1, **current_filters) }}">Previous</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('educational_contracts', page=p, **current_filters) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('educational_contracts', page=page+1, **current_filters) }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <!-- No Contracts Found -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-graduation-cap fa-4x text-muted mb-3"></i>
+            <h4 class="mb-3">No Opportunities Found</h4>
+            <p class="text-muted mb-4">Try adjusting your filters or check back later for new opportunities.</p>
+            <a href="{{ url_for('educational_contracts') }}" class="btn btn-primary">Reset Filters</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.details-box {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+</style>
+{% endblock %}

@@ -34,6 +34,70 @@ CREATE TABLE IF NOT EXISTS user_surveys (
 
 CREATE INDEX IF NOT EXISTS idx_surveys_user ON user_surveys(user_id);
 
+-- College and University Procurement Opportunities
+CREATE TABLE IF NOT EXISTS educational_contracts (
+    id SERIAL PRIMARY KEY,
+    institution_name VARCHAR(255) NOT NULL,
+    institution_type VARCHAR(50) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    county VARCHAR(100),
+    contact_name VARCHAR(255),
+    contact_title VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    department VARCHAR(255),
+    opportunity_title VARCHAR(500) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) DEFAULT 'Cleaning & Janitorial',
+    estimated_value DECIMAL(12,2),
+    contract_term VARCHAR(100),
+    bid_deadline DATE,
+    start_date DATE,
+    requirements TEXT,
+    submission_method VARCHAR(255),
+    website_url VARCHAR(500),
+    status VARCHAR(50) DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_edu_contracts_city ON educational_contracts(city);
+CREATE INDEX IF NOT EXISTS idx_edu_contracts_institution ON educational_contracts(institution_name);
+CREATE INDEX IF NOT EXISTS idx_edu_contracts_deadline ON educational_contracts(bid_deadline);
+CREATE INDEX IF NOT EXISTS idx_edu_contracts_status ON educational_contracts(status);
+
+-- Industry Days and Events
+CREATE TABLE IF NOT EXISTS industry_days (
+    id SERIAL PRIMARY KEY,
+    event_title VARCHAR(255) NOT NULL,
+    organizer VARCHAR(255) NOT NULL,
+    organizer_type VARCHAR(100),
+    event_date DATE NOT NULL,
+    event_time VARCHAR(100),
+    location VARCHAR(255),
+    city VARCHAR(100),
+    venue_name VARCHAR(255),
+    event_type VARCHAR(100) DEFAULT 'Industry Day',
+    description TEXT,
+    target_audience VARCHAR(255),
+    registration_required BOOLEAN DEFAULT TRUE,
+    registration_deadline DATE,
+    registration_link VARCHAR(500),
+    contact_name VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    topics TEXT,
+    is_virtual BOOLEAN DEFAULT FALSE,
+    virtual_link VARCHAR(500),
+    attachments TEXT,
+    status VARCHAR(50) DEFAULT 'upcoming',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_industry_days_date ON industry_days(event_date);
+CREATE INDEX IF NOT EXISTS idx_industry_days_city ON industry_days(city);
+CREATE INDEX IF NOT EXISTS idx_industry_days_status ON industry_days(status);
+
 -- Page Analytics (Track User Behavior)
 CREATE TABLE IF NOT EXISTS page_analytics (
     id SERIAL PRIMARY KEY,
