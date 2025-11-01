@@ -741,7 +741,7 @@ Virginia Government Contracts Lead Generation System
         
         msg = Message(
             subject=subject,
-            recipients=['info@eliteecoservices.com'],
+            recipients=['info@eliteecocareservices.com'],
             body=body
         )
         
@@ -2937,7 +2937,7 @@ def send_proposal_help_notification(request_data, request_id):
         # Create message
         msg = Message(
             subject=subject,
-            recipients=['info@eliteecoservices.com'],  # Your business email
+            recipients=['info@eliteecocareservices.com'],  # Your business email
             html=html_body,
             sender=app.config['MAIL_DEFAULT_SENDER']
         )
@@ -3493,7 +3493,7 @@ You'll continue receiving unlimited contract opportunities for:
 
 Next billing date: {(datetime.now().replace(day=datetime.now().day + 30)).strftime('%B %d, %Y')}
 
-Questions? Reply to this email or contact info@eliteecoservices.com
+Questions? Reply to this email or contact info@eliteecocareservices.com
 
 Best regards,
 Virginia Contract Leads Team
@@ -3516,7 +3516,7 @@ Watch your inbox for opportunities!
 
 Best regards,
 Virginia Contract Leads Team
-info@eliteecoservices.com
+info@eliteecocareservices.com
                 """
             
             msg = Message(subject=subject, recipients=[email], body=body)

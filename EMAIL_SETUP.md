@@ -2,7 +2,7 @@
 
 ## 📧 Email Configuration
 
-Your app now sends automatic email notifications to **info@eliteecoservices.com** every time someone registers!
+Your app now sends automatic email notifications to **info@eliteecocareservices.com** every time someone registers!
 
 ## 🔧 Required Environment Variables
 
@@ -77,7 +77,7 @@ Just update the MAIL_SERVER and port settings in the code.
 
 ## ✅ Current Setup
 
-- ✅ Emails sent to: **info@eliteecoservices.com**
+- ✅ Emails sent to: **info@eliteecocareservices.com**
 - ✅ Automatic on every registration
 - ✅ Complete lead information included
 - ✅ Professional formatting
