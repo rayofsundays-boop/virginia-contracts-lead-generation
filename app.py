@@ -1838,15 +1838,8 @@ def index():
         except:
             pass
         
-        # Create a new session
-        try:
-            db.session()
-        except:
-            pass
-        
-        # Use global cache key for homepage (not user-specific)
-        cache_key = 'homepage_global'
-        cache_data = get_dashboard_cache(cache_key)
+        # Don't use cache for now - skip it to avoid transaction issues
+        cache_data = None
         
         if cache_data:
             # Use cached data
@@ -1889,13 +1882,8 @@ def index():
             ).fetchone()
             commercial_count = commercial_count_result[0] if commercial_count_result else 0
             
-            # Cache the data for 10 minutes (homepage changes less frequently)
-            cache_data = {
-                'contracts': contracts,
-                'commercial_opportunities': commercial_opportunities,
-                'commercial_count': commercial_count
-            }
-            set_dashboard_cache(cache_key, cache_data, ttl_minutes=10)
+            # Skip caching for now to avoid transaction issues
+            # TODO: Re-enable caching once transaction issues are resolved
         
         return render_template('index.html', 
                              contracts=contracts, 
