@@ -1149,6 +1149,30 @@ def init_postgres_db():
         
         db.session.commit()
         
+        # User activity tracking table
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_activity
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL,
+                      action_type TEXT NOT NULL,
+                      description TEXT,
+                      reference_id TEXT,
+                      reference_type TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
+        # User notes table
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_notes
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL,
+                      title TEXT NOT NULL,
+                      content TEXT NOT NULL,
+                      tags TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
@@ -1338,6 +1362,26 @@ def init_db():
                       size TEXT,
                       website_url TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create user activity table
+        c.execute('''CREATE TABLE IF NOT EXISTS user_activity
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL,
+                      action_type TEXT NOT NULL,
+                      description TEXT,
+                      reference_id TEXT,
+                      reference_type TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Create user notes table
+        c.execute('''CREATE TABLE IF NOT EXISTS user_notes
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL,
+                      title TEXT NOT NULL,
+                      content TEXT NOT NULL,
+                      tags TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         
         conn.commit()
         
@@ -2618,6 +2662,9 @@ def save_lead():
         })
         db.session.commit()
         
+        # Log activity
+        log_activity(user_email, 'saved_lead', f'Saved lead: {data.get("title")}', data.get('lead_id'), data.get('lead_type'))
+        
         return jsonify({'success': True, 'message': 'Lead saved successfully'})
     except Exception as e:
         db.session.rollback()
@@ -3363,6 +3410,428 @@ def admin_logout():
     session.pop('is_admin', None)
     flash('Logged out of admin panel', 'info')
     return redirect('/')
+
+# Helper function to log user activity
+def log_activity(user_email, action_type, description, reference_id=None, reference_type=None):
+    """Log user activity for tracking"""
+    try:
+        db.session.execute(text('''
+            INSERT INTO user_activity (user_email, action_type, description, reference_id, reference_type)
+            VALUES (:email, :action, :desc, :ref_id, :ref_type)
+        '''), {
+            'email': user_email,
+            'action': action_type,
+            'desc': description,
+            'ref_id': reference_id,
+            'ref_type': reference_type
+        })
+        db.session.commit()
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+        db.session.rollback()
+
+@app.route('/generate-proposal', methods=['POST'])
+def generate_proposal():
+    """Generate AI-powered proposal"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        contract_title = data.get('contract_title', '')
+        contract_number = data.get('contract_number', '')
+        agency = data.get('agency', '')
+        project_scope = data.get('project_scope', '')
+        company_experience = data.get('company_experience', '')
+        proposal_type = data.get('proposal_type', '')
+        
+        # Get user info
+        user_email = session.get('user_email')
+        user = db.session.execute(
+            text('SELECT company_name, contact_name FROM leads WHERE email = :email'),
+            {'email': user_email}
+        ).fetchone()
+        
+        company_name = user[0] if user else "Your Company"
+        contact_name = user[1] if user else "Contact Person"
+        
+        # Generate proposal based on type
+        proposal_templates = {
+            'technical': f'''
+                <h4>Technical Proposal</h4>
+                <p><strong>Submitted by:</strong> {company_name}</p>
+                <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
+                <p><strong>Agency:</strong> {agency}</p>
+                <hr>
+                <h5>1. Executive Summary</h5>
+                <p>{company_name} is pleased to submit this technical proposal in response to {contract_title}. Our team brings extensive experience in delivering high-quality services to government agencies.</p>
+                
+                <h5>2. Understanding of Requirements</h5>
+                <p><strong>Project Scope:</strong></p>
+                <p>{project_scope}</p>
+                
+                <h5>3. Technical Approach</h5>
+                <p>Our approach includes:</p>
+                <ul>
+                    <li>Comprehensive site assessment and planning</li>
+                    <li>Deployment of certified and trained personnel</li>
+                    <li>Quality control procedures and documentation</li>
+                    <li>Regular progress reporting and communication</li>
+                    <li>Compliance with all federal and state regulations</li>
+                </ul>
+                
+                <h5>4. Company Qualifications</h5>
+                <p>{company_experience}</p>
+                
+                <h5>5. Personnel & Resources</h5>
+                <p>Our team consists of highly trained professionals with relevant certifications and extensive government contracting experience.</p>
+                
+                <h5>6. Quality Assurance</h5>
+                <p>We implement a rigorous quality assurance program including regular inspections, customer feedback, and continuous improvement processes.</p>
+                
+                <h5>7. Project Timeline</h5>
+                <p>We are prepared to begin work immediately upon contract award and will complete all deliverables according to the specified schedule.</p>
+                
+                <p><strong>Contact:</strong> {contact_name}<br>
+                <strong>Company:</strong> {company_name}</p>
+            ''',
+            'pricing': f'''
+                <h4>Pricing Proposal</h4>
+                <p><strong>Submitted by:</strong> {company_name}</p>
+                <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
+                <p><strong>Agency:</strong> {agency}</p>
+                <hr>
+                <h5>Cost Breakdown</h5>
+                <table class="table table-bordered">
+                    <tr><th>Item</th><th>Description</th><th>Cost</th></tr>
+                    <tr><td>Labor</td><td>Certified personnel and supervision</td><td>$___</td></tr>
+                    <tr><td>Materials & Supplies</td><td>Professional-grade cleaning supplies</td><td>$___</td></tr>
+                    <tr><td>Equipment</td><td>Commercial equipment and tools</td><td>$___</td></tr>
+                    <tr><td>Insurance & Bonding</td><td>Required coverage</td><td>$___</td></tr>
+                    <tr><td>Management & Overhead</td><td>Project management and administration</td><td>$___</td></tr>
+                    <tr><th colspan="2">Total</th><th>$___</th></tr>
+                </table>
+                
+                <h5>Payment Terms</h5>
+                <p>Payment due within 30 days of invoice. We accept various payment methods as specified in the contract.</p>
+                
+                <h5>Price Validity</h5>
+                <p>Prices are valid for 90 days from submission date.</p>
+                
+                <p><strong>Contact:</strong> {contact_name}<br>
+                <strong>Company:</strong> {company_name}</p>
+            ''',
+            'combined': f'''
+                <h4>Technical & Pricing Proposal</h4>
+                <p><strong>Submitted by:</strong> {company_name}</p>
+                <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
+                <p><strong>Agency:</strong> {agency}</p>
+                <hr>
+                
+                <h5>PART 1: TECHNICAL PROPOSAL</h5>
+                
+                <h6>1. Executive Summary</h6>
+                <p>{company_name} is pleased to submit this proposal for {contract_title}. We bring proven expertise and commitment to excellence.</p>
+                
+                <h6>2. Scope of Work</h6>
+                <p>{project_scope}</p>
+                
+                <h6>3. Company Experience</h6>
+                <p>{company_experience}</p>
+                
+                <h6>4. Technical Approach</h6>
+                <ul>
+                    <li>Detailed project planning and scheduling</li>
+                    <li>Experienced and certified personnel</li>
+                    <li>Quality control and inspection procedures</li>
+                    <li>Safety protocols and compliance</li>
+                    <li>Communication and reporting</li>
+                </ul>
+                
+                <hr>
+                <h5>PART 2: PRICING PROPOSAL</h5>
+                
+                <h6>Cost Summary</h6>
+                <table class="table table-bordered">
+                    <tr><th>Category</th><th>Amount</th></tr>
+                    <tr><td>Direct Labor</td><td>$___</td></tr>
+                    <tr><td>Materials & Supplies</td><td>$___</td></tr>
+                    <tr><td>Equipment</td><td>$___</td></tr>
+                    <tr><td>Overhead & Profit</td><td>$___</td></tr>
+                    <tr><th>Total Price</th><th>$___</th></tr>
+                </table>
+                
+                <h6>Payment Terms</h6>
+                <p>Net 30 days from invoice date.</p>
+                
+                <p><strong>Contact:</strong> {contact_name}<br>
+                <strong>Company:</strong> {company_name}<br>
+                <strong>Email:</strong> {user_email}</p>
+            ''',
+            'capability': f'''
+                <h4>Capability Statement</h4>
+                <h5>{company_name}</h5>
+                <hr>
+                
+                <h6>Company Overview</h6>
+                <p>{company_name} is a professional service provider specializing in government contracting. We deliver high-quality solutions with a focus on customer satisfaction and regulatory compliance.</p>
+                
+                <h6>Core Competencies</h6>
+                <ul>
+                    <li>Government contract fulfillment</li>
+                    <li>Professional services delivery</li>
+                    <li>Quality assurance and control</li>
+                    <li>Regulatory compliance</li>
+                    <li>Project management</li>
+                </ul>
+                
+                <h6>Experience & Qualifications</h6>
+                <p>{company_experience}</p>
+                
+                <h6>Relevant Contract Experience</h6>
+                <p>We have successfully completed numerous government contracts with various agencies, demonstrating our ability to meet stringent requirements and deadlines.</p>
+                
+                <h6>Certifications & Registrations</h6>
+                <ul>
+                    <li>SAM.gov Registration: Active</li>
+                    <li>DUNS Number: On File</li>
+                    <li>Insurance & Bonding: Current</li>
+                    <li>Industry Certifications: Multiple</li>
+                </ul>
+                
+                <h6>Differentiators</h6>
+                <ul>
+                    <li>Proven track record with government agencies</li>
+                    <li>Experienced and certified personnel</li>
+                    <li>Commitment to quality and compliance</li>
+                    <li>Responsive communication and reporting</li>
+                    <li>Competitive pricing structure</li>
+                </ul>
+                
+                <h6>Contact Information</h6>
+                <p><strong>Company:</strong> {company_name}<br>
+                <strong>Contact:</strong> {contact_name}<br>
+                <strong>Email:</strong> {user_email}<br>
+                <strong>Website:</strong> www.eliteecocareservices.com</p>
+            '''
+        }
+        
+        proposal = proposal_templates.get(proposal_type, proposal_templates['technical'])
+        
+        # Log activity
+        log_activity(user_email, 'generated_proposal', f'Generated {proposal_type} proposal for {contract_title}')
+        
+        return jsonify({
+            'success': True,
+            'proposal': proposal
+        })
+        
+    except Exception as e:
+        print(f"Error generating proposal: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/email-proposal', methods=['POST'])
+def email_proposal():
+    """Email proposal to user"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        proposal = data.get('proposal', '')
+        user_email = session.get('user_email')
+        
+        msg = Message(
+            subject="Your Generated Proposal - Virginia Contracts",
+            recipients=[user_email],
+            html=f"""
+            <html>
+            <body>
+                <h2>Your Generated Proposal</h2>
+                <p>Here is the proposal you generated:</p>
+                <hr>
+                {proposal}
+                <hr>
+                <p>Best regards,<br>Virginia Contract Leads Team</p>
+            </body>
+            </html>
+            """
+        )
+        mail.send(msg)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error emailing proposal: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/get-activity', methods=['GET'])
+def get_activity():
+    """Get user's recent activity"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('user_email')
+        
+        activities = db.session.execute(text('''
+            SELECT action_type, description, created_at 
+            FROM user_activity 
+            WHERE user_email = :email 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        '''), {'email': user_email}).fetchall()
+        
+        activity_list = []
+        for activity in activities:
+            activity_list.append({
+                'action_type': activity[0],
+                'description': activity[1],
+                'created_at': str(activity[2])
+            })
+        
+        return jsonify({
+            'success': True,
+            'activities': activity_list
+        })
+        
+    except Exception as e:
+        print(f"Error getting activity: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/clear-activity', methods=['POST'])
+def clear_activity():
+    """Clear user's activity history"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('user_email')
+        
+        db.session.execute(text('''
+            DELETE FROM user_activity WHERE user_email = :email
+        '''), {'email': user_email})
+        db.session.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error clearing activity: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/save-note', methods=['POST'])
+def save_note():
+    """Save or update a user note"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        note_id = data.get('note_id')
+        title = data.get('title', '')
+        content = data.get('content', '')
+        tags = data.get('tags', '')
+        
+        if note_id:
+            # Update existing note
+            db.session.execute(text('''
+                UPDATE user_notes 
+                SET title = :title, content = :content, tags = :tags, updated_at = CURRENT_TIMESTAMP
+                WHERE id = :note_id AND user_email = :email
+            '''), {
+                'note_id': note_id,
+                'title': title,
+                'content': content,
+                'tags': tags,
+                'email': user_email
+            })
+        else:
+            # Create new note
+            db.session.execute(text('''
+                INSERT INTO user_notes (user_email, title, content, tags)
+                VALUES (:email, :title, :content, :tags)
+            '''), {
+                'email': user_email,
+                'title': title,
+                'content': content,
+                'tags': tags
+            })
+        
+        db.session.commit()
+        
+        # Log activity
+        log_activity(user_email, 'created_note', f'{"Updated" if note_id else "Created"} note: {title}')
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error saving note: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/get-notes', methods=['GET'])
+def get_notes():
+    """Get user's notes"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('user_email')
+        
+        notes = db.session.execute(text('''
+            SELECT id, title, content, tags, created_at 
+            FROM user_notes 
+            WHERE user_email = :email 
+            ORDER BY created_at DESC
+        '''), {'email': user_email}).fetchall()
+        
+        notes_list = []
+        for note in notes:
+            notes_list.append({
+                'id': note[0],
+                'title': note[1],
+                'content': note[2],
+                'tags': note[3],
+                'created_at': str(note[4])
+            })
+        
+        return jsonify({
+            'success': True,
+            'notes': notes_list
+        })
+        
+    except Exception as e:
+        print(f"Error getting notes: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/delete-note', methods=['POST'])
+def delete_note():
+    """Delete a user note"""
+    if not session.get('user_email'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        note_id = data.get('note_id')
+        
+        db.session.execute(text('''
+            DELETE FROM user_notes 
+            WHERE id = :note_id AND user_email = :email
+        '''), {
+            'note_id': note_id,
+            'email': user_email
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error deleting note: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/admin')
 def admin_dashboard():

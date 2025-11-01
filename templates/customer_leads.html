@@ -1174,4 +1174,405 @@ function resetApplyClickCount() {
         </div><!-- Close Main Content col -->
     </div><!-- Close row -->
 </div><!-- Close container-fluid -->
+
+<!-- Proposal Writer Modal -->
+<div class="modal fade" id="proposalHelperModal" tabindex="-1" aria-labelledby="proposalHelperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="proposalHelperModalLabel">
+                    <i class="fas fa-edit me-2"></i>AI Proposal Writer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="proposalForm">
+                    <div class="mb-3">
+                        <label for="contractTitle" class="form-label">Contract Title</label>
+                        <input type="text" class="form-control" id="contractTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contractNumber" class="form-label">Contract Number (Optional)</label>
+                        <input type="text" class="form-control" id="contractNumber">
+                    </div>
+                    <div class="mb-3">
+                        <label for="agency" class="form-label">Agency/Department</label>
+                        <input type="text" class="form-control" id="agency" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectScope" class="form-label">Project Scope & Requirements</label>
+                        <textarea class="form-control" id="projectScope" rows="4" required placeholder="Describe the project requirements, deliverables, and scope of work..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyExperience" class="form-label">Your Company's Relevant Experience</label>
+                        <textarea class="form-control" id="companyExperience" rows="3" required placeholder="Describe your company's experience, qualifications, and relevant past projects..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="proposalType" class="form-label">Proposal Type</label>
+                        <select class="form-select" id="proposalType" required>
+                            <option value="">Select Type</option>
+                            <option value="technical">Technical Proposal</option>
+                            <option value="pricing">Pricing Proposal</option>
+                            <option value="combined">Combined Technical & Pricing</option>
+                            <option value="capability">Capability Statement</option>
+                        </select>
+                    </div>
+                </form>
+                <div id="proposalOutput" class="mt-4" style="display: none;">
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle me-2"></i>Proposal Generated!</h6>
+                        <div id="proposalContent" class="mt-3 p-3 bg-white border rounded" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="downloadProposal()">
+                            <i class="fas fa-download me-2"></i>Download as PDF
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="copyProposal()">
+                            <i class="fas fa-copy me-2"></i>Copy to Clipboard
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="emailProposal()">
+                            <i class="fas fa-envelope me-2"></i>Email to Me
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="generateProposal()">
+                    <i class="fas fa-magic me-2"></i>Generate Proposal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Modal -->
+<div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="activityModalLabel">
+                    <i class="fas fa-history me-2"></i>Recent Activity
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="activityList">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-danger" onclick="clearActivity()">
+                    <i class="fas fa-trash me-2"></i>Clear History
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="notesModalLabel">
+                    <i class="fas fa-sticky-note me-2"></i>My Notes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="showNoteForm()">
+                        <i class="fas fa-plus me-2"></i>New Note
+                    </button>
+                </div>
+                
+                <div id="noteForm" style="display: none;" class="mb-4 p-3 border rounded bg-light">
+                    <input type="hidden" id="noteId">
+                    <div class="mb-2">
+                        <input type="text" class="form-control" id="noteTitle" placeholder="Note Title">
+                    </div>
+                    <div class="mb-2">
+                        <textarea class="form-control" id="noteContent" rows="4" placeholder="Write your note here..."></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="form-control" id="noteTags" placeholder="Tags (comma-separated)">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" onclick="saveNote()">
+                            <i class="fas fa-save me-2"></i>Save Note
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="cancelNote()">Cancel</button>
+                    </div>
+                </div>
+                
+                <div id="notesList">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Proposal Writer Functions
+function generateProposal() {
+    const contractTitle = document.getElementById('contractTitle').value;
+    const contractNumber = document.getElementById('contractNumber').value;
+    const agency = document.getElementById('agency').value;
+    const projectScope = document.getElementById('projectScope').value;
+    const companyExperience = document.getElementById('companyExperience').value;
+    const proposalType = document.getElementById('proposalType').value;
+    
+    if (!contractTitle || !agency || !projectScope || !companyExperience || !proposalType) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Show loading
+    document.getElementById('proposalOutput').style.display = 'block';
+    document.getElementById('proposalContent').innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Generating proposal...</p></div>';
+    
+    fetch('/generate-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contract_title: contractTitle,
+            contract_number: contractNumber,
+            agency: agency,
+            project_scope: projectScope,
+            company_experience: companyExperience,
+            proposal_type: proposalType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('proposalContent').innerHTML = data.proposal;
+        } else {
+            document.getElementById('proposalContent').innerHTML = '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+        }
+    })
+    .catch(error => {
+        document.getElementById('proposalContent').innerHTML = '<div class="alert alert-danger">Error generating proposal</div>';
+    });
+}
+
+function downloadProposal() {
+    const content = document.getElementById('proposalContent').innerText;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'proposal_' + Date.now() + '.txt';
+    a.click();
+}
+
+function copyProposal() {
+    const content = document.getElementById('proposalContent').innerText;
+    navigator.clipboard.writeText(content).then(() => {
+        alert('✅ Proposal copied to clipboard!');
+    });
+}
+
+function emailProposal() {
+    const content = document.getElementById('proposalContent').innerText;
+    fetch('/email-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposal: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Proposal emailed successfully!');
+        } else {
+            alert('❌ Error sending email');
+        }
+    });
+}
+
+// Recent Activity Functions
+document.getElementById('activityModal').addEventListener('show.bs.modal', function () {
+    loadActivity();
+});
+
+function loadActivity() {
+    fetch('/get-activity')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const activityList = document.getElementById('activityList');
+            if (data.activities.length === 0) {
+                activityList.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
+            } else {
+                let html = '<div class="list-group">';
+                data.activities.forEach(activity => {
+                    const icon = getActivityIcon(activity.action_type);
+                    html += `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">
+                                    <i class="${icon} me-2"></i>${activity.action_type}
+                                </h6>
+                                <small class="text-muted">${activity.created_at}</small>
+                            </div>
+                            <p class="mb-1">${activity.description}</p>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                activityList.innerHTML = html;
+            }
+        }
+    });
+}
+
+function getActivityIcon(actionType) {
+    const icons = {
+        'viewed_lead': 'fas fa-eye text-info',
+        'saved_lead': 'fas fa-bookmark text-warning',
+        'applied': 'fas fa-paper-plane text-success',
+        'generated_proposal': 'fas fa-file-alt text-primary',
+        'created_note': 'fas fa-sticky-note text-warning'
+    };
+    return icons[actionType] || 'fas fa-circle text-muted';
+}
+
+function clearActivity() {
+    if (confirm('Clear all activity history?')) {
+        fetch('/clear-activity', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadActivity();
+            }
+        });
+    }
+}
+
+// Notes Functions
+document.getElementById('notesModal').addEventListener('show.bs.modal', function () {
+    loadNotes();
+});
+
+function showNoteForm() {
+    document.getElementById('noteForm').style.display = 'block';
+    document.getElementById('noteId').value = '';
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteContent').value = '';
+    document.getElementById('noteTags').value = '';
+}
+
+function cancelNote() {
+    document.getElementById('noteForm').style.display = 'none';
+}
+
+function saveNote() {
+    const noteId = document.getElementById('noteId').value;
+    const title = document.getElementById('noteTitle').value;
+    const content = document.getElementById('noteContent').value;
+    const tags = document.getElementById('noteTags').value;
+    
+    if (!title || !content) {
+        alert('Please fill in title and content');
+        return;
+    }
+    
+    fetch('/save-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            note_id: noteId,
+            title: title,
+            content: content,
+            tags: tags
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            cancelNote();
+            loadNotes();
+        }
+    });
+}
+
+function loadNotes() {
+    fetch('/get-notes')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notesList = document.getElementById('notesList');
+            if (data.notes.length === 0) {
+                notesList.innerHTML = '<p class="text-muted text-center">No notes yet. Create your first note!</p>';
+            } else {
+                let html = '';
+                data.notes.forEach(note => {
+                    html += `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title">${note.title}</h6>
+                                        <p class="card-text">${note.content}</p>
+                                        ${note.tags ? `<p class="mb-0"><small class="text-muted"><i class="fas fa-tags me-1"></i>${note.tags}</small></p>` : ''}
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="editNote(${note.id}, '${note.title.replace(/'/g, "\\'")}', '${note.content.replace(/'/g, "\\'")}', '${note.tags || ''}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteNote(${note.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">${note.created_at}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                notesList.innerHTML = html;
+            }
+        }
+    });
+}
+
+function editNote(id, title, content, tags) {
+    showNoteForm();
+    document.getElementById('noteId').value = id;
+    document.getElementById('noteTitle').value = title;
+    document.getElementById('noteContent').value = content;
+    document.getElementById('noteTags').value = tags;
+}
+
+function deleteNote(id) {
+    if (confirm('Delete this note?')) {
+        fetch('/delete-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note_id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotes();
+            }
+        });
+    }
+}
+</script>
+
 {% endblock %}
