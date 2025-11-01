@@ -4,250 +4,457 @@
 {% block title %}VA Contract Hub | Home{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section-modern text-center text-white">
-    <div class="container py-5">
+
+<!-- Animated Background Particles -->
+<div class="particles-container"></div>
+
+<!-- Hero Section with Futuristic Design -->
+<section class="hero-section-futuristic text-center text-white position-relative overflow-hidden">
+    <div class="animated-bg"></div>
+    <div class="container py-5 position-relative" style="z-index: 2;">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <h1 class="display-3 fw-bold mb-4">
-                    Connecting Virginia Businesses with Contract Opportunities
+                <div class="floating-badge mb-4">
+                    <span class="badge bg-light text-primary px-4 py-2 rounded-pill shadow-lg">
+                        <i class="fas fa-rocket me-2"></i>AI-Powered Contract Discovery
+                    </span>
+                </div>
+                <h1 class="display-2 fw-bold mb-4 text-glow">
+                    The Future of Contract Opportunities
                 </h1>
-                <p class="lead fs-4 mb-5" style="color: rgba(255,255,255,0.9);">
-                    Discover local, federal, and commercial contracts that match your company's expertise.
+                <p class="lead fs-3 mb-5" style="color: rgba(255,255,255,0.95);">
+                    AI-driven platform connecting Virginia businesses with high-value government & commercial contracts
                 </p>
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg me-3 mb-3">
-                    <i class="fas fa-user-plus me-2"></i>Register Your Company
-                </a>
-                <a href="{{ url_for('landing') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill mb-3">
-                    <i class="fas fa-clipboard-check me-2"></i>Take Assessment
-                </a>
+                <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg futuristic-btn">
+                        <i class="fas fa-user-plus me-2"></i>Launch Your Journey
+                    </a>
+                    <a href="{{ url_for('landing') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill futuristic-btn-outline">
+                        <i class="fas fa-brain me-2"></i>AI Assessment
+                    </a>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center gap-4 mt-5 trust-indicators">
+                    <div class="trust-badge">
+                        <i class="fas fa-shield-alt text-warning"></i>
+                        <span>100% Secure</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="fas fa-bolt text-success"></i>
+                        <span>Real-Time Updates</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="fas fa-users text-info"></i>
+                        <span>500+ Contractors</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    <!-- Floating geometric shapes -->
+    <div class="geometric-shape shape-1"></div>
+    <div class="geometric-shape shape-2"></div>
+    <div class="geometric-shape shape-3"></div>
 </section>
 
-<!-- Stats Bar -->
-<section class="bg-white py-4 shadow-sm">
+<!-- Animated Stats Bar with Counters -->
+<section class="stats-bar-futuristic shadow-lg">
     <div class="container">
-        <div class="row text-center">
-            <div class="col-md-3 mb-3 mb-md-0">
-                <h3 class="text-primary fw-bold mb-0">30+</h3>
-                <p class="text-muted mb-0">Local Government Contracts</p>
-            </div>
-            <div class="col-md-3 mb-3 mb-md-0">
-                <h3 class="text-primary fw-bold mb-0">10+</h3>
-                <p class="text-muted mb-0">Federal Opportunities</p>
-            </div>
-            <div class="col-md-3 mb-3 mb-md-0">
-                <h3 class="text-primary fw-bold mb-0">{{ commercial_count }}+</h3>
-                <p class="text-muted mb-0">Commercial Leads</p>
+        <div class="row text-center g-4">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-landmark"></i>
+                    </div>
+                    <h3 class="stat-number text-primary fw-bold mb-1" data-target="30">0</h3>
+                    <p class="stat-label text-muted mb-0">Local Government Contracts</p>
+                    <div class="stat-glow"></div>
+                </div>
             </div>
             <div class="col-md-3">
-                <h3 class="text-primary fw-bold mb-0">8</h3>
-                <p class="text-muted mb-0">Hampton Roads Cities</p>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-flag-usa"></i>
+                    </div>
+                    <h3 class="stat-number text-primary fw-bold mb-1" data-target="10">0</h3>
+                    <p class="stat-label text-muted mb-0">Federal Opportunities</p>
+                    <div class="stat-glow"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="stat-number text-primary fw-bold mb-1" data-target="{{ commercial_count }}">0</h3>
+                    <p class="stat-label text-muted mb-0">Commercial Leads</p>
+                    <div class="stat-glow"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3 class="stat-number text-primary fw-bold mb-1" data-target="8">0</h3>
+                    <p class="stat-label text-muted mb-0">Hampton Roads Cities</p>
+                    <div class="stat-glow"></div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Category Cards -->
-<section class="container py-5">
+<!-- Category Cards with 3D Effect -->
+<section class="container py-5 mt-4">
     <div class="text-center mb-5">
-        <h2 class="display-5 fw-bold mb-3">Explore Contract Opportunities</h2>
-        <p class="lead text-muted">Choose the category that best fits your business needs</p>
+        <div class="section-label mb-3">
+            <span class="badge bg-primary text-white px-4 py-2 rounded-pill">
+                <i class="fas fa-compass me-2"></i>Explore Opportunities
+            </span>
+        </div>
+        <h2 class="display-4 fw-bold mb-3">Contract Categories</h2>
+        <p class="lead text-muted">Discover opportunities tailored to your expertise</p>
     </div>
     
     <div class="row g-4">
         <!-- Local Government -->
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow hover-lift">
-                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
-                    <div class="mb-3" style="font-size: 3.5rem;">🏛️</div>
+        <div class="col-lg-6">
+            <div class="card futuristic-card h-100 border-0 shadow-lg hover-3d">
+                <div class="card-gradient gradient-blue"></div>
+                <div class="card-body text-center p-5 position-relative">
+                    <div class="icon-circle mb-4">
+                        <i class="fas fa-landmark"></i>
+                    </div>
                     <h3 class="card-title fw-bold mb-3">Local Government Contracts</h3>
-                    <p class="card-text text-muted mb-4">
-                        Stay informed on county and city-level opportunities across Virginia including schools, libraries, and municipal buildings.
+                    <p class="card-text text-muted mb-4 fs-6">
+                        Access county and city-level opportunities across Virginia including schools, libraries, municipal buildings, and public facilities.
                     </p>
-                    <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
-                        View Contracts <i class="fas fa-arrow-right ms-2"></i>
+                    <div class="row g-3 mb-4 text-start">
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Schools & Libraries</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>City Buildings</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Parks & Recreation</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Public Facilities</small>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill futuristic-btn-solid">
+                        <span>Explore Contracts</span>
+                        <i class="fas fa-arrow-right ms-2"></i>
                     </a>
                 </div>
             </div>
         </div>
 
         <!-- Federal Contracts -->
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow hover-lift">
-                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
-                    <div class="mb-3" style="font-size: 3.5rem;">⚖️</div>
+        <div class="col-lg-6">
+            <div class="card futuristic-card h-100 border-0 shadow-lg hover-3d">
+                <div class="card-gradient gradient-purple"></div>
+                <div class="card-body text-center p-5 position-relative">
+                    <div class="icon-circle mb-4">
+                        <i class="fas fa-flag-usa"></i>
+                    </div>
                     <h3 class="card-title fw-bold mb-3">Federal Contracts</h3>
-                    <p class="card-text text-muted mb-4">
-                        Explore open solicitations from federal agencies, military bases, and defense departments via SAM.gov.
+                    <p class="card-text text-muted mb-4 fs-6">
+                        Explore high-value solicitations from federal agencies, military bases, and defense departments via SAM.gov integration.
                     </p>
-                    <a href="{{ url_for('federal_contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
-                        View Federal <i class="fas fa-arrow-right ms-2"></i>
+                    <div class="row g-3 mb-4 text-start">
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Military Bases</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Federal Agencies</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>Defense Contracts</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small>SAM.gov Access</small>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('federal_contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill futuristic-btn-solid">
+                        <span>View Federal Ops</span>
+                        <i class="fas fa-arrow-right ms-2"></i>
                     </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Commercial Opportunities - TEMPORARILY HIDDEN UNTIL LEADS ARE GENERATED -->
-        <!-- <div class="col-md-4">
-            <div class="card h-100 border-0 shadow hover-lift">
-                <div class="card-body text-center p-4" style="border-top: 4px solid var(--primary-color);">
-                    <div class="mb-3" style="font-size: 3.5rem;">💼</div>
-                    <h3 class="card-title fw-bold mb-3">Commercial Opportunities</h3>
-                    <p class="card-text text-muted mb-4">
-                        Connect with private-sector projects including medical offices, gyms, hotels, and office buildings.
-                    </p>
-                    <a href="{{ url_for('commercial_contracts') }}" class="btn btn-primary btn-lg w-100 rounded-pill">
-                        View Commercial <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
-                </div>
-            </div>
-        </div> -->
-    </div>
-</section>
-
-<!-- Subscriber Benefits Section -->
-<section class="bg-gradient py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="container">
-        <div class="row align-items-center text-white">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h2 class="display-5 fw-bold mb-4">🔓 Why Subscribe?</h2>
-                <p class="lead mb-4">Join hundreds of Virginia cleaning businesses growing their revenue with exclusive subscriber benefits:</p>
-                <ul class="list-unstyled fs-5">
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Unlimited Contract Access</strong> - No more 3-click limits, browse everything</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Real Commercial Leads</strong> - Direct contact info for businesses actively hiring cleaners</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Pricing Calculator</strong> - Build accurate competitive bids instantly</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Proposal Support Tools</strong> - Templates, guides, and AI assistance</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Resource Toolbox</strong> - Pricing guides, capability statements, expert templates</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>AI Emergency Assistant</strong> - 24/7 last-minute proposal help</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Priority Support</strong> - Get answers when you need them</li>
-                    <li class="mb-3"><i class="fas fa-check-circle me-2"></i><strong>Email Alerts</strong> - Be first to know about new opportunities</li>
-                </ul>
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg me-3 mb-3">
-                    <i class="fas fa-star me-2"></i>Start Free Trial
-                </a>
-                <a href="#roi-calculator" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill mb-3">
-                    <i class="fas fa-calculator me-2"></i>See ROI
-                </a>
-            </div>
-            <div class="col-lg-6">
-                <div class="row g-3">
-                    <!-- Value Proposition Boxes -->
-                    <div class="col-md-6">
-                        <div class="card bg-white text-dark shadow-lg h-100">
-                            <div class="card-body text-center p-4">
-                                <i class="fas fa-trophy text-warning mb-3" style="font-size: 2.5rem;"></i>
-                                <h5 class="fw-bold mb-2">Win More Contracts</h5>
-                                <p class="small mb-0">Subscribers win 3x more contracts than free users with our tools and support</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card bg-white text-dark shadow-lg h-100">
-                            <div class="card-body text-center p-4">
-                                <i class="fas fa-clock text-primary mb-3" style="font-size: 2.5rem;"></i>
-                                <h5 class="fw-bold mb-2">Save Time</h5>
-                                <p class="small mb-0">Cut proposal prep time by 60% with templates and AI assistance</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card bg-white text-dark shadow-lg h-100">
-                            <div class="card-body text-center p-4">
-                                <i class="fas fa-chart-line text-success mb-3" style="font-size: 2.5rem;"></i>
-                                <h5 class="fw-bold mb-2">Grow Revenue</h5>
-                                <p class="small mb-0">Average subscriber lands $180K in contracts in first year</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card bg-white text-dark shadow-lg h-100">
-                            <div class="card-body text-center p-4">
-                                <i class="fas fa-handshake text-info mb-3" style="font-size: 2.5rem;"></i>
-                                <h5 class="fw-bold mb-2">Expert Support</h5>
-                                <p class="small mb-0">Access proposal specialists and AI chatbot for guidance</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ROI Calculator Section -->
-<section class="bg-light py-5" id="roi-calculator">
+<!-- Subscriber Benefits Section with Glass Morphism -->
+<section class="benefits-section-futuristic py-5 position-relative overflow-hidden">
+    <div class="floating-orbs"></div>
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="text-center mb-5">
+            <div class="section-label mb-3">
+                <span class="badge bg-light text-primary px-4 py-2 rounded-pill shadow">
+                    <i class="fas fa-crown me-2"></i>Premium Features
+                </span>
+            </div>
+            <h2 class="display-4 fw-bold mb-3">Why Go Premium?</h2>
+            <p class="lead text-muted">Unlock the complete toolkit for contract success</p>
+        </div>
+        
+        <div class="row g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="glass-card p-5">
+                    <h3 class="fw-bold mb-4">
+                        <i class="fas fa-rocket text-primary me-2"></i>
+                        Transform Your Business with Premium Access
+                    </h3>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-infinity"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Unlimited Access</h6>
+                                    <p class="text-muted small mb-0">Browse all contracts without limits</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Real Commercial Leads</h6>
+                                    <p class="text-muted small mb-0">Direct contact info for active buyers</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">AI Pricing Calculator</h6>
+                                    <p class="text-muted small mb-0">Build accurate bids instantly</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-file-contract"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Proposal Templates</h6>
+                                    <p class="text-muted small mb-0">Professional templates & AI assistance</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">AI Emergency Assistant</h6>
+                                    <p class="text-muted small mb-0">24/7 last-minute proposal help</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Real-Time Alerts</h6>
+                                    <p class="text-muted small mb-0">Be first to know about new opportunities</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill futuristic-btn-solid">
+                                <i class="fas fa-star me-2"></i>Start Free Trial
+                            </a>
+                            <a href="#roi-calculator" class="btn btn-outline-primary btn-lg px-5 py-3 rounded-pill">
+                                <i class="fas fa-calculator me-2"></i>Calculate ROI
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="glass-card p-4 text-center">
+                            <div class="metric-circle mb-3">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">3x Win Rate</h5>
+                            <p class="text-muted small mb-0">Premium users win 3x more contracts</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="glass-card p-4 text-center">
+                            <div class="metric-circle mb-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">60% Time Saved</h5>
+                            <p class="text-muted small mb-0">Cut proposal prep time dramatically</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="glass-card p-4 text-center">
+                            <div class="metric-circle mb-3">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">$180K Average</h5>
+                            <p class="text-muted small mb-0">First-year contract value</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ROI Calculator with Animated Numbers -->
+<section class="py-5" id="roi-calculator">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-5 text-center">
-                        <h2 class="fw-bold mb-4">💰 Return on Investment Calculator</h2>
+            <div class="col-lg-10">
+                <div class="roi-card shadow-lg border-0 overflow-hidden">
+                    <div class="roi-header text-center p-5">
+                        <div class="section-label mb-3">
+                            <span class="badge bg-warning text-dark px-4 py-2 rounded-pill">
+                                <i class="fas fa-chart-line me-2"></i>Financial Impact
+                            </span>
+                        </div>
+                        <h2 class="display-4 fw-bold mb-3">ROI Calculator</h2>
+                        <p class="lead text-muted">See your potential returns in real-time</p>
+                    </div>
+                    <div class="card-body p-5">
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <div class="roi-metric-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="roi-icon bg-success">
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </div>
+                                        <div class="ms-3">
+                                            <p class="text-muted small mb-1">Average Contract Value</p>
+                                            <h2 class="display-5 mb-0">$3,500<small class="fs-5 text-muted">/mo</small></h2>
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mb-0">Based on typical commercial cleaning contracts in Virginia</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="roi-metric-card">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="roi-icon bg-primary">
+                                            <i class="fas fa-tag"></i>
+                                        </div>
+                                        <div class="ms-3">
+                                            <p class="text-muted small mb-1">Subscription Cost</p>
+                                            <h2 class="display-5 mb-0">$99<small class="fs-5 text-muted">/mo</small></h2>
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mb-0">All premium features included, no hidden fees</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-lightbulb fa-2x text-warning"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h5 class="alert-heading mb-3">
+                                        <strong>Just ONE contract pays for 35+ months of subscription!</strong>
+                                    </h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <p class="mb-2 fw-bold">First Year Potential:</p>
+                                            <ul class="mb-0 small">
+                                                <li>Land 2-3 contracts = <strong>$84K-$126K revenue</strong></li>
+                                                <li>Subscription cost = $1,188</li>
+                                                <li class="text-success fw-bold">Net benefit = $83K-$125K</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-2 fw-bold">Time Savings Value:</p>
+                                            <ul class="mb-0 small">
+                                                <li>60% less proposal prep time</li>
+                                                <li>80% less lead research time</li>
+                                                <li class="text-success fw-bold">Value: $500-800/month saved</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="row g-4 mb-4">
-                            <div class="col-md-6">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <p class="mb-2">Average Contract Value</p>
-                                        <h2 class="display-4 mb-0">$3,500<small class="fs-5">/mo</small></h2>
-                                        <small>Based on typical commercial contracts</small>
-                                    </div>
+                            <div class="col-md-4 text-center">
+                                <div class="impact-metric">
+                                    <div class="impact-number text-primary">3,500%</div>
+                                    <p class="text-muted mb-0">Average ROI</p>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body">
-                                        <p class="mb-2">Subscription Cost</p>
-                                        <h2 class="display-4 mb-0">$99<small class="fs-5">/mo</small></h2>
-                                        <small>All features included</small>
-                                    </div>
+                            <div class="col-md-4 text-center">
+                                <div class="impact-metric">
+                                    <div class="impact-number text-success">14 days</div>
+                                    <p class="text-muted mb-0">Avg. to first contract</p>
                                 </div>
                             </div>
-                        </div>
-                        <div class="alert alert-success mb-4">
-                            <h4 class="alert-heading mb-3">
-                                <i class="fas fa-calculator me-2"></i>Break-Even Analysis
-                            </h4>
-                            <p class="mb-2 lead"><strong>Just ONE contract pays for your subscription for 35 months!</strong></p>
-                            <hr>
-                            <div class="row text-start">
-                                <div class="col-md-6">
-                                    <p class="mb-2"><strong>Year 1 Potential:</strong></p>
-                                    <ul class="mb-0">
-                                        <li>Land 2-3 contracts = $84K-$126K revenue</li>
-                                        <li>Subscription cost = $1,188</li>
-                                        <li><strong>Net benefit = $83K-$125K</strong></li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <p class="mb-2"><strong>Time Savings:</strong></p>
-                                    <ul class="mb-0">
-                                        <li>60% less proposal prep time</li>
-                                        <li>80% less lead research time</li>
-                                        <li>Value: $500-800/month in labor</li>
-                                    </ul>
+                            <div class="col-md-4 text-center">
+                                <div class="impact-metric">
+                                    <div class="impact-number text-info">92%</div>
+                                    <p class="text-muted mb-0">Customer satisfaction</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4 text-center mb-3">
-                                <div class="display-6 fw-bold text-primary">3,500%</div>
-                                <p class="text-muted mb-0">Average ROI</p>
-                            </div>
-                            <div class="col-md-4 text-center mb-3">
-                                <div class="display-6 fw-bold text-success">14 days</div>
-                                <p class="text-muted mb-0">Avg. time to first contract</p>
-                            </div>
-                            <div class="col-md-4 text-center mb-3">
-                                <div class="display-6 fw-bold text-info">92%</div>
-                                <p class="text-muted mb-0">Subscriber satisfaction</p>
-                            </div>
+                        
+                        <div class="text-center">
+                            <a href="{{ url_for('register') }}" class="btn btn-success btn-lg px-5 py-3 rounded-pill futuristic-btn-solid">
+                                Start Your Free Trial Today <i class="fas fa-rocket ms-2"></i>
+                            </a>
+                            <p class="small text-muted mt-3 mb-0">
+                                <i class="fas fa-shield-alt me-1"></i> No credit card required • Cancel anytime • 7-day money-back guarantee
+                            </p>
                         </div>
-                        <a href="{{ url_for('register') }}" class="btn btn-success btn-lg px-5 py-3 mt-3">
-                            Start Your Free Trial Today <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                        <p class="small text-muted mt-3 mb-0">No credit card required • Cancel anytime • 7-day money-back guarantee</p>
                     </div>
                 </div>
             </div>
@@ -526,26 +733,630 @@
 </section>
 
 <style>
-.hero-section-modern {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    padding: 100px 0 80px 0;
+/* Futuristic Hero Section */
+.hero-section-futuristic {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    padding: 120px 0 100px 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.animated-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.15) 0%, transparent 50%);
+    animation: bgFloat 20s ease-in-out infinite;
 }
 
-.hover-lift:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+@keyframes bgFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.05); }
 }
 
-.contract-card {
-    transition: transform 0.2s ease;
+.text-glow {
+    text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.3);
 }
 
-.contract-card:hover {
+.floating-badge {
+    animation: floatBadge 3s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.futuristic-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.futuristic-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3) !important;
+}
+
+.futuristic-btn-outline {
+    border: 2px solid rgba(255,255,255,0.8);
+    transition: all 0.3s ease;
+}
+
+.futuristic-btn-outline:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: white;
+    backdrop-filter: blur(10px);
+}
+
+.trust-indicators {
+    opacity: 0;
+    animation: fadeInUp 1s ease forwards 0.5s;
+}
+
+.trust-badge {
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.trust-badge:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-3px);
+}
+
+/* Geometric Shapes */
+.geometric-shape {
+    position: absolute;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    opacity: 0.1;
+    animation: float 15s ease-in-out infinite;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    background: white;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 200px;
+    height: 200px;
+    background: white;
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+}
+
+.shape-3 {
+    width: 150px;
+    height: 150px;
+    background: white;
+    bottom: 10%;
+    left: 60%;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+    25% {
+        transform: translate(20px, -20px) rotate(90deg);
+        border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+    }
+    50% {
+        transform: translate(-20px, 20px) rotate(180deg);
+        border-radius: 30% 70% 70% 30% / 70% 30% 30% 70%;
+    }
+    75% {
+        transform: translate(20px, 20px) rotate(270deg);
+        border-radius: 70% 30% 30% 70% / 30% 70% 70% 30%;
+    }
+}
+
+/* Particles Container */
+.particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Animated Stats Bar */
+.stats-bar-futuristic {
+    background: white;
+    padding: 40px 0;
+    margin-top: -30px;
+    position: relative;
+    z-index: 10;
+    border-radius: 20px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+}
+
+.stat-item {
+    position: relative;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
     transform: translateY(-5px);
 }
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    position: relative;
+}
+
+.stat-glow {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-item:hover .stat-glow {
+    opacity: 1;
+}
+
+/* Futuristic Cards */
+.futuristic-card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.card-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    z-index: 1;
+}
+
+.gradient-blue {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.gradient-purple {
+    background: linear-gradient(90deg, #764ba2, #f093fb);
+}
+
+.hover-3d {
+    transform-style: preserve-3d;
+}
+
+.hover-3d:hover {
+    transform: translateY(-10px) rotateX(5deg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
+}
+
+.icon-circle {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5); }
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateX(5px);
+}
+
+.futuristic-btn-solid {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.futuristic-btn-solid::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+    z-index: -1;
+}
+
+.futuristic-btn-solid:hover::before {
+    left: 100%;
+}
+
+/* Glass Morphism */
+.benefits-section-futuristic {
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    position: relative;
+}
+
+.floating-orbs::before,
+.floating-orbs::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    animation: floatOrb 20s ease-in-out infinite;
+}
+
+.floating-orbs::before {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    top: -100px;
+    right: -100px;
+}
+
+.floating-orbs::after {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    bottom: -50px;
+    left: -50px;
+    animation-delay: 3s;
+}
+
+@keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateX(5px);
+}
+
+.benefit-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.metric-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    margin: 0 auto;
+}
+
+/* ROI Card */
+.roi-card {
+    border-radius: 30px;
+    overflow: hidden;
+    background: white;
+}
+
+.roi-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.roi-metric-card {
+    background: linear-gradient(135deg, #f8f9fa, white);
+    padding: 30px;
+    border-radius: 20px;
+    border: 2px solid rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.roi-metric-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+.roi-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.impact-metric {
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.impact-metric:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.05);
+}
+
+.impact-number {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+/* Section Label */
+.section-label {
+    animation: fadeInDown 0.6s ease;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hero-section-futuristic {
+        padding: 80px 0 60px 0;
+    }
+    
+    .display-2 {
+        font-size: 2.5rem;
+    }
+    
+    .geometric-shape {
+        display: none;
+    }
+    
+    .stats-bar-futuristic {
+        margin-top: 0;
+    }
+    
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+    }
+}
+
+/* Smooth Scroll Behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Loading Animation for Numbers */
+.stat-number {
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
 </style>
+
+<script>
+// Animated Counter for Stats
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const counters = entry.target.querySelectorAll('.stat-number');
+                counters.forEach(counter => {
+                    animateCounter(counter);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    const statsSection = document.querySelector('.stats-bar-futuristic');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+});
+
+function animateCounter(element) {
+    const target = parseInt(element.getAttribute('data-target'));
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    let current = 0;
+    
+    const updateCounter = () => {
+        current += increment;
+        if (current < target) {
+            element.textContent = Math.ceil(current);
+            requestAnimationFrame(updateCounter);
+        } else {
+            element.textContent = target + '+';
+        }
+    };
+    
+    updateCounter();
+}
+
+// Create Floating Particles
+function createParticles() {
+    const container = document.querySelector('.particles-container');
+    if (!container) return;
+    
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.style.cssText = `
+            position: absolute;
+            width: ${Math.random() * 4 + 2}px;
+            height: ${Math.random() * 4 + 2}px;
+            background: rgba(102, 126, 234, ${Math.random() * 0.3 + 0.1});
+            border-radius: 50%;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
+            animation: particleFloat ${Math.random() * 10 + 10}s linear infinite;
+            animation-delay: ${Math.random() * 5}s;
+        `;
+        container.appendChild(particle);
+    }
+}
+
+// Particle Animation CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes particleFloat {
+        0% {
+            transform: translateY(0) translateX(0);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translateY(-100vh) translateX(${Math.random() * 200 - 100}px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+createParticles();
+
+// Smooth reveal animations for elements
+const revealElements = document.querySelectorAll('.futuristic-card, .glass-card, .roi-card');
+const revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+            setTimeout(() => {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateY(30px)';
+                entry.target.style.transition = 'all 0.6s ease';
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, 50);
+            }, index * 100);
+            revealObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
+
+revealElements.forEach(el => revealObserver.observe(el));
+</script>
+
 {% endblock %}
