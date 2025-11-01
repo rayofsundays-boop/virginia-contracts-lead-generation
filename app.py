@@ -5749,6 +5749,32 @@ def proposal_templates():
     """Free proposal writing templates and guidance"""
     return render_template('proposal_templates.html')
 
+@app.route('/subscription')
+@login_required
+def subscription():
+    """Subscription and pricing page"""
+    user_email = session.get('user_email') or session.get('email')
+    subscription_status = session.get('subscription_status', 'free')
+    
+    # Get user's current subscription info from database
+    if user_email:
+        try:
+            result = db.session.execute(
+                text('SELECT subscription_status, credits_balance FROM leads WHERE email = :email'),
+                {'email': user_email}
+            ).fetchone()
+            if result:
+                subscription_status = result[0] or 'free'
+                credits_balance = result[1] or 0
+        except:
+            credits_balance = 0
+    else:
+        credits_balance = 0
+    
+    return render_template('subscription.html', 
+                         subscription_status=subscription_status,
+                         credits_balance=credits_balance)
+
 @app.route('/pricing-guide')
 @login_required
 def pricing_guide():

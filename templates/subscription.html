@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Plans - VA Contract Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-crown text-warning"></i> Upgrade Your Access
+            </h1>
+            <p class="lead text-muted">Get unlimited access to Virginia's best government contract opportunities</p>
+            
+            {% if subscription_status == 'paid' %}
+            <div class="alert alert-success mx-auto" style="max-width: 600px;">
+                <i class="fas fa-check-circle"></i> You're currently a <strong>Pro Member</strong>! Enjoy unlimited access to all features.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Current Status -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Your Current Plan</h5>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-{{ 'success' if subscription_status == 'paid' else 'secondary' }} me-2" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                                    {{ 'PRO MEMBER' if subscription_status == 'paid' else 'FREE TIER' }}
+                                </span>
+                            </div>
+                            <p class="text-muted mb-0">
+                                {% if subscription_status == 'paid' %}
+                                    Full access to all premium features
+                                {% else %}
+                                    Limited access - Upgrade for full features
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <h5 class="mb-2">Credits Balance</h5>
+                            <h2 class="text-primary mb-0">
+                                <i class="fas fa-coins"></i> {{ credits_balance }}
+                                <small class="text-muted" style="font-size: 0.5em;">credits</small>
+                            </h2>
+                            <small class="text-success">${{ '%.2f'|format(credits_balance * 0.50) }} value</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Plans -->
+    <div class="row g-4 mb-5">
+        <!-- Free Tier -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm {% if subscription_status == 'free' %}border-primary border-2{% endif %}">
+                <div class="card-header bg-light text-center py-4">
+                    <h3 class="mb-0">Free Tier</h3>
+                    <h2 class="display-4 my-3">$0<small class="text-muted fs-6">/month</small></h2>
+                    <p class="text-muted mb-0">Get started with basic access</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> 10 Free Leads per Month</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Basic Search & Filters</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Email Notifications</li>
+                        <li class="mb-3"><i class="fas fa-times text-muted me-2"></i> <span class="text-muted">Contact Information</span></li>
+                        <li class="mb-3"><i class="fas fa-times text-muted me-2"></i> <span class="text-muted">Direct Bid Links</span></li>
+                        <li class="mb-3"><i class="fas fa-times text-muted me-2"></i> <span class="text-muted">AI Proposal Help</span></li>
+                        <li class="mb-3"><i class="fas fa-times text-muted me-2"></i> <span class="text-muted">Priority Support</span></li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent text-center pb-4">
+                    {% if subscription_status == 'free' %}
+                    <button class="btn btn-secondary" disabled>Current Plan</button>
+                    {% else %}
+                    <form action="{{ url_for('cancel_subscription') }}" method="POST">
+                        <button type="submit" class="btn btn-outline-danger">Downgrade</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-lg border-warning border-3 {% if subscription_status == 'paid' %}bg-light{% endif %}">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-warning text-dark px-4 py-2" style="font-size: 0.9rem;">
+                        <i class="fas fa-star"></i> MOST POPULAR
+                    </span>
+                </div>
+                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(135deg, #ffd700, #ffed4e);">
+                    <h3 class="mb-0 text-dark">Pro Member</h3>
+                    <h2 class="display-4 my-3 text-dark">$97<small class="fs-6">/month</small></h2>
+                    <p class="mb-0 text-dark">Unlimited access to everything</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Unlimited Leads</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Full Contact Information</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Direct Bid Links</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>AI Proposal Generator</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Quick Wins Access</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Advanced Filters</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Priority Email Support</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Daily Lead Updates</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Saved Searches</strong></li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Export to CSV</strong></li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent text-center pb-4">
+                    {% if subscription_status == 'paid' %}
+                    <button class="btn btn-success btn-lg" disabled>
+                        <i class="fas fa-check"></i> Current Plan
+                    </button>
+                    {% else %}
+                    <form action="{{ url_for('process_subscription') }}" method="POST">
+                        <input type="hidden" name="plan" value="pro">
+                        <button type="submit" class="btn btn-warning btn-lg px-5">
+                            <i class="fas fa-crown"></i> Upgrade Now
+                        </button>
+                    </form>
+                    <small class="text-muted d-block mt-2">Cancel anytime</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Tier -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h3 class="mb-0">Enterprise</h3>
+                    <h2 class="display-4 my-3">Custom</h2>
+                    <p class="mb-0">For teams & agencies</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Everything in Pro</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Multiple Team Members</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> White-Label Options</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> API Access</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Custom Integrations</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Dedicated Account Manager</li>
+                        <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Priority Phone Support</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent text-center pb-4">
+                    <a href="mailto:admin@vacontracts.com?subject=Enterprise%20Inquiry" class="btn btn-dark btn-lg">
+                        <i class="fas fa-envelope"></i> Contact Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Comparison Table -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Feature Comparison</h2>
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Feature</th>
+                                <th class="text-center">Free</th>
+                                <th class="text-center bg-warning-subtle">Pro</th>
+                                <th class="text-center">Enterprise</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Monthly Leads</td>
+                                <td class="text-center">10</td>
+                                <td class="text-center"><strong>Unlimited</strong></td>
+                                <td class="text-center"><strong>Unlimited</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Contact Information</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Direct Bid Links</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>AI Proposal Generator</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Quick Wins Access</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Team Members</td>
+                                <td class="text-center">1</td>
+                                <td class="text-center">1</td>
+                                <td class="text-center"><strong>Unlimited</strong></td>
+                            </tr>
+                            <tr>
+                                <td>API Access</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Support</td>
+                                <td class="text-center">Email</td>
+                                <td class="text-center">Priority Email</td>
+                                <td class="text-center">Phone & Email</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">Frequently Asked Questions</h2>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Can I cancel anytime?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers for enterprise accounts.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            How often are leads updated?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Pro members receive daily lead updates. We scan federal and state databases every 24 hours to bring you the freshest opportunities.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            What are credits used for?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Credits are used to access contact information and premium features. Pro members get unlimited credits included with their subscription. Free users receive 10 credits monthly.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    {% if subscription_status != 'paid' %}
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card bg-gradient text-white shadow-lg" style="background: linear-gradient(135deg, #0066cc, #004499);">
+                <div class="card-body text-center py-5">
+                    <h2 class="mb-3">Ready to Win More Contracts?</h2>
+                    <p class="lead mb-4">Join hundreds of cleaning businesses already winning government contracts</p>
+                    <form action="{{ url_for('process_subscription') }}" method="POST" class="d-inline">
+                        <input type="hidden" name="plan" value="pro">
+                        <button type="submit" class="btn btn-warning btn-lg px-5 py-3">
+                            <i class="fas fa-crown"></i> Upgrade to Pro Now
+                        </button>
+                    </form>
+                    <p class="mt-3 mb-0"><small>30-day money-back guarantee · Cancel anytime</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
