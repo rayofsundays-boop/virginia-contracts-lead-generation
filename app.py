@@ -1798,6 +1798,267 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('landing'))
 
+@app.route('/user-profile')
+@login_required
+def user_profile():
+    """User profile page showing account details and subscription status"""
+    try:
+        # Get user details from database
+        result = db.session.execute(text('''
+            SELECT id, email, business_name, contact_name, phone, city, 
+                   subscription_status, subscription_end_date, created_at
+            FROM leads 
+            WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        
+        if result:
+            user = {
+                'id': result[0],
+                'email': result[1],
+                'business_name': result[2],
+                'contact_name': result[3],
+                'phone': result[4],
+                'city': result[5],
+                'subscription_status': result[6],
+                'subscription_end_date': result[7],
+                'created_at': result[8]
+            }
+            
+            # Get user stats (placeholder for now)
+            stats = {
+                'leads_viewed': 0,
+                'saved_leads': 0,
+                'proposals_submitted': 0
+            }
+            
+            return render_template('user_profile.html', user=user, stats=stats)
+        else:
+            flash('User not found.', 'error')
+            return redirect(url_for('customer_leads'))
+    except Exception as e:
+        print(f"Error loading user profile: {e}")
+        flash('Error loading profile. Please try again.', 'error')
+        return redirect(url_for('customer_leads'))
+
+@app.route('/customer-dashboard')
+@login_required
+def customer_dashboard():
+    """Internal customer dashboard with stats and quick access"""
+    try:
+        # Get stats
+        gov_contracts = db.session.execute(text(
+            "SELECT COUNT(*) FROM contracts WHERE status = 'open'"
+        )).scalar() or 0
+        
+        supply_contracts = 0
+        try:
+            supply_contracts = db.session.execute(text(
+                "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
+            )).scalar() or 0
+        except:
+            pass
+        
+        commercial_leads = 0
+        try:
+            commercial_leads = db.session.execute(text(
+                "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
+            )).scalar() or 0
+        except:
+            pass
+        
+        quick_wins = 0
+        try:
+            quick_wins = db.session.execute(text(
+                "SELECT COUNT(*) FROM supply_contracts WHERE is_quick_win = TRUE AND status = 'open'"
+            )).scalar() or 0
+            quick_wins += db.session.execute(text(
+                "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
+            )).scalar() or 0
+        except:
+            pass
+        
+        total_leads = gov_contracts + supply_contracts + commercial_leads
+        
+        stats = {
+            'total_leads': total_leads,
+            'government_contracts': gov_contracts,
+            'supply_contracts': supply_contracts,
+            'commercial_leads': commercial_leads,
+            'quick_wins': quick_wins
+        }
+        
+        # Get latest opportunities
+        latest_opportunities = []
+        try:
+            # Get 5 most recent government contracts
+            gov_results = db.session.execute(text('''
+                SELECT title, agency, location, estimated_value, posted_date, id
+                FROM contracts 
+                WHERE status = 'open'
+                ORDER BY posted_date DESC
+                LIMIT 3
+            ''')).fetchall()
+            
+            for row in gov_results:
+                latest_opportunities.append({
+                    'title': row[0],
+                    'agency': row[1],
+                    'location': row[2],
+                    'value': row[3],
+                    'posted_date': row[4],
+                    'lead_type': 'Government Contract',
+                    'link': url_for('government_contracts')
+                })
+            
+            # Get 2 supply contracts
+            supply_results = db.session.execute(text('''
+                SELECT title, agency, location, estimated_value, created_at, id
+                FROM supply_contracts 
+                WHERE status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 2
+            ''')).fetchall()
+            
+            for row in supply_results:
+                latest_opportunities.append({
+                    'title': row[0],
+                    'agency': row[1],
+                    'location': row[2],
+                    'value': row[3],
+                    'posted_date': row[4],
+                    'lead_type': 'Supply Contract',
+                    'link': url_for('supply_contracts')
+                })
+        except Exception as e:
+            print(f"Error fetching latest opportunities: {e}")
+        
+        return render_template('customer_dashboard.html', 
+                             stats=stats, 
+                             latest_opportunities=latest_opportunities)
+    except Exception as e:
+        print(f"Error loading dashboard: {e}")
+        flash('Error loading dashboard. Please try again.', 'error')
+        return redirect(url_for('customer_leads'))
+
+@app.route('/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    """Update user profile information"""
+    try:
+        business_name = request.form.get('business_name', '').strip()
+        contact_name = request.form.get('contact_name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        city = request.form.get('city', '').strip()
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET business_name = :business_name,
+                contact_name = :contact_name,
+                phone = :phone,
+                city = :city
+            WHERE id = :user_id
+        '''), {
+            'business_name': business_name,
+            'contact_name': contact_name,
+            'phone': phone,
+            'city': city,
+            'user_id': session['user_id']
+        })
+        db.session.commit()
+        
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('user_profile'))
+    except Exception as e:
+        print(f"Error updating profile: {e}")
+        db.session.rollback()
+        flash('Error updating profile. Please try again.', 'error')
+        return redirect(url_for('user_profile'))
+
+@app.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Change user password"""
+    try:
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Validate passwords match
+        if new_password != confirm_password:
+            flash('New passwords do not match!', 'error')
+            return redirect(url_for('user_profile'))
+        
+        # Get current password hash
+        result = db.session.execute(text('''
+            SELECT password FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        
+        if not result:
+            flash('User not found.', 'error')
+            return redirect(url_for('user_profile'))
+        
+        # Verify current password
+        from werkzeug.security import check_password_hash, generate_password_hash
+        if not check_password_hash(result[0], current_password):
+            flash('Current password is incorrect!', 'error')
+            return redirect(url_for('user_profile'))
+        
+        # Update password
+        new_password_hash = generate_password_hash(new_password)
+        db.session.execute(text('''
+            UPDATE leads 
+            SET password = :password
+            WHERE id = :user_id
+        '''), {
+            'password': new_password_hash,
+            'user_id': session['user_id']
+        })
+        db.session.commit()
+        
+        flash('Password changed successfully!', 'success')
+        return redirect(url_for('user_profile'))
+    except Exception as e:
+        print(f"Error changing password: {e}")
+        db.session.rollback()
+        flash('Error changing password. Please try again.', 'error')
+        return redirect(url_for('user_profile'))
+
+@app.route('/cancel-subscription', methods=['POST'])
+@login_required
+def cancel_subscription():
+    """Cancel user subscription"""
+    try:
+        data = request.get_json()
+        reason = data.get('reason', '') if data else ''
+        
+        # Update subscription status
+        db.session.execute(text('''
+            UPDATE leads 
+            SET subscription_status = 'cancelled',
+                cancellation_reason = :reason,
+                cancellation_date = CURRENT_TIMESTAMP
+            WHERE id = :user_id
+        '''), {
+            'reason': reason,
+            'user_id': session['user_id']
+        })
+        db.session.commit()
+        
+        # Update session
+        session['subscription_status'] = 'cancelled'
+        
+        return jsonify({
+            'success': True,
+            'message': 'Subscription cancelled successfully'
+        })
+    except Exception as e:
+        print(f"Error cancelling subscription: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @app.route('/request-password-reset', methods=['POST'])
 def request_password_reset():
     """Handle password reset requests"""

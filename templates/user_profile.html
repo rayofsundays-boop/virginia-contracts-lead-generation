@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - VA Contracts Lead Generation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-2">
+                <i class="fas fa-user-circle me-3"></i>My Profile
+            </h1>
+            <p class="lead text-muted">Manage your account settings and subscription</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 48px; color: white; border: 5px solid #e9ecef;">
+                        {{ user.email[0].upper() }}
+                    </div>
+                    <h4 class="mb-1">{{ user.email }}</h4>
+                    <p class="text-muted mb-3">
+                        Member since {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}
+                    </p>
+                    
+                    {% if user.subscription_status == 'paid' %}
+                        <span class="badge bg-success fs-6 px-3 py-2 mb-3">
+                            <i class="fas fa-crown me-2"></i>Premium Member
+                        </span>
+                    {% elif user.subscription_status == 'trial' %}
+                        <span class="badge bg-info fs-6 px-3 py-2 mb-3">
+                            <i class="fas fa-clock me-2"></i>Free Trial
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6 px-3 py-2 mb-3">
+                            <i class="fas fa-user me-2"></i>Free Account
+                        </span>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('customer_dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                        {% if user.subscription_status != 'paid' %}
+                        <a href="{{ url_for('subscription') }}" class="btn btn-success">
+                            <i class="fas fa-crown me-2"></i>Upgrade to Premium
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold mb-3">Activity Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Leads Viewed</span>
+                        <strong>{{ stats.leads_viewed or 0 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Saved Opportunities</span>
+                        <strong>{{ stats.saved_leads or 0 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Proposals Submitted</span>
+                        <strong>{{ stats.proposals_submitted or 0 }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Details -->
+        <div class="col-lg-8">
+            <!-- Account Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Email Address:</div>
+                        <div class="col-md-8">{{ user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Business Name:</div>
+                        <div class="col-md-8">{{ user.business_name or 'Not provided' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Contact Person:</div>
+                        <div class="col-md-8">{{ user.contact_name or 'Not provided' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Phone:</div>
+                        <div class="col-md-8">{{ user.phone or 'Not provided' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">City:</div>
+                        <div class="col-md-8">{{ user.city or 'Not provided' }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 fw-bold">Account Status:</div>
+                        <div class="col-md-8">
+                            {% if user.subscription_status == 'paid' %}
+                                <span class="badge bg-success">Active Premium</span>
+                            {% elif user.subscription_status == 'trial' %}
+                                <span class="badge bg-info">Free Trial Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Free Account</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-crown me-2"></i>Subscription Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.subscription_status == 'paid' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Plan:</div>
+                            <div class="col-md-8">Premium Annual Plan - $497/year</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Status:</div>
+                            <div class="col-md-8">
+                                <span class="badge bg-success">Active</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Billing Cycle:</div>
+                            <div class="col-md-8">Annual (Renews automatically)</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Next Billing Date:</div>
+                            <div class="col-md-8">{{ user.subscription_end_date.strftime('%B %d, %Y') if user.subscription_end_date else 'N/A' }}</div>
+                        </div>
+                        <hr class="my-3">
+                        <h6 class="fw-bold mb-3">Your Premium Benefits:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unlimited access to all government contracts</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>All supply contract opportunities</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Commercial and residential leads</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Quick wins and urgent opportunities</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Lead export functionality</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Priority email support</li>
+                        </ul>
+                        <hr class="my-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal">
+                                <i class="fas fa-times-circle me-2"></i>Cancel Subscription
+                            </button>
+                            <a href="{{ url_for('subscription') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-receipt me-2"></i>View Billing History
+                            </a>
+                        </div>
+                    {% elif user.subscription_status == 'trial' %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="fas fa-clock me-2"></i>Free Trial Active</h6>
+                            <p class="mb-0">You're currently on a free trial. Upgrade to Premium to continue accessing all features after your trial ends.</p>
+                        </div>
+                        <a href="{{ url_for('subscription') }}" class="btn btn-success">
+                            <i class="fas fa-crown me-2"></i>Upgrade to Premium - $497/year
+                        </a>
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <h6 class="alert-heading"><i class="fas fa-user me-2"></i>Free Account</h6>
+                            <p class="mb-2">Upgrade to Premium to unlock:</p>
+                            <ul class="mb-3">
+                                <li>All government contract opportunities</li>
+                                <li>Supply contract leads for bulk procurement</li>
+                                <li>Commercial and residential cleaning leads</li>
+                                <li>Lead export and priority support</li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('subscription') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-crown me-2"></i>Upgrade to Premium - $497/year
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Password & Security -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Password & Security</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Keep your account secure by using a strong password and updating it regularly.</p>
+                    <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editProfileModalLabel">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProfileForm" method="POST" action="{{ url_for('update_profile') }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="businessName" class="form-label">Business Name</label>
+                            <input type="text" class="form-control" id="businessName" name="business_name" value="{{ user.business_name or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contactName" class="form-label">Contact Name</label>
+                            <input type="text" class="form-control" id="contactName" name="contact_name" value="{{ user.contact_name or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">City</label>
+                            <select class="form-select" id="city" name="city">
+                                <option value="">Select City</option>
+                                <option value="Hampton" {% if user.city == 'Hampton' %}selected{% endif %}>Hampton</option>
+                                <option value="Newport News" {% if user.city == 'Newport News' %}selected{% endif %}>Newport News</option>
+                                <option value="Virginia Beach" {% if user.city == 'Virginia Beach' %}selected{% endif %}>Virginia Beach</option>
+                                <option value="Suffolk" {% if user.city == 'Suffolk' %}selected{% endif %}>Suffolk</option>
+                                <option value="Williamsburg" {% if user.city == 'Williamsburg' %}selected{% endif %}>Williamsburg</option>
+                                <option value="Norfolk" {% if user.city == 'Norfolk' %}selected{% endif %}>Norfolk</option>
+                                <option value="Chesapeake" {% if user.city == 'Chesapeake' %}selected{% endif %}>Chesapeake</option>
+                                <option value="Portsmouth" {% if user.city == 'Portsmouth' %}selected{% endif %}>Portsmouth</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="changePasswordModalLabel">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changePasswordForm" method="POST" action="{{ url_for('change_password') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="8">
+                        <small class="text-muted">Must be at least 8 characters</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-check me-2"></i>Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+
+<script>
+    // Form validation for password change
+    document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            e.preventDefault();
+            alert('New passwords do not match!');
+            return false;
+        }
+    });
+</script>
+{% endblock %}
