@@ -37,11 +37,13 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-2">
-                            <label class="form-label">Lead Type:</label>
-                            <select class="form-select" id="leadTypeFilter">
+                            <label class="form-label" style="font-size: 0.9rem;">Lead Type:</label>
+                            <select class="form-select form-select-sm" id="leadTypeFilter">
                                 <option value="">All Types</option>
                                 <option value="government">Government</option>
                                 <option value="commercial">Commercial</option>
+                                <option value="commercial_request">🔥 Business Needs Cleaner</option>
+                                <option value="residential_request">🏠 Homeowner Needs Cleaner</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -127,95 +129,113 @@
     <!-- Leads Grid -->
     <div class="row" id="leadsContainer">
         {% for lead in all_leads %}
-        <div class="col-lg-4 col-md-6 mb-4 lead-card" 
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3 lead-card" 
              data-type="{{ lead.lead_type }}" 
              data-location="{{ lead.location }}" 
              data-value="{{ lead.contract_value }}"
              data-services="{{ lead.services_needed }}"
              data-status="{{ lead.status }}">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pb-2">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <span class="badge bg-{{ 'success' if lead.lead_type == 'government' else 'info' }} mb-1">
-                                {{ lead.lead_type|title }}
-                            </span>
-                            {% if lead.status == 'new' %}
-                            <span class="badge bg-warning text-dark">NEW</span>
+            <div class="card h-100 border-0 shadow-sm {% if lead.lead_type in ['commercial_request', 'residential_request'] %}border-warning{% endif %}">
+                <div class="card-header bg-transparent border-0 pb-1 pt-2 px-2">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div class="mb-1">
+                            {% if lead.lead_type == 'government' %}
+                                <span class="badge bg-success" style="font-size: 0.7rem;">Government</span>
+                            {% elif lead.lead_type == 'commercial' %}
+                                <span class="badge bg-info" style="font-size: 0.7rem;">Commercial</span>
+                            {% elif lead.lead_type == 'commercial_request' %}
+                                <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">🔥 Business Needs Cleaner</span>
+                            {% elif lead.lead_type == 'residential_request' %}
+                                <span class="badge bg-primary" style="font-size: 0.7rem;">🏠 Homeowner Needs Cleaner</span>
                             {% endif %}
                         </div>
-                        <div class="text-end">
-                            <small class="text-muted">Cost: 5 Credits</small>
-                        </div>
+                        <small class="text-muted" style="font-size: 0.65rem;">5 Credits</small>
                     </div>
                 </div>
                 
-                <div class="card-body">
-                    <h5 class="card-title">{{ lead.title }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ lead.agency }}</h6>
-                    <p class="card-text text-truncate-3">{{ lead.description }}</p>
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-1" style="font-size: 0.9rem; line-height: 1.2;">{{ lead.title[:80] }}{% if lead.title|length > 80 %}...{% endif %}</h6>
+                    <p class="text-muted mb-1" style="font-size: 0.75rem;">{{ lead.agency }}</p>
+                    <p class="card-text mb-2" style="font-size: 0.75rem; line-height: 1.3;">
+                        {{ lead.description[:120] }}{% if lead.description|length > 120 %}...{% endif %}
+                    </p>
                     
-                    <div class="row mb-3">
+                    <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <small class="text-muted">Contract Value:</small><br>
-                            <strong class="text-success">{{ lead.contract_value }}</strong>
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Value:</small>
+                            <strong class="text-success" style="font-size: 0.75rem;">{{ lead.contract_value[:30] }}</strong>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted">Location:</small><br>
-                            <strong>{{ lead.location }}</strong>
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Location:</small>
+                            <strong style="font-size: 0.75rem;">{{ lead.location[:20] }}</strong>
                         </div>
                     </div>
                     
-                    <div class="row mb-3">
+                    <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <small class="text-muted">Deadline:</small><br>
-                            <strong class="text-{{ 'danger' if lead.days_left <= 7 else 'warning' if lead.days_left <= 14 else 'info' }}">
-                                {{ lead.deadline }}
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Deadline:</small>
+                            <strong class="text-{{ 'danger' if lead.days_left <= 7 else 'warning' if lead.days_left <= 14 else 'info' }}" style="font-size: 0.75rem;">
+                                {{ lead.deadline[:15] }}
                             </strong>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted">Services:</small><br>
-                            <small>{{ lead.services_needed }}</small>
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Services:</small>
+                            <small style="font-size: 0.7rem;">{{ lead.services_needed[:25] }}</small>
                         </div>
                     </div>
                     
-                    <div class="mb-2">
-                        <small class="text-muted">Requirements:</small><br>
-                        <small class="text-info">{{ lead.requirements[:100] }}...</small>
+                    {% if lead.lead_type in ['commercial_request', 'residential_request'] %}
+                    <div class="alert alert-warning p-2 mb-2" style="font-size: 0.7rem;">
+                        <strong><i class="fas fa-star"></i> Direct Client Lead!</strong><br>
+                        Contact info included when you access this lead.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-1">
+                        <small class="text-muted" style="font-size: 0.65rem;">Requirements:</small><br>
+                        <small class="text-info" style="font-size: 0.7rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ lead.requirements[:100] }}
+                        </small>
                     </div>
                 </div>
                 
-                <div class="card-footer bg-transparent border-0">
-                    <div class="d-grid gap-2">
-                        <div class="btn-group" role="group">
-                            {% if lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
-                            <a href="{{ lead.application_url }}" target="_blank" 
-                               class="btn btn-success btn-sm apply-link"
-                               data-lead-id="{{ lead.id }}"
-                               data-lead-title="{{ lead.title }}"
-                               onclick="trackApplyClick(event, '{{ lead.application_url }}', '{{ lead.title }}')"
-                               title="{% if lead.lead_type == 'government' %}Apply directly on government website{% else %}Visit business website{% endif %}">
-                                <i class="fas fa-external-link-alt"></i> {% if lead.lead_type == 'government' %}Apply Now{% else %}Visit Website{% endif %}
-                            </a>
-                            {% elif lead.lead_type == 'commercial' %}
-                            <button class="btn btn-outline-success btn-sm" disabled
-                                    title="Contact information available through Get Contact button">
-                                <i class="fas fa-handshake"></i> Direct Contact Only
+                <div class="card-footer bg-transparent border-0 p-2">
+                    <div class="d-grid gap-1">
+                        {% if lead.lead_type in ['commercial_request', 'residential_request'] %}
+                            <button class="btn btn-warning btn-sm" 
+                                    onclick="showContactInfo('{{ lead.id }}', '{{ lead.contact_name }}', '{{ lead.contact_email }}', '{{ lead.contact_phone }}', '{{ lead.address }}')"
+                                    style="font-size: 0.8rem; padding: 0.4rem;">
+                                <i class="fas fa-phone"></i> Get Contact Info
                             </button>
-                            {% endif %}
+                        {% elif lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
+                            <a href="{{ lead.application_url }}" target="_blank" 
+                               class="btn btn-success btn-sm"
+                               style="font-size: 0.8rem; padding: 0.4rem;">
+                                <i class="fas fa-external-link-alt"></i> {% if lead.lead_type == 'government' %}Apply{% else %}Visit{% endif %}
+                            </a>
+                        {% elif lead.lead_type == 'commercial' %}
                             <button class="btn btn-primary btn-sm" 
-                                    onclick="accessContactInfo('{{ lead.id }}', '{{ lead.title }}', '{{ lead.lead_type }}')">
+                                    onclick="accessContactInfo('{{ lead.id }}', '{{ lead.title }}', '{{ lead.lead_type }}')"
+                                    style="font-size: 0.8rem; padding: 0.4rem;">
                                 <i class="fas fa-envelope"></i> Get Contact
                             </button>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button class="btn btn-outline-info" 
-                                    onclick="requestProposalHelp('{{ lead.id }}', '{{ lead.title }}')">
-                                <i class="fas fa-hands-helping"></i> Proposal Help
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled
+                                    style="font-size: 0.8rem; padding: 0.4rem;">
+                                <i class="fas fa-info-circle"></i> Details Only
                             </button>
-                            <button class="btn btn-outline-secondary" 
-                                    onclick="shareLead('{{ lead.title }}', '{{ lead.description[:150] }}', '{{ lead.location }}')">
-                                <i class="fas fa-share-alt"></i> Share
+                        {% endif %}
+                        
+                        <div class="btn-group btn-group-sm" role="group" style="font-size: 0.75rem;">
+                            <button class="btn btn-outline-info btn-sm" 
+                                    onclick="requestProposalHelp('{{ lead.id }}', '{{ lead.title }}')"
+                                    style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">
+                                <i class="fas fa-hands-helping"></i> Help
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" 
+                                    onclick="shareLead('{{ lead.title }}', '{{ lead.description[:150] }}', '{{ lead.location }}')"
+                                    style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">
+                                <i class="fas fa-share-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -573,6 +593,82 @@ function accessContactInfo(leadId, leadTitle, leadType) {
     }
 }
 
+function showContactInfo(leadId, contactName, contactEmail, contactPhone, address) {
+    // Show modal with contact info
+    const modalHtml = `
+        <div class="modal fade" id="contactInfoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title"><i class="fas fa-star"></i> Direct Client Contact Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-check-circle"></i> Contact Info Revealed!</strong><br>
+                            This client is actively seeking cleaning services.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contact Name:</label>
+                            <p class="form-control-plaintext">${contactName}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email:</label>
+                            <p class="form-control-plaintext">
+                                <a href="mailto:${contactEmail}">${contactEmail}</a>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Phone:</label>
+                            <p class="form-control-plaintext">
+                                <a href="tel:${contactPhone}">${contactPhone}</a>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Address:</label>
+                            <p class="form-control-plaintext">${address}</p>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong><i class="fas fa-lightbulb"></i> Tip:</strong> Contact them promptly! Clients who submit requests are ready to hire.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="mailto:${contactEmail}" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> Send Email
+                        </a>
+                        <a href="tel:${contactPhone}" class="btn btn-success">
+                            <i class="fas fa-phone"></i> Call Now
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('contactInfoModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('contactInfoModal'));
+    modal.show();
+    
+    // Deduct credits (5 credits for contact info)
+    updateCreditsAfterRequest(5);
+    loadCustomerCredits();
+}
+
 function requestProposalHelp(leadId, leadTitle) {
     document.getElementById('helpLeadId').value = leadId;
     document.getElementById('helpLeadTitle').value = leadTitle;
@@ -676,6 +772,52 @@ style.textContent = `
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+    
+    /* Responsive card sizing */
+    @media (max-width: 1400px) {
+        .card-title {
+            font-size: 0.85rem !important;
+        }
+        .card-body {
+            padding: 0.75rem !important;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .lead-card {
+            margin-bottom: 1rem !important;
+        }
+        .col-xl-3, .col-lg-4 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .col-xl-3, .col-lg-4, .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .card-title {
+            font-size: 0.95rem !important;
+        }
+    }
+    
+    /* Compact card styling */
+    .card {
+        overflow: hidden;
+    }
+    
+    .card-title, .card-text, .card-body p, .card-body small {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Badge styling for cleaning requests */
+    .border-warning {
+        border-left: 4px solid #ffc107 !important;
     }
 `;
 document.head.appendChild(style);

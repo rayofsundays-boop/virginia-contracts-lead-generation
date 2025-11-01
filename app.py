@@ -2139,6 +2139,28 @@ def customer_leads():
             ORDER BY commercial_opportunities.id DESC
         ''')).fetchall()
         
+        # Get commercial cleaning requests (businesses looking for cleaners)
+        commercial_requests = db.session.execute(text('''
+            SELECT 
+                id, business_name, contact_name, email, phone, address, city, zip_code,
+                business_type, square_footage, frequency, services_needed, 
+                special_requirements, budget_range, start_date, urgency, status, created_at
+            FROM commercial_lead_requests 
+            WHERE status = 'open'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        # Get residential cleaning requests (homeowners looking for cleaners)
+        residential_requests = db.session.execute(text('''
+            SELECT 
+                id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
+                square_footage, contact_email, contact_phone, estimated_value, 
+                cleaning_frequency, services_needed, special_requirements, status, created_at
+            FROM residential_leads 
+            WHERE status = 'new'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
     # Combine and format leads
         all_leads = []
         
@@ -2187,6 +2209,56 @@ def customer_leads():
                 'status': lead[12],
                 'requirements': lead[13] or 'Standard commercial cleaning requirements.',
                 'days_left': 30  # Commercial leads are ongoing
+            }
+            all_leads.append(lead_dict)
+        
+        # Add commercial cleaning requests (businesses seeking cleaners)
+        for req in commercial_requests:
+            lead_dict = {
+                'id': f"comreq_{req[0]}",
+                'title': f"Commercial Cleaning Needed - {req[1]}",
+                'agency': req[8],  # business_type
+                'location': f"{req[6]}, VA {req[7]}",  # city, zip
+                'description': f"{req[1]} is seeking professional cleaning services. {req[11]} | Frequency: {req[10]} | Special: {req[12] or 'None'}",
+                'contract_value': req[13] or 'Contact for quote',  # budget_range
+                'deadline': req[14] or 'ASAP',  # start_date
+                'naics_code': '',
+                'date_posted': req[17],  # created_at
+                'application_url': None,
+                'lead_type': 'commercial_request',
+                'services_needed': req[11],
+                'status': 'NEW - Client Seeking Services',
+                'requirements': f"Contact: {req[2]} | Phone: {req[4]} | Email: {req[3]} | Square Footage: {req[9]} sq ft | Urgency: {req[15]}",
+                'days_left': 7,  # Urgent leads
+                'contact_name': req[2],
+                'contact_email': req[3],
+                'contact_phone': req[4],
+                'address': req[5]
+            }
+            all_leads.append(lead_dict)
+        
+        # Add residential cleaning requests (homeowners seeking cleaners)
+        for req in residential_requests:
+            lead_dict = {
+                'id': f"resreq_{req[0]}",
+                'title': f"Residential Cleaning Needed - {req[5]} in {req[3]}",  # property_type, city
+                'agency': 'Homeowner',
+                'location': f"{req[3]}, VA {req[4]}",  # city, zip
+                'description': f"{req[1]} needs {req[13]} services for their {req[5]}. {req[6]} bed, {req[7]} bath | {req[8]} sq ft | Frequency: {req[12]}",
+                'contract_value': req[11] or 'Contact for quote',  # estimated_value
+                'deadline': 'ASAP',
+                'naics_code': '',
+                'date_posted': req[16],  # created_at
+                'application_url': None,
+                'lead_type': 'residential_request',
+                'services_needed': req[13],
+                'status': 'NEW - Client Seeking Services',
+                'requirements': f"Contact: {req[1]} | Phone: {req[10]} | Email: {req[9]} | Special: {req[14] or 'None'}",
+                'days_left': 7,  # Urgent leads
+                'contact_name': req[1],
+                'contact_email': req[9],
+                'contact_phone': req[10],
+                'address': req[2]
             }
             all_leads.append(lead_dict)
         
