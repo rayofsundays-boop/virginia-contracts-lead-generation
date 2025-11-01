@@ -336,47 +336,6 @@
                         </a>
                     </li>
                     
-                    {% if session.get('user_email') %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="leadsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-fire"></i> Opportunities
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="leadsDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('lead_marketplace') }}">
-                                    <i class="fas fa-shopping-cart me-2"></i>Lead Marketplace
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('educational_contracts') }}">
-                                    <i class="fas fa-graduation-cap me-2"></i>College & University Contracts
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('industry_days') }}">
-                                    <i class="fas fa-calendar-alt me-2"></i>Industry Days & Events
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('property_management_companies') }}">
-                                    <i class="fas fa-building me-2"></i>Property Management Companies
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('bulk_products') }}">
-                                    <i class="fas fa-boxes me-2"></i>Bulk Products
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('bulk_purchasing') }}">
-                                    <i class="fas fa-warehouse me-2"></i>Bulk Purchasing Portal
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
                     <!-- Partnerships & Resources - Available to Everyone -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('partnerships') }}">
