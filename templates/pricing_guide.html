@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing Guide - Subscriber Resource{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">💰 Comprehensive Pricing Guide</h1>
+        <p class="lead text-white fs-3">Win more bids with data-driven pricing strategies</p>
+        <span class="badge bg-warning text-dark fs-5 px-4 py-2">Subscriber Exclusive</span>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Pricing Tables Section -->
+    <div class="alert alert-success mb-5">
+        <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How to Use This Guide</h4>
+        <p class="mb-0">These rates are based on 2024-2025 Virginia market research including government contracts, commercial bids, and industry surveys. Adjust for your specific overhead, profit margin, and local competition.</p>
+    </div>
+
+    <!-- Office Building Rates -->
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-primary text-white py-3">
+            <h2 class="mb-0"><i class="fas fa-building me-2"></i>Office Buildings & Commercial Spaces</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="text-primary mb-3">Square Footage Rates (per sq ft/month)</h4>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Building Size</th>
+                            <th>Basic Service</th>
+                            <th>Standard Service</th>
+                            <th>Premium Service</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Under 10,000 sq ft</strong></td>
+                            <td>$0.15 - $0.20</td>
+                            <td>$0.20 - $0.28</td>
+                            <td>$0.28 - $0.35</td>
+                        </tr>
+                        <tr>
+                            <td><strong>10,000 - 25,000 sq ft</strong></td>
+                            <td>$0.12 - $0.17</td>
+                            <td>$0.17 - $0.24</td>
+                            <td>$0.24 - $0.30</td>
+                        </tr>
+                        <tr>
+                            <td><strong>25,000 - 50,000 sq ft</strong></td>
+                            <td>$0.10 - $0.15</td>
+                            <td>$0.15 - $0.22</td>
+                            <td>$0.22 - $0.28</td>
+                        </tr>
+                        <tr>
+                            <td><strong>50,000 - 100,000 sq ft</strong></td>
+                            <td>$0.08 - $0.12</td>
+                            <td>$0.12 - $0.18</td>
+                            <td>$0.18 - $0.25</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Over 100,000 sq ft</strong></td>
+                            <td>$0.06 - $0.10</td>
+                            <td>$0.10 - $0.15</td>
+                            <td>$0.15 - $0.22</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-primary">Basic Service Includes:</h6>
+                            <ul class="small mb-0">
+                                <li>Empty trash (3x/week)</li>
+                                <li>Vacuum high-traffic areas</li>
+                                <li>Restroom cleaning</li>
+                                <li>Spot clean glass/doors</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-success">Standard Service Includes:</h6>
+                            <ul class="small mb-0">
+                                <li>Daily trash removal</li>
+                                <li>Daily vacuum all areas</li>
+                                <li>Daily restroom service</li>
+                                <li>Dust surfaces</li>
+                                <li>Mop hard floors</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-warning">Premium Service Includes:</h6>
+                            <ul class="small mb-0">
+                                <li>All standard services</li>
+                                <li>Detail dusting all surfaces</li>
+                                <li>High/low dusting weekly</li>
+                                <li>Kitchen deep clean</li>
+                                <li>Window cleaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Facilities -->
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-danger text-white py-3">
+            <h2 class="mb-0"><i class="fas fa-hospital me-2"></i>Medical Facilities & Healthcare</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="text-danger mb-3">Specialized Healthcare Cleaning Rates</h4>
+            
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Medical facilities require specialized training, EPA-registered disinfectants, and strict protocols. Rates are 20-35% higher than standard commercial.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Facility Type</th>
+                            <th>Rate Range (per sq ft/month)</th>
+                            <th>Minimum Monthly</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Doctor's Office / Clinic</td>
+                            <td>$0.25 - $0.40</td>
+                            <td>$800</td>
+                        </tr>
+                        <tr>
+                            <td>Dental Office</td>
+                            <td>$0.30 - $0.45</td>
+                            <td>$900</td>
+                        </tr>
+                        <tr>
+                            <td>Urgent Care / Surgery Center</td>
+                            <td>$0.35 - $0.50</td>
+                            <td>$1,500</td>
+                        </tr>
+                        <tr>
+                            <td>Hospital (Non-Patient Areas)</td>
+                            <td>$0.20 - $0.35</td>
+                            <td>$5,000</td>
+                        </tr>
+                        <tr>
+                            <td>Hospital (Patient Care Areas)</td>
+                            <td>$0.40 - $0.60</td>
+                            <td>$10,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schools & Education -->
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-info text-white py-3">
+            <h2 class="mb-0"><i class="fas fa-school me-2"></i>Schools & Educational Facilities</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="text-info mb-3">Education Sector Pricing</h4>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Facility Type</th>
+                            <th>Daily Cleaning</th>
+                            <th>3x Week</th>
+                            <th>Summer Deep Clean</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Elementary School (per sq ft/month)</td>
+                            <td>$0.12 - $0.18</td>
+                            <td>$0.08 - $0.12</td>
+                            <td>$0.05 - $0.08 (one-time)</td>
+                        </tr>
+                        <tr>
+                            <td>Middle/High School (per sq ft/month)</td>
+                            <td>$0.10 - $0.15</td>
+                            <td>$0.07 - $0.10</td>
+                            <td>$0.04 - $0.07 (one-time)</td>
+                        </tr>
+                        <tr>
+                            <td>University Buildings (per sq ft/month)</td>
+                            <td>$0.09 - $0.14</td>
+                            <td>$0.06 - $0.09</td>
+                            <td>$0.04 - $0.06 (one-time)</td>
+                        </tr>
+                        <tr>
+                            <td>Dormitories (per sq ft/month)</td>
+                            <td>$0.15 - $0.22</td>
+                            <td>$0.10 - $0.15</td>
+                            <td>$0.08 - $0.12 (one-time)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Labor Cost Calculator -->
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-success text-white py-3">
+            <h2 class="mb-0"><i class="fas fa-calculator me-2"></i>Labor Cost Calculator</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="text-success mb-3">How to Calculate Your Labor Costs</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold">Virginia Cleaning Labor Rates (2024-2025)</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Entry-Level Cleaner</span>
+                            <strong>$14 - $16/hour</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Experienced Cleaner</span>
+                            <strong>$16 - $19/hour</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Team Lead/Supervisor</span>
+                            <strong>$19 - $24/hour</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Site Manager</span>
+                            <strong>$24 - $32/hour</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="fw-bold">Fully Burdened Rate Formula</h5>
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-2"><strong>Base Wage:</strong> $16.00/hour</p>
+                        <p class="mb-2"><strong>+ Payroll Taxes (7.65%):</strong> $1.22</p>
+                        <p class="mb-2"><strong>+ Workers Comp (4-8%):</strong> $0.96</p>
+                        <p class="mb-2"><strong>+ Benefits (15%):</strong> $2.40</p>
+                        <p class="mb-2"><strong>+ Insurance/Other (5%):</strong> $0.80</p>
+                        <hr>
+                        <p class="mb-0 fw-bold fs-5"><strong>Fully Burdened Rate:</strong> $21.38/hour</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <h6 class="fw-bold">Industry Standard Multipliers:</h6>
+                <ul class="mb-0">
+                    <li><strong>Overhead Multiplier:</strong> 1.35 - 1.50 (covers management, admin, supplies)</li>
+                    <li><strong>Profit Margin:</strong> 10-20% (government) | 15-25% (commercial)</li>
+                    <li><strong>Example:</strong> $21.38 × 1.40 overhead × 1.15 profit = <strong>$34.42/hour billing rate</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specialty Services Pricing -->
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-warning text-dark py-3">
+            <h2 class="mb-0"><i class="fas fa-tools me-2"></i>Specialty Services Add-Ons</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-primary mb-3">Floor Care</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Strip & Wax (VCT): $0.50 - $0.75/sq ft</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Carpet Cleaning: $0.15 - $0.25/sq ft</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Tile & Grout Cleaning: $0.75 - $1.25/sq ft</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Concrete Polishing: $1.50 - $3.00/sq ft</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-primary mb-3">Window & Exterior</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Interior Windows: $4 - $8 per window</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Exterior Windows (ground): $6 - $12 per window</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>High-Rise Windows: $15 - $30 per window</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Pressure Washing: $0.15 - $0.40/sq ft</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bid Strategy Guide -->
+    <div class="card mb-5 shadow border-primary">
+        <div class="card-header bg-primary text-white py-3">
+            <h2 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Bid Strategy Guide</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="text-primary mb-3">How to Price Competitively</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-check-circle me-2"></i>Price Lower When:</h5>
+                            <ul class="mb-0">
+                                <li>You need to break into a new market</li>
+                                <li>Building has economies of scale (large, simple layout)</li>
+                                <li>Multiple buildings in same complex</li>
+                                <li>You have excess capacity/crews</li>
+                                <li>Long-term contract (3+ years)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-danger text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-arrow-up me-2"></i>Price Higher When:</h5>
+                            <ul class="mb-0">
+                                <li>Specialized requirements (healthcare, labs)</li>
+                                <li>After-hours or weekend work required</li>
+                                <li>Complex layout or difficult access</li>
+                                <li>High security clearance needed</li>
+                                <li>Short-term or on-demand services</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-4">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Common Pricing Mistakes to Avoid</h5>
+                <ol class="mb-0">
+                    <li><strong>Underbidding:</strong> Don't go below 10% profit margin just to win</li>
+                    <li><strong>Forgetting supplies:</strong> Add 3-5% for consumables</li>
+                    <li><strong>No contingency:</strong> Include 5% buffer for unexpected costs</li>
+                    <li><strong>Ignoring prevailing wage:</strong> Check if Davis-Bacon wages apply</li>
+                    <li><strong>Not visiting site:</strong> Always walk the space before bidding</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Reference Card -->
+    <div class="card bg-primary text-white shadow-lg">
+        <div class="card-body text-center py-4">
+            <h3 class="mb-3">Quick Reference: Typical Government Contract Rates in Virginia</h3>
+            <div class="row">
+                <div class="col-md-3">
+                    <h4 class="fw-bold">$0.10 - $0.15</h4>
+                    <p class="mb-0">Large Office (100k+ sq ft)</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="fw-bold">$0.15 - $0.25</h4>
+                    <p class="mb-0">Mid-Size Office/School</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="fw-bold">$0.25 - $0.40</h4>
+                    <p class="mb-0">Small Office/Medical</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="fw-bold">$20 - $35</h4>
+                    <p class="mb-0">Hourly Billing Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.display-2 {
+    font-size: 4.5rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+</style>
+{% endblock %}

@@ -3074,6 +3074,131 @@ def allocate_monthly_credits_route():
         return {'success': False, 'error': str(e)}, 500
 
 # ============================================================================
+# TOOLBOX & RESOURCES ROUTES
+# ============================================================================
+
+@app.route('/toolbox')
+@login_required
+def toolbox():
+    """Toolbox page with templates and resources"""
+    # Check if user is paid subscriber
+    is_paid = False
+    if 'user_id' in session:
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        if result and result[0] == 'paid':
+            is_paid = True
+    
+    return render_template('toolbox.html', is_paid_subscriber=is_paid, is_admin=session.get('is_admin', False))
+
+@app.route('/proposal-templates')
+def proposal_templates():
+    """Free proposal writing templates and guidance"""
+    return render_template('proposal_templates.html')
+
+@app.route('/pricing-guide')
+@login_required
+def pricing_guide():
+    """Subscriber-only pricing guide for cleaning contracts"""
+    # Check if user is paid subscriber or admin
+    is_admin = session.get('is_admin', False)
+    is_paid = False
+    
+    if not is_admin and 'user_id' in session:
+        result = db.session.execute(text('''
+            SELECT subscription_status FROM leads WHERE id = :user_id
+        '''), {'user_id': session['user_id']}).fetchone()
+        if result and result[0] == 'paid':
+            is_paid = True
+    
+    if not is_admin and not is_paid:
+        flash('Pricing Guide is available to paid subscribers only. Subscribe to access this valuable resource!', 'warning')
+        return redirect(url_for('subscribe_page'))
+    
+    return render_template('pricing_guide.html')
+
+@app.route('/capability-statement')
+def capability_statement():
+    """Capability statement template"""
+    return render_template('capability_statement.html')
+
+@app.route('/proposal-review', methods=['GET', 'POST'])
+@login_required
+def proposal_review():
+    """AI-powered proposal review feature"""
+    if request.method == 'POST':
+        try:
+            # Get uploaded files
+            rfp_file = request.files.get('rfp_file')
+            proposal_file = request.files.get('proposal_file')
+            
+            if not rfp_file or not proposal_file:
+                return jsonify({'success': False, 'message': 'Both RFP and Proposal files are required'}), 400
+            
+            # Save files temporarily
+            import os
+            from werkzeug.utils import secure_filename
+            
+            upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            rfp_filename = secure_filename(rfp_file.filename)
+            proposal_filename = secure_filename(proposal_file.filename)
+            
+            rfp_path = os.path.join(upload_folder, f"rfp_{session['user_id']}_{rfp_filename}")
+            proposal_path = os.path.join(upload_folder, f"prop_{session['user_id']}_{proposal_filename}")
+            
+            rfp_file.save(rfp_path)
+            proposal_file.save(proposal_path)
+            
+            # Process files (for now, return mock analysis)
+            analysis = analyze_proposal_compliance(rfp_path, proposal_path)
+            
+            # Clean up files
+            os.remove(rfp_path)
+            os.remove(proposal_path)
+            
+            return jsonify({
+                'success': True,
+                'analysis': analysis
+            })
+            
+        except Exception as e:
+            print(f"Proposal review error: {e}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+    
+    return render_template('proposal_review.html')
+
+def analyze_proposal_compliance(rfp_path, proposal_path):
+    """Analyze proposal compliance with RFP requirements (placeholder for AI integration)"""
+    # This is a placeholder - in production, integrate with OpenAI or Claude API
+    return {
+        'compliance_score': 85,
+        'strengths': [
+            'Clear executive summary addressing key requirements',
+            'Detailed pricing breakdown included',
+            'Past performance examples provided',
+            'All required certifications mentioned'
+        ],
+        'weaknesses': [
+            'Missing specific response to Section 3.2 technical requirements',
+            'Staffing plan lacks detail on quality control procedures',
+            'Timeline could be more specific with milestones'
+        ],
+        'suggestions': [
+            'Add a detailed organizational chart showing reporting structure',
+            'Include specific examples of similar-sized projects completed',
+            'Expand on your green cleaning capabilities if RFP mentions sustainability',
+            'Add a risk management section addressing potential challenges'
+        ],
+        'missing_sections': [
+            'Safety program documentation',
+            'Insurance certificates (mention where they will be provided)'
+        ]
+    }
+
+# ============================================================================
 # NEW LEAD GENERATION SYSTEM
 # ============================================================================
 

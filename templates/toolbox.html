@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Resource Toolbox - Virginia Contracts{% endblock %}
+
+{% block content %}
+<!-- Toolbox Hero with Enhanced Title -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">📋 Resource Toolbox</h1>
+        <p class="lead text-white fs-3">Templates, guides, and tools to win more contracts</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Free Resources Section -->
+    <div class="mb-5">
+        <h2 class="display-5 fw-bold text-primary mb-4">🎁 Free Resources</h2>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-primary shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-file-alt fa-3x text-primary me-3"></i>
+                            <h3 class="mb-0">Proposal Templates</h3>
+                        </div>
+                        <p class="text-muted mb-3">Free proposal writing templates and guidance for government and commercial cleaning contracts</p>
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i> Executive Summary Template</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Technical Approach Guide</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Past Performance Format</li>
+                        </ul>
+                        <a href="{{ url_for('proposal_templates') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-download me-2"></i>Access Templates
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-info shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-certificate fa-3x text-info me-3"></i>
+                            <h3 class="mb-0">Capability Statement</h3>
+                        </div>
+                        <p class="text-muted mb-3">Professional capability statement template to showcase your company's qualifications</p>
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i> One-page format</li>
+                            <li><i class="fas fa-check text-success me-2"></i> NAICS codes section</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Past performance showcase</li>
+                        </ul>
+                        <a href="{{ url_for('capability_statement') }}" class="btn btn-info btn-lg w-100">
+                            <i class="fas fa-file-download me-2"></i>Get Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Subscriber Resources -->
+    <div class="mb-5">
+        <h2 class="display-5 fw-bold text-success mb-4">
+            <i class="fas fa-star"></i> Premium Resources
+            {% if not is_paid_subscriber and not is_admin %}
+                <span class="badge bg-warning text-dark ms-2">Subscribers Only</span>
+            {% endif %}
+        </h2>
+        
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-success shadow-sm {% if is_paid_subscriber or is_admin %}hover-lift{% else %}opacity-75{% endif %}">
+                    {% if not is_paid_subscriber and not is_admin %}
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.9); z-index: 10;">
+                        <div class="text-center">
+                            <i class="fas fa-lock fa-4x text-warning mb-3"></i>
+                            <h4>Subscribe to Unlock</h4>
+                            <a href="{{ url_for('subscribe_page') }}" class="btn btn-success">Subscribe Now</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-dollar-sign fa-3x text-success me-3"></i>
+                            <h3 class="mb-0">Pricing Guide</h3>
+                        </div>
+                        <p class="text-muted mb-3">Comprehensive pricing guide for cleaning contracts by region, building type, and service level</p>
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i> Square footage rates</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Labor cost calculations</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Profit margin guidance</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Competitive analysis</li>
+                        </ul>
+                        {% if is_paid_subscriber or is_admin %}
+                        <a href="{{ url_for('pricing_guide') }}" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-unlock me-2"></i>View Pricing Guide
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary btn-lg w-100" disabled>
+                            <i class="fas fa-lock me-2"></i>Locked
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-warning shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-robot fa-3x text-warning me-3"></i>
+                            <h3 class="mb-0">AI Proposal Review</h3>
+                        </div>
+                        <p class="text-muted mb-3">Upload your RFP and proposal for AI-powered compliance check and enhancement suggestions</p>
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i> Compliance scoring</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Missing sections detection</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Enhancement recommendations</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Instant feedback</li>
+                        </ul>
+                        <a href="{{ url_for('proposal_review') }}" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-magic me-2"></i>Review My Proposal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Resources -->
+    <div class="alert alert-info">
+        <h4 class="alert-heading"><i class="fas fa-lightbulb me-2"></i>Pro Tip</h4>
+        <p class="mb-0">Combine these resources to create winning proposals! Start with the capability statement, use pricing guide for accurate bids, and run your final proposal through the AI review before submission.</p>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+}
+
+.display-2 {
+    font-size: 4.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.display-5 {
+    font-size: 2.5rem;
+}
+</style>
+{% endblock %}

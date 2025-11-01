@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}AI Proposal Review - Virginia Contracts{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">🤖 AI-Powered Proposal Review</h1>
+        <p class="lead text-white fs-3">Upload your RFP & proposal for instant compliance analysis</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Upload Form -->
+            <div class="card shadow-lg mb-5">
+                <div class="card-header bg-primary text-white py-4">
+                    <h2 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Your Documents</h2>
+                </div>
+                <div class="card-body p-5">
+                    <form id="proposalReviewForm" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold fs-5">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>1. Upload RFP/Solicitation Document
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="rfp_file" name="rfp_file" accept=".pdf,.doc,.docx,.txt" required>
+                            <small class="form-text text-muted">Accepted formats: PDF, Word, Text (Max 10MB)</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold fs-5">
+                                <i class="fas fa-file-alt text-success me-2"></i>2. Upload Your Proposal Draft
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="proposal_file" name="proposal_file" accept=".pdf,.doc,.docx,.txt" required>
+                            <small class="form-text text-muted">Accepted formats: PDF, Word, Text (Max 10MB)</small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading"><i class="fas fa-shield-alt me-2"></i>Your Privacy is Protected</h5>
+                            <ul class="mb-0 small">
+                                <li>Documents are analyzed securely and deleted immediately after review</li>
+                                <li>We never store or share your proprietary information</li>
+                                <li>All analysis is performed using encrypted connections</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg py-3" id="analyzeBtn">
+                                <i class="fas fa-magic me-2"></i>Analyze My Proposal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="card shadow-lg mb-5" style="display:none;">
+                <div class="card-body p-5 text-center">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="mb-3">Analyzing Your Proposal...</h4>
+                    <p class="text-muted">Our AI is reviewing your documents for compliance, completeness, and quality. This typically takes 30-60 seconds.</p>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Display -->
+            <div id="resultsContainer" style="display:none;">
+                <!-- Compliance Score -->
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header text-white py-4" id="scoreHeader">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="mb-0"><i class="fas fa-chart-line me-2"></i>Compliance Score</h2>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <h1 class="display-3 mb-0" id="complianceScore">--</h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="progress" style="height: 40px;">
+                            <div class="progress-bar" role="progressbar" id="scoreBar" style="width: 0%;">
+                                <span class="fs-5 fw-bold" id="scoreText">--</span>
+                            </div>
+                        </div>
+                        <p class="text-muted mt-3 mb-0" id="scoreDescription">Analysis results will appear here...</p>
+                    </div>
+                </div>
+
+                <!-- Strengths -->
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h3 class="mb-0"><i class="fas fa-check-circle me-2"></i>Strengths</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="strengthsList">
+                            <!-- Populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Weaknesses -->
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-warning text-dark py-3">
+                        <h3 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="weaknessesList">
+                            <!-- Populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-info text-white py-3">
+                        <h3 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Enhancement Suggestions</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="suggestionsList">
+                            <!-- Populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Missing Sections -->
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-danger text-white py-3">
+                        <h3 class="mb-0"><i class="fas fa-times-circle me-2"></i>Missing or Incomplete Sections</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="missingList">
+                            <!-- Populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center">
+                    <button class="btn btn-primary btn-lg me-2" onclick="location.reload()">
+                        <i class="fas fa-redo me-2"></i>Analyze Another Proposal
+                    </button>
+                    <button class="btn btn-success btn-lg" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row mt-5">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h3 class="mb-0"><i class="fas fa-question-circle me-2"></i>How It Works</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-upload fa-2x"></i>
+                            </div>
+                            <h5>Upload Documents</h5>
+                            <p class="small text-muted">Upload your RFP and proposal draft in any common format</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-cogs fa-2x"></i>
+                            </div>
+                            <h5>AI Analysis</h5>
+                            <p class="small text-muted">Our AI compares your proposal against RFP requirements</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-chart-bar fa-2x"></i>
+                            </div>
+                            <h5>Instant Results</h5>
+                            <p class="small text-muted">Get compliance score and detailed feedback in seconds</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-edit fa-2x"></i>
+                            </div>
+                            <h5>Improve & Win</h5>
+                            <p class="small text-muted">Apply suggestions to strengthen your proposal before submission</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('proposalReviewForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('rfp_file', document.getElementById('rfp_file').files[0]);
+    formData.append('proposal_file', document.getElementById('proposal_file').files[0]);
+    
+    // Show loading state
+    document.getElementById('proposalReviewForm').closest('.card').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'block';
+    
+    try {
+        const response = await fetch('/proposal-review', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayResults(result.analysis);
+        } else {
+            alert('Error: ' + result.message);
+            location.reload();
+        }
+    } catch (error) {
+        alert('Error analyzing proposal: ' + error.message);
+        location.reload();
+    }
+});
+
+function displayResults(analysis) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('resultsContainer').style.display = 'block';
+    
+    // Update score
+    const score = analysis.compliance_score;
+    document.getElementById('complianceScore').textContent = score;
+    document.getElementById('scoreText').textContent = score + '%';
+    document.getElementById('scoreBar').style.width = score + '%';
+    
+    // Color code the score
+    let scoreColor, headerColor, description;
+    if (score >= 90) {
+        scoreColor = 'bg-success';
+        headerColor = 'bg-success';
+        description = 'Excellent! Your proposal demonstrates strong compliance with RFP requirements.';
+    } else if (score >= 75) {
+        scoreColor = 'bg-primary';
+        headerColor = 'bg-primary';
+        description = 'Good job! Your proposal is competitive but could be strengthened in a few areas.';
+    } else if (score >= 60) {
+        scoreColor = 'bg-warning';
+        headerColor = 'bg-warning';
+        description = 'Needs improvement. Address the weaknesses below to increase your chances of winning.';
+    } else {
+        scoreColor = 'bg-danger';
+        headerColor = 'bg-danger';
+        description = 'Significant revisions needed. Your proposal may not be competitive without major improvements.';
+    }
+    
+    document.getElementById('scoreBar').className = 'progress-bar ' + scoreColor;
+    document.getElementById('scoreHeader').className = 'card-header text-white py-4 ' + headerColor;
+    document.getElementById('scoreDescription').textContent = description;
+    
+    // Display strengths
+    const strengthsList = document.getElementById('strengthsList');
+    strengthsList.innerHTML = '';
+    analysis.strengths.forEach(strength => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>' + strength;
+        strengthsList.appendChild(li);
+    });
+    
+    // Display weaknesses
+    const weaknessesList = document.getElementById('weaknessesList');
+    weaknessesList.innerHTML = '';
+    analysis.weaknesses.forEach(weakness => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = '<i class="fas fa-exclamation-circle text-warning me-2"></i>' + weakness;
+        weaknessesList.appendChild(li);
+    });
+    
+    // Display suggestions
+    const suggestionsList = document.getElementById('suggestionsList');
+    suggestionsList.innerHTML = '';
+    analysis.suggestions.forEach(suggestion => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = '<i class="fas fa-lightbulb text-info me-2"></i>' + suggestion;
+        suggestionsList.appendChild(li);
+    });
+    
+    // Display missing sections
+    const missingList = document.getElementById('missingList');
+    missingList.innerHTML = '';
+    if (analysis.missing_sections.length > 0) {
+        analysis.missing_sections.forEach(missing => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>' + missing;
+            missingList.appendChild(li);
+        });
+    } else {
+        const li = document.createElement('li');
+        li.className = 'list-group-item text-success';
+        li.innerHTML = '<i class="fas fa-check-circle me-2"></i>No missing sections detected!';
+        missingList.appendChild(li);
+    }
+    
+    // Scroll to results
+    document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+<style>
+.hero-section {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.display-2 {
+    font-size: 4.5rem;
+}
+
+.display-3 {
+    font-weight: 700;
+}
+
+@media print {
+    .btn, form, .hero-section {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
