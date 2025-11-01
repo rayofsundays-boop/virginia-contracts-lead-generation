@@ -2409,11 +2409,14 @@ def track_click():
 def customer_leads():
     """Customer portal for accessing all leads with advanced features"""
     try:
+        # Check if user is admin - admins get unlimited access
+        is_admin = session.get('is_admin', False)
+        
         # Check if user has credits
         user_credits = session.get('credits_balance', 0)
         
-        # If no credits, show payment prompt instead of leads
-        if user_credits == 0:
+        # If no credits and not admin, show payment prompt instead of leads
+        if user_credits == 0 and not is_admin:
             return render_template('customer_leads.html', all_leads=[], show_payment_prompt=True)
         
         # Get all available leads (both government and commercial)
@@ -4849,6 +4852,10 @@ def quick_wins():
         if result and result[0] == 'paid':
             is_paid = True
     
+    # Admin gets full access
+    if is_admin:
+        is_paid = True
+    
     # Build query
     where_conditions = ["urgency IN ('emergency', 'urgent', 'soon')"]
     params = {}
@@ -4926,6 +4933,10 @@ def bulk_products():
         '''), {'user_id': session['user_id']}).fetchone()
         if result and result[0] == 'paid':
             is_paid = True
+    
+    # Admin gets full access
+    if is_admin:
+        is_paid = True
     
     # Build query
     where_conditions = ["status = 'open'"]

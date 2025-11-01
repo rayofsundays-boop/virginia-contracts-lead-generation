@@ -354,10 +354,10 @@
                         </a>
                     </li>
                     {% else %}
-                    <!-- Show Sign In prompt for non-authenticated users -->
+                    <!-- Show Register/Sign In button for non-authenticated users -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth') }}" title="Sign in to access Customer Portal">
-                            <i class="fas fa-sign-in-alt"></i> Sign In to Access Portal
+                        <a class="nav-link btn btn-outline-light px-3 mx-2" href="{{ url_for('auth') }}" style="border-radius: 50px;">
+                            <i class="fas fa-user-plus"></i> Register / Sign In
                         </a>
                     </li>
                     {% endif %}
@@ -367,14 +367,6 @@
                             <i class="fas fa-clipboard-check"></i> Assessment
                         </a>
                     </li>
-                    
-                    {% if not session.get('user_email') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth') }}#register">
-                            <i class="fas fa-user-plus"></i> Register
-                        </a>
-                    </li>
-                    {% endif %}
                     
                 </ul>
             </div>
