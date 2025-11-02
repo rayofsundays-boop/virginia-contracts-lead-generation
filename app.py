@@ -403,6 +403,70 @@ def clear_all_dashboard_cache():
         print(f"Cache clear error: {e}")
         return False
 
+# Lightweight app settings helpers (persisted in DB)
+def _ensure_settings_table():
+    """Create system_settings table if it doesn't exist (idempotent)."""
+    try:
+        db.session.execute(text('''
+            CREATE TABLE IF NOT EXISTS system_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        '''))
+        db.session.commit()
+    except Exception:
+        # Ignore create errors to avoid breaking app if permissions differ
+        db.session.rollback()
+
+def get_setting(key: str):
+    """Get a setting value from system_settings."""
+    try:
+        _ensure_settings_table()
+        return db.session.execute(
+            text('SELECT value FROM system_settings WHERE key = :key'),
+            {'key': key}
+        ).scalar()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return None
+
+def set_setting(key: str, value: str):
+    """Upsert a setting value into system_settings."""
+    try:
+        _ensure_settings_table()
+        db.session.execute(text('''
+            INSERT INTO system_settings (key, value, updated_at)
+            VALUES (:key, :value, CURRENT_TIMESTAMP)
+            ON CONFLICT (key)
+            DO UPDATE SET value = :value, updated_at = CURRENT_TIMESTAMP
+        '''), {'key': key, 'value': value})
+        db.session.commit()
+        return True
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return False
+
+def supply_refresh_due(hours:int = 24) -> bool:
+    """Return True if supply_contracts should be refreshed (older than hours)."""
+    try:
+        last = get_setting('supply_last_populated_at')
+        if not last:
+            return True
+        try:
+            last_dt = datetime.fromisoformat(last)
+        except Exception:
+            return True
+        return (datetime.utcnow() - last_dt) >= timedelta(hours=hours)
+    except Exception:
+        return True
+
 # Add to Jinja environment
 app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
 
@@ -6689,6 +6753,13 @@ def admin_db_stats():
         except Exception as e:
             stats['leads_error'] = str(e)
         
+        # Add last refresh metadata if available
+        try:
+            stats['supply_last_populated_at'] = get_setting('supply_last_populated_at')
+            stats['supply_last_populated_count'] = get_setting('supply_populated_count')
+        except Exception:
+            pass
+        
         return jsonify(stats)
         
     except Exception as e:
@@ -6720,6 +6791,56 @@ def admin_repopulate_supply():
         print(f"❌ Error repopulating supply contracts: {error_details}")
         flash(f'❌ Error repopulating supply contracts: {str(e)}. Check server logs.', 'danger')
         return redirect(url_for('quick_wins'))
+
+@app.route('/admin/daily-refresh-supply')
+def admin_daily_refresh_supply():
+    """Admin-only: Refresh supply contracts if last run is older than 24 hours."""
+    try:
+        if not session.get('is_admin', False):
+            flash('Admin access required', 'danger')
+            return redirect(url_for('index'))
+
+        if supply_refresh_due(24):
+            print('⏰ Daily refresh due: repopulating supply_contracts...')
+            count = populate_supply_contracts(force=True)
+            clear_all_dashboard_cache()
+            flash(f'✅ Daily refresh complete. Repopulated {count} supply contracts.', 'success')
+        else:
+            last = get_setting('supply_last_populated_at') or 'unknown'
+            flash(f'ℹ️ Daily refresh skipped: last run at {last}', 'info')
+
+        return redirect(url_for('quick_wins'))
+    except Exception as e:
+        import traceback
+        print(f"❌ Daily refresh error: {traceback.format_exc()}")
+        flash(f'❌ Daily refresh failed: {str(e)}', 'danger')
+        return redirect(url_for('quick_wins'))
+
+@app.route('/cron/supply-daily')
+def cron_supply_daily():
+    """Cron endpoint: refresh supply_contracts once per day using a secret token.
+
+    Usage: GET /cron/supply-daily?token=YOUR_SECRET
+    Set CRON_SECRET in environment and configure your platform's cron to hit this.
+    """
+    try:
+        token = request.args.get('token')
+        secret = os.environ.get('CRON_SECRET')
+        if not secret:
+            return jsonify({'error': 'CRON_SECRET not configured on server'}), 500
+        if token != secret:
+            return jsonify({'error': 'Forbidden'}), 403
+
+        if supply_refresh_due(24):
+            count = populate_supply_contracts(force=True)
+            clear_all_dashboard_cache()
+            return jsonify({'success': True, 'action': 'repopulated', 'count': count})
+        else:
+            last = get_setting('supply_last_populated_at')
+            return jsonify({'success': True, 'action': 'skipped', 'last_run': last})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
 
 @app.route('/admin/clear-dashboard-cache')
 def admin_clear_cache():
@@ -8957,6 +9078,12 @@ def populate_supply_contracts(force=False):
         
         db.session.commit()
         final_count = len(supplier_requests)
+        # Record last population timestamp and count for daily refresh logic
+        try:
+            set_setting('supply_last_populated_at', datetime.utcnow().isoformat())
+            set_setting('supply_populated_count', str(final_count))
+        except Exception:
+            pass
         print(f"✅ Successfully populated {final_count} international supplier contracts")
         return final_count
         
