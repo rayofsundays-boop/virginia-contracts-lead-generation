@@ -2491,12 +2491,22 @@ def customer_dashboard():
             
             quick_wins = 0
             try:
+                # Quick Wins includes:
+                # 1. ALL open supply contracts (not just is_quick_win = TRUE)
                 quick_wins = db.session.execute(text(
-                    "SELECT COUNT(*) FROM supply_contracts WHERE is_quick_win = TRUE AND status = 'open'"
+                    "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
                 )).scalar() or 0
+                
+                # 2. Urgent/emergency commercial requests
                 quick_wins += db.session.execute(text(
                     "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
                 )).scalar() or 0
+                
+                # 3. Regular government contracts with upcoming deadlines (limit 20 as shown on quick_wins page)
+                upcoming_contracts = db.session.execute(text(
+                    "SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'"
+                )).scalar() or 0
+                quick_wins += min(upcoming_contracts, 20)  # Cap at 20 like the quick_wins route
             except:
                 pass
             
