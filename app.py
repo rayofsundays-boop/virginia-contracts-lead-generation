@@ -6629,6 +6629,66 @@ def subscription():
                          subscription_status=subscription_status,
                          credits_balance=credits_balance)
 
+@app.route('/admin/db-stats')
+def admin_db_stats():
+    """Admin-only: View database statistics"""
+    try:
+        # Check admin access
+        if not session.get('is_admin', False):
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        stats = {}
+        
+        # Count supply contracts
+        try:
+            result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+            stats['supply_contracts_total'] = result[0] if result else 0
+            
+            result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts WHERE is_quick_win = TRUE')).fetchone()
+            stats['supply_contracts_quick_wins'] = result[0] if result else 0
+            
+            result = db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'")).fetchone()
+            stats['supply_contracts_open'] = result[0] if result else 0
+        except Exception as e:
+            stats['supply_contracts_error'] = str(e)
+        
+        # Count regular contracts
+        try:
+            result = db.session.execute(text('SELECT COUNT(*) FROM contracts')).fetchone()
+            stats['contracts_total'] = result[0] if result else 0
+        except Exception as e:
+            stats['contracts_error'] = str(e)
+        
+        # Count leads
+        try:
+            result = db.session.execute(text('SELECT COUNT(*) FROM leads')).fetchone()
+            stats['leads_total'] = result[0] if result else 0
+        except Exception as e:
+            stats['leads_error'] = str(e)
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/repopulate-supply-contracts')
+def admin_repopulate_supply():
+    """Admin-only: Force repopulate supply contracts"""
+    try:
+        # Check admin access
+        if not session.get('is_admin', False):
+            flash('Admin access required', 'danger')
+            return redirect(url_for('index'))
+        
+        count = populate_supply_contracts(force=True)
+        flash(f'✅ Successfully repopulated {count} supply contracts', 'success')
+        return redirect(url_for('quick_wins'))
+        
+    except Exception as e:
+        flash(f'Error repopulating supply contracts: {str(e)}', 'danger')
+        return redirect(url_for('index'))
+
+
 @app.route('/pricing-guide')
 @login_required
 def pricing_guide():
@@ -8596,16 +8656,25 @@ def admin_reject_request():
         print(f"Error rejecting request: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-def populate_supply_contracts():
-    """Populate supply_contracts table with international supplier requests"""
+def populate_supply_contracts(force=False):
+    """Populate supply_contracts table with international supplier requests
+    
+    Args:
+        force: If True, delete existing records and repopulate
+    """
     try:
         # Check if we already have supply contracts
         count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
         existing_count = count_result[0] if count_result else 0
         
-        if existing_count > 0:
+        if existing_count > 0 and not force:
             print(f"ℹ️  Supply contracts table already has {existing_count} records - skipping population")
-            return
+            return existing_count
+        
+        if force and existing_count > 0:
+            print(f"🔄 Force mode: Deleting {existing_count} existing records...")
+            db.session.execute(text('DELETE FROM supply_contracts'))
+            db.session.commit()
         
         # International supplier requests across all 50 states
         supplier_requests = [
@@ -8696,7 +8765,9 @@ def populate_supply_contracts():
             '''), request)
         
         db.session.commit()
-        print(f"✅ Successfully populated {len(supplier_requests)} international supplier contracts")
+        final_count = len(supplier_requests)
+        print(f"✅ Successfully populated {final_count} international supplier contracts")
+        return final_count
         
     except Exception as e:
         db.session.rollback()

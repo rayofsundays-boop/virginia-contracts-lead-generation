@@ -153,46 +153,29 @@
 
     </div>
 
-    <!-- Premium Features Locked -->
+    <!-- Call to Action for Full Toolbox -->
     <div class="row mt-5">
         <div class="col-12">
-            <h3 class="text-center mb-4">Premium Features (Subscriber Only)</h3>
-        </div>
-        
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
-                <div class="card-body text-center">
-                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
-                    <div class="mb-3">
-                        <i class="fas fa-magic fa-3x text-muted"></i>
+            <div class="card border-primary shadow-lg">
+                <div class="card-body text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fas fa-crown me-2"></i>Unlock the Full Resource Toolbox
+                    </h3>
+                    <p class="text-white fs-5 mb-4">Get access to AI-powered tools, advanced calculators, and premium templates</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up Free
+                        </a>
+                        <a href="{{ url_for('resource_toolbox') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
+                            <i class="fas fa-eye me-2"></i>View Full Toolbox
+                        </a>
                     </div>
-                    <h5 class="card-title">AI Proposal Generator</h5>
-                    <p class="card-text text-muted small">Auto-generate winning proposals</p>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
-                <div class="card-body text-center">
-                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
-                    <div class="mb-3">
-                        <i class="fas fa-chart-line fa-3x text-muted"></i>
-                    </div>
-                    <h5 class="card-title">Advanced Analytics</h5>
-                    <p class="card-text text-muted small">Track bid success rates</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
-                <div class="card-body text-center">
-                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
-                    <div class="mb-3">
-                        <i class="fas fa-file-contract fa-3x text-muted"></i>
-                    </div>
-                    <h5 class="card-title">Contract Templates</h5>
+    <!-- Removed Premium Features Locked Section -->
                     <p class="card-text text-muted small">100+ professional templates</p>
                 </div>
             </div>
