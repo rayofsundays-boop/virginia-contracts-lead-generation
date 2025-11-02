@@ -6759,6 +6759,59 @@ def admin_populate_if_empty():
         return redirect(url_for('index'))
 
 
+@app.route('/admin/init-supply-contracts')
+def admin_init_supply_contracts():
+    """Quick admin route to initialize supply contracts table
+    
+    This is a convenience route that can be accessed directly to populate
+    the supply_contracts table with 300+ contracts if it's empty.
+    """
+    try:
+        # Check admin access
+        if not session.get('is_admin', False):
+            return jsonify({
+                'error': 'Admin access required',
+                'message': 'Please log in as admin first at /admin-login'
+            }), 403
+        
+        # Check current count
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+        current_count = count_result[0] if count_result else 0
+        
+        if current_count > 0:
+            return jsonify({
+                'success': True,
+                'message': f'Supply contracts table already populated',
+                'current_count': current_count,
+                'action': 'none',
+                'note': 'Use /admin/repopulate-supply-contracts to force repopulation'
+            })
+        
+        # Table is empty, populate it
+        print("🚀 Initializing supply contracts table...")
+        new_count = populate_supply_contracts(force=False)
+        
+        # Clear dashboard cache
+        clear_all_dashboard_cache()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully populated {new_count} supply contracts',
+            'new_count': new_count,
+            'action': 'populated',
+            'note': 'Dashboard cache cleared. Users will see updated counts.'
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Error initializing supply contracts: {error_details}")
+        return jsonify({
+            'error': str(e),
+            'details': error_details
+        }), 500
+
+
 @app.route('/pricing-guide')
 @login_required
 def pricing_guide():
