@@ -6994,7 +6994,9 @@ def quick_wins():
                 flash('Quick Wins is exclusive to paid subscribers. Upgrade now to access urgent leads and time-sensitive contracts!', 'warning')
                 return redirect(url_for('pricing_guide'))
         
-        # Removed all filters - show ALL Quick Wins at once
+        # Get filter parameters from URL
+        city_filter = request.args.get('city', '')
+        min_value_filter = request.args.get('min_value', '')
         page = 1  # Single page showing all results
         per_page = 999999  # No pagination limit - show everything
         
@@ -7132,21 +7134,46 @@ def quick_wins():
                 'solicitation_number': contract[10] or 'N/A'
             })
         
-        # NO FILTERS - Show ALL Quick Wins
-        total_count = len(all_quick_wins)
-        print(f"✅ Total Quick Wins combined: {total_count} (Supply: {len(supply_contracts_data)}, Commercial: {len(urgent_commercial)}, Gov: {len(urgent_contracts)})")
+        # Apply filters if provided
+        filtered_leads = all_quick_wins
         
-        # No pagination - show all results at once
+        # Filter by city if requested
+        if city_filter:
+            filtered_leads = [l for l in filtered_leads if city_filter.lower() in l.get('location', '').lower()]
+        
+        # Filter by minimum value if requested
+        if min_value_filter:
+            try:
+                min_val = float(min_value_filter)
+                # Parse value strings like "$150,000" to numbers
+                def parse_value(val_str):
+                    try:
+                        if isinstance(val_str, (int, float)):
+                            return float(val_str)
+                        # Remove $, commas, and other non-numeric chars except decimal
+                        cleaned = ''.join(c for c in str(val_str) if c.isdigit() or c == '.')
+                        return float(cleaned) if cleaned else 0
+                    except:
+                        return 0
+                
+                filtered_leads = [l for l in filtered_leads if parse_value(l.get('value', '$0')) >= min_val]
+            except:
+                pass
+        
+        total_count = len(filtered_leads)
+        print(f"✅ Total Quick Wins (after filters): {total_count} (Supply: {len(supply_contracts_data)}, Commercial: {len(urgent_commercial)}, Gov: {len(urgent_contracts)})")
+        
+        # No pagination - show all filtered results at once
         total_pages = 1
-        paginated_leads = all_quick_wins  # Show everything
+        paginated_leads = filtered_leads  # Show everything
         
-        # Get counts for badges - count from ALL leads
+        # Get counts for badges - count from FILTERED leads
         from datetime import datetime, timedelta
         seven_days_from_now = datetime.now() + timedelta(days=7)
         
         # Count contracts expiring in 7 days
         expiring_7days_count = 0
-        for lead in all_quick_wins:
+        for lead in filtered_leads:
             deadline_str = lead.get('deadline', '')
             if deadline_str and deadline_str != 'ASAP' and deadline_str != 'Not specified':
                 try:
@@ -7161,9 +7188,9 @@ def quick_wins():
                 except:
                     pass
         
-        # Calculate all counts from full list
-        urgent_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'urgent'])
-        quick_win_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'quick-win'])
+        # Calculate all counts from filtered list
+        urgent_count = len([l for l in filtered_leads if l.get('urgency_level') == 'urgent'])
+        quick_win_count = len([l for l in filtered_leads if l.get('urgency_level') == 'quick-win'])
 
         
         return render_template('quick_wins.html',
