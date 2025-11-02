@@ -4153,7 +4153,7 @@ def commercial_contracts():
             'state': 'TX',
             'city': 'Dallas',
             'properties': '200,000+ units managed',
-            'vendor_link': 'https://www.lpccorp.com/contact-us',
+            'vendor_link': 'https://www.lpc.com/about-us/partnership-opportunities',
             'description': 'Full-service real estate company founded 1965. Contact Procurement: 214-740-3300 | Email: procurement@lpccorp.com',
             'property_types': 'Apartments, office buildings, retail centers, industrial',
             'regions': 'All 50 states, specializing in Texas, California, Southeast'
@@ -4164,7 +4164,7 @@ def commercial_contracts():
             'state': 'TX',
             'city': 'Dallas',
             'properties': '6 billion sq ft managed globally',
-            'vendor_link': 'https://www.cbre.com/about-us/contact-us',
+            'vendor_link': 'https://www.cbre.com/about/doing-business-with-cbre',
             'description': 'World\'s largest commercial real estate firm. US Vendor Relations: 214-979-6100 | Email: vendor.relations@cbre.com',
             'property_types': 'Office, industrial, retail, multifamily, data centers',
             'regions': 'All 50 states + operations in 100+ countries'
@@ -4175,7 +4175,7 @@ def commercial_contracts():
             'state': 'IL',
             'city': 'Chicago',
             'properties': '5+ billion sq ft managed',
-            'vendor_link': 'https://www.cushmanwakefield.com/en/united-states/services',
+            'vendor_link': 'https://www.cushmanwakefield.com/en/united-states/about-us/contact-us',
             'description': 'Global real estate services firm. US Procurement: 312-470-2000 | Email: us.procurement@cushwake.com',
             'property_types': 'Office, retail, industrial, multifamily, healthcare',
             'regions': 'All 50 states with major offices in NYC, LA, Chicago, Dallas'
@@ -4186,7 +4186,7 @@ def commercial_contracts():
             'state': 'IL',
             'city': 'Chicago',
             'properties': '4.7 billion sq ft managed',
-            'vendor_link': 'https://www.us.jll.com/en/contact-us',
+            'vendor_link': 'https://www.us.jll.com/en/about-jll/suppliers',
             'description': 'Fortune 500 real estate services firm. Vendor Services: 312-782-5800 | Email: vendor.management@jll.com',
             'property_types': 'Office, industrial, retail, hotels, residential',
             'regions': 'All 50 states, especially strong in gateway cities'
@@ -4197,7 +4197,7 @@ def commercial_contracts():
             'state': 'GA',
             'city': 'Atlanta',
             'properties': '100,000+ units in 700+ communities',
-            'vendor_link': 'https://www.amcllc.com/contact',
+            'vendor_link': 'https://www.amcllc.com/careers-and-opportunities',
             'description': 'Third-party multifamily property management since 1978. Contact: 404-836-7100 | Email: procurement@amcllc.com',
             'property_types': 'Multifamily apartments, affordable housing',
             'regions': 'Southeast US (GA, FL, NC, SC, TN, AL) expanding nationwide'
@@ -4210,7 +4210,7 @@ def commercial_contracts():
             'state': 'NJ',
             'city': 'Cherry Hill',
             'properties': '90,000+ units in 300+ communities',
-            'vendor_link': 'https://www.morganproperties.com/contact',
+            'vendor_link': 'https://www.morganproperties.com/about-us/contact-us',
             'description': 'Vertically integrated apartment owner/operator. Contact: 856-382-1200 | Email: vendorservices@morganproperties.com',
             'property_types': 'Value-add multifamily apartments',
             'regions': 'Northeast (PA, NJ, NY, MD), Mid-Atlantic, Southeast, Texas'
@@ -4221,7 +4221,7 @@ def commercial_contracts():
             'state': 'AZ',
             'city': 'Scottsdale',
             'properties': '85,000+ units developed/managed',
-            'vendor_link': 'https://www.allresco.com/contact-us',
+            'vendor_link': 'https://www.allresco.com/about-us/contact-us',
             'description': 'Multifamily developer and manager since 1996. Contact: 480-427-7000 | Email: procurement@allresco.com',
             'property_types': 'Luxury apartments, multifamily communities',
             'regions': 'Sunbelt states (AZ, TX, CA, CO, FL, NC, GA) and major metros'
@@ -4232,7 +4232,7 @@ def commercial_contracts():
             'state': 'VA',
             'city': 'Vienna',
             'properties': '80,000+ units in 400+ communities',
-            'vendor_link': 'https://www.bozzuto.com/contact',
+            'vendor_link': 'https://www.bozzuto.com/about/partnerships',
             'description': 'Diversified real estate company founded 1988. Contact: 301-220-0100 | Email: procurement@bozzuto.com',
             'property_types': 'Multifamily apartments, condos, retail, homeowner associations',
             'regions': 'East Coast: MD, VA, DC, PA, NY, NC, FL (DC Metro area headquarters)'
@@ -4243,7 +4243,7 @@ def commercial_contracts():
             'state': 'VA',
             'city': 'Arlington',
             'properties': '80,000+ apartment homes in 295+ communities',
-            'vendor_link': 'https://www.avaloncommunities.com/contact-us',
+            'vendor_link': 'https://www.avaloncommunities.com/corporate/corporate-information',
             'description': 'Publicly traded REIT (NYSE: AVB). Vendor Relations: 703-329-6300 | Email: vendor.services@avalonbay.com',
             'property_types': 'Class A luxury multifamily apartments',
             'regions': 'New England, NY/NJ Metro, Mid-Atlantic (DC area), Pacific Northwest, California'
@@ -4254,7 +4254,7 @@ def commercial_contracts():
             'state': 'IL',
             'city': 'Chicago',
             'properties': '80,000+ apartments in 305+ properties',
-            'vendor_link': 'https://www.equityapartments.com/corporate/contact-us',
+            'vendor_link': 'https://www.equityapartments.com/corporate/supplier-diversity',
             'description': 'S&P 500 REIT (NYSE: EQR). Procurement: 312-474-1300 | Email: procurement@eqrworld.com',
             'property_types': 'High-rise urban apartments, suburban garden communities',
             'regions': 'Boston, NYC, Washington DC, Seattle, San Francisco, Southern CA, Denver'
@@ -4265,7 +4265,7 @@ def commercial_contracts():
             'state': 'TX',
             'city': 'Houston',
             'properties': '60,000+ apartment homes in 170+ properties',
-            'vendor_link': 'https://www.camdenliving.com/corporate/contact',
+            'vendor_link': 'https://www.camdenliving.com/corporate/vendors',
             'description': 'S&P 400 REIT (NYSE: CPT) since 1993. Vendor Services: 713-354-2500 | Email: vendorservices@camdenliving.com',
             'property_types': 'Class A luxury apartment communities',
             'regions': 'Sunbelt markets: TX, FL, GA, NC, SC, AZ, CA, CO, NV, DC Metro'
@@ -4276,7 +4276,7 @@ def commercial_contracts():
             'state': 'CA',
             'city': 'Sacramento',
             'properties': '60,000+ units in 500+ properties',
-            'vendor_link': 'https://www.fpimgt.com/contact',
+            'vendor_link': 'https://www.fpimgt.com/about-us/contact-us',
             'description': 'Third-party management since 1968. Contact: 916-736-4500 | Email: purchasing@fpimgt.com',
             'property_types': 'Affordable housing (LIHTC), market-rate apartments, senior communities',
             'regions': 'California (primary), expanding to Western US, TX, CO, WA, OR'
@@ -4287,7 +4287,7 @@ def commercial_contracts():
             'state': 'WA',
             'city': 'Seattle',
             'properties': 'Billions in commercial real estate',
-            'vendor_link': 'https://www.colliers.com/en/united-states',
+            'vendor_link': 'https://www.colliers.com/en/united-states/about',
             'description': 'Global diversified real estate services. US Vendor Portal: 206-682-5000 | Email: us.procurement@colliers.com',
             'property_types': 'Office, industrial, retail, hospitality, multifamily',
             'regions': 'All 50 states + 66 countries, 18,000+ professionals globally'
@@ -4298,7 +4298,7 @@ def commercial_contracts():
             'state': 'NY',
             'city': 'New York',
             'properties': '2.5+ billion sq ft under management',
-            'vendor_link': 'https://www.nmrk.com/contact',
+            'vendor_link': 'https://www.nmrk.com/corporate-responsibility/supplier-diversity',
             'description': 'Nasdaq-listed (NMRK) commercial real estate advisor. Vendor Relations: 212-372-2000 | Email: procurement@nmrk.com',
             'property_types': 'Office, industrial, retail, multifamily, healthcare',
             'regions': 'All 50 states with major presence in gateway markets'
@@ -4309,7 +4309,7 @@ def commercial_contracts():
             'state': 'TX',
             'city': 'Carrollton',
             'properties': '20 million+ units using RealPage software',
-            'vendor_link': 'https://www.realpage.com/contact',
+            'vendor_link': 'https://www.realpage.com/partners/',
             'description': 'Property management software and on-site services. Contact: 972-820-3000 | Email: partnerships@realpage.com',
             'property_types': 'Multifamily apartments (software platform and services)',
             'regions': 'All 50 states - software serves 13,000+ property management clients'
@@ -4320,7 +4320,7 @@ def commercial_contracts():
             'state': 'NC',
             'city': 'Greensboro',
             'properties': '85,000+ apartment homes in 550+ communities',
-            'vendor_link': 'https://www.bellpartnersinc.com/contact',
+            'vendor_link': 'https://www.bellpartnersinc.com/about-us/contact-us',
             'description': 'Apartment investment and management since 1976. Contact: 336-232-1860 | Email: vendorrelations@bellpartnersinc.com',
             'property_types': 'Class A & B multifamily apartments',
             'regions': 'Sunbelt and high-growth markets: Southeast, Texas, Mid-Atlantic, Colorado'
@@ -4331,7 +4331,7 @@ def commercial_contracts():
             'state': 'NC',
             'city': 'Morrisville',
             'properties': '50,000+ units in 280+ communities',
-            'vendor_link': 'https://www.pinnacleliving.com/contact',
+            'vendor_link': 'https://www.pinnacleliving.com/about-us/contact-us',
             'description': 'Third-party property management since 1988. Contact: 919-233-7970 | Email: procurement@pinnacleliving.com',
             'property_types': 'Multifamily apartments, HOAs, condominiums, student housing',
             'regions': 'Southeast primarily (NC, SC, VA, GA, TN, FL) plus TX, expanding nationwide'
@@ -4342,7 +4342,7 @@ def commercial_contracts():
             'state': 'GA',
             'city': 'Atlanta',
             'properties': '90,000+ apartments in 100+ communities',
-            'vendor_link': 'https://woodpartners.com/contact',
+            'vendor_link': 'https://woodpartners.com/about/contact',
             'description': 'Multifamily developer and manager since 1998. Contact: 404-250-2420 | Email: vendorservices@woodpartners.com',
             'property_types': 'Class A luxury apartment communities',
             'regions': 'Major markets nationwide: Southeast, Texas, Mid-Atlantic, West Coast, Mountain States'
@@ -4353,7 +4353,7 @@ def commercial_contracts():
             'state': 'MA',
             'city': 'Cambridge',
             'properties': '115,000+ apartment homes in 800+ communities',
-            'vendor_link': 'https://www.winnco.com/contact-us',
+            'vendor_link': 'https://www.winnco.com/about-us/contact-us',
             'description': 'Award-winning affordable housing specialist since 1971. Contact: 617-612-8100 | Email: procurement@winnco.com',
             'property_types': 'Affordable housing (LIHTC), military housing, senior living, workforce housing',
             'regions': 'All 50 states - largest manager of affordable housing in America'
@@ -4364,7 +4364,7 @@ def commercial_contracts():
             'state': 'CA',
             'city': 'San Francisco',
             'properties': '40,000+ units in 200+ communities',
-            'vendor_link': 'https://www.prometheusreg.com/contact',
+            'vendor_link': 'https://www.prometheusreg.com/about/contact-us',
             'description': 'Multifamily investment and management since 1991. Contact: 415-398-2340 | Email: vendorservices@prometheusreg.com',
             'property_types': 'Multifamily apartments, value-add properties',
             'regions': 'West Coast: Northern CA (SF Bay Area), Southern CA, Oregon (Portland), Washington (Seattle)'
@@ -4375,7 +4375,7 @@ def commercial_contracts():
             'state': 'FL',
             'city': 'Miami',
             'properties': '50,000+ units in 300+ communities',
-            'vendor_link': 'https://www.zrsmanagement.com/contact',
+            'vendor_link': 'https://www.zrsmanagement.com/about/contact-us',
             'description': 'Third-party management for institutional investors since 2002. Contact: 305-573-9977 | Email: purchasing@zrsmanagement.com',
             'property_types': 'Class A, B, C multifamily apartments, student housing',
             'regions': 'Southeast (FL, GA, SC, NC, TN, AL) expanding to TX, Mid-Atlantic'
@@ -4386,7 +4386,7 @@ def commercial_contracts():
             'state': 'TX',
             'city': 'Dallas',
             'properties': '45,000+ apartment homes in 250+ communities',
-            'vendor_link': 'https://www.riverstoneresidential.com/contact-us',
+            'vendor_link': 'https://www.riverstoneresidential.com/about-us/contact-us',
             'description': 'Full-service property management since 2013. Contact: 214-572-7200 | Email: procurement@riverstoneresidential.com',
             'property_types': 'Multifamily apartments - all classes (A, B, C)',
             'regions': 'Sunbelt and high-growth markets: TX, Southeast, Mountain West, Southwest'
@@ -4397,7 +4397,7 @@ def commercial_contracts():
             'state': 'IA',
             'city': 'Des Moines',
             'properties': '40,000+ units in 350+ communities',
-            'vendor_link': 'https://www.bhmanagement.com/contact',
+            'vendor_link': 'https://www.bhmanagement.com/about-us/contact-us',
             'description': 'Third-party multifamily management since 1993. Contact: 515-242-4474 | Email: vendorrelations@bhmanagement.com',
             'property_types': 'Conventional multifamily, student housing, affordable housing, senior living',
             'regions': 'All 50 states with strong presence in Midwest, Southeast, Texas, Mountain States'
