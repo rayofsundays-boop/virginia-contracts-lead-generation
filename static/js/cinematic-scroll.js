@@ -3,28 +3,31 @@
  * Inspired by Opus Agent - scroll-driven storytelling with GSAP & Lenis
  */
 
-// Initialize Lenis smooth scroll - configured for manual scrolling only
+// Lenis smooth scroll DISABLED - using native browser scrolling for better performance
+// No speed limits - user has full control
 const lenis = new Lenis({
-    duration: 0.6,  // Faster, more responsive scroll duration
-    easing: (t) => t,  // Linear easing for immediate response (no auto-scroll feel)
+    duration: 0,  // Instant - no smooth scrolling delay
+    easing: (t) => t,  // Linear
     direction: 'vertical',
-    smooth: true,
-    smoothTouch: false,  // Disable smooth touch for native feel
-    touchMultiplier: 2,  // Increase for responsive touch
-    wheelMultiplier: 1.5,  // Increase for faster manual scrolling
+    smooth: false,  // DISABLED - use native scrolling
+    smoothTouch: false,  // Native touch scrolling
+    touchMultiplier: 1,  // Native speed
+    wheelMultiplier: 1,  // Native speed - no restrictions
     infinite: false,
-    syncTouch: true  // Better touch sync
+    syncTouch: false  // Let browser handle touch
 });
 
-// Lenis RAF loop
+// Minimal RAF loop - Lenis disabled but kept for GSAP compatibility
 function raf(time) {
     lenis.raf(time);
     requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
 
-// Sync GSAP ScrollTrigger with Lenis
-lenis.on('scroll', ScrollTrigger.update);
+// Sync GSAP ScrollTrigger with native scroll
+window.addEventListener('scroll', () => {
+    ScrollTrigger.update();
+});
 
 gsap.ticker.add((time) => {
     lenis.raf(time * 1000);
@@ -40,7 +43,7 @@ gsap.from('.hero-scene .hero-headline', {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 0.3,  // Reduced for more immediate response
+        scrub: false,  // No scrub - instant animation trigger
     },
     opacity: 0,
     y: 80,
@@ -54,7 +57,7 @@ gsap.from('.hero-scene .hero-subtext', {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 0.3  // Reduced for more immediate response
+        scrub: false  // No scrub - instant animation trigger
     },
     opacity: 0,
     y: 60,
@@ -69,7 +72,7 @@ gsap.from('.hero-scene .cta-button', {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 0.3  // Reduced for more immediate response
+        scrub: false  // No scrub - instant animation trigger
     },
     opacity: 0,
     y: 40,
@@ -90,7 +93,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top 80%',
             end: 'top 30%',
-            scrub: 0.3  // Reduced for more immediate response
+            scrub: false  // No scrub - instant animation trigger
         },
         x: isEven ? -100 : 100,
         opacity: 0,
@@ -104,7 +107,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top 80%',
             end: 'top 30%',
-            scrub: 0.3  // Reduced for more immediate response
+            scrub: false  // No scrub - instant animation trigger
         },
         x: isEven ? 100 : -100,
         opacity: 0,
@@ -119,7 +122,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top bottom',
             end: 'bottom top',
-            scrub: 0.5  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         y: -50,
         ease: 'none'
@@ -155,7 +158,7 @@ gsap.utils.toArray('.ai-card').forEach((card, index) => {
             trigger: '.ai-showcase',
             start: 'top 70%',
             end: 'top 30%',
-            scrub: 0.3  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         ...startPos[direction],
         opacity: 0,
@@ -172,7 +175,7 @@ gsap.utils.toArray('.ai-card').forEach((card, index) => {
             trigger: card,
             start: 'top 80%',
             end: 'top 50%',
-            scrub: 0.3  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         boxShadow: '0 0 40px rgba(102, 126, 234, 0.6)',
         duration: 0.5
@@ -220,7 +223,7 @@ gsap.utils.toArray('.stat-item').forEach((stat, index) => {
             trigger: '.stats-section',
             start: 'top 80%',
             end: 'top 50%',
-            scrub: 0.3  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         y: 50,
         opacity: 0,
@@ -256,7 +259,7 @@ gsap.from('.cta-scene .cta-content', {
         trigger: '.cta-scene',
         start: 'top 70%',
         end: 'top 30%',
-        scrub: 0.3  // Reduced for more immediate response
+        scrub: false  // Instant - no scroll delay
     },
     scale: 0.9,
     opacity: 0,
@@ -271,7 +274,7 @@ gsap.to('.cta-scene .light-beam', {
         trigger: '.cta-scene',
         start: 'top 70%',
         end: 'bottom top',
-        scrub: 0.5  // Reduced for more immediate response
+        scrub: false  // Instant - no scroll delay
     },
     opacity: 0.8,
     scale: 1.2,
@@ -286,7 +289,7 @@ gsap.to('.cta-scene .cta-button-final', {
         trigger: '.cta-scene',
         start: 'top 60%',
         end: 'top 40%',
-        scrub: 0.3  // Reduced for more immediate response
+        scrub: false  // Instant - no scroll delay
     },
     scale: 1.05,
     duration: 0.5,
@@ -339,7 +342,7 @@ gsap.utils.toArray('.parallax-element').forEach((element) => {
             trigger: element,
             start: 'top bottom',
             end: 'bottom top',
-            scrub: 0.5  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         y: () => -window.innerHeight * speed,
         ease: 'none'
@@ -353,7 +356,7 @@ gsap.utils.toArray('.geometric-shape').forEach((shape, index) => {
             trigger: 'body',
             start: 'top top',
             end: 'bottom bottom',
-            scrub: 0.8  // Reduced for more immediate response
+            scrub: false  // Instant - no scroll delay
         },
         y: index % 2 === 0 ? -300 : 300,
         x: index % 2 === 0 ? 200 : -200,
@@ -370,7 +373,7 @@ gsap.to('.scroll-progress', {
         trigger: 'body',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 0.5
+        scrub: false  // Instant - no scroll delay
     },
     scaleY: 1,
     transformOrigin: 'top',
