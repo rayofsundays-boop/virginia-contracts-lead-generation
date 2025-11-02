@@ -6994,37 +6994,24 @@ def quick_wins():
                 flash('Quick Wins is exclusive to paid subscribers. Upgrade now to access urgent leads and time-sensitive contracts!', 'warning')
                 return redirect(url_for('pricing_guide'))
         
-        expiring_filter = request.args.get('expiring', '')
-        lead_type_filter = request.args.get('lead_type', '')
-        city_filter = request.args.get('city', '')
-        category_filter = request.args.get('category', '')
-        min_value_filter = request.args.get('min_value', '')
-        page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = 12
+        # Removed all filters - show ALL Quick Wins at once
+        page = 1  # Single page showing all results
+        per_page = 999999  # No pagination limit - show everything
         
-        # Get ALL supply contracts (not just quick wins) with filters
+        # Get ALL supply contracts (no filters)
         supply_contracts_data = []
         try:
-            where_conditions = ["status = 'open'"]
-            params = {}
-            
-            if category_filter:
-                where_conditions.append("product_category = :category")
-                params['category'] = category_filter
-            
-            where_clause = " AND ".join(where_conditions)
-            
-            supply_contracts_data = db.session.execute(text(f'''
+            supply_contracts_data = db.session.execute(text('''
                 SELECT 
                     id, title, agency, location, product_category, estimated_value,
                     bid_deadline, description, website_url, is_small_business_set_aside,
                     contact_name, contact_email, contact_phone, is_quick_win
                 FROM supply_contracts 
-                WHERE {where_clause}
+                WHERE status = 'open'
                 ORDER BY 
                     CASE WHEN is_quick_win THEN 0 ELSE 1 END,
                     bid_deadline ASC
-            '''), params).fetchall()
+            ''')).fetchall()
             print(f"📦 Found {len(supply_contracts_data)} supply contracts")
         except Exception as e:
             print(f"❌ Supply contracts error: {e}")
@@ -7145,61 +7132,21 @@ def quick_wins():
                 'solicitation_number': contract[10] or 'N/A'
             })
         
-        # Pagination
+        # NO FILTERS - Show ALL Quick Wins
         total_count = len(all_quick_wins)
         print(f"✅ Total Quick Wins combined: {total_count} (Supply: {len(supply_contracts_data)}, Commercial: {len(urgent_commercial)}, Gov: {len(urgent_contracts)})")
         
-        # Filter by expiring in 7 days if requested
-        if expiring_filter == '7days':
-            from datetime import datetime, timedelta
-            seven_days_from_now = datetime.now() + timedelta(days=7)
-            
-            filtered_leads = []
-            for lead in all_quick_wins:
-                deadline_str = lead.get('deadline', '')
-                if deadline_str and deadline_str != 'ASAP' and deadline_str != 'Not specified':
-                    try:
-                        # Try different date formats
-                        for fmt in ['%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d', '%d/%m/%Y']:
-                            try:
-                                deadline_date = datetime.strptime(deadline_str, fmt)
-                                if deadline_date <= seven_days_from_now:
-                                    filtered_leads.append(lead)
-                                break
-                            except ValueError:
-                                continue
-                    except:
-                        pass
-            
-            all_quick_wins = filtered_leads
-            total_count = len(all_quick_wins)
+        # No pagination - show all results at once
+        total_pages = 1
+        paginated_leads = all_quick_wins  # Show everything
         
-        # Filter by city if requested
-        if city_filter:
-            all_quick_wins = [l for l in all_quick_wins if city_filter.lower() in l.get('location', '').lower()]
-            total_count = len(all_quick_wins)
-        
-        # Filter by minimum value if requested
-        if min_value_filter:
-            try:
-                min_val = float(min_value_filter)
-                all_quick_wins = [l for l in all_quick_wins if l.get('value', 0) >= min_val]
-                total_count = len(all_quick_wins)
-            except:
-                pass
-        
-        total_pages = max(math.ceil(total_count / per_page), 1)
-        start = (page - 1) * per_page
-        end = start + per_page
-        paginated_leads = all_quick_wins[start:end]
-        
-        # Get counts for badges
+        # Get counts for badges - count from ALL leads
         from datetime import datetime, timedelta
         seven_days_from_now = datetime.now() + timedelta(days=7)
         
         # Count contracts expiring in 7 days
         expiring_7days_count = 0
-        for lead in all_quick_wins if not expiring_filter else paginated_leads:
+        for lead in all_quick_wins:
             deadline_str = lead.get('deadline', '')
             if deadline_str and deadline_str != 'ASAP' and deadline_str != 'Not specified':
                 try:
@@ -7214,10 +7161,10 @@ def quick_wins():
                 except:
                     pass
         
-        # Recalculate all counts based on current filtered list
-        all_leads_for_count = all_quick_wins if expiring_filter else [lead for lead in all_quick_wins]
-        urgent_count = len([l for l in all_leads_for_count if l.get('urgency_level') == 'urgent'])
-        quick_win_count = len([l for l in all_leads_for_count if l.get('urgency_level') == 'quick-win'])
+        # Calculate all counts from full list
+        urgent_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'urgent'])
+        quick_win_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'quick-win'])
+
         
         return render_template('quick_wins.html',
                              leads=paginated_leads,
