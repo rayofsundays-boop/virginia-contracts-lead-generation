@@ -82,11 +82,11 @@
                     <button class="btn btn-info me-2 mb-2" onclick="showUploadLeadModal('commercial')">
                         <i class="fas fa-building me-2"></i>Upload Commercial Lead
                     </button>
-                    <a href="/send-existing-leads" class="btn btn-warning me-2 mb-2">
-                        <i class="fas fa-download me-2"></i>Export All User Data
-                    </a>
-                    <a href="/customer_leads" class="btn btn-secondary me-2 mb-2">
+                    <a href="{{ url_for('customer_leads') }}" class="btn btn-secondary me-2 mb-2" target="_blank">
                         <i class="fas fa-eye me-2"></i>View Customer Portal
+                    </a>
+                    <a href="{{ url_for('contracts') }}" class="btn btn-warning me-2 mb-2" target="_blank">
+                        <i class="fas fa-list me-2"></i>View All Contracts
                     </a>
                 </div>
             </div>
@@ -575,7 +575,76 @@ function deleteLead(leadId, title) {
 <style>
 .text-purple { color: #764ba2; }
 .user-row:hover { background-color: #f8f9fa; }
+.lead-row:hover { background-color: #f8f9fa; }
 .btn-group-sm .btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+
+/* Enhanced color contrast for better readability */
+.card-header {
+    color: #fff !important;
+}
+
+.card-header h5 {
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.table thead th {
+    color: #2c3e50 !important;
+    font-weight: 600;
+    background-color: #f8f9fa !important;
+}
+
+.table tbody td {
+    color: #2c3e50 !important;
+    font-weight: 500;
+}
+
+.table tbody td strong {
+    color: #1a252f !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Make small text darker */
+.card-body small {
+    color: #495057 !important;
+    font-weight: 500;
+}
+
+/* Card stats text */
+.card-body h3 {
+    color: #2c3e50 !important;
+    font-weight: 700;
+}
+
+.card-body h6 {
+    color: #2c3e50 !important;
+    font-weight: 600;
+}
+
+/* Search input */
+.card-header input.form-control {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.card-header input.form-control::placeholder {
+    color: #6c757d;
+}
+
+/* Button text */
+.btn {
+    font-weight: 600;
+}
+
+/* Empty state text */
+.text-center.text-muted p {
+    color: #6c757d !important;
+    font-size: 1.1rem;
+}
 </style>
 
 {% endblock %}

@@ -4871,6 +4871,48 @@ def admin_logout():
     flash('Logged out of admin panel', 'info')
     return redirect('/')
 
+@app.route('/admin-reset-password', methods=['POST'])
+def admin_reset_password():
+    """Admin function to reset user password"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({'success': False, 'error': 'Email required'})
+        
+        # Generate a new random password
+        import random
+        import string
+        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        
+        # Hash the new password
+        hashed_password = generate_password_hash(new_password)
+        
+        # Update user's password
+        db.session.execute(
+            text('UPDATE leads SET password = :password WHERE email = :email'),
+            {'password': hashed_password, 'email': email}
+        )
+        db.session.commit()
+        
+        # TODO: Send email to user with new password
+        # For now, return the password to admin
+        
+        return jsonify({
+            'success': True, 
+            'new_password': new_password,
+            'message': f'Password reset for {email}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error resetting password: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-update-payment-status', methods=['POST'])
 def admin_update_payment_status():
     """Admin function to update user payment status"""
@@ -5411,40 +5453,11 @@ def delete_note():
 
 @app.route('/admin')
 def admin_dashboard():
-    """Admin dashboard for lead management"""
-    try:
-        # Get lead statistics
-        stats = lead_generator.get_lead_statistics()
-        
-        # Get recent activity (last 7 days)
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # Get recent government contracts
-        c.execute('''SELECT title, agency, location, value, created_at 
-                     FROM contracts 
-                     WHERE created_at >= date("now", "-7 days")
-                     ORDER BY created_at DESC LIMIT 10''')
-        recent_gov = c.fetchall()
-        
-        # Get recent commercial opportunities (last 10 added)
-        c.execute('''SELECT business_name, business_type, location, monthly_value 
-                     FROM commercial_opportunities 
-                     ORDER BY id DESC LIMIT 10''')
-        recent_commercial = c.fetchall()
-        
-        conn.close()
-        
-        return render_template('admin_dashboard.html', 
-                             stats=stats, 
-                             recent_gov=recent_gov, 
-                             recent_commercial=recent_commercial,
-                             scheduler_running=scheduler_running)
-        
-    except Exception as e:
-        print(f"Admin dashboard error: {e}")
-        flash('Error loading admin dashboard', 'error')
-        return redirect(url_for('index'))
+    """Redirect admin homepage to admin panel"""
+    if session.get('is_admin'):
+        return redirect(url_for('admin_panel'))
+    else:
+        return redirect(url_for('admin_login'))
 
 @app.route('/admin-enhanced')
 @login_required
