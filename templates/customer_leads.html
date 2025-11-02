@@ -1225,22 +1225,29 @@ function resetApplyClickCount() {
 
 .nav-link {
     padding: 0.75rem 1rem;
-    color: #1a252f;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 8px;
     margin-bottom: 0.25rem;
     transition: all 0.2s;
     font-weight: 600;
+    opacity: 0.85;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .nav-link:hover {
-    background-color: #e9ecef;
-    color: #667eea;
+    background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+    color: white;
     transform: translateX(4px);
+    opacity: 1;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .nav-link.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a56b8 0%, #5d3679 100%);
     color: white !important;
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .nav-link i {
