@@ -76,8 +76,8 @@
     <div class="alert alert-warning text-center p-4 mb-4">
         <h4><i class="fas fa-lock"></i> You've reached your free view limit</h4>
         <p class="mb-3">Subscribe now to unlock unlimited access to all federal contract opportunities!</p>
-        <a href="{{ url_for('subscribe_page') }}" class="btn btn-primary btn-lg">
-            <i class="fas fa-star me-2"></i>Subscribe Now - $99/month
+                <a href="{{ url_for('subscription') }}" class="btn btn-primary btn-lg">
+            Subscribe to View Full Details
         </a>
         <br><br>
         <small class="text-muted">Already have an account? <a href="{{ url_for('signin') }}">Sign In</a></small>
@@ -96,7 +96,7 @@
                             <i class="fas fa-lock fa-3x mb-3"></i>
                             <h5>Subscribe to View</h5>
                             <p>{{ clicks_remaining }} free views remaining</p>
-                            <a href="{{ url_for('subscribe_page') }}" class="btn btn-light btn-sm">
+                            <a href="{{ url_for('subscription') }}" class="btn btn-light btn-sm">
                                 Subscribe Now
                             </a>
                         </div>

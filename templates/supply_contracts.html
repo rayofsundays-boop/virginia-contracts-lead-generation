@@ -213,8 +213,8 @@
                             {% endif %}
                         {% else %}
                             <!-- Paywall for Non-Subscribers -->
-                            <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-sm w-100">
-                                <i class="fas fa-lock"></i> Upgrade to View
+                                                        <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-sm w-100">
+                                Subscribe to View
                             </a>
                         {% endif %}
                     </div>
@@ -283,7 +283,7 @@
                 Get instant access to contact information, full requirements, and direct application links 
                 for all <strong>{{ total_count }}</strong> supply opportunities.
             </p>
-            <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
+            <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-lg">
                 <i class="fas fa-arrow-up"></i> Upgrade to Premium - $29/month
             </a>
         </div>

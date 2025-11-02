@@ -19,7 +19,7 @@
         {% else %}
         <p class="text-white">
             <i class="fas fa-unlock me-2"></i>Free Access • 
-            <a href="{{ url_for('pricing') }}" class="text-white text-decoration-underline">Upgrade for Premium Tools</a>
+            <a href="{{ url_for('subscription') }}" class="text-white text-decoration-underline">Upgrade for Premium Tools</a>
         </p>
         {% endif %}
     </div>
@@ -402,7 +402,7 @@
                         <h5 class="mb-1">Upgrade to Premium</h5>
                         <p class="mb-0">Unlock video tutorials, webinars, expert consultation, and advanced AI tools</p>
                     </div>
-                    <a href="{{ url_for('pricing') }}" class="btn btn-warning">
+                    <a href="{{ url_for('subscription') }}" class="btn btn-warning">
                         <i class="fas fa-arrow-up me-2"></i>Upgrade Now
                     </a>
                 </div>
