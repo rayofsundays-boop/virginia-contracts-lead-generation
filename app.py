@@ -2599,6 +2599,59 @@ def signin():
     
     return render_template('signin.html')
 
+@app.route('/login', methods=['POST'])
+def login():
+    """Alternative login endpoint for direct POST requests"""
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    if not username or not password:
+        flash('Username and password are required.', 'error')
+        return redirect(url_for('auth'))
+    
+    # Check for admin login first (hardcoded superadmin)
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        session.permanent = True
+        app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
+        
+        session['user_id'] = 1
+        session['is_admin'] = True
+        session['username'] = 'Admin'
+        session['name'] = 'Administrator'
+        session['user_email'] = 'admin@vacontracts.com'
+        session['email'] = 'admin@vacontracts.com'
+        session['subscription_status'] = 'paid'
+        
+        log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
+        flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    # Validate regular user
+    result = db.session.execute(
+        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+        {'username': username}
+    ).fetchone()
+    
+    if result and check_password_hash(result[3], password):
+        session['user_id'] = result[0]
+        session['username'] = result[1]
+        session['email'] = result[2]
+        session['user_email'] = result[2]
+        session['name'] = result[4]
+        session['credits_balance'] = result[5]
+        session['is_admin'] = bool(result[6])
+        session['subscription_status'] = result[7] or 'free'
+        
+        if session['is_admin']:
+            flash(f'Welcome back, {result[4]}! You have admin privileges. 🔑', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash(f'Welcome back, {result[4]}! 🎉', 'success')
+            return redirect(url_for('customer_dashboard'))
+    else:
+        flash('Invalid username or password. Please try again.', 'error')
+        return redirect(url_for('auth'))
+
 @app.route('/logout')
 def logout():
     session.clear()
