@@ -7371,11 +7371,36 @@ def quick_wins():
         # Combine all leads
         all_quick_wins = []
         
+        # Helpers: normalize deadline strings to display-friendly format
+        def _norm_deadline(s):
+            try:
+                if not s or s in ('ASAP', 'Not specified'):
+                    return s or 'Not specified'
+                st = str(s)
+                # Handle ISO timestamps like 2025-11-02T00:00:00Z
+                if 'T' in st or st.endswith('Z'):
+                    try:
+                        from datetime import datetime as _dt
+                        return _dt.fromisoformat(st.replace('Z', '+00:00')).strftime('%m/%d/%Y')
+                    except Exception:
+                        pass
+                for fmt in ('%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d', '%d/%m/%Y'):
+                    try:
+                        from datetime import datetime as _dt
+                        return _dt.strptime(st, fmt).strftime('%m/%d/%Y')
+                    except ValueError:
+                        continue
+                return st
+            except Exception:
+                return 'Not specified'
+        
         # Add supply contracts
         for supply in supply_contracts_data:
             # Determine urgency level based on quick_win status and deadline
             is_quick_win = supply[13] if len(supply) > 13 else False
             urgency_level = 'quick-win' if is_quick_win else 'normal'
+            # Normalize deadline if needed
+            normalized_deadline = _norm_deadline(supply[6])
             
             all_quick_wins.append({
                 'id': f"supply_{supply[0]}",
@@ -7384,7 +7409,7 @@ def quick_wins():
                 'location': supply[3],
                 'category': supply[4],
                 'value': supply[5],
-                'deadline': supply[6],
+                'deadline': normalized_deadline,
                 'description': supply[7],
                 'website_url': supply[8],
                 'is_small_business': supply[9],
@@ -8757,6 +8782,7 @@ def city_procurement(city_name):
         return redirect(url_for('contracts'))
     
     try:
+        is_admin = session.get('is_admin', False)
         # Get all contracts for this city
         contracts = db.session.execute(text('''
             SELECT id, title, agency, location, description, value, deadline, 
@@ -8814,7 +8840,8 @@ def city_procurement(city_name):
                              contracts=contracts,
                              commercial=commercial,
                              city_info=city_info.get(city, {}),
-                             total_opportunities=len(contracts) + len(commercial))
+                             total_opportunities=len(contracts) + len(commercial),
+                             is_admin=is_admin)
     
     except Exception as e:
         print(f"Error loading city procurement: {e}")

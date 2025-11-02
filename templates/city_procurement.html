@@ -119,6 +119,19 @@
                     <i class="fas fa-info-circle me-2"></i>
                     No government contracts currently available for {{ city }}. Check back soon!
                 </div>
+                {% if is_admin %}
+                <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-tools me-2"></i>
+                        <strong>Admin:</strong> You can trigger a procurement scrape to refresh data.
+                    </div>
+                    <form method="POST" action="/scrape-procurement" class="mb-0">
+                        <button type="submit" class="btn btn-sm btn-warning">
+                            <i class="fas fa-sync-alt me-1"></i>Run Scrapers
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
             {% endif %}
 
             <!-- Commercial Opportunities -->
@@ -172,6 +185,22 @@
                     <i class="fas fa-info-circle me-2"></i>
                     No commercial opportunities currently available for {{ city }}. Check back soon!
                 </div>
+                {% if is_admin %}
+                <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-database me-2"></i>
+                        <strong>Admin:</strong> Review database stats or refresh supply contracts.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/db-stats" class="btn btn-sm btn-info" target="_blank">
+                            <i class="fas fa-chart-bar me-1"></i>DB Stats
+                        </a>
+                        <a href="/admin/repopulate-supply-contracts" class="btn btn-sm btn-success">
+                            <i class="fas fa-database me-1"></i>Repopulate Supply
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             {% endif %}
         </div>
 
@@ -247,6 +276,8 @@
         </div>
     </div>
 </div>
+
+        {% include 'components/disclaimer.html' %}
 
 <style>
     .hover-lift {

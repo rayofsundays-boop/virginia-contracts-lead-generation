@@ -1,0 +1,16 @@
+<div class="container my-4">
+  <div class="alert alert-secondary small mb-0" role="alert">
+    <div class="d-flex align-items-start">
+      <i class="fas fa-info-circle me-2 mt-1"></i>
+      <div>
+        <strong>Important:</strong>
+        <ul class="mb-0 mt-2">
+          <li><strong>Estimated Value is not a bid price.</strong> It is an internal estimate or range and may differ from the final award amount. Always rely on the official solicitation documents for pricing and scope.</li>
+          <li><strong>No placeholder phone numbers.</strong> We do not publish or accept placeholder phone numbers (e.g., 555-XXXX). Contact numbers must reach a real person or official procurement line.</li>
+          <li><strong>Emails/URLs shown only when no public POC.</strong> We display emails and external URLs when an official public point of contact isn’t published by the procuring entity. Where an official POC is listed, that information takes precedence.</li>
+        </ul>
+        <div class="mt-2 text-muted">See an error? <a href="{{ url_for('contact') if 'contact' in globals() else '#' }}">Report an issue</a> so we can correct it quickly.</div>
+      </div>
+    </div>
+  </div>
+</div>

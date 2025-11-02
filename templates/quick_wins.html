@@ -226,6 +226,25 @@
                                         </p>
                                     </div>
                                 {% else %}
+                                    <!-- Public Info for Non-Subscribers -->
+                                    {% if lead.website_url %}
+                                    <div class="card border-info mb-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0"><i class="fas fa-external-link-alt me-2"></i>Official Bid (Public)</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <a href="{{ lead.website_url | safe_url }}" target="_blank" class="btn btn-outline-primary w-100" rel="noopener noreferrer">
+                                                <i class="fas fa-external-link-alt me-2"></i>View Official Bid
+                                            </a>
+                                            {% if lead.solicitation_number %}
+                                            <div class="small text-muted mt-2">
+                                                Solicitation: <strong>{{ lead.solicitation_number }}</strong>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
                                     <!-- Locked for Non-Subscribers -->
                                     <div class="card border-warning bg-light">
                                         <div class="card-body text-center py-5">
@@ -235,7 +254,6 @@
                                             <ul class="list-unstyled text-start mb-4">
                                                 <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Direct contact information</li>
                                                 <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>One-click calling & emailing</li>
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Official bid links</li>
                                                 <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>AI proposal generator</li>
                                                 <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Full lead details</li>
                                             </ul>
@@ -368,6 +386,9 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Global Procurement Disclaimer -->
+{% include 'components/disclaimer.html' %}
 
 <style>
 @keyframes pulse-animation {
