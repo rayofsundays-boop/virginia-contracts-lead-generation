@@ -8795,7 +8795,7 @@ def populate_supply_contracts(force=False):
             {'title': 'Hospital Network Supplies - Indiana', 'agency': 'Indiana Healthcare Alliance', 'location': 'Indianapolis, IN', 'product_category': 'Healthcare Supplies', 'estimated_value': '$550,000', 'bid_deadline': '01/28/2026', 'description': 'Medical cleaning supplies for hospital network', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Healthcare Procurement', 'contact_email': 'procurement@iha.org', 'contact_phone': '317-555-0425', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
         ]
         
-        # Add 185 more diverse entries to reach 200+ (abbreviated for file size)
+        # Add more diverse entries to reach 300+ (expanded for better coverage)
         additional_states = [
             'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 
             'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
@@ -8810,8 +8810,8 @@ def populate_supply_contracts(force=False):
         
         import random
         for state in additional_states:
-            # Add 5-6 opportunities per remaining state
-            for i in range(5):
+            # Add 8 opportunities per remaining state to reach 300+ total
+            for i in range(8):
                 value = random.choice(['$150,000', '$200,000', '$350,000', '$450,000', '$600,000'])
                 category = random.choice(categories)
                 supplier_requests.append({
