@@ -56,7 +56,10 @@ cp .env.example .env
 ```
 
 Key variables:
-- `INTERNATIONAL_RSS_URL` – public procurement RSS feed for international quick wins (cleaning-related)
+- `INTERNATIONAL_RSS_URL` – primary public procurement RSS feed (we filter entries containing "clean")
+- `INTERNATIONAL_RSS_URLS` – optional comma-separated list of additional feeds to aggregate
+- `EU_RSS_URL` – optional EU procurement RSS feed for cleaning (e.g., TED search)
+- `CANADA_RSS_URL` – optional Canada procurement RSS feed for cleaning
 - `CRON_SECRET` – token for hitting `/cron/supply-daily`
 - `PAYPAL_*` – subscription and payment configuration
 
@@ -188,6 +191,10 @@ Use the included script for a quick smoke test:
 ```bash
 export TEST_LIMIT=10
 export INTERNATIONAL_RSS_URL="https://your-procurement-feed.example/rss"
+# Optional additional feeds
+export INTERNATIONAL_RSS_URLS="https://feed-one.example/rss,https://feed-two.example/rss"
+export EU_RSS_URL="https://eu-procurement.example/rss"
+export CANADA_RSS_URL="https://canada-procurement.example/rss"
 "/Users/chinneaquamatthews/Lead Generartion for Cleaning Contracts (VA) ELITE/.venv/bin/python" scripts/test_international_sources.py
 ```
 

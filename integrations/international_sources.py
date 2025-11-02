@@ -179,12 +179,30 @@ def fetch_international_cleaning(limit_per_source: int = 50) -> List[Dict[str, A
         results += fetch_rss_cleaning_generic(limit=limit_per_source)
     except Exception:
         logger.warning("Generic RSS adapter failed; continuing with other sources")
+    # Optional: Multiple generic RSS URLs (comma-separated)
+    try:
+        urls = os.environ.get('INTERNATIONAL_RSS_URLS', '')
+        if urls:
+            for u in [s.strip() for s in urls.split(',') if s.strip()]:
+                results += fetch_rss_from_url(u, source_label='International RSS')[:limit_per_source]
+    except Exception:
+        logger.warning("Multi RSS adapter failed; continuing")
     # Placeholder for additional sources to keep adapters small and testable
     try:
         results += fetch_canada_pspc_cleaning(limit=limit_per_source)
     except Exception:
         # Keep failure isolated to the source adapter
         logger.warning("Canada PSPC adapter failed; continuing with other sources")
+    # EU RSS (if configured)
+    try:
+        results += fetch_rss_eu_cleaning(limit=limit_per_source)
+    except Exception:
+        logger.warning("EU RSS adapter failed; continuing")
+    # Canada RSS (if configured)
+    try:
+        results += fetch_rss_canada_cleaning(limit=limit_per_source)
+    except Exception:
+        logger.warning("Canada RSS adapter failed; continuing")
     return results
 
 
@@ -273,3 +291,67 @@ def fetch_rss_cleaning_generic(limit: int = 50) -> List[Dict[str, Any]]:
     except Exception:
         logger.exception("Generic RSS fetch failed")
         return []
+
+
+def fetch_rss_from_url(url: str, source_label: str = 'RSS', limit: int = 50) -> List[Dict[str, Any]]:
+    """Helper to parse an RSS feed URL and map cleaning-related entries.
+
+    Filters by 'clean' in title/description.
+    """
+    import xml.etree.ElementTree as ET
+    if not url:
+        return []
+    try:
+        r = requests.get(url, timeout=20)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        channel = root.find('channel')
+        entries = channel.findall('item') if channel is not None else root.findall('.//item')
+        out: List[Dict[str, Any]] = []
+        for it in entries[:max(1, min(limit, 200))]:
+            title = (it.findtext('title') or '').strip()
+            link = (it.findtext('link') or '').strip()
+            description = (it.findtext('description') or '').strip()
+            pub_date = (it.findtext('pubDate') or '').strip()
+            if 'clean' not in f"{title}\n{description}".lower():
+                continue
+            out.append({
+                'title': title or 'Cleaning Services / Supplies',
+                'agency': source_label,
+                'location': 'International',
+                'product_category': 'Cleaning Services',
+                'estimated_value': None,
+                'bid_deadline': _normalize_deadline(pub_date),
+                'description': description,
+                'website_url': link or None,
+                'is_small_business_set_aside': False,
+                'contact_name': None,
+                'contact_email': None,
+                'contact_phone': None,
+                'is_quick_win': True,
+                'status': 'open',
+                'posted_date': pub_date,
+            })
+        return out
+    except Exception:
+        logger.exception("RSS fetch failed for %s", url)
+        return []
+
+
+def fetch_rss_eu_cleaning(limit: int = 50) -> List[Dict[str, Any]]:
+    """EU cleaning opportunities via RSS if EU_RSS_URL is configured.
+
+    Provide an EU RSS URL (e.g., a TED search feed) in EU_RSS_URL.
+    """
+    url = os.environ.get('EU_RSS_URL', '').strip()
+    if not url:
+        return []
+    return fetch_rss_from_url(url, source_label='EU Procurement', limit=limit)
+
+
+def fetch_rss_canada_cleaning(limit: int = 50) -> List[Dict[str, Any]]:
+    """Canada cleaning opportunities via RSS if CANADA_RSS_URL is configured."""
+    url = os.environ.get('CANADA_RSS_URL', '').strip()
+    if not url:
+        return []
+    return fetch_rss_from_url(url, source_label='Canada Procurement', limit=limit)

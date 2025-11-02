@@ -2524,10 +2524,10 @@ def customer_dashboard():
     """Optimized customer dashboard with caching, personalization, and recommendations"""
     try:
         user_email = session.get('user_email')
-        
+
         # Log activity
         log_user_activity(user_email, 'viewed_dashboard')
-        
+
         # Check cache first
         cached_data = get_dashboard_cache(user_email)
         if cached_data:
@@ -2536,60 +2536,47 @@ def customer_dashboard():
             # Get stats from all lead sources
             gov_contracts = 0
             try:
-                gov_contracts = db.session.execute(text(
-                    "SELECT COUNT(*) FROM contracts"
-                )).scalar() or 0
-            except:
+                gov_contracts = db.session.execute(text("SELECT COUNT(*) FROM contracts")).scalar() or 0
+            except Exception:
                 pass
-            
+
             supply_contracts = 0
             try:
-                supply_contracts = db.session.execute(text(
-                    "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
-                )).scalar() or 0
-            except:
+                supply_contracts = db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"))\
+                    .scalar() or 0
+            except Exception:
                 pass
-            
+
             commercial_leads = 0
             try:
-                commercial_leads = db.session.execute(text(
-                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
-                )).scalar() or 0
-            except:
+                commercial_leads = db.session.execute(text("SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"))\
+                    .scalar() or 0
+            except Exception:
                 pass
-            
+
             residential_leads = 0
             try:
-                residential_leads = db.session.execute(text(
-                    "SELECT COUNT(*) FROM residential_leads WHERE status = 'new'"
-                )).scalar() or 0
-            except:
+                residential_leads = db.session.execute(text("SELECT COUNT(*) FROM residential_leads WHERE status = 'new'"))\
+                    .scalar() or 0
+            except Exception:
                 pass
-            
+
             quick_wins = 0
             try:
-                # Quick Wins includes:
-                # 1. ALL open supply contracts (not just is_quick_win = TRUE)
-                quick_wins = db.session.execute(text(
-                    "SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"
-                )).scalar() or 0
-                
-                # 2. Urgent/emergency commercial requests
+                # Quick Wins includes: open supply + urgent commercial + capped gov upcoming deadlines
+                quick_wins = db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"))\
+                    .scalar() or 0
                 quick_wins += db.session.execute(text(
                     "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
                 )).scalar() or 0
-                
-                # 3. Regular government contracts with upcoming deadlines (limit 20 as shown on quick_wins page)
                 upcoming_contracts = db.session.execute(text(
                     "SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'"
                 )).scalar() or 0
-                quick_wins += min(upcoming_contracts, 20)  # Cap at 20 like the quick_wins route
-            except:
+                quick_wins += min(upcoming_contracts, 20)
+            except Exception:
                 pass
-            
-            # Total includes government, supply, commercial, and residential
+
             total_leads = gov_contracts + supply_contracts + commercial_leads + residential_leads
-            
             stats = {
                 'total_leads': total_leads,
                 'government_contracts': gov_contracts,
@@ -2598,153 +2585,150 @@ def customer_dashboard():
                 'residential_leads': residential_leads,
                 'quick_wins': quick_wins
             }
-            
-            # Cache the stats
             set_dashboard_cache(user_email, stats)
-        
-        # Get user preferences for personalization
+
+        # Personalization
         preferences = {}
         try:
             preferences = get_user_preferences(user_email)
         except Exception as e:
             print(f"Error getting preferences: {e}")
             preferences = {}
-        
-        # Get unread notifications
+
         notifications = []
         try:
             notifications = get_unread_notifications(user_email, limit=5)
         except Exception as e:
             print(f"Error getting notifications: {e}")
             notifications = []
-        
-        # Check onboarding status
+
         show_onboarding = False
         try:
             show_onboarding = not check_onboarding_status(user_email)
         except Exception as e:
             print(f"Error checking onboarding: {e}")
             show_onboarding = False
-        
-        # Get personalized recommendations
+
+        # Recommendations
         recommended_leads = []
         try:
             recommended_leads = get_personalized_recommendations(user_email, limit=5)
         except Exception as e:
             print(f"Error getting recommendations: {e}")
             recommended_leads = []
-        
-        # Get latest opportunities from all sources (optimized query)
+
+        # Latest opportunities (and per-category lists)
         latest_opportunities = []
+        gov_opps_list, supply_opps_list, com_reqs_list, res_reqs_list = [], [], [], []
         try:
-            # Get government contracts
-            try:
-                gov_opps = db.session.execute(text('''
-                    SELECT title, agency, location, value, created_at, 
-                           'Government Contract' as lead_type, id
-                    FROM contracts 
-                    ORDER BY created_at DESC
-                    LIMIT 10
-                ''')).fetchall()
-                
-                for row in gov_opps:
-                    latest_opportunities.append({
-                        'title': row[0],
-                        'agency': row[1],
-                        'location': row[2],
-                        'value': row[3],
-                        'posted_date': row[4],
-                        'lead_type': row[5],
-                        'id': row[6],
-                        'link': url_for('contracts')
-                    })
-            except Exception as e:
-                print(f"Error fetching government contracts: {e}")
-            
-            # Get commercial requests
-            try:
-                com_reqs = db.session.execute(text('''
-                    SELECT business_name, business_type, city || ', VA', budget_range, created_at, 
-                           'Commercial Request' as lead_type, id
-                    FROM commercial_lead_requests 
-                    WHERE status = 'open'
-                    ORDER BY created_at DESC
-                    LIMIT 5
-                ''')).fetchall()
-                
-                for row in com_reqs:
-                    latest_opportunities.append({
-                        'title': f"Commercial Cleaning - {row[0]}",
-                        'agency': row[1],
-                        'location': row[2],
-                        'value': row[3] or 'Contact for quote',
-                        'posted_date': row[4],
-                        'lead_type': row[5],
-                        'id': row[6],
-                        'link': url_for('customer_leads')
-                    })
-            except Exception as e:
-                print(f"Error fetching commercial requests: {e}")
-            
-            # Get residential requests
-            try:
-                res_reqs = db.session.execute(text('''
-                    SELECT homeowner_name, property_type, city || ', VA', estimated_value, created_at, 
-                           'Residential Request' as lead_type, id
-                    FROM residential_leads 
-                    WHERE status = 'new'
-                    ORDER BY created_at DESC
-                    LIMIT 5
-                ''')).fetchall()
-                
-                for row in res_reqs:
-                    latest_opportunities.append({
-                        'title': f"Residential Cleaning - {row[1]}",
-                        'agency': f"Homeowner: {row[0]}",
-                        'location': row[2],
-                        'value': row[3] or 'Contact for quote',
-                        'posted_date': row[4],
-                        'lead_type': row[5],
-                        'id': row[6],
-                        'link': url_for('customer_leads')
-                    })
-            except Exception as e:
-                print(f"Error fetching residential requests: {e}")
-            
-            # Sort all opportunities by date and limit to 15 most recent
+            # Government
+            gov_rows = db.session.execute(text(
+                """
+                SELECT title, agency, location, value, created_at,
+                       'Government Contract' as lead_type, id
+                FROM contracts
+                ORDER BY created_at DESC
+                LIMIT 10
+                """
+            )).fetchall()
+            for r in gov_rows:
+                rec = {
+                    'title': r[0], 'agency': r[1], 'location': r[2], 'value': r[3],
+                    'posted_date': r[4], 'lead_type': r[5], 'id': r[6], 'link': url_for('contracts')
+                }
+                latest_opportunities.append(rec); gov_opps_list.append(rec)
+
+            # Supply
+            supply_rows = db.session.execute(text(
+                """
+                SELECT title, agency, location, estimated_value, posted_date,
+                       'Supply Opportunity' as lead_type, id, website_url
+                FROM supply_contracts
+                WHERE status = 'open'
+                ORDER BY COALESCE(posted_date, created_at) DESC
+                LIMIT 10
+                """
+            )).fetchall()
+            for r in supply_rows:
+                rec = {
+                    'title': r[0], 'agency': r[1], 'location': r[2], 'value': r[3],
+                    'posted_date': r[4], 'lead_type': r[5], 'id': r[6], 'link': r[7] or url_for('quick_wins')
+                }
+                latest_opportunities.append(rec); supply_opps_list.append(rec)
+
+            # Commercial
+            com_rows = db.session.execute(text(
+                """
+                SELECT business_name, business_type, city || ', VA', budget_range, created_at,
+                       'Commercial Request' as lead_type, id
+                FROM commercial_lead_requests
+                WHERE status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 5
+                """
+            )).fetchall()
+            for r in com_rows:
+                rec = {
+                    'title': f"Commercial Cleaning - {r[0]}", 'agency': r[1], 'location': r[2],
+                    'value': r[3] or 'Contact for quote', 'posted_date': r[4], 'lead_type': r[5], 'id': r[6],
+                    'link': url_for('customer_leads')
+                }
+                latest_opportunities.append(rec); com_reqs_list.append(rec)
+
+            # Residential
+            res_rows = db.session.execute(text(
+                """
+                SELECT homeowner_name, property_type, city || ', VA', estimated_value, created_at,
+                       'Residential Request' as lead_type, id
+                FROM residential_leads
+                WHERE status = 'new'
+                ORDER BY created_at DESC
+                LIMIT 5
+                """
+            )).fetchall()
+            for r in res_rows:
+                rec = {
+                    'title': f"Residential Cleaning - {r[1]}", 'agency': f"Homeowner: {r[0]}", 'location': r[2],
+                    'value': r[3] or 'Contact for quote', 'posted_date': r[4], 'lead_type': r[5], 'id': r[6],
+                    'link': url_for('customer_leads')
+                }
+                latest_opportunities.append(rec); res_reqs_list.append(rec)
+
             latest_opportunities.sort(key=lambda x: x['posted_date'] if x['posted_date'] else '', reverse=True)
             latest_opportunities = latest_opportunities[:15]
-            
         except Exception as e:
             print(f"Error fetching latest opportunities: {e}")
-        
-        # Get saved searches count
+
+        # Saved stats
         saved_searches_count = 0
         try:
-            saved_searches_count = db.session.execute(text('''
-                SELECT COUNT(*) FROM saved_searches WHERE user_email = :email
-            '''), {'email': user_email}).scalar() or 0
-        except:
+            saved_searches_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM saved_searches WHERE user_email = :email"
+            ), {'email': user_email}).scalar() or 0
+        except Exception:
             pass
-        
-        # Get saved leads count
+
         saved_leads_count = 0
         try:
-            saved_leads_count = db.session.execute(text('''
-                SELECT COUNT(*) FROM saved_leads WHERE user_email = :email
-            '''), {'email': user_email}).scalar() or 0
-        except:
+            saved_leads_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM saved_leads WHERE user_email = :email"
+            ), {'email': user_email}).scalar() or 0
+        except Exception:
             pass
-        
-        return render_template('customer_dashboard.html', 
-                             stats=stats, 
-                             latest_opportunities=latest_opportunities,
-                             preferences=preferences,
-                             notifications=notifications,
-                             show_onboarding=show_onboarding,
-                             recommended_leads=recommended_leads,
-                             saved_searches_count=saved_searches_count,
-                             saved_leads_count=saved_leads_count)
+
+        return render_template('customer_dashboard.html',
+                               stats=stats,
+                               latest_opportunities=latest_opportunities,
+                               preferences=preferences,
+                               notifications=notifications,
+                               show_onboarding=show_onboarding,
+                               recommended_leads=recommended_leads,
+                               gov_leads=gov_opps_list,
+                               supply_leads=supply_opps_list,
+                               commercial_leads_list=com_reqs_list,
+                               residential_leads_list=res_reqs_list,
+                               saved_searches_count=saved_searches_count,
+                               saved_leads_count=saved_leads_count)
     except Exception as e:
         print(f"Error loading dashboard: {e}")
         import traceback
