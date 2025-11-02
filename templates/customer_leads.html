@@ -348,7 +348,10 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h5 class="mb-0">
-                        <span class="badge bg-gradient-primary" id="resultsCount" style="font-size: 1rem;">{{ all_leads|length }}</span>
+                        <span class="badge bg-gradient-primary clickable-badge" id="resultsCount" style="font-size: 1rem; cursor: pointer;" 
+                              onclick="showAllLeads()" title="Click to show all leads">
+                            {{ all_leads|length }}
+                        </span>
                         <span class="ms-2">Active Opportunities</span>
                     </h5>
                     <small class="text-muted">
@@ -881,6 +884,31 @@ function setView(view) {
     }
     
     updateActivityScore(5, 'view-change');
+}
+
+function showAllLeads() {
+    // Clear all filters and show all leads
+    clearAllFilters();
+    
+    // Highlight all cards briefly
+    const cards = document.querySelectorAll('.lead-card');
+    cards.forEach(card => {
+        card.style.transition = 'all 0.3s';
+        card.style.transform = 'scale(1.02)';
+        card.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.3)';
+        setTimeout(() => {
+            card.style.transform = '';
+            card.style.boxShadow = '';
+        }, 500);
+    });
+    
+    // Scroll to leads section
+    const leadsContainer = document.getElementById('leadsContainer');
+    if (leadsContainer) {
+        leadsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    updateActivityScore(5, 'show-all');
 }
 
 function sortLeads() {
@@ -1761,6 +1789,33 @@ function resetApplyClickCount() {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     font-weight: bold;
+}
+
+/* Clickable Badge */
+.clickable-badge {
+    transition: all 0.2s;
+    position: relative;
+}
+
+.clickable-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+    animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5); }
+    50% { box-shadow: 0 6px 24px rgba(102, 126, 234, 0.8); }
+}
+
+.clickable-badge::after {
+    content: ' 👆';
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.clickable-badge:hover::after {
+    opacity: 1;
 }
 
 /* Enhanced Lead Cards */
