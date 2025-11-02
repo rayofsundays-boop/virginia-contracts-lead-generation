@@ -7328,7 +7328,7 @@ def admin_test_insert():
             'estimated_value': '100000',  # No dollar sign or commas
             'bid_deadline': '12/31/2025',
             'description': 'This is a test record to verify database insertion works',
-            'website_url': 'https://test.com',
+            'website_url': 'https://sam.gov/content/opportunities',
             'is_small_business_set_aside': True,
             'contact_name': 'Test Contact',
             'contact_email': 'test@test.com',
