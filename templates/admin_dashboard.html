@@ -93,6 +93,118 @@
         </div>
     </div>
 
+    <!-- Pending Requests for Review -->
+    {% if pending_count > 0 %}
+    <div class="card shadow-sm mb-4 border-warning">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Pending Requests for Review ({{ pending_count }})</h5>
+            <span class="badge bg-danger">ACTION REQUIRED</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                <i class="fas fa-info-circle me-2"></i>Review and approve these requests to post them to the Community Forum
+            </p>
+            
+            <!-- Commercial Requests -->
+            {% if pending_commercial %}
+            <h6 class="mt-3 mb-3"><i class="fas fa-building me-2 text-primary"></i>Commercial Requests ({{ pending_commercial|length }})</h6>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Business</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Services</th>
+                            <th>Urgency</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in pending_commercial %}
+                        <tr>
+                            <td><strong>{{ req[1] }}</strong></td>
+                            <td>
+                                {{ req[2] }}<br>
+                                <small class="text-muted">{{ req[3] }}</small><br>
+                                <small class="text-muted">{{ req[4] }}</small>
+                            </td>
+                            <td>{{ req[5] }}, VA</td>
+                            <td><span class="badge bg-info">{{ req[6] }}</span></td>
+                            <td>{{ req[8][:40] }}...</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if req[9] == 'urgent' else 'warning' }}">
+                                    {{ req[9]|upper }}
+                                </span>
+                            </td>
+                            <td>{{ req[10].strftime('%m/%d/%Y') if req[10] else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success" onclick="approveRequest('commercial', {{ req[0] }}, '{{ req[1] }}')" title="Approve & Post">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger" onclick="rejectRequest('commercial', {{ req[0] }}, '{{ req[1] }}')" title="Reject">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- Residential Requests -->
+            {% if pending_residential %}
+            <h6 class="mt-4 mb-3"><i class="fas fa-home me-2 text-success"></i>Residential Requests ({{ pending_residential|length }})</h6>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Homeowner</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Property Type</th>
+                            <th>Services</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in pending_residential %}
+                        <tr>
+                            <td><strong>{{ req[1] }}</strong></td>
+                            <td>
+                                <small class="text-muted">{{ req[2] }}</small><br>
+                                <small class="text-muted">{{ req[3] }}</small>
+                            </td>
+                            <td>{{ req[4] }}, VA</td>
+                            <td><span class="badge bg-success">{{ req[5] }}</span></td>
+                            <td>{{ req[7][:40] }}...</td>
+                            <td>{{ req[8].strftime('%m/%d/%Y') if req[8] else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success" onclick="approveRequest('residential', {{ req[0] }}, '{{ req[1] }}')" title="Approve & Post">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger" onclick="rejectRequest('residential', {{ req[0] }}, '{{ req[1] }}')" title="Reject">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- User Management Table -->
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -531,6 +643,56 @@ function submitLead() {
 
 function viewUserDetails(userId) {
     alert('User details viewer coming soon!');
+}
+
+// Approve request for community forum
+function approveRequest(type, id, name) {
+    if (confirm(`Approve ${type} request from "${name}" and post to Community Forum?`)) {
+        fetch('/admin-approve-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                request_type: type,
+                request_id: id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Request approved and posted to Community Forum!');
+                location.reload();
+            } else {
+                alert(`❌ Error: ${data.error}`);
+            }
+        })
+        .catch(error => alert(`❌ Error: ${error}`));
+    }
+}
+
+// Reject request
+function rejectRequest(type, id, name) {
+    const reason = prompt(`Reject ${type} request from "${name}"?\n\nOptional: Enter reason for rejection:`);
+    if (reason !== null) {  // User didn't cancel
+        fetch('/admin-reject-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                request_type: type,
+                request_id: id,
+                reason: reason
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Request rejected');
+                location.reload();
+            } else {
+                alert(`❌ Error: ${data.error}`);
+            }
+        })
+        .catch(error => alert(`❌ Error: ${error}`));
+    }
 }
 
 // Lead management functions

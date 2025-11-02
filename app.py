@@ -539,6 +539,138 @@ def send_new_lead_notification(lead_type, lead_data):
     except Exception as e:
         print(f"Error sending lead notifications: {str(e)}")
 
+def send_request_confirmation_email(request_type, data):
+    """Send confirmation email to requester that their request has been received"""
+    try:
+        if request_type == 'residential':
+            recipient = data.get('email')
+            name = data.get('homeowner_name')
+            location = f"{data.get('city')}, VA {data.get('zip_code')}"
+        else:  # commercial
+            recipient = data.get('email')
+            name = data.get('contact_name')
+            location = f"{data.get('city')}, VA {data.get('zip_code')}"
+        
+        subject = "✅ Your Cleaning Request Has Been Received"
+        body = f"""
+        Dear {name},
+        
+        Thank you for submitting your {'residential' if request_type == 'residential' else 'commercial'} cleaning request!
+        
+        📋 REQUEST DETAILS:
+        Location: {location}
+        Services: {data.get('services_needed', 'N/A')}
+        Frequency: {data.get('frequency', 'N/A')}
+        
+        🔍 WHAT'S NEXT?
+        Your request is currently under review by our team. Someone will reach out to you within 24 hours to discuss your needs further.
+        
+        Once approved, your request will be posted to our community forum where qualified cleaning contractors can view and respond to your request.
+        
+        📞 CONTACT
+        If you have any questions in the meantime, please reply to this email.
+        
+        Thank you for choosing VA Contract Lead Generation!
+        
+        Best regards,
+        The VA Contract Hub Team
+        """
+        
+        msg = Message(
+            subject=subject,
+            recipients=[recipient],
+            body=body
+        )
+        msg.html = body.replace('\n', '<br>')
+        mail.send(msg)
+        
+        print(f"✅ Sent confirmation email to {recipient}")
+        
+    except Exception as e:
+        print(f"Error sending confirmation email: {str(e)}")
+
+def send_admin_review_notification(request_type, data):
+    """Send notification to admin mailbox for review"""
+    try:
+        # Admin email - get from environment or use default
+        admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vacontracts.com')
+        
+        if request_type == 'residential':
+            subject = f"🏠 New Residential Cleaning Request - Review Required"
+            body = f"""
+            NEW RESIDENTIAL CLEANING REQUEST FOR REVIEW
+            
+            Homeowner: {data.get('homeowner_name')}
+            Email: {data.get('email')}
+            Phone: {data.get('phone')}
+            
+            PROPERTY DETAILS:
+            Address: {data.get('address')}, {data.get('city')}, VA {data.get('zip_code')}
+            Property Type: {data.get('property_type', 'N/A')}
+            Square Footage: {data.get('square_footage', 'N/A')} sq ft
+            Bedrooms: {data.get('bedrooms', 'N/A')}
+            Bathrooms: {data.get('bathrooms', 'N/A')}
+            
+            SERVICE DETAILS:
+            Services Needed: {data.get('services_needed', 'N/A')}
+            Frequency: {data.get('frequency', 'N/A')}
+            Budget Range: {data.get('budget_range', 'Not specified')}
+            Urgency: {data.get('urgency', 'Normal')}
+            Pets: {data.get('pets', 'No')}
+            
+            SPECIAL REQUIREMENTS:
+            {data.get('special_requirements', 'None')}
+            
+            ACCESS INSTRUCTIONS:
+            {data.get('access_instructions', 'None')}
+            
+            ACTION REQUIRED:
+            Please review this request and approve it for posting to the community forum.
+            Login to admin panel to review and approve: {request.host_url}admin-panel
+            """
+        else:  # commercial
+            subject = f"🏢 New Commercial Cleaning Request - Review Required"
+            body = f"""
+            NEW COMMERCIAL CLEANING REQUEST FOR REVIEW
+            
+            Business: {data.get('business_name')}
+            Contact: {data.get('contact_name')}
+            Email: {data.get('email')}
+            Phone: {data.get('phone')}
+            
+            BUSINESS DETAILS:
+            Business Type: {data.get('business_type', 'N/A')}
+            Address: {data.get('address')}, {data.get('city')}, VA {data.get('zip_code')}
+            Square Footage: {data.get('square_footage', 'N/A')} sq ft
+            
+            SERVICE DETAILS:
+            Services Needed: {data.get('services_needed', 'N/A')}
+            Frequency: {data.get('frequency', 'N/A')}
+            Budget Range: {data.get('budget_range', 'Not specified')}
+            Start Date: {data.get('start_date', 'ASAP')}
+            Urgency: {data.get('urgency', 'Normal')}
+            
+            SPECIAL REQUIREMENTS:
+            {data.get('special_requirements', 'None')}
+            
+            ACTION REQUIRED:
+            Please review this request and approve it for posting to the community forum.
+            Login to admin panel to review and approve: {request.host_url}admin-panel
+            """
+        
+        msg = Message(
+            subject=subject,
+            recipients=[admin_email],
+            body=body
+        )
+        msg.html = body.replace('\n', '<br>')
+        mail.send(msg)
+        
+        print(f"✅ Sent admin review notification to {admin_email}")
+        
+    except Exception as e:
+        print(f"Error sending admin notification: {str(e)}")
+
 def send_bid_notification(business_email, contractor_info, bid_info):
     """Notify business owner when a contractor submits a bid"""
     try:
@@ -4850,6 +4982,31 @@ def admin_panel():
         except Exception as e:
             print(f"Note: commercial_opportunities table not found: {e}")
         
+        # Get pending cleaning requests for review
+        pending_commercial = []
+        pending_residential = []
+        try:
+            pending_commercial = db.session.execute(text('''
+                SELECT id, business_name, contact_name, email, phone, city, 
+                       business_type, square_footage, services_needed, urgency, created_at
+                FROM commercial_lead_requests 
+                WHERE status = 'pending_review'
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Note: Error fetching pending commercial requests: {e}")
+        
+        try:
+            pending_residential = db.session.execute(text('''
+                SELECT id, homeowner_name, contact_email, contact_phone, city,
+                       property_type, square_footage, services_needed, created_at
+                FROM residential_leads 
+                WHERE status = 'pending_review'
+                ORDER BY created_at DESC
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Note: Error fetching pending residential requests: {e}")
+        
         return render_template('admin_dashboard.html',
                              user_count=user_count,
                              paid_count=paid_count,
@@ -4857,7 +5014,10 @@ def admin_panel():
                              users=users,
                              gov_contracts=gov_contracts,
                              commercial_leads=commercial_leads,
-                             all_leads=all_leads)
+                             all_leads=all_leads,
+                             pending_commercial=pending_commercial,
+                             pending_residential=pending_residential,
+                             pending_count=len(pending_commercial) + len(pending_residential))
     except Exception as e:
         print(f"Error loading admin panel: {e}")
         import traceback
@@ -7577,7 +7737,7 @@ def submit_cleaning_request():
             'urgency': request.form.get('urgency', 'normal')
         }
         
-        # Insert into database
+        # Insert into database with pending_review status
         db.session.execute(text('''
             INSERT INTO commercial_lead_requests 
             (business_name, contact_name, email, phone, address, city, zip_code, 
@@ -7585,14 +7745,17 @@ def submit_cleaning_request():
              special_requirements, budget_range, start_date, urgency, status)
             VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :zip_code,
                     :business_type, :square_footage, :frequency, :services_needed,
-                    :special_requirements, :budget_range, :start_date, :urgency, 'open')
+                    :special_requirements, :budget_range, :start_date, :urgency, 'pending_review')
         '''), data)
         db.session.commit()
         
-        # Send email notifications to subscribers
-        send_new_lead_notification('commercial', data)
+        # Send confirmation email to requester
+        send_request_confirmation_email('commercial', data)
         
-        flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
+        # Send notification to admin for review
+        send_admin_review_notification('commercial', data)
+        
+        flash('✅ Your request has been submitted successfully! Your request is under review and someone will reach out to you within 24 hours to discuss further.', 'success')
         return redirect(url_for('submit_cleaning_request'))
         
     except Exception as e:
@@ -7629,7 +7792,7 @@ def submit_residential_cleaning_request():
             'access_instructions': request.form.get('access_instructions', '')
         }
         
-        # Insert into residential_leads table
+        # Insert into residential_leads table with pending_review status
         db.session.execute(text('''
             INSERT INTO residential_leads 
             (homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, 
@@ -7639,7 +7802,7 @@ def submit_residential_cleaning_request():
             VALUES 
             (:homeowner_name, :address, :city, :zip_code, :property_type, :bedrooms, :bathrooms,
              :square_footage, :email, :phone, :estimated_value, :frequency, :services_needed,
-             :special_requirements, 'new', 'website_form', 'hot', CURRENT_TIMESTAMP)
+             :special_requirements, 'pending_review', 'website_form', 'hot', CURRENT_TIMESTAMP)
         '''), {
             'homeowner_name': data['homeowner_name'],
             'address': data['address'],
@@ -7661,10 +7824,13 @@ def submit_residential_cleaning_request():
         # Add estimated_value to data for email
         data['estimated_value'] = calculate_estimated_value(data)
         
-        # Send email notifications to subscribers
-        send_new_lead_notification('residential', data)
+        # Send confirmation email to requester
+        send_request_confirmation_email('residential', data)
         
-        flash('Your request has been submitted successfully! Cleaning contractors will contact you soon.', 'success')
+        # Send notification to admin for review
+        send_admin_review_notification('residential', data)
+        
+        flash('✅ Your request has been submitted successfully! Your request is under review and someone will reach out to you within 24 hours to discuss further.', 'success')
         return redirect(url_for('submit_residential_cleaning_request'))
         
     except Exception as e:
@@ -8196,6 +8362,196 @@ def city_procurement(city_name):
         print(f"Error loading city procurement: {e}")
         flash('Error loading city data', 'error')
         return redirect(url_for('contracts'))
+
+# ============================================================================
+# COMMUNITY FORUM FOR APPROVED REQUESTS
+# ============================================================================
+
+@app.route('/community-forum')
+def community_forum():
+    """Public community forum displaying approved cleaning requests"""
+    try:
+        # Get approved commercial requests
+        commercial_requests = db.session.execute(text('''
+            SELECT id, business_name, contact_name, city, business_type, 
+                   square_footage, frequency, services_needed, budget_range, 
+                   urgency, created_at
+            FROM commercial_lead_requests 
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        # Get approved residential requests
+        residential_requests = db.session.execute(text('''
+            SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
+                   square_footage, cleaning_frequency, services_needed, 
+                   estimated_value, created_at
+            FROM residential_leads 
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        return render_template('community_forum.html',
+                             commercial_requests=commercial_requests,
+                             residential_requests=residential_requests,
+                             total_requests=len(commercial_requests) + len(residential_requests))
+    
+    except Exception as e:
+        print(f"Error loading community forum: {e}")
+        flash('Error loading community forum', 'error')
+        return render_template('community_forum.html',
+                             commercial_requests=[],
+                             residential_requests=[],
+                             total_requests=0)
+
+@app.route('/admin-approve-request', methods=['POST'])
+def admin_approve_request():
+    """Admin endpoint to approve a request and post to community forum"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        request_type = data.get('request_type')  # 'commercial' or 'residential'
+        request_id = data.get('request_id')
+        
+        if not request_type or not request_id:
+            return jsonify({'success': False, 'error': 'Missing parameters'})
+        
+        # Update status to approved
+        if request_type == 'commercial':
+            db.session.execute(text('''
+                UPDATE commercial_lead_requests 
+                SET status = 'approved' 
+                WHERE id = :id
+            '''), {'id': request_id})
+            
+            # Get request details for notification
+            req = db.session.execute(text('''
+                SELECT business_name, contact_name, email FROM commercial_lead_requests 
+                WHERE id = :id
+            '''), {'id': request_id}).fetchone()
+            
+        else:  # residential
+            db.session.execute(text('''
+                UPDATE residential_leads 
+                SET status = 'approved' 
+                WHERE id = :id
+            '''), {'id': request_id})
+            
+            # Get request details for notification
+            req = db.session.execute(text('''
+                SELECT homeowner_name, contact_email FROM residential_leads 
+                WHERE id = :id
+            '''), {'id': request_id}).fetchone()
+        
+        db.session.commit()
+        
+        # Send approval notification to requester
+        if req:
+            try:
+                if request_type == 'commercial':
+                    recipient_email = req[2]  # email
+                    recipient_name = req[1]  # contact_name
+                else:
+                    recipient_email = req[1]  # contact_email
+                    recipient_name = req[0]  # homeowner_name
+                
+                subject = "✅ Your Cleaning Request Has Been Approved!"
+                body = f"""
+                Dear {recipient_name},
+                
+                Great news! Your {'commercial' if request_type == 'commercial' else 'residential'} cleaning request has been approved and is now live on our Community Forum!
+                
+                Qualified cleaning contractors can now view and respond to your request.
+                
+                View your request and responses on our Community Forum:
+                {request.host_url}community-forum
+                
+                You should start receiving responses from interested contractors soon.
+                
+                Thank you for using VA Contract Lead Generation!
+                
+                Best regards,
+                The VA Contract Hub Team
+                """
+                
+                msg = Message(
+                    subject=subject,
+                    recipients=[recipient_email],
+                    body=body
+                )
+                msg.html = body.replace('\n', '<br>')
+                mail.send(msg)
+                
+                print(f"✅ Sent approval notification to {recipient_email}")
+                
+            except Exception as e:
+                print(f"Error sending approval email: {e}")
+        
+        # Notify paid subscribers about the new approved lead
+        if request_type == 'commercial':
+            send_new_lead_notification('commercial', {
+                'business_name': req[0],
+                'contact_name': req[1],
+                'email': req[2]
+            })
+        else:
+            send_new_lead_notification('residential', {
+                'homeowner_name': req[0],
+                'email': req[1]
+            })
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Request approved and posted to community forum'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error approving request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin-reject-request', methods=['POST'])
+def admin_reject_request():
+    """Admin endpoint to reject a request"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        request_type = data.get('request_type')
+        request_id = data.get('request_id')
+        reason = data.get('reason', 'Does not meet community guidelines')
+        
+        if not request_type or not request_id:
+            return jsonify({'success': False, 'error': 'Missing parameters'})
+        
+        # Update status to rejected
+        if request_type == 'commercial':
+            db.session.execute(text('''
+                UPDATE commercial_lead_requests 
+                SET status = 'rejected' 
+                WHERE id = :id
+            '''), {'id': request_id})
+        else:  # residential
+            db.session.execute(text('''
+                UPDATE residential_leads 
+                SET status = 'rejected' 
+                WHERE id = :id
+            '''), {'id': request_id})
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Request rejected'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error rejecting request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # Initialize database for both local and production
 try:
