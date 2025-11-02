@@ -121,9 +121,12 @@
         <div class="col-md-6 col-lg-4">
             <div class="card h-100 shadow-sm hover-lift" style="transition: transform 0.2s;">
                 <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <h5 class="mb-0 text-white">
-                        <i class="fas fa-building me-2"></i>{{ pm.name }}
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-building me-2"></i>{{ pm.name }}
+                        </h5>
+                        <span class="badge bg-white text-dark">ID: {{ pm.id }}</span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">

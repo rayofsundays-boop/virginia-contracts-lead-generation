@@ -107,8 +107,13 @@
         <div class="col-md-6">
             <div class="card h-100 shadow-sm hover-shadow">
                 <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-                    <h5 class="mb-0"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
-                    <small class="text-white-50">{{ college.institution_type }}</small>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-0"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
+                            <small class="text-white-50">{{ college.institution_type }}</small>
+                        </div>
+                        <span class="badge bg-white text-dark">ID: {{ college.id }}</span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">

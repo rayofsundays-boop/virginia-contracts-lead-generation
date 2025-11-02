@@ -5218,6 +5218,10 @@ def commercial_contracts():
         }
     ]
     
+    # Add unique IDs to property managers
+    for idx, pm in enumerate(property_managers, start=1):
+        pm['id'] = f'com_{idx:03d}'
+    
     # Fetch approved commercial lead requests from database
     try:
         approved_leads = db.session.execute(text('''
@@ -5227,8 +5231,9 @@ def commercial_contracts():
         ''')).fetchall()
         
         # Convert approved leads to property manager format
-        for lead in approved_leads:
+        for idx, lead in enumerate(approved_leads, start=len(property_managers)+1):
             lead_dict = {
+                'id': f'com_{idx:03d}',
                 'name': lead.business_name,
                 'location': f"{lead.address}, {lead.city}, {lead.state} {lead.zip_code or ''}",
                 'state': lead.state,
