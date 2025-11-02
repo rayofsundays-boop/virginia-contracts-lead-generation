@@ -521,24 +521,31 @@
     }
     
     /* Enhanced text contrast for better readability */
-    .text-muted {
-        color: #495057 !important; /* Darker gray instead of Bootstrap's light #6c757d */
+    .text-muted, p.text-muted, small.text-muted {
+        color: #2c3e50 !important; /* Much darker gray for all muted text */
+        font-weight: 500 !important;
     }
     
     .opportunity-card .text-muted {
-        color: #2c3e50 !important; /* Even darker for card descriptions */
-        font-weight: 500;
+        color: #1a202c !important; /* Very dark for card descriptions */
+        font-weight: 600 !important;
     }
     
     .opportunity-card h6 {
-        color: #1a202c !important; /* Very dark for headings */
-        font-weight: 700;
+        color: #000000 !important; /* Black for headings */
+        font-weight: 700 !important;
     }
     
     /* Stats cards text contrast */
     .card-body p.text-muted {
-        color: #495057 !important;
-        font-weight: 500;
+        color: #2c3e50 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Resources section text */
+    .card-body h6 {
+        color: #1a202c !important;
+        font-weight: 700 !important;
     }
 </style>
 
