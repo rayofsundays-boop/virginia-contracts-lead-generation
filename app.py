@@ -2352,16 +2352,36 @@ def customer_dashboard():
             set_dashboard_cache(user_email, stats)
         
         # Get user preferences for personalization
-        preferences = get_user_preferences(user_email)
+        preferences = {}
+        try:
+            preferences = get_user_preferences(user_email)
+        except Exception as e:
+            print(f"Error getting preferences: {e}")
+            preferences = {}
         
         # Get unread notifications
-        notifications = get_unread_notifications(user_email, limit=5)
+        notifications = []
+        try:
+            notifications = get_unread_notifications(user_email, limit=5)
+        except Exception as e:
+            print(f"Error getting notifications: {e}")
+            notifications = []
         
         # Check onboarding status
-        show_onboarding = not check_onboarding_status(user_email)
+        show_onboarding = False
+        try:
+            show_onboarding = not check_onboarding_status(user_email)
+        except Exception as e:
+            print(f"Error checking onboarding: {e}")
+            show_onboarding = False
         
         # Get personalized recommendations
-        recommended_leads = get_personalized_recommendations(user_email, limit=5)
+        recommended_leads = []
+        try:
+            recommended_leads = get_personalized_recommendations(user_email, limit=5)
+        except Exception as e:
+            print(f"Error getting recommendations: {e}")
+            recommended_leads = []
         
         # Get latest opportunities (optimized query)
         latest_opportunities = []
