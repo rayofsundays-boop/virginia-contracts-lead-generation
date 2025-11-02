@@ -4734,12 +4734,22 @@ def admin_panel():
             gov_contracts = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
             
             # Get all available contract leads
-            all_leads = db.session.execute(text('''
+            raw_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, 
                        description, naics_code, set_aside, posted_date, solicitation_number
                 FROM contracts 
                 ORDER BY posted_date DESC
             ''')).fetchall()
+            
+            # Convert datetime objects to strings for template rendering
+            all_leads = []
+            for lead in raw_leads:
+                lead_list = list(lead)
+                # Convert posted_date (index 9) to string if it's a datetime
+                if lead_list[9] and hasattr(lead_list[9], 'strftime'):
+                    lead_list[9] = lead_list[9].strftime('%Y-%m-%d')
+                all_leads.append(tuple(lead_list))
+                
         except Exception as e:
             print(f"Note: contracts table error: {e}")
         
