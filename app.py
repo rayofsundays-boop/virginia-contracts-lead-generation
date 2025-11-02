@@ -2647,7 +2647,7 @@ def login():
             return redirect(url_for('admin_dashboard'))
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
-            return redirect(url_for('customer_dashboard'))
+            return redirect(url_for('customer_leads'))
     else:
         flash('Invalid username or password. Please try again.', 'error')
         return redirect(url_for('auth'))
