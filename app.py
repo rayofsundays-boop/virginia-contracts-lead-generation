@@ -4056,11 +4056,22 @@ def commercial_contracts():
     """Property Managers Nationwide with Vendor Application Links"""
     # This page is now PUBLIC - shows property managers nationwide with vendor links
     
-    # National Property Management Companies with Vendor Application Links
+    # Get filter parameters
+    state_filter = request.args.get('state', '').strip()
+    city_filter = request.args.get('city', '').strip().lower()
+    search_query = request.args.get('q', '').strip().lower()
+    
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)
+    per_page = max(6, min(per_page, 50))  # Limit between 6 and 50
+    
     property_managers = [
         {
             'name': 'Greystar Real Estate Partners',
             'location': 'HQ: 230 Meeting Street, Charleston, SC 29401 | Regional offices in all 50 states',
+            'state': 'SC',
+            'city': 'Charleston',
             'properties': '750,000+ units across 240+ markets',
             'vendor_link': 'https://www.greystar.com/about-us/work-with-us',
             'description': 'Largest property management company in the US. Contact Vendor Relations: 843-266-5170 | Email: vendorservices@greystar.com',
@@ -4070,6 +4081,8 @@ def commercial_contracts():
         {
             'name': 'Lincoln Property Company',
             'location': 'HQ: 2501 Cedar Springs Road, Dallas, TX 75201 | 200+ offices nationwide',
+            'state': 'TX',
+            'city': 'Dallas',
             'properties': '200,000+ units managed',
             'vendor_link': 'https://www.lpccorp.com/contact-us',
             'description': 'Full-service real estate company founded 1965. Contact Procurement: 214-740-3300 | Email: procurement@lpccorp.com',
@@ -4079,6 +4092,8 @@ def commercial_contracts():
         {
             'name': 'CBRE Group',
             'location': 'HQ: 2100 McKinney Avenue, Dallas, TX 75201 (formerly LA) | 530+ offices globally',
+            'state': 'TX',
+            'city': 'Dallas',
             'properties': '6 billion sq ft managed globally',
             'vendor_link': 'https://www.cbre.com/about-us/contact-us',
             'description': 'World\'s largest commercial real estate firm. US Vendor Relations: 214-979-6100 | Email: vendor.relations@cbre.com',
@@ -4088,6 +4103,8 @@ def commercial_contracts():
         {
             'name': 'Cushman & Wakefield',
             'location': 'HQ: 225 W Wacker Drive, Chicago, IL 60606 | 400+ offices in 60 countries',
+            'state': 'IL',
+            'city': 'Chicago',
             'properties': '5+ billion sq ft managed',
             'vendor_link': 'https://www.cushmanwakefield.com/en/united-states/services',
             'description': 'Global real estate services firm. US Procurement: 312-470-2000 | Email: us.procurement@cushwake.com',
@@ -4097,6 +4114,8 @@ def commercial_contracts():
         {
             'name': 'JLL (Jones Lang LaSalle)',
             'location': 'HQ: 200 E Randolph Drive, Chicago, IL 60601 | 300+ offices in 80 countries',
+            'state': 'IL',
+            'city': 'Chicago',
             'properties': '4.7 billion sq ft managed',
             'vendor_link': 'https://www.us.jll.com/en/contact-us',
             'description': 'Fortune 500 real estate services firm. Vendor Services: 312-782-5800 | Email: vendor.management@jll.com',
@@ -4106,6 +4125,8 @@ def commercial_contracts():
         {
             'name': 'Apartment Management Consultants (AMC)',
             'location': 'HQ: 5775 Glenridge Drive NE, Suite B-100, Atlanta, GA 30328 | 19 regional offices',
+            'state': 'GA',
+            'city': 'Atlanta',
             'properties': '100,000+ units in 700+ communities',
             'vendor_link': 'https://www.amcllc.com/contact',
             'description': 'Third-party multifamily property management since 1978. Contact: 404-836-7100 | Email: procurement@amcllc.com',
@@ -4115,6 +4136,10 @@ def commercial_contracts():
         {
             'name': 'Morgan Properties',
             'location': 'HQ: 2200 Rte 70 West, Suite 100, Cherry Hill, NJ 08002 | Offices in PA, NJ, TX',
+            'state': 'NJ',
+            'city': 'Cherry Hill',
+            'state': 'NJ',
+            'city': 'Cherry Hill',
             'properties': '90,000+ units in 300+ communities',
             'vendor_link': 'https://www.morganproperties.com/contact',
             'description': 'Vertically integrated apartment owner/operator. Contact: 856-382-1200 | Email: vendorservices@morganproperties.com',
@@ -4124,6 +4149,8 @@ def commercial_contracts():
         {
             'name': 'Alliance Residential',
             'location': 'HQ: 4200 N Scottsdale Road, Suite 1700, Scottsdale, AZ 85251 | 25+ regional offices',
+            'state': 'AZ',
+            'city': 'Scottsdale',
             'properties': '85,000+ units developed/managed',
             'vendor_link': 'https://www.allresco.com/contact-us',
             'description': 'Multifamily developer and manager since 1996. Contact: 480-427-7000 | Email: procurement@allresco.com',
@@ -4133,6 +4160,8 @@ def commercial_contracts():
         {
             'name': 'Bozzuto',
             'location': 'HQ: 8020 Towers Crescent Drive, Vienna, VA 22182 | Offices in MD, VA, DC, NC, FL',
+            'state': 'VA',
+            'city': 'Vienna',
             'properties': '80,000+ units in 400+ communities',
             'vendor_link': 'https://www.bozzuto.com/contact',
             'description': 'Diversified real estate company founded 1988. Contact: 301-220-0100 | Email: procurement@bozzuto.com',
@@ -4142,6 +4171,8 @@ def commercial_contracts():
         {
             'name': 'AvalonBay Communities',
             'location': 'HQ: 671 N Glebe Road, Suite 800, Arlington, VA 22203 | Regional offices in 11 states',
+            'state': 'VA',
+            'city': 'Arlington',
             'properties': '80,000+ apartment homes in 295+ communities',
             'vendor_link': 'https://www.avaloncommunities.com/contact-us',
             'description': 'Publicly traded REIT (NYSE: AVB). Vendor Relations: 703-329-6300 | Email: vendor.services@avalonbay.com',
@@ -4151,6 +4182,8 @@ def commercial_contracts():
         {
             'name': 'Equity Residential',
             'location': 'HQ: 77 W Wacker Drive, Chicago, IL 60601 | Properties in 6 core markets',
+            'state': 'IL',
+            'city': 'Chicago',
             'properties': '80,000+ apartments in 305+ properties',
             'vendor_link': 'https://www.equityapartments.com/corporate/contact-us',
             'description': 'S&P 500 REIT (NYSE: EQR). Procurement: 312-474-1300 | Email: procurement@eqrworld.com',
@@ -4160,6 +4193,8 @@ def commercial_contracts():
         {
             'name': 'Camden Property Trust',
             'location': 'HQ: 11 Greenway Plaza, Suite 2400, Houston, TX 77046 | 16 regional markets',
+            'state': 'TX',
+            'city': 'Houston',
             'properties': '60,000+ apartment homes in 170+ properties',
             'vendor_link': 'https://www.camdenliving.com/corporate/contact',
             'description': 'S&P 400 REIT (NYSE: CPT) since 1993. Vendor Services: 713-354-2500 | Email: vendorservices@camdenliving.com',
@@ -4169,6 +4204,8 @@ def commercial_contracts():
         {
             'name': 'FPI Management',
             'location': 'HQ: 6400 Riverside Blvd, Suite 101, Sacramento, CA 95831 | 23 regional offices',
+            'state': 'CA',
+            'city': 'Sacramento',
             'properties': '60,000+ units in 500+ properties',
             'vendor_link': 'https://www.fpimgt.com/contact',
             'description': 'Third-party management since 1968. Contact: 916-736-4500 | Email: purchasing@fpimgt.com',
@@ -4178,6 +4215,8 @@ def commercial_contracts():
         {
             'name': 'Colliers International',
             'location': 'HQ: 145 King Street West, Suite 300, Toronto, ON | US HQ: Seattle, WA | 400+ offices',
+            'state': 'WA',
+            'city': 'Seattle',
             'properties': 'Billions in commercial real estate',
             'vendor_link': 'https://www.colliers.com/en/united-states',
             'description': 'Global diversified real estate services. US Vendor Portal: 206-682-5000 | Email: us.procurement@colliers.com',
@@ -4187,6 +4226,8 @@ def commercial_contracts():
         {
             'name': 'Newmark',
             'location': 'HQ: 125 Park Avenue, New York, NY 10017 | 160+ offices in North America',
+            'state': 'NY',
+            'city': 'New York',
             'properties': '2.5+ billion sq ft under management',
             'vendor_link': 'https://www.nmrk.com/contact',
             'description': 'Nasdaq-listed (NMRK) commercial real estate advisor. Vendor Relations: 212-372-2000 | Email: procurement@nmrk.com',
@@ -4196,6 +4237,8 @@ def commercial_contracts():
         {
             'name': 'RealPage Property Management',
             'location': 'HQ: 4000 International Parkway, Carrollton, TX 75007 | Software serves 19M+ units',
+            'state': 'TX',
+            'city': 'Carrollton',
             'properties': '20 million+ units using RealPage software',
             'vendor_link': 'https://www.realpage.com/contact',
             'description': 'Property management software and on-site services. Contact: 972-820-3000 | Email: partnerships@realpage.com',
@@ -4205,6 +4248,8 @@ def commercial_contracts():
         {
             'name': 'Bell Partners',
             'location': 'HQ: 301 S Elm Street, Suite 400, Greensboro, NC 27401 | 12 regional offices',
+            'state': 'NC',
+            'city': 'Greensboro',
             'properties': '85,000+ apartment homes in 550+ communities',
             'vendor_link': 'https://www.bellpartnersinc.com/contact',
             'description': 'Apartment investment and management since 1976. Contact: 336-232-1860 | Email: vendorrelations@bellpartnersinc.com',
@@ -4214,6 +4259,8 @@ def commercial_contracts():
         {
             'name': 'Pinnacle Property Management',
             'location': 'HQ: 5227 Paramount Parkway, Morrisville, NC 27560 | Offices in NC, VA, SC, GA, TN, TX',
+            'state': 'NC',
+            'city': 'Morrisville',
             'properties': '50,000+ units in 280+ communities',
             'vendor_link': 'https://www.pinnacleliving.com/contact',
             'description': 'Third-party property management since 1988. Contact: 919-233-7970 | Email: procurement@pinnacleliving.com',
@@ -4223,6 +4270,8 @@ def commercial_contracts():
         {
             'name': 'Wood Partners',
             'location': 'HQ: 1776 Peachtree Street NW, Suite 300 South, Atlanta, GA 30309 | 18 regional offices',
+            'state': 'GA',
+            'city': 'Atlanta',
             'properties': '90,000+ apartments in 100+ communities',
             'vendor_link': 'https://woodpartners.com/contact',
             'description': 'Multifamily developer and manager since 1998. Contact: 404-250-2420 | Email: vendorservices@woodpartners.com',
@@ -4232,6 +4281,8 @@ def commercial_contracts():
         {
             'name': 'WinnCompanies',
             'location': 'HQ: 675 Massachusetts Avenue, Cambridge, MA 02139 | 140+ offices in all 50 states',
+            'state': 'MA',
+            'city': 'Cambridge',
             'properties': '115,000+ apartment homes in 800+ communities',
             'vendor_link': 'https://www.winnco.com/contact-us',
             'description': 'Award-winning affordable housing specialist since 1971. Contact: 617-612-8100 | Email: procurement@winnco.com',
@@ -4241,6 +4292,8 @@ def commercial_contracts():
         {
             'name': 'Prometheus Real Estate Group',
             'location': 'HQ: 100 Pine Street, Suite 1250, San Francisco, CA 94111 | Offices in CA, OR, WA',
+            'state': 'CA',
+            'city': 'San Francisco',
             'properties': '40,000+ units in 200+ communities',
             'vendor_link': 'https://www.prometheusreg.com/contact',
             'description': 'Multifamily investment and management since 1991. Contact: 415-398-2340 | Email: vendorservices@prometheusreg.com',
@@ -4250,6 +4303,8 @@ def commercial_contracts():
         {
             'name': 'ZRS Management',
             'location': 'HQ: 3050 Biscayne Blvd, Suite 600, Miami, FL 33137 | 15 regional offices',
+            'state': 'FL',
+            'city': 'Miami',
             'properties': '50,000+ units in 300+ communities',
             'vendor_link': 'https://www.zrsmanagement.com/contact',
             'description': 'Third-party management for institutional investors since 2002. Contact: 305-573-9977 | Email: purchasing@zrsmanagement.com',
@@ -4259,6 +4314,8 @@ def commercial_contracts():
         {
             'name': 'Riverstone Residential',
             'location': 'HQ: 5950 Sherry Lane, Suite 800, Dallas, TX 75225 | 14 regional offices',
+            'state': 'TX',
+            'city': 'Dallas',
             'properties': '45,000+ apartment homes in 250+ communities',
             'vendor_link': 'https://www.riverstoneresidential.com/contact-us',
             'description': 'Full-service property management since 2013. Contact: 214-572-7200 | Email: procurement@riverstoneresidential.com',
@@ -4268,6 +4325,8 @@ def commercial_contracts():
         {
             'name': 'BH Management',
             'location': 'HQ: 1641 Bell Avenue, Suite 100, Des Moines, IA 50315 | 70+ offices in 30 states',
+            'state': 'IA',
+            'city': 'Des Moines',
             'properties': '40,000+ units in 350+ communities',
             'vendor_link': 'https://www.bhmanagement.com/contact',
             'description': 'Third-party multifamily management since 1993. Contact: 515-242-4474 | Email: vendorrelations@bhmanagement.com',
@@ -4276,8 +4335,47 @@ def commercial_contracts():
         }
     ]
     
+    # Apply filters
+    filtered_managers = property_managers
+    
+    if state_filter:
+        filtered_managers = [pm for pm in filtered_managers if pm.get('state', '').upper() == state_filter.upper()]
+    
+    if city_filter:
+        filtered_managers = [pm for pm in filtered_managers if city_filter in pm.get('city', '').lower()]
+    
+    if search_query:
+        filtered_managers = [pm for pm in filtered_managers if (
+            search_query in pm.get('name', '').lower() or
+            search_query in pm.get('description', '').lower() or
+            search_query in pm.get('regions', '').lower() or
+            search_query in pm.get('property_types', '').lower()
+        )]
+    
+    # Get unique states and cities for filter dropdowns
+    all_states = sorted(set(pm.get('state', '') for pm in property_managers if pm.get('state')))
+    all_cities = sorted(set(pm.get('city', '') for pm in property_managers if pm.get('city')))
+    
+    # Calculate pagination
+    total_managers = len(filtered_managers)
+    total_pages = max(1, (total_managers + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    paginated_managers = filtered_managers[start_idx:end_idx]
+    
     return render_template('commercial_contracts.html', 
-                         property_managers=property_managers,
+                         property_managers=paginated_managers,
+                         total_managers=total_managers,
+                         all_states=all_states,
+                         all_cities=all_cities,
+                         state_filter=state_filter,
+                         city_filter=city_filter,
+                         search_query=search_query,
+                         page=page,
+                         per_page=per_page,
+                         total_pages=total_pages,
                          is_subscriber=True,  # Make this public
                          show_upgrade_message=False)
 

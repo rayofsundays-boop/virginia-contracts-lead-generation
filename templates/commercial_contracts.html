@@ -18,7 +18,7 @@
                     <div class="col-md-4">
                         <div class="badge bg-light text-dark p-3 fs-6 w-100">
                             <i class="fas fa-building"></i><br>
-                            <strong>{{ property_managers|length }}+</strong> Companies
+                            <strong>{{ total_managers }}</strong> Companies{% if state_filter or city_filter or search_query %} (filtered){% endif %}
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -35,6 +35,66 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Property Managers</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('commercial_contracts') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="state" class="form-label">State (HQ)</label>
+                        <select name="state" id="state" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All States</option>
+                            {% for state in all_states %}
+                            <option value="{{ state }}" {% if state_filter == state %}selected{% endif %}>{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="city" class="form-label">City (HQ)</label>
+                        <select name="city" id="city" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Cities</option>
+                            {% for city in all_cities %}
+                            <option value="{{ city }}" {% if city_filter == city %}selected{% endif %}>{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="q" class="form-label">Search</label>
+                        <input type="text" name="q" id="q" class="form-control" 
+                               placeholder="Search by name, description, regions..." 
+                               value="{{ search_query or '' }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+                {% if state_filter or city_filter or search_query %}
+                <div class="mt-3">
+                    <a href="{{ url_for('commercial_contracts') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-2"></i>Clear All Filters
+                    </a>
+                    {% if state_filter %}
+                    <span class="badge bg-info ms-2">State: {{ state_filter }}</span>
+                    {% endif %}
+                    {% if city_filter %}
+                    <span class="badge bg-info ms-2">City: {{ city_filter }}</span>
+                    {% endif %}
+                    {% if search_query %}
+                    <span class="badge bg-info ms-2">Search: "{{ search_query }}"</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
         </div>
     </div>
 </div>
@@ -99,6 +159,58 @@
         </div>
         {% endfor %}
     </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Property managers pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            <!-- Previous Button -->
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('commercial_contracts', page=page-1, state=state_filter, city=city_filter, q=search_query, per_page=per_page) }}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            </li>
+            
+            <!-- First Page -->
+            {% if page > 3 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('commercial_contracts', page=1, state=state_filter, city=city_filter, q=search_query, per_page=per_page) }}">1</a>
+            </li>
+            {% if page > 4 %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endif %}
+            
+            <!-- Page Numbers -->
+            {% for p in range([1, page-2]|max, [total_pages, page+2]|min + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('commercial_contracts', page=p, state=state_filter, city=city_filter, q=search_query, per_page=per_page) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <!-- Last Page -->
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('commercial_contracts', page=total_pages, state=state_filter, city=city_filter, q=search_query, per_page=per_page) }}">{{ total_pages }}</a>
+            </li>
+            {% endif %}
+            
+            <!-- Next Button -->
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('commercial_contracts', page=page+1, state=state_filter, city=city_filter, q=search_query, per_page=per_page) }}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="text-center text-muted mt-3">
+            <small>Showing {{ (page-1) * per_page + 1 }}-{{ [page * per_page, total_managers]|min }} of {{ total_managers }} companies</small>
+        </div>
+    </nav>
+    {% endif %}
 </div>
 
 <!-- Tips Section -->
