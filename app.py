@@ -4142,7 +4142,7 @@ def commercial_contracts():
             'state': 'SC',
             'city': 'Charleston',
             'properties': '750,000+ units across 240+ markets',
-            'vendor_link': 'https://www.greystar.com/about-us/work-with-us',
+            'vendor_link': 'https://www.greystar.com/contact-us/supplier-and-vendor-opportunities',
             'description': 'Largest property management company in the US. Contact Vendor Relations: 843-266-5170 | Email: vendorservices@greystar.com',
             'property_types': 'Multi-family apartments, student housing, military housing',
             'regions': 'All 50 states with major presence in Sunbelt markets'
