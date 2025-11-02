@@ -106,11 +106,11 @@
         {% for college in colleges %}
         <div class="col-md-6">
             <div class="card h-100 shadow-sm hover-shadow">
-                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h5 class="mb-0"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
-                            <small class="text-white-50">{{ college.institution_type }}</small>
+                            <h5 class="mb-0 fw-bold" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
+                            <small class="d-block mt-1" style="opacity: 0.95;">{{ college.institution_type }}</small>
                         </div>
                         <div class="d-flex gap-2">
                             {% if college.status == 'upcoming' %}
@@ -118,7 +118,7 @@
                                 <i class="fas fa-clock me-1"></i>Upcoming
                             </span>
                             {% endif %}
-                            <span class="badge bg-white text-dark">ID: {{ college.id }}</span>
+                            <span class="badge bg-white text-dark fw-bold">ID: {{ college.id }}</span>
                         </div>
                     </div>
                 </div>
