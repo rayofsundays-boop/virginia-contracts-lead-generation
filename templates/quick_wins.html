@@ -99,7 +99,13 @@
                                     {% else %}
                                         <span class="badge bg-success me-2">⚡ QUICK WIN</span>
                                     {% endif %}
-                                    {{ lead.title }}
+                                    {% if lead.source == 'government' %}
+                                        <a href="{{ url_for('contracts') }}#contract-{{ lead.id.split('_')[1] }}" class="text-dark text-decoration-none hover-underline">
+                                            {{ lead.title }}
+                                        </a>
+                                    {% else %}
+                                        {{ lead.title }}
+                                    {% endif %}
                                 </h4>
                                 <p class="mb-0 text-muted">
                                     <span class="badge bg-primary me-2">{{ lead.lead_type }}</span>
@@ -385,6 +391,15 @@
 
 .card-header {
     border-bottom: 2px solid rgba(0,0,0,0.05);
+}
+
+.hover-underline {
+    transition: all 0.2s ease;
+}
+
+.hover-underline:hover {
+    text-decoration: underline !important;
+    color: #667eea !important;
 }
 </style>
 {% endblock %}
