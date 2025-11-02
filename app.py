@@ -9333,7 +9333,7 @@ def procurement_lifecycle():
 
 @app.route('/community-forum')
 def community_forum():
-    """Public community forum displaying approved cleaning requests with filters and pagination"""
+    """Public community forum displaying approved cleaning requests, discussions, and admin posts"""
     try:
         # Query params
         q = (request.args.get('q') or '').strip()
@@ -9342,7 +9342,7 @@ def community_forum():
         req_type = (request.args.get('type') or 'all').strip().lower()  # 'all' | 'commercial' | 'residential'
         active_tab = (request.args.get('tab') or 'all').strip().lower()
 
-        # Pagination params (separate for commercial/residential to keep tabs independent)
+        # Pagination params (separate for commercial/residential/discussions)
         def _int_arg(name, default, min_v=1, max_v=1000):
             try:
                 v = int(request.args.get(name, default))
@@ -9353,6 +9353,38 @@ def community_forum():
         per_page = _int_arg('per_page', 10, 5, 50)
         page_comm = _int_arg('page_comm', 1)
         page_res = _int_arg('page_res', 1)
+        page_disc = _int_arg('page_disc', 1)  # discussions page
+
+        # Get forum posts (discussions)
+        disc_where = ["status = 'active'"]
+        disc_params = {}
+        if q:
+            disc_where.append('(LOWER(title) LIKE :disc_q OR LOWER(content) LIKE :disc_q)')
+            disc_params['disc_q'] = f"%{q.lower()}%"
+        
+        disc_where_sql = ' AND '.join(disc_where)
+        
+        # Count discussions
+        disc_count = db.session.execute(text(f'''
+            SELECT COUNT(1) FROM forum_posts WHERE {disc_where_sql}
+        '''), disc_params).scalar()
+        
+        disc_pages = max(1, (disc_count + per_page - 1) // per_page)
+        page_disc = min(page_disc, disc_pages)
+        disc_offset = (page_disc - 1) * per_page
+        
+        # Get discussions with comment counts
+        forum_posts = db.session.execute(text(f'''
+            SELECT 
+                fp.id, fp.title, fp.content, fp.post_type, fp.user_email, 
+                fp.user_name, fp.is_admin_post, fp.views, fp.created_at,
+                (SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) as comment_count,
+                (SELECT COUNT(*) FROM forum_post_likes WHERE post_id = fp.id) as like_count
+            FROM forum_posts fp
+            WHERE {disc_where_sql}
+            ORDER BY fp.created_at DESC
+            LIMIT :disc_limit OFFSET :disc_offset
+        '''), {**disc_params, 'disc_limit': per_page, 'disc_offset': disc_offset}).fetchall()
 
         # Build filters for commercial
         comm_where = ["status = 'approved'"]
@@ -9441,6 +9473,7 @@ def community_forum():
             'community_forum.html',
             commercial_requests=commercial_requests,
             residential_requests=residential_requests,
+            forum_posts=forum_posts,
             total_requests=(comm_count if req_type in ('all', 'commercial') else 0) + (res_count if req_type in ('all', 'residential') else 0),
             # filters
             q=q, city=city, urgency=urgency, req_type=req_type, active_tab=active_tab,
@@ -9449,6 +9482,7 @@ def community_forum():
             per_page=per_page,
             page_comm=page_comm, comm_pages=comm_pages, comm_count=comm_count,
             page_res=page_res, res_pages=res_pages, res_count=res_count,
+            page_disc=page_disc, disc_pages=disc_pages, disc_count=disc_count,
         )
 
     except Exception as e:
@@ -9457,10 +9491,12 @@ def community_forum():
         return render_template('community_forum.html',
                              commercial_requests=[],
                              residential_requests=[],
+                             forum_posts=[],
                              total_requests=0,
                              q='', city='', urgency='', req_type='all', active_tab='all',
                              cities=[], per_page=10, page_comm=1, comm_pages=1, comm_count=0,
-                             page_res=1, res_pages=1, res_count=0)
+                             page_res=1, res_pages=1, res_count=0,
+                             page_disc=1, disc_pages=1, disc_count=0)
 
 @app.route('/admin-approve-request', methods=['POST'])
 def admin_approve_request():
@@ -9645,6 +9681,179 @@ def admin_unapprove_request():
     except Exception as e:
         db.session.rollback()
         print(f"Error unapproving request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/forum/create-post', methods=['POST'])
+def create_forum_post():
+    """Create a new discussion post in the community forum"""
+    try:
+        data = request.get_json()
+        title = (data.get('title') or '').strip()
+        content = (data.get('content') or '').strip()
+        user_email = data.get('user_email', session.get('email', 'anonymous@guest.com'))
+        user_name = data.get('user_name', session.get('name', 'Anonymous'))
+        is_admin = session.get('is_admin', False)
+        
+        if not title or not content:
+            return jsonify({'success': False, 'error': 'Title and content are required'}), 400
+        
+        # Insert post
+        result = db.session.execute(text('''
+            INSERT INTO forum_posts 
+            (title, content, post_type, user_email, user_name, is_admin_post, status)
+            VALUES (:title, :content, :post_type, :user_email, :user_name, :is_admin, 'active')
+        '''), {
+            'title': title,
+            'content': content,
+            'post_type': 'discussion',
+            'user_email': user_email,
+            'user_name': user_name,
+            'is_admin': is_admin
+        })
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Discussion post created successfully!',
+            'redirect': url_for('community_forum', tab='discussions')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating forum post: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/forum/create-comment', methods=['POST'])
+def create_forum_comment():
+    """Add a comment to a forum post"""
+    try:
+        data = request.get_json()
+        post_id = data.get('post_id')
+        content = (data.get('content') or '').strip()
+        user_email = data.get('user_email', session.get('email', 'anonymous@guest.com'))
+        user_name = data.get('user_name', session.get('name', 'Anonymous'))
+        is_admin = session.get('is_admin', False)
+        parent_comment_id = data.get('parent_comment_id')  # For nested replies
+        
+        if not post_id or not content:
+            return jsonify({'success': False, 'error': 'Post ID and content are required'}), 400
+        
+        # Insert comment
+        db.session.execute(text('''
+            INSERT INTO forum_comments 
+            (post_id, content, user_email, user_name, is_admin, parent_comment_id)
+            VALUES (:post_id, :content, :user_email, :user_name, :is_admin, :parent_id)
+        '''), {
+            'post_id': post_id,
+            'content': content,
+            'user_email': user_email,
+            'user_name': user_name,
+            'is_admin': is_admin,
+            'parent_id': parent_comment_id
+        })
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Comment added successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating comment: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/forum/admin-post-from-request', methods=['POST'])
+def admin_post_from_request():
+    """Admin endpoint to create a forum post from an approved commercial/residential request"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        request_type = data.get('request_type')  # 'commercial' or 'residential'
+        request_id = data.get('request_id')
+        custom_message = data.get('custom_message', '').strip()
+        
+        if not request_type or not request_id:
+            return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+        
+        # Fetch request details
+        if request_type == 'commercial':
+            req = db.session.execute(text('''
+                SELECT business_name, city, business_type, square_footage, 
+                       frequency, services_needed, budget_range, urgency
+                FROM commercial_lead_requests
+                WHERE id = :id AND status = 'approved'
+            '''), {'id': request_id}).fetchone()
+            
+            if not req:
+                return jsonify({'success': False, 'error': 'Request not found or not approved'}), 404
+            
+            title = f"🏢 New Commercial Opportunity: {req[0]} in {req[1]}, VA"
+            content = f"""{custom_message}
+
+**Business:** {req[0]}
+**Location:** {req[1]}, Virginia
+**Business Type:** {req[2]}
+**Size:** {req[3]} sq ft
+**Cleaning Frequency:** {req[4]}
+**Services Needed:** {req[5]}
+**Budget Range:** {req[6] or 'Contact for quote'}
+**Urgency:** {req[7].upper() if req[7] else 'NORMAL'} PRIORITY
+
+📍 This is a verified cleaning opportunity from a business looking to hire professional cleaning services.
+
+💼 View full details and contact information at: {url_for('customer_leads', _external=True)}"""
+            
+        else:  # residential
+            req = db.session.execute(text('''
+                SELECT homeowner_name, city, property_type, bedrooms, bathrooms,
+                       square_footage, cleaning_frequency, services_needed, estimated_value
+                FROM residential_leads
+                WHERE id = :id AND status = 'approved'
+            '''), {'id': request_id}).fetchone()
+            
+            if not req:
+                return jsonify({'success': False, 'error': 'Request not found or not approved'}), 404
+            
+            title = f"🏠 New Residential Opportunity: {req[2]} in {req[1]}, VA"
+            content = f"""{custom_message}
+
+**Location:** {req[1]}, Virginia
+**Property Type:** {req[2]}
+**Size:** {req[3]} bed / {req[4]} bath ({req[5]} sq ft)
+**Cleaning Frequency:** {req[6]}
+**Services Needed:** {req[7]}
+**Estimated Monthly Value:** ${req[8]}/month
+
+🏡 This is a verified residential cleaning opportunity from a homeowner looking to hire professional services.
+
+💼 View full details and contact information at: {url_for('customer_leads', _external=True)}"""
+        
+        # Create forum post
+        db.session.execute(text('''
+            INSERT INTO forum_posts 
+            (title, content, post_type, user_email, user_name, is_admin_post, 
+             related_lead_id, related_lead_type, status)
+            VALUES (:title, :content, 'opportunity', 'admin@vacontracts.com', 'Admin Team', 
+                    1, :lead_id, :lead_type, 'active')
+        '''), {
+            'title': title,
+            'content': content,
+            'lead_id': str(request_id),
+            'lead_type': request_type
+        })
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Opportunity posted to community forum!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error posting from request: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def populate_supply_contracts(force=False):
