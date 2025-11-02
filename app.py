@@ -6600,6 +6600,23 @@ def quick_wins():
         except Exception as e:
             print(f"Commercial requests error: {e}")
         
+        # Get regular contracts with upcoming deadlines (as fallback quick wins)
+        urgent_contracts = []
+        try:
+            urgent_contracts = db.session.execute(text('''
+                SELECT 
+                    id, title, agency, location, value, deadline, 
+                    description, naics_code, set_aside, posted_date, solicitation_number
+                FROM contracts 
+                WHERE deadline IS NOT NULL 
+                AND deadline != ''
+                AND deadline != 'Rolling'
+                ORDER BY deadline ASC
+                LIMIT 20
+            ''')).fetchall()
+        except Exception as e:
+            print(f"Regular contracts error: {e}")
+        
         # Combine all leads
         all_quick_wins = []
         
@@ -6647,6 +6664,28 @@ def quick_wins():
                 'lead_type': 'Commercial Request',
                 'urgency_level': comm[6],
                 'source': 'commercial'
+            })
+        
+        # Add regular contracts with upcoming deadlines
+        for contract in urgent_contracts:
+            all_quick_wins.append({
+                'id': f"contract_{contract[0]}",
+                'title': contract[1],
+                'agency': contract[2],
+                'location': contract[3],
+                'category': contract[7] or 'Janitorial Services',
+                'value': contract[4],
+                'deadline': contract[5],
+                'description': contract[6][:200] if contract[6] else 'Government cleaning contract',
+                'website_url': None,
+                'is_small_business': bool(contract[8]),
+                'contact_name': 'Procurement Office',
+                'email': 'See contract details',
+                'phone': 'See contract details',
+                'lead_type': 'Government Contract' + (' - Small Business Set-Aside' if contract[8] else ''),
+                'urgency_level': 'quick-win',
+                'source': 'government',
+                'solicitation_number': contract[10] or 'N/A'
             })
         
         # Pagination
