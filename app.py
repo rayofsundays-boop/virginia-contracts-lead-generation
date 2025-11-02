@@ -7475,7 +7475,7 @@ def quick_wins():
         page = 1  # Single page showing all results
         per_page = 999999  # No pagination limit - show everything
         
-        # Get ALL supply contracts (only from Virginia)
+        # Get ALL supply contracts (national - show state on each lead)
         supply_contracts_data = []
         try:
             supply_contracts_data = db.session.execute(text('''
@@ -7485,29 +7485,17 @@ def quick_wins():
                     contact_name, contact_email, contact_phone, is_quick_win
                 FROM supply_contracts 
                 WHERE status = 'open'
-                AND (
-                    location LIKE '%Virginia%' OR 
-                    location LIKE '%VA%' OR
-                    location LIKE '%Hampton%' OR
-                    location LIKE '%Norfolk%' OR
-                    location LIKE '%Virginia Beach%' OR
-                    location LIKE '%Newport News%' OR
-                    location LIKE '%Williamsburg%' OR
-                    location LIKE '%Suffolk%' OR
-                    location LIKE '%Chesapeake%' OR
-                    location LIKE '%Portsmouth%'
-                )
                 ORDER BY 
                     CASE WHEN is_quick_win THEN 0 ELSE 1 END,
                     bid_deadline ASC
             ''')).fetchall()
-            print(f"📦 Found {len(supply_contracts_data)} Virginia supply contracts")
+            print(f"📦 Found {len(supply_contracts_data)} supply contracts (national)")
         except Exception as e:
             print(f"❌ Supply contracts error: {e}")
             import traceback
             traceback.print_exc()
         
-        # Get urgent commercial requests (only from Virginia cities)
+        # Get urgent commercial requests (national)
         urgent_commercial = []
         try:
             urgent_commercial = db.session.execute(text('''
@@ -7516,7 +7504,6 @@ def quick_wins():
                     budget_range, urgency, created_at, contact_person, email, phone
                 FROM commercial_lead_requests 
                 WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
-                AND city IN ('Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg', 'Suffolk', 'Chesapeake', 'Portsmouth')
                 ORDER BY 
                     CASE urgency 
                         WHEN 'emergency' THEN 1
@@ -7525,11 +7512,11 @@ def quick_wins():
                     END,
                     created_at DESC
             ''')).fetchall()
-            print(f"🚨 Found {len(urgent_commercial)} urgent Virginia commercial requests")
+            print(f"🚨 Found {len(urgent_commercial)} urgent commercial requests (national)")
         except Exception as e:
             print(f"❌ Commercial requests error: {e}")
         
-        # Get regular contracts with upcoming deadlines (as fallback quick wins) - Virginia only
+        # Get regular contracts with upcoming deadlines (as fallback quick wins) - national
         urgent_contracts = []
         try:
             urgent_contracts = db.session.execute(text('''
@@ -7540,22 +7527,10 @@ def quick_wins():
                 WHERE deadline IS NOT NULL 
                 AND deadline != ''
                 AND deadline != 'Rolling'
-                AND (
-                    location LIKE '%Virginia%' OR 
-                    location LIKE '%VA%' OR
-                    location LIKE '%Hampton%' OR
-                    location LIKE '%Norfolk%' OR
-                    location LIKE '%Virginia Beach%' OR
-                    location LIKE '%Newport News%' OR
-                    location LIKE '%Williamsburg%' OR
-                    location LIKE '%Suffolk%' OR
-                    location LIKE '%Chesapeake%' OR
-                    location LIKE '%Portsmouth%'
-                )
                 ORDER BY deadline ASC
                 LIMIT 20
             ''')).fetchall()
-            print(f"📋 Found {len(urgent_contracts)} Virginia government contracts with deadlines")
+            print(f"📋 Found {len(urgent_contracts)} government contracts with deadlines (national)")
         except Exception as e:
             print(f"❌ Regular contracts error: {e}")
         
@@ -7600,6 +7575,42 @@ def quick_wins():
             except Exception:
                 return 'Not specified'
         
+        # Helper: Extract state from location string
+        def _extract_state(location_str):
+            if not location_str:
+                return 'Unknown'
+            location = str(location_str)
+            
+            # US state abbreviations mapping
+            states = {
+                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+                'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+                'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+                'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+                'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+                'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+                'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+                'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+                'DC': 'Washington DC'
+            }
+            
+            # Check for state abbreviation (like "Hampton, VA" or "VA")
+            for abbr, full_name in states.items():
+                if f', {abbr}' in location or f' {abbr} ' in location or location.endswith(f' {abbr}'):
+                    return abbr
+                # Check for full state name
+                if full_name in location:
+                    return abbr
+            
+            # If no state found, return the last part of location (might be city name)
+            parts = location.split(',')
+            if len(parts) >= 2:
+                return parts[-1].strip()
+            
+            return 'Unknown'
+        
         # Add supply contracts
         for supply in supply_contracts_data:
             # Determine urgency level based on quick_win status and deadline
@@ -7607,12 +7618,15 @@ def quick_wins():
             urgency_level = 'quick-win' if is_quick_win else 'normal'
             # Normalize deadline if needed
             normalized_deadline = _norm_deadline(supply[6])
+            # Extract state from location
+            state = _extract_state(supply[3])
             
             all_quick_wins.append({
                 'id': f"supply_{supply[0]}",
                 'title': supply[1],
                 'agency': supply[2],
                 'location': supply[3],
+                'state': state,
                 'category': supply[4],
                 'value': supply[5],
                 'deadline': normalized_deadline,
@@ -7633,11 +7647,15 @@ def quick_wins():
         
         # Add commercial requests
         for comm in urgent_commercial:
+            # Extract state from city (commercial requests have city field)
+            state = _extract_state(comm[2])
+            
             all_quick_wins.append({
                 'id': f"commercial_{comm[0]}",
                 'title': f"Commercial Cleaning - {comm[1]}",
                 'agency': comm[3],
                 'location': comm[2],
+                'state': state,
                 'category': comm[4],
                 'value': comm[5],
                 'deadline': 'ASAP',
@@ -7654,11 +7672,15 @@ def quick_wins():
         
         # Add regular contracts with upcoming deadlines
         for contract in urgent_contracts:
+            # Extract state from location
+            state = _extract_state(contract[3])
+            
             all_quick_wins.append({
                 'id': f"contract_{contract[0]}",
                 'title': contract[1],
                 'agency': contract[2],
                 'location': contract[3],
+                'state': state,
                 'category': contract[7] or 'Janitorial Services',
                 'value': contract[4],
                 'deadline': contract[5],
