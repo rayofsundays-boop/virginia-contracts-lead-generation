@@ -3446,11 +3446,9 @@ def industry_days():
         flash('Industry days feature is being set up. Check back soon!', 'info')
         return redirect(url_for('customer_leads'))
 
-@app.route('/supply-contracts')
-@app.route('/supplies')
-# DEPRECATED: This route has been merged into quick_wins for better UX
-# The /supply-contracts URL now redirects to quick_wins via the @app.route('/supply-contracts') decorator on quick_wins()
-# Removed duplicate code to simplify maintenance and improve user experience
+
+# DEPRECATED: supply-contracts route has been merged into quick_wins for better UX
+# The /supply-contracts and /quick-wins URLs both route to the quick_wins() function
 
 @app.route('/federal-contracts')
 def federal_contracts():
