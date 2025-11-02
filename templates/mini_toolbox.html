@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Mini Toolbox - Free Resources{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-white">
+            <i class="fas fa-toolbox me-3"></i>Mini Toolbox
+        </h1>
+        <p class="lead fs-4 text-white">Free essential tools to help you get started</p>
+        <p class="text-white">
+            <i class="fas fa-lock-open me-2"></i>No registration required
+        </p>
+    </div>
+</div>
+
+<div class="container my-5">
+    
+    <!-- Upgrade Banner -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="alert alert-info border-0 shadow-sm" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-star fa-2x text-primary me-3"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">Unlock the Full Toolbox!</h5>
+                        <p class="mb-2">Get access to advanced tools, calculators, templates, and AI-powered features.</p>
+                    </div>
+                    <a href="{{ url_for('auth') }}" class="btn btn-primary">
+                        <i class="fas fa-unlock me-2"></i>Sign Up Free
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Free Tools Grid -->
+    <div class="row g-4">
+        
+        <!-- Basic Pricing Calculator -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calculator fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">Basic Pricing Calculator</h4>
+                    <p class="card-text text-muted">Simple square footage calculator for cleaning estimates</p>
+                    <button class="btn btn-outline-primary" onclick="showBasicCalculator()">
+                        <i class="fas fa-play me-2"></i>Use Tool
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist Generator -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tasks fa-3x text-success"></i>
+                    </div>
+                    <h4 class="card-title">Cleaning Checklist</h4>
+                    <p class="card-text text-muted">Downloadable checklists for different cleaning types</p>
+                    <button class="btn btn-outline-success" onclick="showChecklists()">
+                        <i class="fas fa-download me-2"></i>Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Industry Resources -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-book-open fa-3x text-info"></i>
+                    </div>
+                    <h4 class="card-title">Industry Links</h4>
+                    <p class="card-text text-muted">Quick links to government contracting resources</p>
+                    <button class="btn btn-outline-info" onclick="showResources()">
+                        <i class="fas fa-external-link-alt me-2"></i>View Links
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bid Timeline Template -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-alt fa-3x text-warning"></i>
+                    </div>
+                    <h4 class="card-title">Bid Timeline</h4>
+                    <p class="card-text text-muted">Basic timeline template for contract submissions</p>
+                    <button class="btn btn-outline-warning" onclick="showTimeline()">
+                        <i class="fas fa-eye me-2"></i>View Template
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Glossary -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-book fa-3x text-danger"></i>
+                    </div>
+                    <h4 class="card-title">Contract Glossary</h4>
+                    <p class="card-text text-muted">Common government contracting terms explained</p>
+                    <button class="btn btn-outline-danger" onclick="showGlossary()">
+                        <i class="fas fa-search me-2"></i>Browse Terms
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting Started Guide -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-graduation-cap fa-3x text-purple"></i>
+                    </div>
+                    <h4 class="card-title">Getting Started Guide</h4>
+                    <p class="card-text text-muted">Step-by-step guide to government contracting</p>
+                    <button class="btn btn-outline-secondary" onclick="showGuide()">
+                        <i class="fas fa-play-circle me-2"></i>Start Guide
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Premium Features Locked -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Premium Features (Subscriber Only)</h3>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
+                    <div class="mb-3">
+                        <i class="fas fa-magic fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="card-title">AI Proposal Generator</h5>
+                    <p class="card-text text-muted small">Auto-generate winning proposals</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="card-title">Advanced Analytics</h5>
+                    <p class="card-text text-muted small">Track bid success rates</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
+                    <div class="mb-3">
+                        <i class="fas fa-file-contract fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="card-title">Contract Templates</h5>
+                    <p class="card-text text-muted small">100+ professional templates</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm" style="opacity: 0.7; position: relative;">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock position-absolute top-0 end-0 m-3 text-muted"></i>
+                    <div class="mb-3">
+                        <i class="fas fa-headset fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="card-title">Expert Support</h5>
+                    <p class="card-text text-muted small">1-on-1 consultation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="p-5 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h2 class="text-white mb-3">Ready for the Full Experience?</h2>
+                <p class="text-white fs-5 mb-4">Join thousands of contractors winning government contracts</p>
+                <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg me-3">
+                    <i class="fas fa-user-plus me-2"></i>Create Free Account
+                </a>
+                <a href="{{ url_for('pricing') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-eye me-2"></i>View Pricing
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Tool Modals -->
+<div class="modal fade" id="toolModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toolModalTitle">Tool</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="toolModalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+.text-purple {
+    color: #764ba2;
+}
+</style>
+
+<script>
+function showBasicCalculator() {
+    document.getElementById('toolModalTitle').textContent = 'Basic Pricing Calculator';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Calculate cleaning costs based on square footage</h6>
+            <div class="mb-3">
+                <label class="form-label">Square Footage</label>
+                <input type="number" class="form-control" id="sqft" placeholder="Enter square footage">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Rate per Square Foot ($)</label>
+                <input type="number" class="form-control" id="rate" value="0.15" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="calculatePrice()">Calculate</button>
+            <div id="result" class="mt-3"></div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function calculatePrice() {
+    const sqft = parseFloat(document.getElementById('sqft').value);
+    const rate = parseFloat(document.getElementById('rate').value);
+    if (sqft && rate) {
+        const total = (sqft * rate).toFixed(2);
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success">
+                <h5>Estimated Cost: $${total}</h5>
+                <p class="mb-0">Based on ${sqft} sq ft @ $${rate}/sq ft</p>
+            </div>
+        `;
+    }
+}
+
+function showChecklists() {
+    document.getElementById('toolModalTitle').textContent = 'Cleaning Checklists';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Select a checklist to download:</h6>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-building me-2"></i>Office Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-restroom me-2"></i>Restroom Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-school me-2"></i>School Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-warehouse me-2"></i>Warehouse Cleaning Checklist
+                </a>
+            </div>
+            <div class="alert alert-info mt-3">
+                <small><i class="fas fa-info-circle me-2"></i>Sign up for more specialized checklists!</small>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showResources() {
+    document.getElementById('toolModalTitle').textContent = 'Industry Resources';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Useful Government Contracting Links:</h6>
+            <div class="list-group">
+                <a href="https://sam.gov" target="_blank" class="list-group-item list-group-item-action">
+                    <i class="fas fa-external-link-alt me-2"></i>SAM.gov - Federal Contracts
+                </a>
+                <a href="https://www.sba.gov" target="_blank" class="list-group-item list-group-item-action">
+                    <i class="fas fa-external-link-alt me-2"></i>SBA.gov - Small Business Administration
+                </a>
+                <a href="https://mvendor.cgieva.com" target="_blank" class="list-group-item list-group-item-action">
+                    <i class="fas fa-external-link-alt me-2"></i>Virginia eVA - State Procurement
+                </a>
+                <a href="https://www.gsa.gov" target="_blank" class="list-group-item list-group-item-action">
+                    <i class="fas fa-external-link-alt me-2"></i>GSA.gov - General Services Administration
+                </a>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showTimeline() {
+    document.getElementById('toolModalTitle').textContent = 'Bid Timeline Template';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Typical Government Contract Timeline:</h6>
+            <div class="timeline">
+                <div class="alert alert-primary">
+                    <strong>Day 1-3:</strong> Review RFP and requirements
+                </div>
+                <div class="alert alert-info">
+                    <strong>Day 4-7:</strong> Prepare questions for contracting officer
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Day 8-14:</strong> Develop proposal and pricing
+                </div>
+                <div class="alert alert-success">
+                    <strong>Day 15-17:</strong> Review and finalize submission
+                </div>
+                <div class="alert alert-danger">
+                    <strong>Day 18:</strong> Submit proposal before deadline
+                </div>
+            </div>
+            <p class="text-muted"><small>Adjust timeline based on RFP complexity and deadline</small></p>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showGlossary() {
+    document.getElementById('toolModalTitle').textContent = 'Contract Glossary';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Common Terms:</h6>
+            <dl>
+                <dt>RFP (Request for Proposal)</dt>
+                <dd>Document requesting bids for a specific project or service</dd>
+                
+                <dt>SAM (System for Award Management)</dt>
+                <dd>Official database for businesses seeking federal contracts</dd>
+                
+                <dt>NAICS (North American Industry Classification System)</dt>
+                <dd>Code system used to classify business types</dd>
+                
+                <dt>SBA (Small Business Administration)</dt>
+                <dd>Federal agency supporting small business development</dd>
+                
+                <dt>Capability Statement</dt>
+                <dd>One-page overview of your company's qualifications</dd>
+            </dl>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showGuide() {
+    document.getElementById('toolModalTitle').textContent = 'Getting Started Guide';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Steps to Start Winning Government Contracts:</h6>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item">Register in SAM.gov (required for federal contracts)</li>
+                <li class="list-group-item">Get your DUNS number from Dun & Bradstreet</li>
+                <li class="list-group-item">Determine your NAICS codes</li>
+                <li class="list-group-item">Create a professional capability statement</li>
+                <li class="list-group-item">Research opportunities on government portals</li>
+                <li class="list-group-item">Start with smaller contracts to build experience</li>
+                <li class="list-group-item">Network with other contractors and agencies</li>
+                <li class="list-group-item">Keep detailed records of past performance</li>
+            </ol>
+            <div class="alert alert-success mt-3">
+                <small><i class="fas fa-lightbulb me-2"></i>Sign up for personalized guidance and templates!</small>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+</script>
+
+{% endblock %}

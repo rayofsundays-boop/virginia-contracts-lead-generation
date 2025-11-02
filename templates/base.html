@@ -317,7 +317,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('toolbox') }}">Resource Toolbox</a>
+                            <a class="nav-link" href="{{ url_for('mini_toolbox') }}">
+                                <i class="fas fa-toolbox me-1"></i>Mini Toolbox
+                            </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('community_forum') }}">
@@ -364,12 +366,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('commercial_contracts') }}"><i class="fas fa-building me-2"></i>Commercial Leads</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('pricing_guide') }}"><i class="fas fa-tags me-2"></i>Pricing Guide</a></li>
-                                <li>
-                                    <a class="dropdown-item disabled" href="#" style="opacity: 0.6; cursor: not-allowed;">
-                                        <i class="fas fa-toolbox me-2"></i>Resource Toolbox 
-                                        <span class="badge bg-warning text-dark ms-2" style="font-size: 0.65rem;">Coming Soon</span>
-                                    </a>
-                                </li>
+                                <li><a class="dropdown-item" href="{{ url_for('resource_toolbox') }}"><i class="fas fa-toolbox me-2"></i>Resource Toolbox</a></li>
                                 <li>
                                     <a class="dropdown-item disabled" href="#" style="opacity: 0.6; cursor: not-allowed;">
                                         <i class="fas fa-users me-2"></i>Community Forum 

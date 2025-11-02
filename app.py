@@ -6614,6 +6614,18 @@ def pricing_guide():
     # For now, show pricing guide to all logged-in users
     return render_template('pricing_guide.html')
 
+@app.route('/resource-toolbox')
+@login_required
+def resource_toolbox():
+    """Full resource toolbox for logged-in users"""
+    is_premium = session.get('subscription_status') == 'paid'
+    return render_template('resource_toolbox.html', is_premium=is_premium)
+
+@app.route('/mini-toolbox')
+def mini_toolbox():
+    """Mini toolbox available to non-subscribers"""
+    return render_template('mini_toolbox.html')
+
 @app.route('/capability-statement')
 def capability_statement():
     """Capability statement template"""

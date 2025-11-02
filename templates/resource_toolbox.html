@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}Resource Toolbox - Client Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-white">
+            <i class="fas fa-toolbox me-3"></i>Resource Toolbox
+        </h1>
+        <p class="lead fs-4 text-white">Your complete toolkit for winning government contracts</p>
+        {% if is_premium %}
+        <p class="text-white">
+            <span class="badge bg-success">
+                <i class="fas fa-crown me-2"></i>Premium Member
+            </span>
+        </p>
+        {% else %}
+        <p class="text-white">
+            <i class="fas fa-unlock me-2"></i>Free Access • 
+            <a href="{{ url_for('pricing') }}" class="text-white text-decoration-underline">Upgrade for Premium Tools</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container my-5">
+    
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h3>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('ai_proposal_generator') }}" class="btn btn-lg btn-primary w-100 mb-3">
+                <i class="fas fa-magic me-2"></i>Generate Proposal
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('pricing_calculator') }}" class="btn btn-lg btn-success w-100 mb-3">
+                <i class="fas fa-calculator me-2"></i>Price Calculator
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('proposal_templates') }}" class="btn btn-lg btn-info w-100 mb-3">
+                <i class="fas fa-file-alt me-2"></i>Templates
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('ai_assistant') }}" class="btn btn-lg btn-warning w-100 mb-3">
+                <i class="fas fa-robot me-2"></i>AI Assistant
+            </a>
+        </div>
+    </div>
+
+    <!-- Tools Categories -->
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-pills mb-4" id="toolCategories" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#calculators">
+                        <i class="fas fa-calculator me-2"></i>Calculators
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#templates">
+                        <i class="fas fa-file-alt me-2"></i>Templates
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#checklists">
+                        <i class="fas fa-tasks me-2"></i>Checklists
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#resources">
+                        <i class="fas fa-book-open me-2"></i>Resources
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#training">
+                        <i class="fas fa-graduation-cap me-2"></i>Training
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="toolCategoriesContent">
+                
+                <!-- Calculators Tab -->
+                <div class="tab-pane fade show active" id="calculators">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calculator fa-3x text-primary mb-3"></i>
+                                    <h5>Advanced Pricing Calculator</h5>
+                                    <p class="text-muted">Calculate detailed cleaning costs with labor, materials, and overhead</p>
+                                    <a href="{{ url_for('pricing_calculator') }}" class="btn btn-primary">Use Calculator</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                    <h5>Labor Cost Calculator</h5>
+                                    <p class="text-muted">Estimate staffing needs and labor costs for projects</p>
+                                    <button class="btn btn-success" onclick="showLaborCalculator()">Use Calculator</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-cart fa-3x text-info mb-3"></i>
+                                    <h5>Materials Cost Calculator</h5>
+                                    <p class="text-muted">Track and calculate cleaning supply costs</p>
+                                    <button class="btn btn-info" onclick="showMaterialsCalculator()">Use Calculator</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-percentage fa-3x text-warning mb-3"></i>
+                                    <h5>Profit Margin Calculator</h5>
+                                    <p class="text-muted">Calculate markup and profit margins</p>
+                                    <button class="btn btn-warning" onclick="showProfitCalculator()">Use Calculator</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clock fa-3x text-danger mb-3"></i>
+                                    <h5>Time Estimator</h5>
+                                    <p class="text-muted">Estimate project completion times</p>
+                                    <button class="btn btn-danger" onclick="showTimeEstimator()">Use Calculator</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-3x text-purple mb-3"></i>
+                                    <h5>ROI Calculator</h5>
+                                    <p class="text-muted">Calculate return on investment for bids</p>
+                                    <button class="btn btn-outline-secondary" onclick="showROICalculator()">Use Calculator</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Tab -->
+                <div class="tab-pane fade" id="templates">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-file-contract text-primary me-2"></i>Proposal Templates</h5>
+                                    <p class="text-muted">Professional proposal templates for various contract types</p>
+                                    <a href="{{ url_for('proposal_templates') }}" class="btn btn-sm btn-primary">View Templates</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-handshake text-success me-2"></i>Contract Templates</h5>
+                                    <p class="text-muted">Sample contracts and agreements</p>
+                                    <button class="btn btn-sm btn-success" onclick="showContracts()">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-envelope text-info me-2"></i>Email Templates</h5>
+                                    <p class="text-muted">Professional communication templates</p>
+                                    <button class="btn btn-sm btn-info" onclick="showEmails()">View Templates</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-file-invoice text-warning me-2"></i>Invoice Templates</h5>
+                                    <p class="text-muted">Professional invoice formats</p>
+                                    <button class="btn btn-sm btn-warning" onclick="showInvoices()">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-id-card text-danger me-2"></i>Capability Statement</h5>
+                                    <p class="text-muted">Create your company capability statement</p>
+                                    <a href="{{ url_for('capability_statement') }}" class="btn btn-sm btn-danger">Create Now</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-briefcase text-dark me-2"></i>Past Performance</h5>
+                                    <p class="text-muted">Document your successful projects</p>
+                                    <button class="btn btn-sm btn-dark" onclick="showPastPerformance()">Template</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklists Tab -->
+                <div class="tab-pane fade" id="checklists">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                                    <h6>Office Cleaning</h6>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('office')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-restroom fa-2x text-success mb-2"></i>
+                                    <h6>Restroom Cleaning</h6>
+                                    <button class="btn btn-sm btn-outline-success" onclick="downloadChecklist('restroom')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-school fa-2x text-info mb-2"></i>
+                                    <h6>School Cleaning</h6>
+                                    <button class="btn btn-sm btn-outline-info" onclick="downloadChecklist('school')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-hospital fa-2x text-danger mb-2"></i>
+                                    <h6>Medical Facility</h6>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="downloadChecklist('medical')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-warehouse fa-2x text-warning mb-2"></i>
+                                    <h6>Warehouse</h6>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="downloadChecklist('warehouse')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-utensils fa-2x text-dark mb-2"></i>
+                                    <h6>Kitchen/Cafeteria</h6>
+                                    <button class="btn btn-sm btn-outline-dark" onclick="downloadChecklist('kitchen')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-flask fa-2x text-purple mb-2"></i>
+                                    <h6>Laboratory</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="downloadChecklist('lab')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <h6>Quality Inspection</h6>
+                                    <button class="btn btn-sm btn-outline-success" onclick="downloadChecklist('inspection')">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resources Tab -->
+                <div class="tab-pane fade" id="resources">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-link text-primary me-2"></i>Government Portals</h5>
+                                    <div class="list-group list-group-flush">
+                                        <a href="https://sam.gov" target="_blank" class="list-group-item list-group-item-action">
+                                            <i class="fas fa-external-link-alt me-2"></i>SAM.gov - Federal Opportunities
+                                        </a>
+                                        <a href="https://mvendor.cgieva.com" target="_blank" class="list-group-item list-group-item-action">
+                                            <i class="fas fa-external-link-alt me-2"></i>Virginia eVA Portal
+                                        </a>
+                                        <a href="https://www.sba.gov" target="_blank" class="list-group-item list-group-item-action">
+                                            <i class="fas fa-external-link-alt me-2"></i>Small Business Administration
+                                        </a>
+                                        <a href="https://www.gsa.gov" target="_blank" class="list-group-item list-group-item-action">
+                                            <i class="fas fa-external-link-alt me-2"></i>General Services Administration
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-book text-success me-2"></i>Guides & Documentation</h5>
+                                    <div class="list-group list-group-flush">
+                                        <button class="list-group-item list-group-item-action" onclick="showGuide('getting-started')">
+                                            <i class="fas fa-play-circle me-2"></i>Getting Started Guide
+                                        </button>
+                                        <button class="list-group-item list-group-item-action" onclick="showGuide('sam-registration')">
+                                            <i class="fas fa-user-plus me-2"></i>SAM Registration Guide
+                                        </button>
+                                        <button class="list-group-item list-group-item-action" onclick="showGuide('naics-codes')">
+                                            <i class="fas fa-code me-2"></i>NAICS Code Guide
+                                        </button>
+                                        <button class="list-group-item list-group-item-action" onclick="showGuide('glossary')">
+                                            <i class="fas fa-book-open me-2"></i>Contract Glossary
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Tab -->
+                <div class="tab-pane fade" id="training">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-video fa-3x text-primary mb-3"></i>
+                                    <h5>Video Tutorials</h5>
+                                    <p class="text-muted">Step-by-step video guides</p>
+                                    {% if is_premium %}
+                                    <button class="btn btn-primary" onclick="showVideos()">Watch Now</button>
+                                    {% else %}
+                                    <button class="btn btn-outline-primary" disabled>Premium Only</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chalkboard-teacher fa-3x text-success mb-3"></i>
+                                    <h5>Webinars</h5>
+                                    <p class="text-muted">Live training sessions</p>
+                                    {% if is_premium %}
+                                    <button class="btn btn-success" onclick="showWebinars()">View Schedule</button>
+                                    {% else %}
+                                    <button class="btn btn-outline-success" disabled>Premium Only</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-certificate fa-3x text-warning mb-3"></i>
+                                    <h5>Certification Courses</h5>
+                                    <p class="text-muted">Industry certifications</p>
+                                    {% if is_premium %}
+                                    <button class="btn btn-warning" onclick="showCourses()">Enroll</button>
+                                    {% else %}
+                                    <button class="btn btn-outline-warning" disabled>Premium Only</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade CTA for Free Users -->
+    {% if not is_premium %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-crown fa-2x me-3"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">Upgrade to Premium</h5>
+                        <p class="mb-0">Unlock video tutorials, webinars, expert consultation, and advanced AI tools</p>
+                    </div>
+                    <a href="{{ url_for('pricing') }}" class="btn btn-warning">
+                        <i class="fas fa-arrow-up me-2"></i>Upgrade Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+.text-purple {
+    color: #764ba2;
+}
+.nav-pills .nav-link {
+    color: #495057;
+    font-weight: 600;
+}
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+
+<script>
+// Placeholder functions for interactive tools
+function showLaborCalculator() {
+    alert('Labor Calculator - Coming soon! This will help you estimate staffing needs and costs.');
+}
+
+function showMaterialsCalculator() {
+    alert('Materials Calculator - Coming soon! Track cleaning supply costs and inventory.');
+}
+
+function showProfitCalculator() {
+    alert('Profit Margin Calculator - Coming soon! Calculate optimal pricing with profit margins.');
+}
+
+function showTimeEstimator() {
+    alert('Time Estimator - Coming soon! Estimate project completion times accurately.');
+}
+
+function showROICalculator() {
+    alert('ROI Calculator - Coming soon! Calculate return on investment for contract bids.');
+}
+
+function showContracts() {
+    alert('Contract Templates - Coming soon! Download professional contract templates.');
+}
+
+function showEmails() {
+    alert('Email Templates - Coming soon! Professional communication templates for clients.');
+}
+
+function showInvoices() {
+    alert('Invoice Templates - Coming soon! Professional invoice formats for billing.');
+}
+
+function showPastPerformance() {
+    alert('Past Performance Template - Coming soon! Document your successful projects.');
+}
+
+function downloadChecklist(type) {
+    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} Checklist - Downloading... (Feature coming soon)`);
+}
+
+function showGuide(guide) {
+    alert(`${guide.replace('-', ' ').toUpperCase()} - Guide coming soon!`);
+}
+
+function showVideos() {
+    alert('Video Tutorials - Coming soon! Access comprehensive video training library.');
+}
+
+function showWebinars() {
+    alert('Webinars - Coming soon! Join live training sessions with experts.');
+}
+
+function showCourses() {
+    alert('Certification Courses - Coming soon! Enroll in industry certification programs.');
+}
+</script>
+
+{% endblock %}
