@@ -12,9 +12,9 @@
             </h1>
             <p class="lead mb-4">Hot opportunities requiring immediate response</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <span class="badge bg-danger fs-5 px-4 py-2 pulse-animation">
-                    <i class="fas fa-fire me-2"></i>{{ emergency_count }} Emergency
-                </span>
+                <a href="{{ url_for('quick_wins', expiring='7days') }}" class="badge bg-danger fs-5 px-4 py-2 pulse-animation text-decoration-none" style="cursor: pointer;">
+                    <i class="fas fa-clock me-2"></i>{{ expiring_7days_count }} Expiring in 7 Days
+                </a>
                 <span class="badge bg-warning text-dark fs-5 px-4 py-2">
                     <i class="fas fa-exclamation-triangle me-2"></i>{{ urgent_count }} Urgent
                 </span>
@@ -31,18 +31,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <form method="GET" action="{{ url_for('quick_wins') }}" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-fire text-danger me-2"></i>Urgency Level
-                    </label>
-                    <select class="form-select form-select-lg" name="urgency">
-                        <option value="">All Levels</option>
-                        <option value="emergency" {% if request.args.get('urgency') == 'emergency' %}selected{% endif %}>🔴 Emergency</option>
-                        <option value="urgent" {% if request.args.get('urgency') == 'urgent' %}selected{% endif %}>🟠 Urgent</option>
-                        <option value="quick-win" {% if request.args.get('urgency') == 'quick-win' %}selected{% endif %}>⚡ Quick Win</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label fw-bold">
                         <i class="fas fa-map-marker-alt text-primary me-2"></i>City
                     </label>
@@ -58,7 +47,7 @@
                         <option value="Portsmouth" {% if request.args.get('city') == 'Portsmouth' %}selected{% endif %}>Portsmouth</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label fw-bold">
                         <i class="fas fa-dollar-sign text-success me-2"></i>Min Value
                     </label>
@@ -70,7 +59,7 @@
                         <option value="100000">$100,000+</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <button type="submit" class="btn btn-primary btn-lg w-100">
                         <i class="fas fa-search me-2"></i>Filter Results
                     </button>

@@ -6588,10 +6588,11 @@ def quick_wins():
         if is_admin:
             is_paid = True
         
-        urgency_filter = request.args.get('urgency', '')
+        expiring_filter = request.args.get('expiring', '')
         lead_type_filter = request.args.get('lead_type', '')
         city_filter = request.args.get('city', '')
         category_filter = request.args.get('category', '')
+        min_value_filter = request.args.get('min_value', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
         per_page = 12
         
@@ -6731,19 +6732,80 @@ def quick_wins():
         
         # Pagination
         total_count = len(all_quick_wins)
+        
+        # Filter by expiring in 7 days if requested
+        if expiring_filter == '7days':
+            from datetime import datetime, timedelta
+            seven_days_from_now = datetime.now() + timedelta(days=7)
+            
+            filtered_leads = []
+            for lead in all_quick_wins:
+                deadline_str = lead.get('deadline', '')
+                if deadline_str and deadline_str != 'ASAP' and deadline_str != 'Not specified':
+                    try:
+                        # Try different date formats
+                        for fmt in ['%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d', '%d/%m/%Y']:
+                            try:
+                                deadline_date = datetime.strptime(deadline_str, fmt)
+                                if deadline_date <= seven_days_from_now:
+                                    filtered_leads.append(lead)
+                                break
+                            except ValueError:
+                                continue
+                    except:
+                        pass
+            
+            all_quick_wins = filtered_leads
+            total_count = len(all_quick_wins)
+        
+        # Filter by city if requested
+        if city_filter:
+            all_quick_wins = [l for l in all_quick_wins if city_filter.lower() in l.get('location', '').lower()]
+            total_count = len(all_quick_wins)
+        
+        # Filter by minimum value if requested
+        if min_value_filter:
+            try:
+                min_val = float(min_value_filter)
+                all_quick_wins = [l for l in all_quick_wins if l.get('value', 0) >= min_val]
+                total_count = len(all_quick_wins)
+            except:
+                pass
+        
         total_pages = max(math.ceil(total_count / per_page), 1)
         start = (page - 1) * per_page
         end = start + per_page
         paginated_leads = all_quick_wins[start:end]
         
         # Get counts for badges
-        emergency_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'emergency'])
-        urgent_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'urgent'])
-        quick_win_count = len([l for l in all_quick_wins if l.get('urgency_level') == 'quick-win'])
+        from datetime import datetime, timedelta
+        seven_days_from_now = datetime.now() + timedelta(days=7)
+        
+        # Count contracts expiring in 7 days
+        expiring_7days_count = 0
+        for lead in all_quick_wins if not expiring_filter else paginated_leads:
+            deadline_str = lead.get('deadline', '')
+            if deadline_str and deadline_str != 'ASAP' and deadline_str != 'Not specified':
+                try:
+                    for fmt in ['%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d', '%d/%m/%Y']:
+                        try:
+                            deadline_date = datetime.strptime(deadline_str, fmt)
+                            if deadline_date <= seven_days_from_now:
+                                expiring_7days_count += 1
+                            break
+                        except ValueError:
+                            continue
+                except:
+                    pass
+        
+        # Recalculate all counts based on current filtered list
+        all_leads_for_count = all_quick_wins if expiring_filter else [lead for lead in all_quick_wins]
+        urgent_count = len([l for l in all_leads_for_count if l.get('urgency_level') == 'urgent'])
+        quick_win_count = len([l for l in all_leads_for_count if l.get('urgency_level') == 'quick-win'])
         
         return render_template('quick_wins.html',
                              leads=paginated_leads,
-                             emergency_count=emergency_count,
+                             expiring_7days_count=expiring_7days_count,
                              urgent_count=urgent_count,
                              quick_win_count=quick_win_count,
                              total_count=total_count,
