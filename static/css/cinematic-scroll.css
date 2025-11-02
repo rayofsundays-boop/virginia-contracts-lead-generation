@@ -1,0 +1,759 @@
+/**
+ * Cinematic Scroll Styles
+ * Dark theme with neon glow, parallax, and 3D effects
+ */
+
+/* ============================================
+   GLOBAL SETTINGS
+   ============================================ */
+:root {
+    --primary-glow: #667eea;
+    --secondary-glow: #764ba2;
+    --accent-glow: #f093fb;
+    --dark-bg: #0f0e17;
+    --darker-bg: #0a0a0f;
+    --text-primary: #fffffe;
+    --text-secondary: #a7a9be;
+    --glass-bg: rgba(15, 14, 23, 0.7);
+    --transition-smooth: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: linear-gradient(135deg, #1a0a2e, #0f3460);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+/* GPU Acceleration for smooth animations */
+.cinematic-container,
+.hero-scene,
+.story-scene,
+.ai-showcase,
+.cta-scene {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform, opacity;
+}
+
+/* ============================================
+   PARTICLES CANVAS BACKGROUND
+   ============================================ */
+.particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* ============================================
+   SCROLL PROGRESS INDICATOR
+   ============================================ */
+.scroll-progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(102, 126, 234, 0.2);
+    z-index: 9999;
+}
+
+.scroll-progress {
+    width: 100%;
+    height: 0;
+    background: linear-gradient(180deg, var(--primary-glow), var(--accent-glow));
+    transform-origin: top;
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.progress-text {
+    position: fixed;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-glow);
+    z-index: 9999;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}
+
+/* ============================================
+   SECTION TIMELINE NAVIGATION
+   ============================================ */
+.section-timeline {
+    position: fixed;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(102, 126, 234, 0.3);
+    border: 2px solid rgba(102, 126, 234, 0.5);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.timeline-dot::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0;
+    white-space: nowrap;
+    transition: var(--transition-smooth);
+    pointer-events: none;
+}
+
+.timeline-dot:hover::after {
+    opacity: 1;
+    right: 30px;
+}
+
+.timeline-dot.active {
+    background: var(--primary-glow);
+    box-shadow: 0 0 20px var(--primary-glow);
+    transform: scale(1.3);
+}
+
+.timeline-dot:hover {
+    background: var(--accent-glow);
+    transform: scale(1.2);
+}
+
+/* ============================================
+   HERO SCENE
+   ============================================ */
+.hero-scene {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 100px 20px;
+    overflow: hidden;
+}
+
+.hero-logo {
+    font-size: 80px;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    margin-bottom: 30px;
+    text-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+}
+
+.hero-headline {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+}
+
+.text-glow {
+    background: linear-gradient(135deg, #ffffff, var(--primary-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtext {
+    font-size: clamp(16px, 2vw, 24px);
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+}
+
+.hero-cta-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.cta-button {
+    padding: 16px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cta-button-primary {
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    color: white;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+}
+
+.cta-button-primary:hover {
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+    transform: translateY(-3px) scale(1.05);
+}
+
+.cta-button-secondary {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--primary-glow);
+    color: white;
+}
+
+.cta-button-secondary:hover {
+    background: rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 30px var(--primary-glow);
+    transform: translateY(-3px);
+}
+
+/* Button shimmer effect */
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.cta-button:hover::before {
+    left: 100%;
+}
+
+/* ============================================
+   STORYTELLING SCENES
+   ============================================ */
+.story-scene {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    padding: 100px 60px;
+    position: relative;
+    transition: background 1s ease;
+}
+
+.story-scene.active {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.story-text {
+    z-index: 2;
+}
+
+.story-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-glow);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.story-title {
+    font-size: clamp(32px, 4vw, 56px);
+    font-weight: 800;
+    margin-bottom: 24px;
+    line-height: 1.2;
+}
+
+.story-description {
+    font-size: 18px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 30px;
+}
+
+.story-media {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.story-media img,
+.story-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    transition: transform 0.6s ease;
+}
+
+.story-media:hover img,
+.story-media:hover video {
+    transform: scale(1.05);
+}
+
+/* Glowing border effect */
+.story-media::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    border-radius: 22px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.6s;
+}
+
+.story-media:hover::before {
+    opacity: 1;
+}
+
+/* Reverse layout for odd scenes */
+.story-scene:nth-child(odd) {
+    direction: rtl;
+}
+
+.story-scene:nth-child(odd) > * {
+    direction: ltr;
+}
+
+/* ============================================
+   AI SHOWCASE SECTION
+   ============================================ */
+.ai-showcase {
+    min-height: 100vh;
+    padding: 100px 60px;
+    position: relative;
+}
+
+.ai-showcase-header {
+    text-align: center;
+    margin-bottom: 80px;
+}
+
+.ai-showcase-title {
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+.ai-showcase-subtitle {
+    font-size: 20px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.ai-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.ai-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 24px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    transform-style: preserve-3d;
+}
+
+.ai-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
+    opacity: 0;
+    transition: opacity 0.6s;
+}
+
+.ai-card:hover {
+    border-color: var(--primary-glow);
+    transform: translateY(-10px) translateZ(20px);
+}
+
+.ai-card:hover::before {
+    opacity: 1;
+}
+
+.ai-card-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.ai-card-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.ai-card-description {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ============================================
+   STATISTICS SECTION
+   ============================================ */
+.stats-section {
+    padding: 80px 60px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    margin: 100px 0;
+    border-top: 1px solid rgba(102, 126, 234, 0.3);
+    border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stat-item {
+    text-align: center;
+    position: relative;
+}
+
+.stat-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    color: var(--primary-glow);
+}
+
+.stat-number {
+    font-size: 48px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.6s;
+}
+
+.stat-item:hover .stat-glow {
+    opacity: 1;
+}
+
+/* ============================================
+   CTA FINAL SCENE
+   ============================================ */
+.cta-scene {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 100px 20px;
+    overflow: hidden;
+}
+
+.light-beam {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(102, 126, 234, 0.3), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cta-content {
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+}
+
+.cta-headline {
+    font-size: clamp(40px, 6vw, 80px);
+    font-weight: 900;
+    margin-bottom: 30px;
+    line-height: 1.1;
+}
+
+.cta-subheadline {
+    font-size: clamp(18px, 2.5vw, 28px);
+    color: var(--text-secondary);
+    margin-bottom: 50px;
+}
+
+.cta-button-final {
+    padding: 24px 60px;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    color: white;
+    border: none;
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.5);
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cta-button-final:hover {
+    box-shadow: 0 30px 80px rgba(102, 126, 234, 0.7);
+    transform: translateY(-5px) scale(1.05);
+}
+
+/* Motion blur effect */
+.cta-button-final::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.8s;
+}
+
+.cta-button-final:hover::after {
+    transform: translateX(100%);
+}
+
+/* ============================================
+   PARALLAX ELEMENTS
+   ============================================ */
+.parallax-element {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+.parallax-circle {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent);
+    filter: blur(60px);
+}
+
+.parallax-square {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.2));
+    transform: rotate(45deg);
+    filter: blur(40px);
+}
+
+/* ============================================
+   GEOMETRIC SHAPES (Animated)
+   ============================================ */
+.geometric-shape {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.3;
+    z-index: 0;
+}
+
+.geometric-shape-1 {
+    top: 10%;
+    left: 5%;
+    width: 100px;
+    height: 100px;
+    border: 3px solid var(--primary-glow);
+    border-radius: 20px;
+    animation: float 6s ease-in-out infinite;
+}
+
+.geometric-shape-2 {
+    top: 60%;
+    right: 10%;
+    width: 150px;
+    height: 150px;
+    border: 3px solid var(--accent-glow);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+}
+
+.geometric-shape-3 {
+    bottom: 15%;
+    left: 15%;
+    width: 80px;
+    height: 80px;
+    border: 3px solid var(--secondary-glow);
+    transform: rotate(45deg);
+    animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-30px) rotate(180deg);
+    }
+}
+
+/* ============================================
+   GLASS MORPHISM EFFECT
+   ============================================ */
+.glass-card {
+    background: rgba(15, 14, 23, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .hero-logo {
+        font-size: 48px;
+    }
+    
+    .story-scene {
+        grid-template-columns: 1fr;
+        padding: 60px 20px;
+        gap: 40px;
+    }
+    
+    .story-scene:nth-child(odd) {
+        direction: ltr;
+    }
+    
+    .ai-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+    
+    .section-timeline {
+        display: none;
+    }
+    
+    .progress-text {
+        display: none;
+    }
+    
+    .hero-cta-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .cta-button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-number {
+        font-size: 36px;
+    }
+}
+
+/* ============================================
+   PERFORMANCE & ACCESSIBILITY
+   ============================================ */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Focus styles for accessibility */
+.cta-button:focus,
+.timeline-dot:focus {
+    outline: 3px solid var(--primary-glow);
+    outline-offset: 4px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .text-glow {
+        -webkit-text-fill-color: white;
+    }
+    
+    .ai-card {
+        border-width: 2px;
+    }
+}

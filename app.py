@@ -2124,7 +2124,8 @@ def index():
             # Skip caching for now to avoid transaction issues
             # TODO: Re-enable caching once transaction issues are resolved
         
-        return render_template('index.html', 
+        # Use cinematic scroll template for homepage
+        return render_template('index_cinematic.html', 
                              contracts=contracts, 
                              commercial_opportunities=commercial_opportunities,
                              commercial_count=commercial_count)
