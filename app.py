@@ -2562,12 +2562,13 @@ def signin():
             session['name'] = 'Administrator'
             session['user_email'] = 'admin@vacontracts.com'
             session['email'] = 'admin@vacontracts.com'
-            session['subscription_status'] = 'paid'  # Admin has full access
+            session['subscription_status'] = 'paid'  # Admin has full paid subscription access
+            session['credits_balance'] = 999999  # Admin has unlimited credits
             
             # Log admin login
             log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
             
-            flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
+            flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
             return redirect(url_for('contracts'))
         
         # Get user from database (including is_admin flag and subscription status)
@@ -2585,11 +2586,17 @@ def signin():
             session['name'] = result[4]
             session['credits_balance'] = result[5]
             session['is_admin'] = bool(result[6])  # Set admin status from database
-            session['subscription_status'] = result[7] or 'free'  # Set subscription status
+            
+            # Admin users get paid subscription status and unlimited credits
+            if session['is_admin']:
+                session['subscription_status'] = 'paid'  # Force paid status for all admins
+                session['credits_balance'] = 999999  # Unlimited credits for admins
+            else:
+                session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
             
             # Show appropriate welcome message
             if session['is_admin']:
-                flash(f'Welcome back, {result[4]}! You have admin privileges. 🔑', 'success')
+                flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
             else:
                 flash(f'Welcome back, {result[4]}! 🎉', 'success')
             
@@ -2621,10 +2628,11 @@ def login():
         session['name'] = 'Administrator'
         session['user_email'] = 'admin@vacontracts.com'
         session['email'] = 'admin@vacontracts.com'
-        session['subscription_status'] = 'paid'
+        session['subscription_status'] = 'paid'  # Admin has full paid subscription access
+        session['credits_balance'] = 999999  # Admin has unlimited credits
         
         log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
-        flash('Welcome, Administrator! You have full access to all features. 🔑', 'success')
+        flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
         return redirect(url_for('admin_dashboard'))
     
     # Validate regular user
@@ -2641,10 +2649,16 @@ def login():
         session['name'] = result[4]
         session['credits_balance'] = result[5]
         session['is_admin'] = bool(result[6])
-        session['subscription_status'] = result[7] or 'free'
+        
+        # Admin users get paid subscription status and unlimited credits
+        if session['is_admin']:
+            session['subscription_status'] = 'paid'  # Force paid status for all admins
+            session['credits_balance'] = 999999  # Unlimited credits for admins
+        else:
+            session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
         
         if session['is_admin']:
-            flash(f'Welcome back, {result[4]}! You have admin privileges. 🔑', 'success')
+            flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
