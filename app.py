@@ -9156,6 +9156,42 @@ def admin_reject_request():
         print(f"Error rejecting request: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-unapprove-request', methods=['POST'])
+def admin_unapprove_request():
+    """Admin endpoint to revert an approved request so it no longer appears on the forum"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    try:
+        data = request.get_json()
+        request_type = data.get('request_type')  # 'commercial' or 'residential'
+        request_id = data.get('request_id')
+
+        if not request_type or not request_id:
+            return jsonify({'success': False, 'error': 'Missing parameters'})
+
+        if request_type == 'commercial':
+            # revert to open so it's visible in pipelines but not on forum
+            db.session.execute(text('''
+                UPDATE commercial_lead_requests
+                SET status = 'open', updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+            '''), {'id': request_id})
+        else:
+            # residential defaults to 'new'
+            db.session.execute(text('''
+                UPDATE residential_leads
+                SET status = 'new', updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+            '''), {'id': request_id})
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Request unapproved and removed from forum'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error unapproving request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 def populate_supply_contracts(force=False):
     """Populate supply_contracts table with international supplier requests
     
