@@ -15,9 +15,6 @@
                 <a href="{{ url_for('quick_wins', expiring='7days') }}" class="badge bg-danger fs-5 px-4 py-2 pulse-animation text-decoration-none" style="cursor: pointer;">
                     <i class="fas fa-clock me-2"></i>{{ expiring_7days_count }} Expiring in 7 Days
                 </a>
-                <span class="badge bg-warning text-dark fs-5 px-4 py-2">
-                    <i class="fas fa-exclamation-triangle me-2"></i>{{ urgent_count }} Urgent
-                </span>
                 <span class="badge bg-success fs-5 px-4 py-2">
                     <i class="fas fa-bolt me-2"></i>{{ quick_win_count }} Quick Wins
                 </span>
