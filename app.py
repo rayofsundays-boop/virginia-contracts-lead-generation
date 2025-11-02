@@ -1736,6 +1736,28 @@ def init_postgres_db():
         
         db.session.commit()
         
+        # Lead clicks tracking (for free lead limit - 3 clicks)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS lead_clicks
+                     (id SERIAL PRIMARY KEY,
+                      user_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      ip_address TEXT)'''))
+        
+        db.session.commit()
+        
+        # Lead views tracking (detailed analytics)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS lead_views
+                     (id SERIAL PRIMARY KEY,
+                      user_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      lead_type TEXT NOT NULL,
+                      lead_id TEXT NOT NULL,
+                      viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      ip_address TEXT)'''))
+        
+        db.session.commit()
+        
         # Saved leads table (user bookmarks)
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS saved_leads
                      (id SERIAL PRIMARY KEY,
@@ -7098,6 +7120,169 @@ def privacy():
 def dashboard():
     """Dashboard for signed-in users"""
     return render_template('dashboard.html')
+
+# ============================================================================
+# LEAD CLICK TRACKING & FREE LEAD LIMIT
+# ============================================================================
+
+def check_and_update_lead_clicks(user_id, user_email, subscription_status):
+    """
+    Check if user can view more leads and update click count.
+    Returns: (can_view: bool, remaining_clicks: int, message: str)
+    """
+    # Admin and paid users have unlimited access
+    if session.get('is_admin') or subscription_status == 'paid':
+        return True, -1, ""  # -1 indicates unlimited
+    
+    try:
+        # Get current click count from session (resets when session expires)
+        clicks_used = session.get('lead_clicks_used', 0)
+        
+        # Free users get 3 free lead views
+        FREE_LEAD_LIMIT = 3
+        remaining = FREE_LEAD_LIMIT - clicks_used
+        
+        if clicks_used >= FREE_LEAD_LIMIT:
+            return False, 0, f"You've used all {FREE_LEAD_LIMIT} free lead views. Subscribe to view unlimited leads!"
+        
+        # Increment click count
+        session['lead_clicks_used'] = clicks_used + 1
+        session.modified = True
+        
+        # Log the click in database for analytics
+        db.session.execute(text('''
+            INSERT INTO lead_clicks (user_id, user_email, clicked_at, ip_address)
+            VALUES (:user_id, :email, NOW(), :ip)
+        '''), {
+            'user_id': user_id,
+            'email': user_email,
+            'ip': request.remote_addr
+        })
+        db.session.commit()
+        
+        remaining_after = FREE_LEAD_LIMIT - session['lead_clicks_used']
+        message = f"{remaining_after} free lead view{'s' if remaining_after != 1 else ''} remaining"
+        
+        return True, remaining_after, message
+        
+    except Exception as e:
+        print(f"Lead click tracking error: {e}")
+        db.session.rollback()
+        # Default to allowing access on error
+        return True, 0, ""
+
+@app.route('/api/track-lead-click', methods=['POST'])
+def track_lead_click():
+    """API endpoint to track lead clicks and return remaining free views"""
+    try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({
+                'success': False,
+                'requires_login': True,
+                'message': 'Please sign in to view lead details'
+            })
+        
+        user_id = session.get('user_id')
+        user_email = session.get('email')
+        subscription_status = session.get('subscription_status', 'free')
+        
+        data = request.get_json()
+        lead_type = data.get('lead_type', 'unknown')
+        lead_id = data.get('lead_id', 'unknown')
+        
+        # Check and update lead clicks
+        can_view, remaining, message = check_and_update_lead_clicks(user_id, user_email, subscription_status)
+        
+        if not can_view:
+            return jsonify({
+                'success': False,
+                'limit_reached': True,
+                'remaining': 0,
+                'message': message
+            })
+        
+        # Log detailed lead view for analytics
+        try:
+            db.session.execute(text('''
+                INSERT INTO lead_views (user_id, user_email, lead_type, lead_id, viewed_at, ip_address)
+                VALUES (:user_id, :email, :lead_type, :lead_id, NOW(), :ip)
+            '''), {
+                'user_id': user_id,
+                'email': user_email,
+                'lead_type': lead_type,
+                'lead_id': lead_id,
+                'ip': request.remote_addr
+            })
+            db.session.commit()
+        except:
+            pass  # Don't fail if detailed logging fails
+        
+        return jsonify({
+            'success': True,
+            'can_view': True,
+            'remaining': remaining,
+            'is_unlimited': remaining == -1,
+            'message': message
+        })
+        
+    except Exception as e:
+        print(f"Track lead click error: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error tracking lead click'
+        }), 500
+
+@app.route('/api/check-lead-access')
+def check_lead_access():
+    """Check if user can access more leads without incrementing count"""
+    try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({
+                'success': True,
+                'requires_login': True,
+                'can_view': False,
+                'remaining': 0,
+                'message': 'Please sign in to view leads'
+            })
+        
+        subscription_status = session.get('subscription_status', 'free')
+        
+        # Admin and paid users have unlimited access
+        if session.get('is_admin') or subscription_status == 'paid':
+            return jsonify({
+                'success': True,
+                'can_view': True,
+                'remaining': -1,
+                'is_unlimited': True,
+                'message': 'Unlimited access'
+            })
+        
+        # Free users - check click count
+        clicks_used = session.get('lead_clicks_used', 0)
+        FREE_LEAD_LIMIT = 3
+        remaining = FREE_LEAD_LIMIT - clicks_used
+        
+        can_view = clicks_used < FREE_LEAD_LIMIT
+        message = f"{remaining} free lead view{'s' if remaining != 1 else ''} remaining" if can_view else "Free lead limit reached. Subscribe for unlimited access!"
+        
+        return jsonify({
+            'success': True,
+            'can_view': can_view,
+            'remaining': remaining,
+            'is_unlimited': False,
+            'clicks_used': clicks_used,
+            'limit': FREE_LEAD_LIMIT,
+            'message': message
+        })
+        
+    except Exception as e:
+        print(f"Check lead access error: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error checking lead access'
+        }), 500
 
 @app.route('/api/dashboard-stats')
 def api_dashboard_stats():

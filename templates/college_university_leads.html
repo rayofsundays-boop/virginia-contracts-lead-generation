@@ -152,7 +152,11 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <a href="{{ college.vendor_portal }}" target="_blank" class="btn btn-primary">
+                        <a href="{{ college.vendor_portal }}" 
+                           target="_blank" 
+                           class="btn btn-primary view-details-btn" 
+                           data-lead-id="{{ college.institution_name | urlencode }}" 
+                           data-lead-type="college">
                             <i class="fas fa-external-link-alt me-2"></i>Visit Vendor Portal
                         </a>
                         <button class="btn btn-outline-success" onclick="alert('Bookmark feature coming soon!')">
@@ -188,6 +192,9 @@
     </div>
 </div>
 
+<!-- Lead Click Tracker -->
+<script src="{{ url_for('static', filename='js/lead-click-tracker.js') }}"></script>
+
 <style>
 .hover-shadow {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -199,3 +206,4 @@
 </style>
 
 {% endblock %}
+

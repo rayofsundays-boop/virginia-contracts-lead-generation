@@ -428,7 +428,10 @@
                 </div>
                 <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                     <div>
-                        <button class="btn btn-primary btn-sm" onclick="requestContact('{{ opportunity.id }}', '{{ opportunity.business_name }}')">
+                        <button class="btn btn-primary btn-sm contact-info-btn" 
+                                data-lead-id="{{ opportunity.id }}" 
+                                data-lead-type="commercial"
+                                onclick="requestContact('{{ opportunity.id }}', '{{ opportunity.business_name }}')">
                             <i class="fas fa-coins"></i> Get Contact Info
                         </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="shareCommercialOpportunity('{{ opportunity.business_name | safe }}', '{{ opportunity.description[:150] | safe }}...', '{{ opportunity.location }}', '${{ opportunity.monthly_value }}', '{{ opportunity.business_type }}')">
@@ -869,6 +872,9 @@ function showToastCommercial(message, type) {
 }
 </script>
 
+<!-- Lead Click Tracker -->
+<script src="{{ url_for('static', filename='js/lead-click-tracker.js') }}"></script>
+
 <style>
 .cta-section {
     background: linear-gradient(135deg, #198754, #20c997);
@@ -876,4 +882,5 @@ function showToastCommercial(message, type) {
     padding: 3rem 0;
 }
 </style>
+
 
