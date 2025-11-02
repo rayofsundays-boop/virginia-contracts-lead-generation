@@ -189,19 +189,21 @@
                     <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center">
-                                <div class="me-3">
+                                <div class="me-3 flex-shrink-0">
                                     <div class="pulse-dot bg-success"></div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="activity-ticker">
-                                        <span class="activity-item">🎯 <strong>Sarah M.</strong> just saved a $250K hospital contract in Norfolk...</span>
-                                        <span class="activity-item">⚡ <strong>Mike T.</strong> accessed contact info for Hampton Schools RFP...</span>
-                                        <span class="activity-item">🔥 <strong>Lisa K.</strong> requested proposal help for $500K university contract...</span>
-                                        <span class="activity-item">✨ <strong>John D.</strong> reached Level 3 - Keep going! ...</span>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="activity-ticker-container">
+                                        <div class="activity-ticker">
+                                            <span class="activity-item">🎯 <strong>Sarah M.</strong> saved $250K hospital contract...</span>
+                                            <span class="activity-item">⚡ <strong>Mike T.</strong> accessed Hampton Schools RFP...</span>
+                                            <span class="activity-item">🔥 <strong>Lisa K.</strong> requested proposal help...</span>
+                                            <span class="activity-item">✨ <strong>John D.</strong> reached Level 3!</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary" onclick="showActivityFeed()">
-                                    <i class="fas fa-users"></i> See All Activity
+                                <button class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" onclick="showActivityFeed()">
+                                    <i class="fas fa-users"></i> <span class="d-none d-md-inline">See All</span>
                                 </button>
                             </div>
                         </div>
@@ -1647,10 +1649,17 @@ function resetApplyClickCount() {
     100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
 }
 
+.activity-ticker-container {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+}
+
 .activity-ticker {
     display: flex;
-    animation: scroll-left 30s linear infinite;
+    animation: scroll-left 40s linear infinite;
     white-space: nowrap;
+    will-change: transform;
 }
 
 @keyframes scroll-left {
@@ -1659,8 +1668,16 @@ function resetApplyClickCount() {
 }
 
 .activity-item {
-    padding-right: 50px;
+    padding-right: 60px;
     display: inline-block;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .activity-item {
+        font-size: 0.8rem;
+        padding-right: 40px;
+    }
 }
 
 .achievement-toast {
