@@ -32,6 +32,25 @@
                     </a>
                 </div>
                 
+                <!-- Education Leads Section (Paid Subscribers Only) -->
+                {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
+                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+                    <i class="fas fa-graduation-cap me-2"></i>EDUCATION LEADS
+                </h6>
+                
+                <div class="nav flex-column">
+                    <a href="/college-university-leads" class="nav-link">
+                        <i class="fas fa-university me-2"></i>Colleges & Universities
+                        <span class="badge bg-success float-end">Premium</span>
+                    </a>
+                    
+                    <a href="/k12-school-leads" class="nav-link">
+                        <i class="fas fa-school me-2"></i>K-12 Schools
+                        <span class="badge bg-success float-end">Premium</span>
+                    </a>
+                </div>
+                {% endif %}
+                
                 <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
                     <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS
                 </h6>
@@ -1918,6 +1937,24 @@ html {
                 <i class="fas fa-bookmark me-2 text-warning"></i>Saved Leads
             </a>
         </div>
+        
+        <!-- Education Leads Section (Paid Subscribers Only) -->
+        {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
+        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
+            <i class="fas fa-graduation-cap me-2"></i>EDUCATION LEADS
+        </h6>
+        
+        <div class="nav flex-column">
+            <a href="/college-university-leads" class="nav-link">
+                <i class="fas fa-university me-2"></i>Colleges & Universities
+                <span class="badge bg-success float-end">Premium</span>
+            </a>
+            <a href="/k12-school-leads" class="nav-link">
+                <i class="fas fa-school me-2"></i>K-12 Schools
+                <span class="badge bg-success float-end">Premium</span>
+            </a>
+        </div>
+        {% endif %}
         
         <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
             <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS

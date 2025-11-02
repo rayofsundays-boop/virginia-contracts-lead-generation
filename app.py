@@ -4552,6 +4552,426 @@ def track_click():
         'clicks_used': session['contract_clicks']
     }
 
+@app.route('/college-university-leads')
+@login_required
+def college_university_leads():
+    """College and University cleaning contract leads - Premium Feature"""
+    # Check if user is paid subscriber or admin
+    subscription_status = session.get('subscription_status', 'free')
+    is_admin = session.get('is_admin', False)
+    
+    if subscription_status != 'paid' and not is_admin:
+        flash('⚠️ College & University leads are a premium feature. Please upgrade your subscription to access this content.', 'warning')
+        return redirect(url_for('subscription'))
+    
+    # College and university cleaning contract opportunities
+    colleges_universities = [
+        {
+            'id': 'edu_001',
+            'institution_name': 'College of William & Mary',
+            'institution_type': 'Public University',
+            'location': 'Williamsburg, VA 23185',
+            'campus_size': '1,200 acres',
+            'buildings': '128 buildings totaling 6.5M sq ft',
+            'contract_value': '$2.5M - $3.5M annually',
+            'services_needed': 'Daily janitorial services, floor care, carpet cleaning, window washing, special event cleaning',
+            'current_contractor': 'Contract up for renewal 2025',
+            'procurement_contact': 'Facilities Management Department',
+            'phone': '(757) 221-1234',
+            'email': 'facilitiesprocurement@wm.edu',
+            'vendor_portal': 'https://www.wm.edu/offices/procurement/vendorportal/',
+            'certifications': 'Green cleaning certified, OSHA compliant, background checks required',
+            'bid_cycle': 'Every 3 years, next bid: Q2 2025',
+            'special_requirements': 'Must maintain LEED building standards, use eco-friendly products'
+        },
+        {
+            'id': 'edu_002',
+            'institution_name': 'Christopher Newport University',
+            'institution_type': 'Public University',
+            'location': 'Newport News, VA 23606',
+            'campus_size': '260 acres',
+            'buildings': '50+ buildings totaling 2.8M sq ft',
+            'contract_value': '$1.8M - $2.3M annually',
+            'services_needed': 'Custodial services, dormitory cleaning, athletic facility maintenance, dining hall sanitation',
+            'current_contractor': 'Accepting proposals for 2025-2028 contract',
+            'procurement_contact': 'Purchasing & Contract Services',
+            'phone': '(757) 594-7000',
+            'email': 'procurement@cnu.edu',
+            'vendor_portal': 'https://cnu.edu/purchasing/',
+            'certifications': 'Bonded & insured, EPA-approved cleaning products',
+            'bid_cycle': 'Multi-year contracts reviewed annually',
+            'special_requirements': 'Student housing experience preferred, 24/7 availability for emergencies'
+        },
+        {
+            'id': 'edu_003',
+            'institution_name': 'Hampton University',
+            'institution_type': 'Private HBCU',
+            'location': 'Hampton, VA 23668',
+            'campus_size': '314 acres on waterfront',
+            'buildings': '100+ buildings including historic structures',
+            'contract_value': '$2.2M - $3.0M annually',
+            'services_needed': 'Campus-wide janitorial, residence hall deep cleaning, laboratory sanitation, historic building care',
+            'current_contractor': 'Competitive bidding open for 2025',
+            'procurement_contact': 'Facilities Planning & Management',
+            'phone': '(757) 727-5000',
+            'email': 'facilities@hamptonu.edu',
+            'vendor_portal': 'https://home.hamptonu.edu/administration/facilities/',
+            'certifications': 'Experience with historic properties, specialized lab cleaning certification',
+            'bid_cycle': '5-year contracts with performance reviews',
+            'special_requirements': 'Minority-owned business participation encouraged, HBCU commitment'
+        },
+        {
+            'id': 'edu_004',
+            'institution_name': 'Old Dominion University',
+            'institution_type': 'Public Research University',
+            'location': 'Norfolk, VA 23529',
+            'campus_size': '251 acres',
+            'buildings': '162 buildings totaling 9.1M sq ft',
+            'contract_value': '$4.5M - $5.5M annually',
+            'services_needed': 'Comprehensive campus cleaning, research lab sanitation, medical building maintenance, athletic facilities',
+            'current_contractor': 'Major contract bid expected Q4 2024',
+            'procurement_contact': 'Procurement Services',
+            'phone': '(757) 683-3000',
+            'email': 'procurement@odu.edu',
+            'vendor_portal': 'https://www.odu.edu/procurement',
+            'certifications': 'Biohazard cleaning certified, medical facility experience, ISSA CIMS-GB certification',
+            'bid_cycle': 'Large multi-year contracts, separate bids for specialized areas',
+            'special_requirements': 'Research facility experience mandatory, clearance for sensitive areas'
+        },
+        {
+            'id': 'edu_005',
+            'institution_name': 'Norfolk State University',
+            'institution_type': 'Public HBCU',
+            'location': 'Norfolk, VA 23504',
+            'campus_size': '134 acres',
+            'buildings': '50+ buildings totaling 3.2M sq ft',
+            'contract_value': '$1.5M - $2.0M annually',
+            'services_needed': 'General campus custodial services, dormitory cleaning, classroom maintenance, cafeteria sanitation',
+            'current_contractor': 'Reviewing vendor applications for 2025-2027',
+            'procurement_contact': 'Office of Procurement & Strategic Sourcing',
+            'phone': '(757) 823-8600',
+            'email': 'procurement@nsu.edu',
+            'vendor_portal': 'https://www.nsu.edu/procurement',
+            'certifications': 'Standard facility cleaning, food service sanitation experience',
+            'bid_cycle': '3-year renewable contracts',
+            'special_requirements': 'Small business and diverse supplier program participation'
+        },
+        {
+            'id': 'edu_006',
+            'institution_name': 'Eastern Virginia Medical School',
+            'institution_type': 'Medical School',
+            'location': 'Norfolk, VA 23501',
+            'campus_size': 'Urban campus, multiple facilities',
+            'buildings': '12 buildings including medical center, research labs, simulation center',
+            'contract_value': '$1.2M - $1.8M annually',
+            'services_needed': 'Medical-grade cleaning, laboratory decontamination, operating theater sanitation, biohazard cleanup',
+            'current_contractor': 'Specialized medical facility cleaning required',
+            'procurement_contact': 'Facilities & Safety Services',
+            'phone': '(757) 446-5000',
+            'email': 'facilitiesinfo@evms.edu',
+            'vendor_portal': 'https://www.evms.edu/about_evms/administrative_offices/facilities_safety_services/',
+            'certifications': 'OSHA bloodborne pathogen training, medical facility cleaning certification, biohazard handling',
+            'bid_cycle': 'Annual contracts with option to extend',
+            'special_requirements': 'Strict adherence to medical facility protocols, emergency response capability'
+        },
+        {
+            'id': 'edu_007',
+            'institution_name': 'Tidewater Community College',
+            'institution_type': 'Community College (4 campuses)',
+            'location': 'Norfolk, Chesapeake, Portsmouth, Virginia Beach, VA',
+            'campus_size': 'Multi-campus system',
+            'buildings': '100+ buildings across 4 campuses',
+            'contract_value': '$3.0M - $4.0M annually (all campuses)',
+            'services_needed': 'Multi-site custodial services, classroom cleaning, vocational lab maintenance, library sanitation',
+            'current_contractor': 'System-wide contract awarded through VCCS',
+            'procurement_contact': 'Virginia Community College System Procurement',
+            'phone': '(757) 822-1122',
+            'email': 'vccs.procurement@vccs.edu',
+            'vendor_portal': 'https://www.tcc.edu/administration/procurement/',
+            'certifications': 'Multi-site management experience, commercial cleaning certification',
+            'bid_cycle': 'State contract through VCCS, 3-5 year terms',
+            'special_requirements': 'Must service all 4 campuses, coordinated scheduling, economies of scale'
+        },
+        {
+            'id': 'edu_008',
+            'institution_name': 'Regent University',
+            'institution_type': 'Private Christian University',
+            'location': 'Virginia Beach, VA 23464',
+            'campus_size': '70 acres',
+            'buildings': '20+ buildings including library, student center, chapel, TV studios',
+            'contract_value': '$900K - $1.4M annually',
+            'services_needed': 'Campus custodial, chapel/sanctuary cleaning, media production facility maintenance, residence halls',
+            'current_contractor': 'Accepting bids for 2025 academic year',
+            'procurement_contact': 'Facilities Management',
+            'phone': '(757) 352-4127',
+            'email': 'facilities@regent.edu',
+            'vendor_portal': 'https://www.regent.edu/about-us/offices-services/facilities-management/',
+            'certifications': 'Professional cleaning standards, family-friendly work environment',
+            'bid_cycle': 'Annual contracts reviewed each spring',
+            'special_requirements': 'Alignment with Christian values, respectful campus culture'
+        }
+    ]
+    
+    # Get filter parameters
+    search_query = request.args.get('q', '').strip().lower()
+    location_filter = request.args.get('location', '').strip().lower()
+    institution_type = request.args.get('type', '').strip().lower()
+    
+    # Filter colleges based on search
+    filtered_colleges = colleges_universities
+    if search_query:
+        filtered_colleges = [c for c in filtered_colleges if 
+                           search_query in c['institution_name'].lower() or
+                           search_query in c['services_needed'].lower() or
+                           search_query in c['location'].lower()]
+    
+    if location_filter:
+        filtered_colleges = [c for c in filtered_colleges if location_filter in c['location'].lower()]
+    
+    if institution_type and institution_type != 'all':
+        filtered_colleges = [c for c in filtered_colleges if institution_type in c['institution_type'].lower()]
+    
+    # Get unique values for filters
+    all_locations = sorted(set(c['location'].split(',')[0] for c in colleges_universities))
+    all_types = sorted(set(c['institution_type'] for c in colleges_universities))
+    
+    return render_template('college_university_leads.html',
+                         colleges=filtered_colleges,
+                         total_colleges=len(filtered_colleges),
+                         all_locations=all_locations,
+                         all_types=all_types,
+                         search_query=search_query,
+                         location_filter=location_filter,
+                         institution_type=institution_type)
+
+@app.route('/k12-school-leads')
+@login_required
+def k12_school_leads():
+    """K-12 School cleaning contract leads - Premium Feature"""
+    # Check if user is paid subscriber or admin
+    subscription_status = session.get('subscription_status', 'free')
+    is_admin = session.get('is_admin', False)
+    
+    if subscription_status != 'paid' and not is_admin:
+        flash('⚠️ K-12 School leads are a premium feature. Please upgrade your subscription to access this content.', 'warning')
+        return redirect(url_for('subscription'))
+    
+    # K-12 school cleaning contract opportunities
+    k12_schools = [
+        {
+            'id': 'k12_001',
+            'school_name': 'Hampton City Schools',
+            'school_type': 'Public School Division',
+            'location': 'Hampton, VA 23669',
+            'facilities': '29 schools: 18 elementary, 5 middle, 4 high schools, 2 special centers',
+            'square_footage': '2.8M sq ft total',
+            'contract_value': '$3.5M - $4.2M annually',
+            'services_needed': 'Daily custodial services, floor care, cafeteria deep cleaning, gymnasium maintenance, summer deep clean',
+            'current_contractor': 'Bid opening Q1 2025',
+            'procurement_contact': 'Hampton City Schools Procurement',
+            'phone': '(757) 727-2000',
+            'email': 'procurement@hampton.k12.va.us',
+            'vendor_portal': 'https://www.hampton.k12.va.us/departments/procurement',
+            'certifications': 'Background checks required, child safety training, EPA Safer Choice products',
+            'bid_cycle': '3-year contracts with performance-based renewals',
+            'special_requirements': 'School-age facility experience, flexible scheduling around academic calendar'
+        },
+        {
+            'id': 'k12_002',
+            'school_name': 'Newport News Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Newport News, VA 23607',
+            'facilities': '41 schools: 25 elementary, 8 middle, 6 high schools, 2 alternative education',
+            'square_footage': '4.2M sq ft total',
+            'contract_value': '$5.0M - $6.0M annually',
+            'services_needed': 'Comprehensive custodial, kitchen/cafeteria sanitation, athletic facility cleaning, event setup/cleanup',
+            'current_contractor': 'Major contract renewal cycle 2025-2028',
+            'procurement_contact': 'NNPS Facilities & Operations',
+            'phone': '(757) 591-4500',
+            'email': 'procurement@nn.k12.va.us',
+            'vendor_portal': 'https://www.nn.k12.va.us/domain/133',
+            'certifications': 'Full background screening, SafeSport training, green cleaning certification',
+            'bid_cycle': 'Multi-year contracts, separate bids possible for elementary vs secondary',
+            'special_requirements': 'Large district experience, zone-based management, emergency response team'
+        },
+        {
+            'id': 'k12_003',
+            'school_name': 'Virginia Beach City Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Virginia Beach, VA 23456',
+            'facilities': '86 schools: 54 elementary, 14 middle, 11 high, 7 special programs',
+            'square_footage': '10M+ sq ft (second largest district in VA)',
+            'contract_value': '$12M - $15M annually',
+            'services_needed': 'District-wide custodial, coastal facility care (salt air), sports complex maintenance, performing arts centers',
+            'current_contractor': 'RFP expected Fall 2024',
+            'procurement_contact': 'VBCPS Purchasing Department',
+            'phone': '(757) 263-1000',
+            'email': 'purchasing@vbschools.com',
+            'vendor_portal': 'https://www.vbschools.com/departments/purchasing',
+            'certifications': 'Extensive background checks, large-scale operation experience, CIMS certification',
+            'bid_cycle': '5-year master agreements with annual performance reviews',
+            'special_requirements': 'Massive scale operations, coastal environment experience, multiple facility types'
+        },
+        {
+            'id': 'k12_004',
+            'school_name': 'Suffolk Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Suffolk, VA 23434',
+            'facilities': '16 schools: 10 elementary, 3 middle, 3 high schools',
+            'square_footage': '1.9M sq ft',
+            'contract_value': '$2.0M - $2.8M annually',
+            'services_needed': 'School custodial services, agricultural education facility maintenance, vocational building cleaning',
+            'current_contractor': 'Accepting proposals for 2025-2027 contract',
+            'procurement_contact': 'Suffolk Schools Purchasing',
+            'phone': '(757) 925-5600',
+            'email': 'purchasing@spsk12.net',
+            'vendor_portal': 'https://www.spsk12.net/page/purchasing',
+            'certifications': 'Background checks, rural school experience, specialized facility cleaning',
+            'bid_cycle': '3-year contracts with option for 2 additional years',
+            'special_requirements': 'Rural/suburban district knowledge, agricultural facility experience'
+        },
+        {
+            'id': 'k12_005',
+            'school_name': 'Williamsburg-James City County Schools',
+            'school_type': 'Public School Division',
+            'location': 'Williamsburg, VA 23185',
+            'facilities': '15 schools: 9 elementary, 3 middle, 2 high schools, 1 primary',
+            'square_footage': '1.7M sq ft',
+            'contract_value': '$2.2M - $2.9M annually',
+            'services_needed': 'Daily janitorial, historic building preservation cleaning, new construction maintenance, grounds support',
+            'current_contractor': 'Contract cycle begins Q3 2024',
+            'procurement_contact': 'WJCC Schools Business Office',
+            'phone': '(757) 603-6300',
+            'email': 'businessoffice@wjccschools.org',
+            'vendor_portal': 'https://wjccschools.org/departments/business-services/',
+            'certifications': 'Historic preservation awareness, eco-friendly products, VA state certifications',
+            'bid_cycle': '3-5 year contracts depending on performance',
+            'special_requirements': 'Tourism-adjacent area, historic district protocols, high community standards'
+        },
+        {
+            'id': 'k12_006',
+            'school_name': 'Chesapeake Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Chesapeake, VA 23320',
+            'facilities': '48 schools: 30 elementary, 10 middle, 7 high, 1 alternative',
+            'square_footage': '6.5M sq ft',
+            'contract_value': '$7.5M - $9.0M annually',
+            'services_needed': 'System-wide custodial, Career & Technical Education facility maintenance, aquatic center cleaning, turf field care',
+            'current_contractor': 'Major RFP planned for FY2025-2026',
+            'procurement_contact': 'Chesapeake Public Schools Procurement',
+            'phone': '(757) 547-0153',
+            'email': 'procurement@cpschools.com',
+            'vendor_portal': 'https://www.cpschools.com/departments/procurement',
+            'certifications': 'Large district operations, specialized facility experience, ISSA membership',
+            'bid_cycle': '4-year master service agreements',
+            'special_requirements': 'Third-largest district in VA, diverse facility portfolio, 24/7 availability'
+        },
+        {
+            'id': 'k12_007',
+            'school_name': 'Norfolk Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Norfolk, VA 23510',
+            'facilities': '35 schools: 23 elementary, 6 middle, 5 high, 1 academy',
+            'square_footage': '4.5M sq ft',
+            'contract_value': '$5.5M - $7.0M annually',
+            'services_needed': 'Urban school custodial, historic building care, magnet program facilities, special education centers',
+            'current_contractor': 'Contract under review for 2025',
+            'procurement_contact': 'NPS Procurement Services',
+            'phone': '(757) 628-3830',
+            'email': 'procurement@nps.k12.va.us',
+            'vendor_portal': 'https://www.nps.k12.va.us/departments/procurement',
+            'certifications': 'Urban school experience, historic preservation, accessibility compliance',
+            'bid_cycle': '3-year agreements with annual assessments',
+            'special_requirements': 'Urban district challenges, aging infrastructure, community engagement'
+        },
+        {
+            'id': 'k12_008',
+            'school_name': 'Portsmouth Public Schools',
+            'school_type': 'Public School Division',
+            'location': 'Portsmouth, VA 23704',
+            'facilities': '17 schools: 10 elementary, 4 middle, 2 high, 1 alternative',
+            'square_footage': '2.1M sq ft',
+            'contract_value': '$2.5M - $3.2M annually',
+            'services_needed': 'School cleaning services, waterfront facility maintenance, Title I school support, summer program cleaning',
+            'current_contractor': 'Open bidding for 2025-2027',
+            'procurement_contact': 'Portsmouth Schools Purchasing',
+            'phone': '(757) 393-8751',
+            'email': 'purchasing@portsmouthschools.org',
+            'vendor_portal': 'https://www.portsmouthschools.org/departments/purchasing',
+            'certifications': 'Background checks mandatory, urban education environment experience',
+            'bid_cycle': '3-year contracts with extension options',
+            'special_requirements': 'Title I school experience, flexible for extended school year programs'
+        },
+        {
+            'id': 'k12_009',
+            'school_name': 'York County School Division',
+            'school_type': 'Public School Division',
+            'location': 'Yorktown, VA 23693',
+            'facilities': '15 schools: 9 elementary, 3 middle, 3 high schools',
+            'square_footage': '2.0M sq ft',
+            'contract_value': '$2.4M - $3.1M annually',
+            'services_needed': 'Custodial services, athletic complex cleaning, performing arts theater maintenance, STEM lab sanitation',
+            'current_contractor': 'RFP cycle Q4 2024',
+            'procurement_contact': 'York County Schools Business Office',
+            'phone': '(757) 898-0300',
+            'email': 'procurement@york.k12.va.us',
+            'vendor_portal': 'https://yorkcountyschools.org/departments/business-office/',
+            'certifications': 'Green cleaning certified, historic area protocols, community standards compliance',
+            'bid_cycle': '3-year master agreements',
+            'special_requirements': 'Historic Yorktown area, high-performing district standards, community reputation'
+        },
+        {
+            'id': 'k12_010',
+            'school_name': 'Peninsula Catholic High School',
+            'school_type': 'Private Catholic School',
+            'location': 'Newport News, VA 23602',
+            'facilities': '1 main campus with multiple buildings',
+            'square_footage': '120,000 sq ft',
+            'contract_value': '$180K - $250K annually',
+            'services_needed': 'Daily janitorial, chapel cleaning, athletic facility maintenance, event setup',
+            'current_contractor': 'Accepting vendor proposals',
+            'procurement_contact': 'Business Office',
+            'phone': '(757) 596-7247',
+            'email': 'business@peninsulacatholic.org',
+            'vendor_portal': 'https://www.peninsulacatholic.org/contact',
+            'certifications': 'Background checks, alignment with Catholic values',
+            'bid_cycle': 'Annual contracts',
+            'special_requirements': 'Respectful of religious environment, chapel/sanctuary care experience'
+        }
+    ]
+    
+    # Get filter parameters
+    search_query = request.args.get('q', '').strip().lower()
+    location_filter = request.args.get('location', '').strip().lower()
+    school_type = request.args.get('type', '').strip().lower()
+    
+    # Filter schools based on search
+    filtered_schools = k12_schools
+    if search_query:
+        filtered_schools = [s for s in filtered_schools if 
+                          search_query in s['school_name'].lower() or
+                          search_query in s['services_needed'].lower() or
+                          search_query in s['location'].lower()]
+    
+    if location_filter:
+        filtered_schools = [s for s in filtered_schools if location_filter in s['location'].lower()]
+    
+    if school_type and school_type != 'all':
+        filtered_schools = [s for s in filtered_schools if school_type in s['school_type'].lower()]
+    
+    # Get unique values for filters
+    all_locations = sorted(set(s['location'].split(',')[0] for s in k12_schools))
+    all_types = sorted(set(s['school_type'] for s in k12_schools))
+    
+    return render_template('k12_school_leads.html',
+                         schools=filtered_schools,
+                         total_schools=len(filtered_schools),
+                         all_locations=all_locations,
+                         all_types=all_types,
+                         search_query=search_query,
+                         location_filter=location_filter,
+                         school_type=school_type)
+
 @app.route('/customer-leads')
 @login_required
 def customer_leads():

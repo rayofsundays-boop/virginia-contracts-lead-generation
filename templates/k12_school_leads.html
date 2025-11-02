@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}K-12 School Cleaning Leads - Premium Feature{% endblock %}
+
+{% block og_title %}K-12 School Cleaning Contract Opportunities{% endblock %}
+{% block og_description %}Exclusive K-12 school cleaning contract opportunities in Virginia - Available to premium subscribers only.{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">🏫 K-12 School Cleaning Leads</h1>
+        <p class="lead text-white fs-3">Premium cleaning contract opportunities at Virginia K-12 school districts</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-school"></i><br>
+                            <strong>{{ total_schools }}</strong> School Districts{% if search_query or location_filter or school_type %} (filtered){% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-dollar-sign"></i><br>
+                            <strong>$50M+</strong> Total Value
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="badge bg-success text-white p-3 fs-6 w-100">
+                            <i class="fas fa-crown"></i><br>
+                            <strong>Premium</strong> Feature
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter K-12 School Districts</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('k12_school_leads') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="location" class="form-label">Location</label>
+                        <select name="location" id="location" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Locations</option>
+                            {% for loc in all_locations %}
+                            <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="type" class="form-label">School Type</label>
+                        <select name="type" id="type" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="all">All Types</option>
+                            {% for stype in all_types %}
+                            <option value="{{ stype }}" {% if school_type == stype %}selected{% endif %}>{{ stype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="q" class="form-label">Search</label>
+                        <input type="text" name="q" id="q" class="form-control" 
+                               placeholder="Search by school name, services..." 
+                               value="{{ search_query or '' }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+                {% if location_filter or school_type != 'all' or search_query %}
+                <div class="mt-3">
+                    <a href="{{ url_for('k12_school_leads') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-2"></i>Clear All Filters
+                    </a>
+                    {% if location_filter %}
+                    <span class="badge bg-info ms-2">Location: {{ location_filter }}</span>
+                    {% endif %}
+                    {% if school_type and school_type != 'all' %}
+                    <span class="badge bg-info ms-2">Type: {{ school_type }}</span>
+                    {% endif %}
+                    {% if search_query %}
+                    <span class="badge bg-info ms-2">Search: "{{ search_query }}"</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Schools List -->
+<div class="container my-5">
+    {% if schools %}
+    <div class="row g-4">
+        {% for school in schools %}
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
+                    <h5 class="mb-0"><i class="fas fa-school me-2"></i>{{ school.school_name }}</h5>
+                    <small class="text-white-50">{{ school.school_type }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>Location:</strong> {{ school.location }}</p>
+                        <p class="mb-2"><i class="fas fa-school text-primary me-2"></i><strong>Facilities:</strong> {{ school.facilities }}</p>
+                        <p class="mb-2"><i class="fas fa-ruler-combined text-info me-2"></i><strong>Square Footage:</strong> {{ school.square_footage }}</p>
+                    </div>
+                    
+                    <div class="alert alert-success mb-3">
+                        <strong><i class="fas fa-dollar-sign me-2"></i>Contract Value:</strong> {{ school.contract_value }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-broom me-2"></i>Services Needed:</h6>
+                        <p class="small">{{ school.services_needed }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-calendar-alt me-2"></i>Bid Cycle:</h6>
+                        <p class="small">{{ school.bid_cycle }}</p>
+                        <span class="badge bg-warning text-dark">{{ school.current_contractor }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-certificate me-2"></i>Required Certifications:</h6>
+                        <p class="small">{{ school.certifications }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-exclamation-circle me-2"></i>Special Requirements:</h6>
+                        <p class="small">{{ school.special_requirements }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-phone-alt me-2"></i>Procurement Contact:</h6>
+                        <p class="mb-1"><strong>{{ school.procurement_contact }}</strong></p>
+                        <p class="mb-1"><i class="fas fa-phone text-success me-2"></i>{{ school.phone }}</p>
+                        <p class="mb-1"><i class="fas fa-envelope text-primary me-2"></i>{{ school.email }}</p>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ school.vendor_portal }}" target="_blank" class="btn btn-danger">
+                            <i class="fas fa-external-link-alt me-2"></i>Visit Vendor Portal
+                        </a>
+                        <button class="btn btn-outline-success" onclick="alert('Bookmark feature coming soon!')">
+                            <i class="fas fa-bookmark me-2"></i>Save This Lead
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle me-2"></i>No K-12 school districts match your current filters. Try adjusting your search criteria.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info Banner -->
+<div class="container my-5">
+    <div class="card bg-light">
+        <div class="card-body">
+            <h5 class="card-title"><i class="fas fa-lightbulb text-warning me-2"></i>Tips for Winning K-12 School Contracts</h5>
+            <ul class="mb-0">
+                <li><strong>Background Checks:</strong> Rigorous background screening required for all staff working in schools</li>
+                <li><strong>Academic Calendar Flexibility:</strong> Must accommodate school schedules, breaks, and summer deep cleaning</li>
+                <li><strong>Child-Safe Products:</strong> Use EPA-approved, low-toxicity cleaning products safe for children</li>
+                <li><strong>Food Service Areas:</strong> Experience with cafeteria and kitchen sanitation is critical</li>
+                <li><strong>Multi-Site Management:</strong> Large districts require coordinated services across many locations</li>
+                <li><strong>Emergency Response:</strong> 24/7 availability for urgent cleaning needs (illness outbreaks, accidents)</li>
+                <li><strong>Community Engagement:</strong> Schools value local businesses and community involvement</li>
+                <li><strong>Performance-Based Renewals:</strong> Consistent quality leads to multi-year contract extensions</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Contract Size Guide -->
+<div class="container my-5">
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Virginia School District Contract Size Guide</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="fw-bold text-success">Small Districts</h6>
+                        <p class="small mb-1">10-20 schools</p>
+                        <p class="small mb-1">1-2M sq ft</p>
+                        <p class="fw-bold text-success mb-0">$1.5M - $3M/year</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="fw-bold text-warning">Medium Districts</h6>
+                        <p class="small mb-1">30-50 schools</p>
+                        <p class="small mb-1">3-6M sq ft</p>
+                        <p class="fw-bold text-warning mb-0">$4M - $8M/year</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="fw-bold text-danger">Large Districts</h6>
+                        <p class="small mb-1">70+ schools</p>
+                        <p class="small mb-1">8M+ sq ft</p>
+                        <p class="fw-bold text-danger mb-0">$10M - $15M/year</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+</style>
+
+{% endblock %}
