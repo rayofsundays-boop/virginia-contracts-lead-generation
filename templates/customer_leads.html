@@ -384,7 +384,8 @@
              data-value="{{ lead.contract_value }}"
              data-category="{{ lead.category|default('') }}"
              data-services="{{ lead.services_needed }}"
-             data-status="{{ lead.status }}">
+             data-status="{{ lead.status }}"
+             data-days-left="{{ lead.days_left|default(999) }}">
             <div class="card h-100 border-0 shadow-sm {% if lead.lead_type in ['commercial_request', 'residential_request'] %}border-warning{% endif %}">
                 <div class="card-header bg-transparent border-0 pb-1 pt-2 px-2">
                     <div class="d-flex justify-content-between align-items-start flex-wrap">
@@ -920,7 +921,7 @@ function loadCustomerCredits() {
 }
 
 function bindFilterEvents() {
-    const filters = ['leadTypeFilter', 'locationFilter', 'valueFilter', 'categoryFilter'];
+    const filters = ['locationFilter', 'valueFilter', 'categoryFilter', 'deadlineFilter'];
     filters.forEach(filterId => {
         const element = document.getElementById(filterId);
         if (element) {
@@ -928,16 +929,23 @@ function bindFilterEvents() {
         }
     });
     
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('sortBy').addEventListener('change', applySorting);
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+    
+    const sortBy = document.getElementById('sortBy');
+    if (sortBy) {
+        sortBy.addEventListener('change', applySorting);
+    }
 }
 
 function applyFilters() {
-    const leadType = document.getElementById('leadTypeFilter').value;
-    const location = document.getElementById('locationFilter').value;
-    const value = document.getElementById('valueFilter').value;
-    const category = document.getElementById('categoryFilter').value;
-    const search = document.getElementById('searchInput').value.toLowerCase();
+    const location = document.getElementById('locationFilter')?.value || '';
+    const value = document.getElementById('valueFilter')?.value || '';
+    const category = document.getElementById('categoryFilter')?.value || '';
+    const deadline = document.getElementById('deadlineFilter')?.value || '';
+    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
     
     const cards = document.querySelectorAll('.lead-card');
     let visibleCount = 0;
@@ -945,23 +953,41 @@ function applyFilters() {
     cards.forEach(card => {
         let show = true;
         
-        if (leadType && card.dataset.type !== leadType) show = false;
+        // Location filter
         if (location && !card.dataset.location.includes(location)) show = false;
+        
+        // Category filter
         if (category && card.dataset.category !== category) show = false;
         
+        // Search filter
         if (search) {
-            const title = card.querySelector('.card-title').textContent.toLowerCase();
-            const description = card.querySelector('.card-text').textContent.toLowerCase();
-            const agency = card.querySelector('.text-muted').textContent.toLowerCase();
+            const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+            const description = card.querySelector('.card-text')?.textContent.toLowerCase() || '';
+            const agency = card.querySelector('.text-muted')?.textContent.toLowerCase() || '';
             if (!title.includes(search) && !description.includes(search) && !agency.includes(search)) show = false;
         }
         
+        // Value filter
         if (value) {
-            const cardValue = parseContractValue(card.dataset.value);
+            const cardValue = parseContractValue(card.dataset.value || '0');
             if (!isInValueRange(cardValue, value)) show = false;
         }
         
-        card.style.display = show ? 'block' : 'none';
+        // Deadline filter
+        if (deadline) {
+            const daysLeft = parseInt(card.dataset.daysLeft || '999');
+            let showByDeadline = false;
+            switch(deadline) {
+                case '3-days': showByDeadline = daysLeft <= 3; break;
+                case '7-days': showByDeadline = daysLeft <= 7; break;
+                case '14-days': showByDeadline = daysLeft <= 14; break;
+                case '30-days': showByDeadline = daysLeft <= 30; break;
+                default: showByDeadline = true;
+            }
+            if (!showByDeadline) show = false;
+        }
+        
+        card.style.display = show ? '' : 'none';
         if (show) visibleCount++;
     });
     
@@ -971,6 +997,15 @@ function applyFilters() {
     if (visibleCountEl) {
         visibleCountEl.textContent = visibleCount;
     }
+    
+    // Reset to "all" pill if using advanced filters
+    const allPill = document.querySelector('[data-filter="all"]');
+    if (allPill && (location || value || category || deadline || search)) {
+        document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+        allPill.classList.add('active');
+    }
+    
+    updateActivityScore(5, 'filter');
 }
 
 function parseContractValue(valueStr) {
@@ -995,11 +1030,24 @@ function isInValueRange(value, range) {
 }
 
 function clearAllFilters() {
-    document.getElementById('leadTypeFilter').value = '';
-    document.getElementById('locationFilter').value = '';
-    document.getElementById('valueFilter').value = '';
-    document.getElementById('categoryFilter').value = '';
-    document.getElementById('searchInput').value = '';
+    // Clear all filter dropdowns
+    const locationFilter = document.getElementById('locationFilter');
+    const valueFilter = document.getElementById('valueFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const deadlineFilter = document.getElementById('deadlineFilter');
+    const searchInput = document.getElementById('searchInput');
+    
+    if (locationFilter) locationFilter.value = '';
+    if (valueFilter) valueFilter.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (deadlineFilter) deadlineFilter.value = '';
+    if (searchInput) searchInput.value = '';
+    
+    // Reset to "all" pill
+    document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+    const allPill = document.querySelector('[data-filter="all"]');
+    if (allPill) allPill.classList.add('active');
+    
     applyFilters();
 }
 

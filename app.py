@@ -7475,7 +7475,7 @@ def quick_wins():
         page = 1  # Single page showing all results
         per_page = 999999  # No pagination limit - show everything
         
-        # Get ALL supply contracts (no filters)
+        # Get ALL supply contracts (only from Virginia)
         supply_contracts_data = []
         try:
             supply_contracts_data = db.session.execute(text('''
@@ -7485,17 +7485,29 @@ def quick_wins():
                     contact_name, contact_email, contact_phone, is_quick_win
                 FROM supply_contracts 
                 WHERE status = 'open'
+                AND (
+                    location LIKE '%Virginia%' OR 
+                    location LIKE '%VA%' OR
+                    location LIKE '%Hampton%' OR
+                    location LIKE '%Norfolk%' OR
+                    location LIKE '%Virginia Beach%' OR
+                    location LIKE '%Newport News%' OR
+                    location LIKE '%Williamsburg%' OR
+                    location LIKE '%Suffolk%' OR
+                    location LIKE '%Chesapeake%' OR
+                    location LIKE '%Portsmouth%'
+                )
                 ORDER BY 
                     CASE WHEN is_quick_win THEN 0 ELSE 1 END,
                     bid_deadline ASC
             ''')).fetchall()
-            print(f"📦 Found {len(supply_contracts_data)} supply contracts")
+            print(f"📦 Found {len(supply_contracts_data)} Virginia supply contracts")
         except Exception as e:
             print(f"❌ Supply contracts error: {e}")
             import traceback
             traceback.print_exc()
         
-        # Get urgent commercial requests
+        # Get urgent commercial requests (only from Virginia cities)
         urgent_commercial = []
         try:
             urgent_commercial = db.session.execute(text('''
@@ -7504,6 +7516,7 @@ def quick_wins():
                     budget_range, urgency, created_at, contact_person, email, phone
                 FROM commercial_lead_requests 
                 WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
+                AND city IN ('Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg', 'Suffolk', 'Chesapeake', 'Portsmouth')
                 ORDER BY 
                     CASE urgency 
                         WHEN 'emergency' THEN 1
@@ -7512,11 +7525,11 @@ def quick_wins():
                     END,
                     created_at DESC
             ''')).fetchall()
-            print(f"🚨 Found {len(urgent_commercial)} urgent commercial requests")
+            print(f"🚨 Found {len(urgent_commercial)} urgent Virginia commercial requests")
         except Exception as e:
             print(f"❌ Commercial requests error: {e}")
         
-        # Get regular contracts with upcoming deadlines (as fallback quick wins)
+        # Get regular contracts with upcoming deadlines (as fallback quick wins) - Virginia only
         urgent_contracts = []
         try:
             urgent_contracts = db.session.execute(text('''
@@ -7527,10 +7540,22 @@ def quick_wins():
                 WHERE deadline IS NOT NULL 
                 AND deadline != ''
                 AND deadline != 'Rolling'
+                AND (
+                    location LIKE '%Virginia%' OR 
+                    location LIKE '%VA%' OR
+                    location LIKE '%Hampton%' OR
+                    location LIKE '%Norfolk%' OR
+                    location LIKE '%Virginia Beach%' OR
+                    location LIKE '%Newport News%' OR
+                    location LIKE '%Williamsburg%' OR
+                    location LIKE '%Suffolk%' OR
+                    location LIKE '%Chesapeake%' OR
+                    location LIKE '%Portsmouth%'
+                )
                 ORDER BY deadline ASC
                 LIMIT 20
             ''')).fetchall()
-            print(f"📋 Found {len(urgent_contracts)} government contracts with deadlines")
+            print(f"📋 Found {len(urgent_contracts)} Virginia government contracts with deadlines")
         except Exception as e:
             print(f"❌ Regular contracts error: {e}")
         
