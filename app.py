@@ -6560,32 +6560,40 @@ def generate_proposal_api():
 def quick_wins():
     """Show urgent leads and quick win supply contracts requiring immediate response
     
+    SUBSCRIBER-ONLY FEATURE
     This consolidated page combines:
     - Quick win supply/product contracts
     - Urgent commercial cleaning requests
     - Emergency leads requiring immediate response
     """
     try:
+        # Check if paid subscriber or admin
+        is_admin = session.get('is_admin', False)
+        is_paid = False
+        
+        if not is_admin:
+            if 'user_id' in session:
+                result = db.session.execute(text('''
+                    SELECT subscription_status FROM leads WHERE id = :user_id
+                '''), {'user_id': session['user_id']}).fetchone()
+                if result and result[0] == 'paid':
+                    is_paid = True
+            
+            # Redirect non-subscribers to pricing page
+            if not is_paid:
+                flash('Quick Wins is exclusive to paid subscribers. Upgrade now to access urgent leads and time-sensitive contracts!', 'warning')
+                return redirect(url_for('pricing_guide'))
+        
+        # Admin gets full access
+        if is_admin:
+            is_paid = True
+        
         urgency_filter = request.args.get('urgency', '')
         lead_type_filter = request.args.get('lead_type', '')
         city_filter = request.args.get('city', '')
         category_filter = request.args.get('category', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
         per_page = 12
-        
-        # Check if paid subscriber or admin
-        is_admin = session.get('is_admin', False)
-        is_paid = False
-        if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
-            if result and result[0] == 'paid':
-                is_paid = True
-        
-        # Admin gets full access
-        if is_admin:
-            is_paid = True
         
         # Get ALL supply contracts (not just quick wins) with filters
         supply_contracts_data = []

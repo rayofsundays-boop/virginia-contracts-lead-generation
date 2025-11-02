@@ -227,6 +227,64 @@
                 display: inline-block;
             }
         }
+        
+        /* Quick Wins Premium Styling */
+        .quick-wins-nav {
+            position: relative;
+        }
+        
+        .quick-wins-link {
+            background: linear-gradient(135deg, #ffc107 10%, #ff9800 100%) !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+            border-radius: 8px !important;
+            padding: 0.45rem 0.85rem !important;
+            box-shadow: 0 3px 10px rgba(255, 193, 7, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .quick-wins-link:hover {
+            background: linear-gradient(135deg, #ffca28 10%, #ffa726 100%) !important;
+            color: #000 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.6);
+        }
+        
+        .quick-wins-link i {
+            color: #000 !important;
+            animation: bolt-pulse 2s infinite;
+        }
+        
+        .pulse-badge {
+            animation: pulse 2s infinite;
+            font-size: 0.55rem !important;
+            padding: 0.2rem 0.4rem !important;
+            font-weight: 800 !important;
+            background-color: #000 !important;
+            color: #ffc107 !important;
+            border-radius: 4px;
+            text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+        
+        @keyframes bolt-pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
     </style>
 </head>
 <body>
@@ -252,8 +310,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('federal_contracts') }}">Federal</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('quick_wins') }}">Quick Wins</a>
+                        <li class="nav-item quick-wins-nav">
+                            <a class="nav-link quick-wins-link" href="{{ url_for('quick_wins') }}">
+                                <i class="fas fa-bolt me-1"></i>Quick Wins
+                                <span class="badge bg-warning text-dark ms-1 pulse-badge">PRO</span>
+                            </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('toolbox') }}">Resource Toolbox</a>
