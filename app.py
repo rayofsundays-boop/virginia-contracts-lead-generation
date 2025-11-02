@@ -8398,6 +8398,15 @@ def city_procurement(city_name):
         return redirect(url_for('contracts'))
 
 # ============================================================================
+# PROCUREMENT LIFECYCLE MAP
+# ============================================================================
+
+@app.route('/procurement-lifecycle')
+def procurement_lifecycle():
+    """Contract procurement lifecycle guide with FAR references"""
+    return render_template('procurement_lifecycle.html')
+
+# ============================================================================
 # COMMUNITY FORUM FOR APPROVED REQUESTS
 # ============================================================================
 

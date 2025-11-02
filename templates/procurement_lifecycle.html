@@ -1,0 +1,781 @@
+{% extends "base.html" %}
+
+{% block title %}Contract Procurement Lifecycle Guide - Virginia Contracts{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%); padding: 80px 0 60px 0;">
+    <div class="container">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-route me-3"></i>Contract Procurement Lifecycle Map
+            </h1>
+            <p class="lead mb-4">Your Complete Guide to Understanding Government Contracting</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <span class="badge bg-success px-4 py-2 fs-6">
+                    <i class="fas fa-book me-2"></i>FAR Referenced
+                </span>
+                <span class="badge bg-info px-4 py-2 fs-6">
+                    <i class="fas fa-graduation-cap me-2"></i>Step-by-Step Guide
+                </span>
+                <span class="badge bg-warning px-4 py-2 fs-6">
+                    <i class="fas fa-lightbulb me-2"></i>Best Practices Included
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Quick Navigation -->
+    <div class="card shadow-lg mb-5 border-0">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-compass me-2"></i>Quick Navigation</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#phase1" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 1: Requirements & Planning</a></li>
+                        <li class="mb-2"><a href="#phase2" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 2: Solicitation</a></li>
+                        <li class="mb-2"><a href="#phase3" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 3: Evaluation & Selection</a></li>
+                        <li class="mb-2"><a href="#phase4" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 4: Award</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#phase5" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 5: Contract Execution</a></li>
+                        <li class="mb-2"><a href="#phase6" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Phase 6: Closeout</a></li>
+                        <li class="mb-2"><a href="#far-reference" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>FAR Reference Guide</a></li>
+                        <li class="mb-2"><a href="#contractor-tips" class="text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Contractor Success Tips</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lifecycle Visual Map -->
+    <div class="card shadow-lg mb-5 border-0">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Procurement Lifecycle Overview</h3>
+        </div>
+        <div class="card-body p-4">
+            <div class="row text-center">
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-primary mb-3"><i class="fas fa-lightbulb"></i></div>
+                        <h5 class="fw-bold">Phase 1</h5>
+                        <p class="small mb-0">Requirements & Planning</p>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-success mb-3"><i class="fas fa-bullhorn"></i></div>
+                        <h5 class="fw-bold">Phase 2</h5>
+                        <p class="small mb-0">Solicitation</p>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-info mb-3"><i class="fas fa-search"></i></div>
+                        <h5 class="fw-bold">Phase 3</h5>
+                        <p class="small mb-0">Evaluation & Selection</p>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-warning mb-3"><i class="fas fa-award"></i></div>
+                        <h5 class="fw-bold">Phase 4</h5>
+                        <p class="small mb-0">Award</p>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-danger mb-3"><i class="fas fa-tasks"></i></div>
+                        <h5 class="fw-bold">Phase 5</h5>
+                        <p class="small mb-0">Contract Execution</p>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <div class="p-3 bg-light rounded shadow-sm h-100">
+                        <div class="display-1 text-secondary mb-3"><i class="fas fa-flag-checkered"></i></div>
+                        <h5 class="fw-bold">Phase 6</h5>
+                        <p class="small mb-0">Closeout</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 1: Requirements & Planning -->
+    <div id="phase1" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Phase 1: Requirements Determination & Planning</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR Part 7 - Acquisition Planning
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">What Happens in This Phase:</h5>
+            <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Agency identifies a need for goods or services</li>
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Requirements are documented in a Statement of Work (SOW) or Performance Work Statement (PWS)</li>
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Market research is conducted to identify potential vendors</li>
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Budget is allocated and approved</li>
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Acquisition strategy is developed</li>
+                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Small business set-aside determinations are made</li>
+            </ul>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-primary"><i class="fas fa-user-tie me-2"></i>For Contractors:</h6>
+                            <ul class="mb-0">
+                                <li>Monitor agency forecasts and procurement schedules</li>
+                                <li>Build relationships with contracting officers</li>
+                                <li>Respond to Requests for Information (RFI)</li>
+                                <li>Attend industry days and pre-solicitation conferences</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-success text-white mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold"><i class="fas fa-stopwatch me-2"></i>Timeline:</h6>
+                            <p class="mb-2">Typically 2-6 months</p>
+                            <p class="small mb-0">Complex acquisitions may take longer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 2: Solicitation -->
+    <div id="phase2" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Phase 2: Solicitation</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR Part 15 - Contracting by Negotiation | FAR Part 14 - Sealed Bidding
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">Common Solicitation Types:</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card border-primary h-100">
+                        <div class="card-header bg-primary text-white">
+                            <strong>RFP - Request for Proposal</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2"><strong>Use:</strong> Complex requirements, negotiated procurement</p>
+                            <p class="small mb-2"><strong>Award Basis:</strong> Best value (technical + price)</p>
+                            <p class="small mb-0"><strong>FAR:</strong> Part 15</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">
+                            <strong>IFB - Invitation for Bid</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2"><strong>Use:</strong> Straightforward requirements</p>
+                            <p class="small mb-2"><strong>Award Basis:</strong> Lowest price</p>
+                            <p class="small mb-0"><strong>FAR:</strong> Part 14</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-info h-100">
+                        <div class="card-header bg-info text-white">
+                            <strong>RFQ - Request for Quotation</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2"><strong>Use:</strong> Simplified acquisitions under $250K</p>
+                            <p class="small mb-2"><strong>Award Basis:</strong> Best value or lowest price</p>
+                            <p class="small mb-0"><strong>FAR:</strong> Part 13</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-header bg-warning">
+                            <strong>Sources Sought Notice</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2"><strong>Use:</strong> Market research, capability statements</p>
+                            <p class="small mb-2"><strong>Award Basis:</strong> Not a solicitation</p>
+                            <p class="small mb-0"><strong>FAR:</strong> Part 7</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mt-4 mb-3">Where Solicitations Are Posted:</h5>
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-globe me-2 text-primary"></i><strong>SAM.gov</strong> - System for Award Management (Federal)</span>
+                    <a href="https://sam.gov" target="_blank" class="btn btn-sm btn-outline-primary">Visit</a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-map-marker-alt me-2 text-success"></i><strong>eVA</strong> - Virginia Procurement Portal (State)</span>
+                    <a href="https://eva.virginia.gov" target="_blank" class="btn btn-sm btn-outline-success">Visit</a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-building me-2 text-info"></i><strong>Local Government Websites</strong> - City/County portals</span>
+                    <a href="{{ url_for('contracts') }}" class="btn btn-sm btn-outline-info">Browse</a>
+                </li>
+            </ul>
+
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold text-success"><i class="fas fa-user-tie me-2"></i>For Contractors:</h6>
+                    <ul class="mb-0">
+                        <li>Register in SAM.gov (required for federal contracts)</li>
+                        <li>Set up email alerts for relevant opportunities</li>
+                        <li>Read the entire solicitation carefully</li>
+                        <li>Attend pre-proposal conferences if offered</li>
+                        <li>Submit questions before the deadline</li>
+                        <li>Start preparing your proposal immediately</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 3: Evaluation & Selection -->
+    <div id="phase3" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0"><i class="fas fa-search me-2"></i>Phase 3: Evaluation & Selection</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR 15.3 - Source Selection
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">Evaluation Process:</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-primary mb-3"><i class="fas fa-clipboard-check"></i></div>
+                            <h6 class="fw-bold">Step 1: Initial Review</h6>
+                            <p class="small mb-0">Proposals checked for completeness and compliance with requirements</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-success">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-success mb-3"><i class="fas fa-star"></i></div>
+                            <h6 class="fw-bold">Step 2: Technical Evaluation</h6>
+                            <p class="small mb-0">Technical panel scores proposals against evaluation criteria</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-warning mb-3"><i class="fas fa-balance-scale"></i></div>
+                            <h6 class="fw-bold">Step 3: Best Value Decision</h6>
+                            <p class="small mb-0">Contracting officer selects winner based on evaluation factors</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mt-4 mb-3">Common Evaluation Criteria:</h5>
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Factor</th>
+                        <th>Description</th>
+                        <th>Typical Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Technical Approach</strong></td>
+                        <td>Understanding of requirements, methodology, quality control</td>
+                        <td>30-40%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Past Performance</strong></td>
+                        <td>Relevant experience, references, quality of prior work</td>
+                        <td>20-30%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Management</strong></td>
+                        <td>Key personnel qualifications, project management plan</td>
+                        <td>15-25%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Price</strong></td>
+                        <td>Cost competitiveness, price reasonableness</td>
+                        <td>20-35%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-warning">
+                <strong><i class="fas fa-exclamation-triangle me-2"></i>Important:</strong> The lowest price does not always win! Agencies use "best value" selection, balancing technical merit and cost.
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 4: Award -->
+    <div id="phase4" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-warning">
+            <h3 class="mb-0"><i class="fas fa-award me-2"></i>Phase 4: Contract Award</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR Part 4 - Administrative Matters | FAR 15.5 - Preaward, Award, and Postaward Notifications
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">Award Process Steps:</h5>
+            <ol class="list-group list-group-numbered mb-4">
+                <li class="list-group-item"><strong>Award Decision:</strong> Contracting Officer makes final selection</li>
+                <li class="list-group-item"><strong>Negotiations (if needed):</strong> Final pricing and terms discussions</li>
+                <li class="list-group-item"><strong>Award Notification:</strong> Winner notified, losers receive debriefings (if requested)</li>
+                <li class="list-group-item"><strong>Contract Signing:</strong> Both parties sign the contract</li>
+                <li class="list-group-item"><strong>Public Posting:</strong> Award posted on SAM.gov (federal) or agency website</li>
+                <li class="list-group-item"><strong>Protest Period:</strong> 10-day window for protests (federal contracts)</li>
+            </ol>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <h6 class="fw-bold"><i class="fas fa-trophy me-2"></i>If You Win:</h6>
+                            <ul class="mb-0">
+                                <li>Review contract terms carefully</li>
+                                <li>Clarify any questions before signing</li>
+                                <li>Set up contract management system</li>
+                                <li>Schedule kickoff meeting</li>
+                                <li>Begin mobilization planning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body">
+                            <h6 class="fw-bold"><i class="fas fa-comments me-2"></i>If You Lose:</h6>
+                            <ul class="mb-0">
+                                <li>Request a debriefing (highly recommended)</li>
+                                <li>Learn from feedback for next time</li>
+                                <li>Consider protest only if there's a valid basis</li>
+                                <li>Maintain professional relationships</li>
+                                <li>Look for teaming opportunities</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 5: Contract Execution -->
+    <div id="phase5" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-danger text-white">
+            <h3 class="mb-0"><i class="fas fa-tasks me-2"></i>Phase 5: Contract Administration & Execution</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR Part 42 - Contract Administration | FAR Part 43 - Contract Modifications
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">Key Activities During Contract Performance:</h5>
+            
+            <div class="accordion" id="contractExecutionAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#kickoff">
+                            <i class="fas fa-handshake me-2 text-primary"></i><strong>Kickoff & Mobilization</strong>
+                        </button>
+                    </h2>
+                    <div id="kickoff" class="accordion-collapse collapse show" data-bs-parent="#contractExecutionAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Hold kickoff meeting with all stakeholders</li>
+                                <li>Establish communication protocols</li>
+                                <li>Confirm deliverable schedules and milestones</li>
+                                <li>Set up invoicing and payment procedures</li>
+                                <li>Assign Contracting Officer Representative (COR)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#performance">
+                            <i class="fas fa-chart-line me-2 text-success"></i><strong>Performance Monitoring</strong>
+                        </button>
+                    </h2>
+                    <div id="performance" class="accordion-collapse collapse" data-bs-parent="#contractExecutionAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Regular status meetings and progress reports</li>
+                                <li>Quality assurance surveillance plans (QASP)</li>
+                                <li>Performance metrics tracking</li>
+                                <li>Issue resolution and corrective actions</li>
+                                <li>Document all communications</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#payment">
+                            <i class="fas fa-money-check-alt me-2 text-info"></i><strong>Invoicing & Payment</strong>
+                        </button>
+                    </h2>
+                    <div id="payment" class="accordion-collapse collapse" data-bs-parent="#contractExecutionAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Submit invoices per contract terms (often monthly)</li>
+                                <li>Include required backup documentation</li>
+                                <li>Use proper invoice formats (WAWF for federal)</li>
+                                <li>Track payment timelines (Prompt Payment Act - FAR 32.9)</li>
+                                <li>Address any payment discrepancies immediately</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#modifications">
+                            <i class="fas fa-edit me-2 text-warning"></i><strong>Contract Modifications</strong>
+                        </button>
+                    </h2>
+                    <div id="modifications" class="accordion-collapse collapse" data-bs-parent="#contractExecutionAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Bilateral modifications: Both parties agree (most common)</li>
+                                <li>Unilateral modifications: Government issues (administrative changes)</li>
+                                <li>Document all scope changes in writing</li>
+                                <li>Submit Request for Equitable Adjustment (REA) if costs increase</li>
+                                <li>Maintain modification log</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-danger mt-4">
+                <strong><i class="fas fa-exclamation-circle me-2"></i>Critical:</strong> Never perform work outside the contract scope without a written modification! This protects both you and the government.
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 6: Closeout -->
+    <div id="phase6" class="card shadow-lg mb-4 border-0">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="mb-0"><i class="fas fa-flag-checkered me-2"></i>Phase 6: Contract Closeout</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-book me-2"></i>FAR Reference:</strong> FAR 4.804 - Closeout of Contract Files
+            </div>
+            
+            <h5 class="fw-bold mt-4 mb-3">Closeout Checklist:</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>All deliverables completed and accepted
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Final invoices submitted and paid
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Property/equipment returned (if applicable)
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Release of claims submitted
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Final performance ratings provided
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Audit requirements satisfied
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>All modifications finalized
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-square text-success me-2"></i>Records retention requirements understood
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold text-primary"><i class="fas fa-trophy me-2"></i>Building for Future Success:</h6>
+                    <ul class="mb-0">
+                        <li>Request letters of recommendation</li>
+                        <li>Document lessons learned</li>
+                        <li>Update past performance records</li>
+                        <li>Maintain relationships for future opportunities</li>
+                        <li>Retain contract files per FAR requirements (typically 3-6 years)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAR Reference Guide -->
+    <div id="far-reference" class="card shadow-lg mb-4 border-0">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h3 class="mb-0 text-white"><i class="fas fa-book-open me-2"></i>FAR (Federal Acquisition Regulation) Reference Guide</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-primary">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>What is the FAR?</h5>
+                <p>The Federal Acquisition Regulation (FAR) is the primary regulation for all executive agencies in their acquisition of supplies and services with appropriated funds. It establishes uniform policies for federal procurement.</p>
+                <p class="mb-0"><strong>Full FAR:</strong> <a href="https://www.acquisition.gov/browse/index/far" target="_blank" class="alert-link">https://www.acquisition.gov/browse/index/far</a></p>
+            </div>
+
+            <h5 class="fw-bold mt-4 mb-3">Key FAR Parts for Contractors:</h5>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 15%;">FAR Part</th>
+                            <th style="width: 35%;">Topic</th>
+                            <th>Why It Matters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Part 2</strong></td>
+                            <td>Definitions</td>
+                            <td>Understand key contracting terminology</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 4</strong></td>
+                            <td>Administrative Requirements</td>
+                            <td>SAM.gov registration, CAGE codes, records retention</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 7</strong></td>
+                            <td>Acquisition Planning</td>
+                            <td>How agencies plan procurements, market research</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 9</strong></td>
+                            <td>Contractor Qualifications</td>
+                            <td>Responsibility standards, small business programs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 13</strong></td>
+                            <td>Simplified Acquisition Procedures</td>
+                            <td>Procurements under $250,000 (SAT)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 14</strong></td>
+                            <td>Sealed Bidding</td>
+                            <td>Formal advertising, IFBs, lowest price wins</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 15</strong></td>
+                            <td>Contracting by Negotiation</td>
+                            <td>RFPs, source selection, best value</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 19</strong></td>
+                            <td>Small Business Programs</td>
+                            <td>Set-asides, 8(a), HUBZone, WOSB, SDVOSB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 22</strong></td>
+                            <td>Labor Standards</td>
+                            <td>Davis-Bacon Act, Service Contract Act wages</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 31</strong></td>
+                            <td>Contract Cost Principles</td>
+                            <td>Allowable/unallowable costs for cost-reimbursable contracts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 32</strong></td>
+                            <td>Contract Financing</td>
+                            <td>Progress payments, prompt payment (30 days)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 33</strong></td>
+                            <td>Protests, Disputes, Appeals</td>
+                            <td>How to challenge procurement decisions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 42</strong></td>
+                            <td>Contract Administration</td>
+                            <td>Performance monitoring, COR duties</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 43</strong></td>
+                            <td>Contract Modifications</td>
+                            <td>How to change contract terms legally</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Part 52</strong></td>
+                            <td>Contract Clauses</td>
+                            <td>Standard clauses incorporated in contracts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <strong><i class="fas fa-map-marked-alt me-2"></i>State & Local Regulations</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2">While FAR governs federal contracts, states and localities have their own procurement rules:</p>
+                            <ul class="small mb-0">
+                                <li><strong>Virginia:</strong> Virginia Public Procurement Act (VPPA)</li>
+                                <li><strong>Local:</strong> Each city/county has its own purchasing policies</li>
+                                <li>Often mirror FAR principles but with variations</li>
+                                <li>Check specific jurisdiction requirements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <strong><i class="fas fa-graduation-cap me-2"></i>Learning Resources</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small mb-0">
+                                <li><a href="https://www.acquisition.gov" target="_blank">Acquisition.gov</a> - Official FAR website</li>
+                                <li><a href="https://www.sba.gov/learning-center" target="_blank">SBA Learning Center</a> - Small business training</li>
+                                <li><a href="https://www.dau.edu" target="_blank">DAU.edu</a> - Defense Acquisition University (free courses)</li>
+                                <li>Procurement Technical Assistance Centers (PTACs)</li>
+                                <li>Industry association workshops</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contractor Success Tips -->
+    <div id="contractor-tips" class="card shadow-lg mb-5 border-0">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Contractor Success Tips</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h5 class="text-primary"><i class="fas fa-user-check me-2"></i>Registration & Credentials</h5>
+                            <ul class="small mb-0">
+                                <li>Complete SAM.gov registration (federal)</li>
+                                <li>Obtain necessary certifications (8(a), WOSB, etc.)</li>
+                                <li>Maintain active licenses and insurance</li>
+                                <li>Build past performance portfolio</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="text-success"><i class="fas fa-network-wired me-2"></i>Relationship Building</h5>
+                            <ul class="small mb-0">
+                                <li>Attend industry days and networking events</li>
+                                <li>Meet with agency small business liaisons</li>
+                                <li>Join relevant industry associations</li>
+                                <li>Build teaming relationships</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-body">
+                            <h5 class="text-info"><i class="fas fa-file-alt me-2"></i>Proposal Excellence</h5>
+                            <ul class="small mb-0">
+                                <li>Follow instructions exactly</li>
+                                <li>Address all evaluation criteria</li>
+                                <li>Use active voice and clear language</li>
+                                <li>Include compelling past performance examples</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-success mt-3">
+                <h5 class="alert-heading"><i class="fas fa-star me-2"></i>Pro Tip:</h5>
+                <p class="mb-0">Start small! Many contractors begin with micro-purchases (under $10,000) or small set-asides to build past performance before pursuing larger contracts.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
+        <div class="container">
+            <h2 class="text-white fw-bold mb-3">Ready to Win Government Contracts?</h2>
+            <p class="text-white fs-5 mb-4">Access thousands of opportunities across federal, state, and local agencies</p>
+            <a href="{{ url_for('quick_wins') }}" class="btn btn-light btn-lg me-3 px-5 py-3 rounded-pill">
+                <i class="fas fa-rocket me-2"></i>Browse Quick Wins
+            </a>
+            <a href="{{ url_for('auth') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
+                <i class="fas fa-user-plus me-2"></i>Create Free Account
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        color: #000;
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .list-group-item {
+        border-left: 3px solid transparent;
+    }
+    
+    .list-group-item:hover {
+        border-left-color: #0d6efd;
+        background-color: #f8f9fa;
+    }
+    
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #343a40;
+        color: white;
+        z-index: 10;
+    }
+</style>
+
+{% endblock %}
