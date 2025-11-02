@@ -8974,23 +8974,31 @@ try:
     print("✅ Database initialized")
     
     # Auto-populate supply contracts only if table is empty
+    # This runs on every app startup/restart to ensure data is always available
     try:
+        print("🔍 Checking supply_contracts table...")
         count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
         current_count = count_result[0] if count_result else 0
         
         if current_count == 0:
-            print("📦 Supply contracts table is empty - auto-populating...")
-            new_count = populate_supply_contracts()
-            print(f"✅ Auto-populated {new_count} supply contracts")
+            print("📦 Supply contracts table is empty - auto-populating now...")
+            new_count = populate_supply_contracts(force=False)
+            print(f"✅ SUCCESS: Auto-populated {new_count} supply contracts on startup!")
         else:
-            print(f"ℹ️  Supply contracts table already has {current_count} records - skipping auto-populate")
-    except Exception as e:
-        print(f"⚠️  Could not check/populate supply contracts: {e}")
+            print(f"ℹ️  Supply contracts table already has {current_count} records - no action needed")
+    except Exception as populate_error:
+        # Log the error but don't crash the app
+        print(f"⚠️  WARNING: Could not auto-populate supply contracts: {populate_error}")
+        import traceback
+        print("Full traceback:")
+        traceback.print_exc()
+        print("💡 App will continue running. You can manually populate via /admin/populate-if-empty")
         
 except Exception as e:
     print(f"❌ Database initialization error: {e}")
     import traceback
     traceback.print_exc()
+    print("⚠️  App may not function correctly without database initialization")
 
 if __name__ == '__main__':
     init_db()
