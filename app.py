@@ -8,6 +8,7 @@ from sqlalchemy import text
 import sqlite3  # Keep for backward compatibility with existing queries
 from datetime import datetime, date, timedelta
 import threading
+from integrations.international_sources import fetch_international_cleaning
 import schedule
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6816,6 +6817,59 @@ def admin_daily_refresh_supply():
         flash(f'❌ Daily refresh failed: {str(e)}', 'danger')
         return redirect(url_for('quick_wins'))
 
+@app.route('/admin/fetch-international-quick-wins')
+def admin_fetch_international_quick_wins():
+    """Admin-only: Fetch real international cleaning opportunities and insert as Quick Wins.
+
+    Non-destructive: deduplicates by website_url or title+agency and only inserts new ones.
+    """
+    try:
+        if not session.get('is_admin', False):
+            flash('Admin access required', 'danger')
+            return redirect(url_for('index'))
+
+        from integrations.international_sources import fetch_international_cleaning
+        records = fetch_international_cleaning(limit_per_source=100)
+        inserted = 0
+        for rec in records:
+            exists = None
+            if rec.get('website_url'):
+                exists = db.session.execute(text('''
+                    SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1
+                '''), {'url': rec['website_url']}).fetchone()
+            if not exists:
+                exists = db.session.execute(text('''
+                    SELECT id FROM supply_contracts WHERE title = :title AND agency = :agency LIMIT 1
+                '''), {'title': rec.get('title'), 'agency': rec.get('agency')}).fetchone()
+            if exists:
+                continue
+            db.session.execute(text('''
+                INSERT INTO supply_contracts 
+                (title, agency, location, product_category, estimated_value, bid_deadline, 
+                 description, website_url, is_small_business_set_aside, contact_name, 
+                 contact_email, contact_phone, is_quick_win, status, posted_date)
+                VALUES 
+                (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
+                 :description, :website_url, :is_small_business_set_aside, :contact_name,
+                 :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
+            '''), rec)
+            inserted += 1
+        db.session.commit()
+
+        if inserted:
+            clear_all_dashboard_cache()
+            set_setting('supply_last_populated_at', datetime.utcnow().isoformat())
+            set_setting('supply_populated_count', str(inserted))
+
+        flash(f'🌍 Inserted {inserted} international quick wins (deduplicated).', 'success')
+        return redirect(url_for('quick_wins'))
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"❌ International fetch error: {traceback.format_exc()}")
+        flash(f'❌ International fetch failed: {str(e)}', 'danger')
+        return redirect(url_for('quick_wins'))
+
 @app.route('/cron/supply-daily')
 def cron_supply_daily():
     """Cron endpoint: refresh supply_contracts once per day using a secret token.
@@ -6926,7 +6980,7 @@ def admin_init_supply_contracts():
                 'note': 'Use /admin/repopulate-supply-contracts to force repopulation'
             })
         
-        # Table is empty, populate it
+        # Table is empty, populate it (this will try real sources first)
         print("🚀 Initializing supply contracts table...")
         new_count = populate_supply_contracts(force=False)
         
@@ -8973,6 +9027,41 @@ def populate_supply_contracts(force=False):
         force: If True, delete existing records and repopulate
     """
     try:
+        # Phase 1: Try to fetch real international data and insert (non-destructive)
+        try:
+            real_records = fetch_international_cleaning(limit_per_source=50)
+        except Exception:
+            real_records = []
+
+        inserted_real = 0
+        if real_records:
+            for rec in real_records:
+                # Deduplicate by website_url or title+agency
+                exists = None
+                if rec.get('website_url'):
+                    exists = db.session.execute(text('''
+                        SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1
+                    '''), {'url': rec['website_url']}).fetchone()
+                if not exists:
+                    exists = db.session.execute(text('''
+                        SELECT id FROM supply_contracts WHERE title = :title AND agency = :agency LIMIT 1
+                    '''), {'title': rec.get('title'), 'agency': rec.get('agency')}).fetchone()
+                if exists:
+                    continue
+                db.session.execute(text('''
+                    INSERT INTO supply_contracts 
+                    (title, agency, location, product_category, estimated_value, bid_deadline, 
+                     description, website_url, is_small_business_set_aside, contact_name, 
+                     contact_email, contact_phone, is_quick_win, status, posted_date)
+                    VALUES 
+                    (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
+                     :description, :website_url, :is_small_business_set_aside, :contact_name,
+                     :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
+                '''), rec)
+                inserted_real += 1
+            db.session.commit()
+            print(f"🌍 Inserted {inserted_real} real international cleaning opportunities")
+
         # Check if we already have supply contracts
         count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
         existing_count = count_result[0] if count_result else 0
@@ -8986,8 +9075,9 @@ def populate_supply_contracts(force=False):
             db.session.execute(text('DELETE FROM supply_contracts'))
             db.session.commit()
         
-        # International supplier requests across all 50 states
-        # NOTE: Values are stored WITHOUT dollar signs to work with both TEXT and NUMERIC column types
+    # Phase 2: If force or table empty or low count, backfill with curated/synthetic entries
+    # International supplier requests across all 50 states (synthetic fallback)
+    # NOTE: Values are stored WITHOUT dollar signs to work with both TEXT and NUMERIC column types
         supplier_requests = [
             # High-value quick wins
             {'title': 'Urgent: Hospital Network Cleaning Supplies - Multi-State', 'agency': 'Healthcare Consortium International', 'location': 'Multiple States', 'product_category': 'Medical Cleaning Supplies', 'estimated_value': '2500000', 'bid_deadline': '12/15/2025', 'description': 'Seeking suppliers for hospital-grade cleaning supplies for 50+ facilities across 15 states', 'website_url': 'https://hci-procurement.com', 'is_small_business_set_aside': True, 'contact_name': 'Sarah Johnson', 'contact_email': 'procurement@hci.com', 'contact_phone': '555-0100', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/01/2025'},
@@ -9063,28 +9153,29 @@ def populate_supply_contracts(force=False):
                     'posted_date': '11/01/2025'
                 })
         
-        # Insert all supplier requests
-        for request in supplier_requests:
-            db.session.execute(text('''
-                INSERT INTO supply_contracts 
-                (title, agency, location, product_category, estimated_value, bid_deadline, 
-                 description, website_url, is_small_business_set_aside, contact_name, 
-                 contact_email, contact_phone, is_quick_win, status, posted_date)
-                VALUES 
-                (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
-                 :description, :website_url, :is_small_business_set_aside, :contact_name,
-                 :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-            '''), request)
+        # Insert all synthetic supplier requests only if force, or none exist yet
+        if force or existing_count == 0:
+            for request in supplier_requests:
+                db.session.execute(text('''
+                    INSERT INTO supply_contracts 
+                    (title, agency, location, product_category, estimated_value, bid_deadline, 
+                     description, website_url, is_small_business_set_aside, contact_name, 
+                     contact_email, contact_phone, is_quick_win, status, posted_date)
+                    VALUES 
+                    (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
+                     :description, :website_url, :is_small_business_set_aside, :contact_name,
+                     :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
+                '''), request)
         
         db.session.commit()
-        final_count = len(supplier_requests)
+        final_count = (inserted_real or 0) + (len(supplier_requests) if (force or existing_count == 0) else 0)
         # Record last population timestamp and count for daily refresh logic
         try:
             set_setting('supply_last_populated_at', datetime.utcnow().isoformat())
             set_setting('supply_populated_count', str(final_count))
         except Exception:
             pass
-        print(f"✅ Successfully populated {final_count} international supplier contracts")
+        print(f"✅ Successfully populated {final_count} international supplier contracts (real:{inserted_real} synthetic:{(len(supplier_requests) if (force or existing_count == 0) else 0)})")
         return final_count
         
     except Exception as e:
