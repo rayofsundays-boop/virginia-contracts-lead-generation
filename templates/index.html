@@ -1164,6 +1164,8 @@
     position: relative;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    border: 2px solid transparent;
+    box-sizing: border-box;
 }
 
 .futuristic-btn:hover {
@@ -1172,13 +1174,14 @@
 }
 
 .futuristic-btn-outline {
-    border: 2px solid rgba(255,255,255,0.8);
+    border: 2px solid rgba(255,255,255,0.8) !important;
     transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 .futuristic-btn-outline:hover {
     background: rgba(255,255,255,0.2);
-    border-color: white;
+    border-color: white !important;
     backdrop-filter: blur(10px);
 }
 
@@ -1392,10 +1395,11 @@
 
 .futuristic-btn-solid {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border: none;
+    border: 2px solid transparent;
     position: relative;
     overflow: hidden;
     z-index: 1;
+    box-sizing: border-box;
 }
 
 .futuristic-btn-solid::before {
