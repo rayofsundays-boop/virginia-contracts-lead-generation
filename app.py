@@ -4053,92 +4053,233 @@ def federal_contracts():
 
 @app.route('/commercial-contracts')
 def commercial_contracts():
-    """Commercial cleaning opportunities page - Subscriber Only"""
-    # Check if user is logged in and has active subscription
-    user_email = session.get('user_email')
-    is_subscriber = False
+    """Property Managers Nationwide with Vendor Application Links"""
+    # This page is now PUBLIC - shows property managers nationwide with vendor links
     
-    if user_email:
-        try:
-            user = db.session.execute(
-                text('SELECT subscription_status FROM leads WHERE email = :email'),
-                {'email': user_email}
-            ).fetchone()
-            
-            if user and user[0] == 'paid':
-                is_subscriber = True
-        except Exception as e:
-            print(f"Error checking subscription: {str(e)}")
-    
-    # If not a subscriber, show limited preview with upgrade message
-    if not is_subscriber:
-        return render_template('commercial_contracts.html', 
-                             opportunities=[], 
-                             is_subscriber=False,
-                             show_upgrade_message=True)
-    
-    # Load opportunities for subscribers
-    try:
-        page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = int(request.args.get('per_page', 12) or 12)
-        per_page = min(max(per_page, 6), 48)
-        offset = (page - 1) * per_page
-
-        total = db.session.execute(text('SELECT COUNT(*) FROM commercial_opportunities')).scalar() or 0
-        rows = db.session.execute(text('''
-            SELECT id, business_name, business_type, address, location, square_footage, monthly_value,
-                   frequency, services_needed, special_requirements, contact_type, description, size
-            FROM commercial_opportunities
-            ORDER BY monthly_value DESC
-            LIMIT :limit OFFSET :offset
-        '''), {'limit': per_page, 'offset': offset}).fetchall()
-
-        opportunities = []
-        for row in rows:
-            opportunities.append({
-                'id': row[0],
-                'business_name': row[1],
-                'business_type': row[2],
-                'address': row[3],
-                'location': row[4],
-                'square_footage': row[5],
-                'monthly_value': row[6],
-                'frequency': row[7],
-                'services_needed': row[8],
-                'special_requirements': row[9],
-                'contact_type': row[10],
-                'description': row[11],
-                'size': row[12]
-            })
-
-        pages = max(math.ceil(total / per_page), 1)
-        args_base = dict(request.args)
-        args_base.pop('page', None)
-        args_base.pop('per_page', None)
-        prev_url = url_for('commercial_contracts', page=page-1, per_page=per_page, **args_base) if page > 1 else None
-        next_url = url_for('commercial_contracts', page=page+1, per_page=per_page, **args_base) if page < pages else None
-        pagination = {
-            'page': page,
-            'per_page': per_page,
-            'total': total,
-            'pages': pages,
-            'has_prev': page > 1,
-            'has_next': page < pages,
-            'prev_url': prev_url,
-            'next_url': next_url
+    # National Property Management Companies with Vendor Application Links
+    property_managers = [
+        {
+            'name': 'Greystar Real Estate Partners',
+            'location': 'Charleston, SC (Nationwide)',
+            'properties': '750,000+ units',
+            'vendor_link': 'https://www.greystar.com/about-us/work-with-us',
+            'description': 'Largest property management company in the US managing apartments nationwide',
+            'property_types': 'Multi-family apartments, student housing',
+            'regions': 'All 50 states'
+        },
+        {
+            'name': 'Lincoln Property Company',
+            'location': 'Dallas, TX (Nationwide)',
+            'properties': '200,000+ units',
+            'vendor_link': 'https://www.lpccorp.com/contact-us',
+            'description': 'Full-service real estate company managing commercial and residential properties',
+            'property_types': 'Apartments, office buildings, retail',
+            'regions': 'All 50 states'
+        },
+        {
+            'name': 'CBRE Group',
+            'location': 'Los Angeles, CA (Global)',
+            'properties': '6 billion sq ft globally',
+            'vendor_link': 'https://www.cbre.com/about-us/contact-us',
+            'description': 'World\'s largest commercial real estate services and investment firm',
+            'property_types': 'Office, industrial, retail, multifamily',
+            'regions': 'All 50 states + international'
+        },
+        {
+            'name': 'Cushman & Wakefield',
+            'location': 'Chicago, IL (Global)',
+            'properties': '5+ billion sq ft',
+            'vendor_link': 'https://www.cushmanwakefield.com/en/united-states/services',
+            'description': 'Global real estate services firm managing diverse property portfolios',
+            'property_types': 'Office, retail, industrial, multifamily',
+            'regions': 'All 50 states + 60 countries'
+        },
+        {
+            'name': 'JLL (Jones Lang LaSalle)',
+            'location': 'Chicago, IL (Global)',
+            'properties': '4.7 billion sq ft',
+            'vendor_link': 'https://www.us.jll.com/en/contact-us',
+            'description': 'Professional services firm specializing in real estate and investment management',
+            'property_types': 'Office, industrial, retail, hotels',
+            'regions': 'All 50 states + 80 countries'
+        },
+        {
+            'name': 'Apartment Management Consultants (AMC)',
+            'location': 'Atlanta, GA (Southeast)',
+            'properties': '100,000+ units',
+            'vendor_link': 'https://www.amcllc.com/contact',
+            'description': 'Third-party property management for multifamily communities',
+            'property_types': 'Multifamily apartments',
+            'regions': 'Southeast US, expanding nationwide'
+        },
+        {
+            'name': 'Morgan Properties',
+            'location': 'King of Prussia, PA (Multi-state)',
+            'properties': '90,000+ units',
+            'vendor_link': 'https://www.morganproperties.com/contact',
+            'description': 'Vertically integrated real estate investment and management company',
+            'property_types': 'Multifamily apartments',
+            'regions': 'Northeast, Mid-Atlantic, Southeast, Texas'
+        },
+        {
+            'name': 'Alliance Residential',
+            'location': 'Phoenix, AZ (Nationwide)',
+            'properties': '85,000+ units',
+            'vendor_link': 'https://www.allresco.com/contact-us',
+            'description': 'Multifamily housing developer and property manager',
+            'property_types': 'Luxury apartments, multifamily',
+            'regions': 'Sunbelt states and major metros nationwide'
+        },
+        {
+            'name': 'Bozzuto',
+            'location': 'Greenbelt, MD (East Coast)',
+            'properties': '80,000+ units',
+            'vendor_link': 'https://www.bozzuto.com/contact',
+            'description': 'Diversified real estate company managing apartments and condos',
+            'property_types': 'Multifamily, condos, retail',
+            'regions': 'East Coast (MD, VA, DC, PA, NY, NC, FL)'
+        },
+        {
+            'name': 'AvalonBay Communities',
+            'location': 'Arlington, VA (Nationwide)',
+            'properties': '80,000+ units',
+            'vendor_link': 'https://www.avaloncommunities.com/contact-us',
+            'description': 'Publicly traded REIT developing and managing luxury apartments',
+            'property_types': 'Luxury multifamily apartments',
+            'regions': 'New England, NY/NJ, Mid-Atlantic, West Coast'
+        },
+        {
+            'name': 'Equity Residential',
+            'location': 'Chicago, IL (Nationwide)',
+            'properties': '80,000+ units',
+            'vendor_link': 'https://www.equityapartments.com/corporate/contact-us',
+            'description': 'Publicly traded REIT focused on high-quality apartment properties',
+            'property_types': 'Urban and suburban apartments',
+            'regions': 'Boston, NY, DC, Seattle, SF, LA, San Diego, Denver'
+        },
+        {
+            'name': 'Camden Property Trust',
+            'location': 'Houston, TX (Nationwide)',
+            'properties': '60,000+ units',
+            'vendor_link': 'https://www.camdenliving.com/corporate/contact',
+            'description': 'Publicly traded REIT owning and managing multifamily communities',
+            'property_types': 'Luxury apartments',
+            'regions': 'Sunbelt markets across US'
+        },
+        {
+            'name': 'FPI Management',
+            'location': 'Sacramento, CA (Western US)',
+            'properties': '60,000+ units',
+            'vendor_link': 'https://www.fpimgt.com/contact',
+            'description': 'Third-party property management company for affordable and market-rate housing',
+            'property_types': 'Affordable housing, market-rate apartments',
+            'regions': 'California, Western US'
+        },
+        {
+            'name': 'Colliers International',
+            'location': 'Toronto, Canada (Global)',
+            'properties': 'Billions in commercial real estate',
+            'vendor_link': 'https://www.colliers.com/en/united-states',
+            'description': 'Diversified professional services company in commercial real estate',
+            'property_types': 'Office, industrial, retail, hospitality',
+            'regions': 'All 50 states + 66 countries'
+        },
+        {
+            'name': 'Newmark',
+            'location': 'New York, NY (Nationwide)',
+            'properties': '2.5+ billion sq ft managed',
+            'vendor_link': 'https://www.nmrk.com/contact',
+            'description': 'Commercial real estate advisory and property management',
+            'property_types': 'Office, industrial, retail, multifamily',
+            'regions': 'All 50 states'
+        },
+        {
+            'name': 'RealPage Property Management',
+            'location': 'Richardson, TX (Software + Services)',
+            'properties': '20 million+ units (software)',
+            'vendor_link': 'https://www.realpage.com/contact',
+            'description': 'Property management software and on-site services provider',
+            'property_types': 'Multifamily apartments (software clients)',
+            'regions': 'All 50 states'
+        },
+        {
+            'name': 'Bell Partners',
+            'location': 'Greensboro, NC (Nationwide)',
+            'properties': '85,000+ units',
+            'vendor_link': 'https://www.bellpartnersinc.com/contact',
+            'description': 'Apartment investment and management company',
+            'property_types': 'Multifamily apartments',
+            'regions': 'Sunbelt and high-growth markets nationwide'
+        },
+        {
+            'name': 'Pinnacle Property Management',
+            'location': 'Multiple locations (Regional)',
+            'properties': '50,000+ units',
+            'vendor_link': 'https://www.pinnacleliving.com/contact',
+            'description': 'Third-party property management for apartments and HOAs',
+            'property_types': 'Multifamily, HOAs, condos',
+            'regions': 'Multiple states across US'
+        },
+        {
+            'name': 'Wood Partners',
+            'location': 'Atlanta, GA (Nationwide)',
+            'properties': '100+ communities',
+            'vendor_link': 'https://woodpartners.com/contact',
+            'description': 'Multifamily real estate development and management',
+            'property_types': 'Luxury apartments',
+            'regions': 'Major markets nationwide'
+        },
+        {
+            'name': 'WinnCompanies',
+            'location': 'Boston, MA (Nationwide)',
+            'properties': '115,000+ units',
+            'vendor_link': 'https://www.winnco.com/contact-us',
+            'description': 'Award-winning property management specializing in affordable housing',
+            'property_types': 'Affordable housing, military housing, senior living',
+            'regions': 'All 50 states'
+        },
+        {
+            'name': 'Prometheus Real Estate Group',
+            'location': 'San Francisco, CA (West Coast)',
+            'properties': '40,000+ units',
+            'vendor_link': 'https://www.prometheusreg.com/contact',
+            'description': 'Multifamily property management and investment',
+            'property_types': 'Multifamily apartments',
+            'regions': 'California, Oregon, Washington'
+        },
+        {
+            'name': 'ZRS Management',
+            'location': 'Coral Gables, FL (Southeast)',
+            'properties': '50,000+ units',
+            'vendor_link': 'https://www.zrsmanagement.com/contact',
+            'description': 'Third-party property management for institutional investors',
+            'property_types': 'Multifamily apartments',
+            'regions': 'Florida, Southeast US'
+        },
+        {
+            'name': 'Riverstone Residential',
+            'location': 'Dallas, TX (Nationwide)',
+            'properties': '45,000+ units',
+            'vendor_link': 'https://www.riverstoneresidential.com/contact-us',
+            'description': 'Full-service property management company',
+            'property_types': 'Multifamily apartments',
+            'regions': 'Sunbelt and high-growth markets'
+        },
+        {
+            'name': 'BH Management',
+            'location': 'Des Moines, IA (Nationwide)',
+            'properties': '40,000+ units',
+            'vendor_link': 'https://www.bhmanagement.com/contact',
+            'description': 'Third-party multifamily property management',
+            'property_types': 'Multifamily apartments, student housing',
+            'regions': 'All 50 states'
         }
-
-        return render_template('commercial_contracts.html', 
-                             opportunities=opportunities,
-                             is_subscriber=True,
-                             show_upgrade_message=False,
-                             pagination=pagination)
-    except Exception as e:
-        flash(f'Error loading opportunities: {str(e)}', 'danger')
-        return render_template('commercial_contracts.html', 
-                             opportunities=[], 
-                             is_subscriber=is_subscriber,
-                             show_upgrade_message=not is_subscriber)
+    ]
+    
+    return render_template('commercial_contracts.html', 
+                         property_managers=property_managers,
+                         is_subscriber=True,  # Make this public
+                         show_upgrade_message=False)
 
 @app.route('/request-commercial-contact', methods=['POST'])
 @login_required

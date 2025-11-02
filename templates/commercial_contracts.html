@@ -1,103 +1,189 @@
 {% extends "base.html" %}
 
-{% block title %}Commercial Cleaning Contracts - Virginia{% endblock %}
+{% block title %}Property Managers Nationwide - Vendor Applications{% endblock %}
 
-{% block og_title %}Commercial Cleaning Opportunities in Virginia{% endblock %}
-{% block og_description %}Discover private sector cleaning contracts for dental offices, law firms, real estate companies, gyms, hotels, and more in Virginia.{% endblock %}
+{% block og_title %}Property Management Companies - Apply as Cleaning Vendor{% endblock %}
+{% block og_description %}Directory of major property management companies nationwide with direct links to apply as a cleaning vendor.{% endblock %}
 
 {% block content %}
 
-{% if show_upgrade_message %}
-<!-- Subscriber-Only Access Message -->
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-lg">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4" style="font-size: 5rem; opacity: 0.2;">🔒</div>
-                    <h1 class="display-4 fw-bold mb-4">Exclusive Subscriber Content</h1>
-                    <p class="lead mb-4">Commercial cleaning leads are only available to our premium subscribers.</p>
-                    
-                    <div class="row g-4 my-5">
-                        <div class="col-md-6">
-                            <div class="card h-100 border-primary">
-                                <div class="card-body">
-                                    <h3 class="text-primary mb-3">💼 What You Get</h3>
-                                    <ul class="text-start">
-                                        <li class="mb-2"><strong>Real Commercial Leads</strong> - Businesses actively looking for cleaners</li>
-                                        <li class="mb-2"><strong>Full Contact Details</strong> - Direct phone, email, and business name</li>
-                                        <li class="mb-2"><strong>Instant Email Alerts</strong> - Be the first to know about new leads</li>
-                                        <li class="mb-2"><strong>Residential Leads Too</strong> - Access homeowner requests as well</li>
-                                        <li class="mb-2"><strong>Bidding System</strong> - Submit proposals directly through platform</li>
-                                        <li class="mb-2"><strong>Monthly Value Info</strong> - Know the contract worth upfront</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card h-100 border-success">
-                                <div class="card-body">
-                                    <h3 class="text-success mb-3">📈 Hidden Perks</h3>
-                                    <ul class="text-start">
-                                        <li class="mb-2"><strong>Priority Access</strong> - Get leads first</li>
-                                        <li class="mb-2"><strong>No Ads</strong> - Ad-free browsing experience</li>
-                                        <li class="mb-2"><strong>Analytics Dashboard</strong> - Track your bids and wins</li>
-                                        <li class="mb-2"><strong>Exclusive Training</strong> - Contract bidding resources</li>
-                                        <li class="mb-2"><strong>Support Team</strong> - Priority customer support</li>
-                                        <li class="mb-2"><strong>Cost Savings</strong> - Save $100s vs buying leads individually!</li>
-                                    </ul>
-                                </div>
-                            </div>
+<!-- Property Managers Hero -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">🏢 Property Managers Nationwide</h1>
+        <p class="lead text-white fs-3">Apply directly as a cleaning vendor with top property management companies</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-building"></i><br>
+                            <strong>{{ property_managers|length }}+</strong> Companies
                         </div>
                     </div>
-
-                    <div class="alert alert-info mb-4">
-                        <i class="fas fa-calculator me-2"></i>
-                        <strong>ROI Example:</strong> Just ONE commercial cleaning contract ($2,000-5,000/month) pays for your subscription for the entire year! Most subscribers land 3-5 contracts in their first month.
+                    <div class="col-md-4">
+                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-map-marked-alt"></i><br>
+                            <strong>All 50</strong> States
+                        </div>
                     </div>
-
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill mb-3">
-                        <i class="fas fa-rocket me-2"></i>Start Your Subscription
-                    </a>
-                    <br>
-                    <small class="text-muted">Already a subscriber? <a href="{{ url_for('signin') }}">Sign In</a></small>
+                    <div class="col-md-4">
+                        <div class="badge bg-success text-white p-3 fs-6 w-100">
+                            <i class="fas fa-link"></i><br>
+                            <strong>Direct</strong> Vendor Links
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Pagination -->
-<div class="container">
-    {% if opportunities %}
-        {% include 'components/pagination.html' %}
-    {% endif %}
-</div>
-{% else %}
-{% block content %}
-<!-- Commercial Opportunities Hero with Enhanced Title -->
-<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);">
-    <div class="container">
-        <h1 class="display-2 fw-bold text-white mb-3">💼 Commercial Cleaning Opportunities</h1>
-        <p class="lead text-white fs-3">Connect with businesses actively seeking cleaning services</p>
-        <div class="row justify-content-center mt-4">
+<!-- Info Banner -->
+<div class="container my-4">
+    <div class="alert alert-info">
+        <div class="row align-items-center">
             <div class="col-md-8">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-building"></i><br>
-                            <strong>20+</strong> Businesses
+                <h5 class="mb-2"><i class="fas fa-info-circle me-2"></i>How to Use This Directory</h5>
+                <p class="mb-0">Each company listed below manages thousands of properties nationwide. Click the "Apply as Vendor" button to go directly to their vendor application or contact page. Tip: Apply to multiple companies to maximize your opportunities!</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-handshake fa-4x text-primary"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Property Managers Directory -->
+<div class="container my-5">
+    <div class="row g-4">
+        {% for pm in property_managers %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift" style="transition: transform 0.2s;">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-building me-2"></i>{{ pm.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-map-marker-alt me-1"></i>Headquarters</small>
+                        <strong>{{ pm.location }}</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-city me-1"></i>Portfolio Size</small>
+                        <strong class="text-success">{{ pm.properties }}</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-globe me-1"></i>Coverage</small>
+                        <strong>{{ pm.regions }}</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-warehouse me-1"></i>Property Types</small>
+                        <span class="badge bg-info">{{ pm.property_types }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="small text-muted mb-0">{{ pm.description }}</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ pm.vendor_link }}" target="_blank" class="btn btn-primary w-100" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt me-2"></i>Apply as Vendor
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Tips Section -->
+<div class="container my-5">
+    <div class="card border-primary">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Vendor Application Tips</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-primary">Before Applying:</h5>
+                    <ul>
+                        <li>Have your business license and insurance certificates ready</li>
+                        <li>Prepare a list of your services and service areas</li>
+                        <li>Get references from current clients</li>
+                        <li>Document your safety training and certifications</li>
+                        <li>Have financial statements if required</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-success">Application Best Practices:</h5>
+                    <ul>
+                        <li>Apply to multiple companies to increase opportunities</li>
+                        <li>Follow up 1-2 weeks after applying</li>
+                        <li>Highlight any property management experience</li>
+                        <li>Emphasize 24/7 availability and quick response times</li>
+                        <li>Be prepared for background checks and site visits</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Stories -->
+<div class="container my-5">
+    <div class="card bg-light">
+        <div class="card-body">
+            <h4 class="text-center mb-4"><i class="fas fa-star me-2 text-warning"></i>Success Stories</h4>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-quote-left fa-2x text-primary mb-3"></i>
+                            <p class="mb-3">"Applied to 5 companies from this list and got approved by 3 within a month. Now servicing 15+ properties!"</p>
+                            <small class="text-muted">- Small Business Owner, TX</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-check-circle"></i><br>
-                            Included with subscription
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-quote-left fa-2x text-primary mb-3"></i>
+                            <p class="mb-3">"The vendor application links saved me hours of research. Within 2 months, I had contracts with 2 major property managers."</p>
+                            <small class="text-muted">- Cleaning Company, FL</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="badge bg-success text-white p-3 fs-6 w-100">
-                            <i class="fas fa-unlock"></i><br>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-quote-left fa-2x text-primary mb-3"></i>
+                            <p class="mb-3">"Best resource for growing my business. Direct links made the process so much easier than cold calling."</p>
+                            <small class="text-muted">- Janitorial Services, CA</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+}
+
+.card-header h5 {
+    font-size: 1rem;
+}
+</style>
+
+{% endblock %}
                             <strong>Full Access</strong>
                         </div>
                     </div>
