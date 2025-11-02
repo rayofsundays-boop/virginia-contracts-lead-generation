@@ -6703,17 +6703,23 @@ def admin_repopulate_supply():
             flash('Admin access required', 'danger')
             return redirect(url_for('index'))
         
+        print("🔄 Force repopulating supply contracts...")
         count = populate_supply_contracts(force=True)
+        print(f"✅ Repopulated {count} contracts")
         
         # Clear dashboard cache so users see updated counts immediately
         clear_all_dashboard_cache()
+        print("🗑️  Dashboard cache cleared")
         
-        flash(f'✅ Successfully repopulated {count} supply contracts and cleared dashboard cache', 'success')
+        flash(f'✅ Successfully repopulated {count} supply contracts and cleared dashboard cache!', 'success')
         return redirect(url_for('quick_wins'))
         
     except Exception as e:
-        flash(f'Error repopulating supply contracts: {str(e)}', 'danger')
-        return redirect(url_for('index'))
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Error repopulating supply contracts: {error_details}")
+        flash(f'❌ Error repopulating supply contracts: {str(e)}. Check server logs.', 'danger')
+        return redirect(url_for('quick_wins'))
 
 @app.route('/admin/clear-dashboard-cache')
 def admin_clear_cache():
@@ -6740,23 +6746,35 @@ def admin_populate_if_empty():
             flash('Admin access required', 'danger')
             return redirect(url_for('index'))
         
+        print("🔍 Checking supply_contracts table status...")
+        
         # Check current count
         count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
         current_count = count_result[0] if count_result else 0
         
+        print(f"📊 Current supply_contracts count: {current_count}")
+        
         if current_count == 0:
             # Table is empty, populate it
+            print("🚀 Starting population...")
             new_count = populate_supply_contracts(force=False)
+            print(f"✅ Populated {new_count} contracts")
+            
             clear_all_dashboard_cache()
-            flash(f'✅ Populated {new_count} supply contracts (table was empty)', 'success')
+            print("🗑️  Dashboard cache cleared")
+            
+            flash(f'✅ Successfully populated {new_count} supply contracts!', 'success')
         else:
-            flash(f'ℹ️ Supply contracts table already has {current_count} records', 'info')
+            flash(f'ℹ️ Supply contracts table already has {current_count} records. Use repopulate to refresh.', 'info')
         
         return redirect(url_for('quick_wins'))
         
     except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('index'))
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Error in admin_populate_if_empty: {error_details}")
+        flash(f'❌ Error: {str(e)}. Check server logs for details.', 'danger')
+        return redirect(url_for('quick_wins'))
 
 
 @app.route('/admin/init-supply-contracts')
@@ -8880,13 +8898,34 @@ def populate_supply_contracts(force=False):
     except Exception as e:
         db.session.rollback()
         print(f"⚠️  Error populating supply contracts: {e}")
+        import traceback
+        traceback.print_exc()
+        raise  # Re-raise the exception so caller knows it failed
 
 # Initialize database for both local and production
 try:
+    print("🔧 Initializing database...")
     init_db()
-    populate_supply_contracts()  # Populate supplier data after DB init
+    print("✅ Database initialized")
+    
+    # Auto-populate supply contracts only if table is empty
+    try:
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+        current_count = count_result[0] if count_result else 0
+        
+        if current_count == 0:
+            print("📦 Supply contracts table is empty - auto-populating...")
+            new_count = populate_supply_contracts()
+            print(f"✅ Auto-populated {new_count} supply contracts")
+        else:
+            print(f"ℹ️  Supply contracts table already has {current_count} records - skipping auto-populate")
+    except Exception as e:
+        print(f"⚠️  Could not check/populate supply contracts: {e}")
+        
 except Exception as e:
-    print(f"Database initialization warning: {e}")
+    print(f"❌ Database initialization error: {e}")
+    import traceback
+    traceback.print_exc()
 
 if __name__ == '__main__':
     init_db()
