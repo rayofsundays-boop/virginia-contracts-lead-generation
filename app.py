@@ -6731,6 +6731,33 @@ def admin_clear_cache():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/populate-if-empty')
+def admin_populate_if_empty():
+    """Admin-only: Populate supply contracts if table is empty"""
+    try:
+        # Check admin access
+        if not session.get('is_admin', False):
+            flash('Admin access required', 'danger')
+            return redirect(url_for('index'))
+        
+        # Check current count
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+        current_count = count_result[0] if count_result else 0
+        
+        if current_count == 0:
+            # Table is empty, populate it
+            new_count = populate_supply_contracts(force=False)
+            clear_all_dashboard_cache()
+            flash(f'✅ Populated {new_count} supply contracts (table was empty)', 'success')
+        else:
+            flash(f'ℹ️ Supply contracts table already has {current_count} records', 'info')
+        
+        return redirect(url_for('quick_wins'))
+        
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('index'))
+
 
 @app.route('/pricing-guide')
 @login_required
