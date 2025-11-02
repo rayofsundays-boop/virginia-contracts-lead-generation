@@ -5,12 +5,14 @@
 
 // Initialize Lenis smooth scroll
 const lenis = new Lenis({
-    duration: 1.2,
+    duration: 0.8,  // Faster scroll duration (was 1.2)
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // easeOutExpo
     direction: 'vertical',
     smooth: true,
-    smoothTouch: false,
-    touchMultiplier: 2
+    smoothTouch: true,  // Enable touch scrolling
+    touchMultiplier: 1.5,  // Reduced for better control
+    wheelMultiplier: 1.2,  // Add wheel multiplier for faster manual scrolling
+    infinite: false
 });
 
 // Lenis RAF loop
@@ -30,29 +32,14 @@ gsap.ticker.add((time) => {
 gsap.ticker.lagSmoothing(0);
 
 // ============================================
-// SCENE 1: Hero Scene - Logo + Headline Fade In
+// SCENE 1: Hero Scene - Headline Fade In
 // ============================================
-gsap.from('.hero-scene .hero-logo', {
-    scrollTrigger: {
-        trigger: '.hero-scene',
-        start: 'top center',
-        end: 'center center',
-        scrub: 1,
-        // markers: true // Uncomment for debugging
-    },
-    scale: 0.8,
-    opacity: 0,
-    y: 100,
-    duration: 1.5,
-    ease: 'power3.out'
-});
-
 gsap.from('.hero-scene .hero-headline', {
     scrollTrigger: {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 1
+        scrub: 0.5,  // Faster scrub (was 1)
     },
     opacity: 0,
     y: 80,
@@ -66,7 +53,7 @@ gsap.from('.hero-scene .hero-subtext', {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 1
+        scrub: 0.5  // Faster scrub (was 1)
     },
     opacity: 0,
     y: 60,
@@ -81,7 +68,7 @@ gsap.from('.hero-scene .cta-button', {
         trigger: '.hero-scene',
         start: 'top center',
         end: 'center center',
-        scrub: 1
+        scrub: 0.5  // Faster scrub (was 1)
     },
     opacity: 0,
     y: 40,
@@ -102,7 +89,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top 80%',
             end: 'top 30%',
-            scrub: 1
+            scrub: 0.5  // Faster scrub (was 1)
         },
         x: isEven ? -100 : 100,
         opacity: 0,
@@ -116,7 +103,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top 80%',
             end: 'top 30%',
-            scrub: 1
+            scrub: 0.5  // Faster scrub (was 1)
         },
         x: isEven ? 100 : -100,
         opacity: 0,
@@ -131,7 +118,7 @@ gsap.utils.toArray('.story-scene').forEach((scene, index) => {
             trigger: scene,
             start: 'top bottom',
             end: 'bottom top',
-            scrub: 2
+            scrub: 1  // Faster scrub (was 2)
         },
         y: -50,
         ease: 'none'
@@ -167,7 +154,7 @@ gsap.utils.toArray('.ai-card').forEach((card, index) => {
             trigger: '.ai-showcase',
             start: 'top 70%',
             end: 'top 30%',
-            scrub: 1
+            scrub: 0.5  // Faster scrub (was 1)
         },
         ...startPos[direction],
         opacity: 0,
@@ -184,7 +171,7 @@ gsap.utils.toArray('.ai-card').forEach((card, index) => {
             trigger: card,
             start: 'top 80%',
             end: 'top 50%',
-            scrub: 1
+            scrub: 0.5  // Faster scrub (was 1)
         },
         boxShadow: '0 0 40px rgba(102, 126, 234, 0.6)',
         duration: 0.5
@@ -232,7 +219,7 @@ gsap.utils.toArray('.stat-item').forEach((stat, index) => {
             trigger: '.stats-section',
             start: 'top 80%',
             end: 'top 50%',
-            scrub: 1
+            scrub: 0.5  // Faster scrub (was 1)
         },
         y: 50,
         opacity: 0,
@@ -267,7 +254,7 @@ gsap.from('.cta-scene .cta-content', {
         trigger: '.cta-scene',
         start: 'top 70%',
         end: 'top 30%',
-        scrub: 1
+        scrub: 0.5  // Faster scrub (was 1)
     },
     scale: 0.9,
     opacity: 0,
@@ -282,7 +269,7 @@ gsap.to('.cta-scene .light-beam', {
         trigger: '.cta-scene',
         start: 'top 70%',
         end: 'bottom top',
-        scrub: 2
+        scrub: 1  // Faster scrub (was 2)
     },
     opacity: 0.8,
     scale: 1.2,
@@ -297,7 +284,7 @@ gsap.to('.cta-scene .cta-button-final', {
         trigger: '.cta-scene',
         start: 'top 60%',
         end: 'top 40%',
-        scrub: 1
+        scrub: 0.5  // Faster scrub (was 1)
     },
     scale: 1.05,
     duration: 0.5,
@@ -350,7 +337,7 @@ gsap.utils.toArray('.parallax-element').forEach((element) => {
             trigger: element,
             start: 'top bottom',
             end: 'bottom top',
-            scrub: 2
+            scrub: 1  // Faster scrub (was 2)
         },
         y: () => -window.innerHeight * speed,
         ease: 'none'
@@ -364,7 +351,7 @@ gsap.utils.toArray('.geometric-shape').forEach((shape, index) => {
             trigger: 'body',
             start: 'top top',
             end: 'bottom bottom',
-            scrub: 3
+            scrub: 1.5  // Faster scrub (was 3)
         },
         y: index % 2 === 0 ? -300 : 300,
         x: index % 2 === 0 ? 200 : -200,
