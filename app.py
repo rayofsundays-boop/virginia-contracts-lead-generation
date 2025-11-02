@@ -391,6 +391,18 @@ def set_dashboard_cache(user_email, stats_data, ttl_minutes=5):
             print(f"Cache write error: {e}")
         db.session.rollback()
 
+def clear_all_dashboard_cache():
+    """Clear all dashboard cache to force refresh"""
+    try:
+        db.session.rollback()
+        db.session.execute(text('DELETE FROM dashboard_cache'))
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Cache clear error: {e}")
+        return False
+
 # Add to Jinja environment
 app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
 
@@ -6691,12 +6703,32 @@ def admin_repopulate_supply():
             return redirect(url_for('index'))
         
         count = populate_supply_contracts(force=True)
-        flash(f'✅ Successfully repopulated {count} supply contracts', 'success')
+        
+        # Clear dashboard cache so users see updated counts immediately
+        clear_all_dashboard_cache()
+        
+        flash(f'✅ Successfully repopulated {count} supply contracts and cleared dashboard cache', 'success')
         return redirect(url_for('quick_wins'))
         
     except Exception as e:
         flash(f'Error repopulating supply contracts: {str(e)}', 'danger')
         return redirect(url_for('index'))
+
+@app.route('/admin/clear-dashboard-cache')
+def admin_clear_cache():
+    """Admin-only: Clear all dashboard cache to force stats refresh"""
+    try:
+        # Check admin access
+        if not session.get('is_admin', False):
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        if clear_all_dashboard_cache():
+            return jsonify({'success': True, 'message': 'Dashboard cache cleared successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to clear cache'}), 500
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/pricing-guide')
