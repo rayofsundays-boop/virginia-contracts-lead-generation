@@ -390,32 +390,52 @@ ScrollTrigger.create({
 });
 
 // ============================================
-// SECTION TIMELINE DOTS - Visual Navigation
+// SECTION TIMELINE DOTS - Visual Navigation (Fixed Sync)
 // ============================================
-const sections = document.querySelectorAll('[data-section]');
 const dots = document.querySelectorAll('.timeline-dot');
 
-sections.forEach((section, index) => {
-    ScrollTrigger.create({
-        trigger: section,
-        start: 'top center',
-        end: 'bottom center',
-        onEnter: () => dots[index]?.classList.add('active'),
-        onLeave: () => dots[index]?.classList.remove('active'),
-        onEnterBack: () => dots[index]?.classList.add('active'),
-        onLeaveBack: () => dots[index]?.classList.remove('active')
-    });
-});
-
-// Click to scroll to section
-dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => {
-        lenis.scrollTo(sections[index], {
-            offset: 0,
-            duration: 1.5,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+// Match dots to sections by data-section attribute
+// Handle multiple sections with same data-section (like 'ai')
+dots.forEach((dot) => {
+    const sectionId = dot.getAttribute('data-section');
+    const sections = document.querySelectorAll(`[data-section="${sectionId}"]`);
+    
+    if (sections.length > 0) {
+        // For sections with same ID, use first and last for trigger range
+        const firstSection = sections[0];
+        const lastSection = sections[sections.length - 1];
+        
+        // Create ScrollTrigger that spans all sections with this ID
+        ScrollTrigger.create({
+            trigger: firstSection,
+            endTrigger: lastSection,
+            start: 'top 60%',  // Activate when first section is 60% down viewport
+            end: 'bottom 40%',  // Deactivate when last section is 40% up viewport
+            onEnter: () => {
+                dots.forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+            },
+            onEnterBack: () => {
+                dots.forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+            },
+            onLeave: () => {
+                dot.classList.remove('active');
+            },
+            onLeaveBack: () => {
+                dot.classList.remove('active');
+            }
         });
-    });
+        
+        // Click to scroll to first section with this ID
+        dot.addEventListener('click', () => {
+            lenis.scrollTo(firstSection, {
+                offset: 0,
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+            });
+        });
+    }
 });
 
 // ============================================
