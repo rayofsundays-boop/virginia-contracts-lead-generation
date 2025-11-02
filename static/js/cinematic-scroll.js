@@ -1,36 +1,38 @@
 /**
  * Cinematic Scroll Experience
- * Inspired by Opus Agent - scroll-driven storytelling with GSAP & Lenis
+ * Inspired by Opus Agent - scroll-driven storytelling with GSAP
+ * Lenis completely removed for native scrolling
  */
 
-// Lenis smooth scroll DISABLED - using native browser scrolling for better performance
-// No speed limits - user has full control
+// Lenis COMPLETELY DISABLED - pure native browser scrolling
+// No smooth scroll library interference
+/*
 const lenis = new Lenis({
-    duration: 0,  // Instant - no smooth scrolling delay
-    easing: (t) => t,  // Linear
+    duration: 0,
+    easing: (t) => t,
     direction: 'vertical',
-    smooth: false,  // DISABLED - use native scrolling
-    smoothTouch: false,  // Native touch scrolling
-    touchMultiplier: 1,  // Native speed
-    wheelMultiplier: 1,  // Native speed - no restrictions
+    smooth: false,
+    smoothTouch: false,
+    touchMultiplier: 1,
+    wheelMultiplier: 1,
     infinite: false,
-    syncTouch: false  // Let browser handle touch
+    syncTouch: false
 });
 
-// Minimal RAF loop - Lenis disabled but kept for GSAP compatibility
 function raf(time) {
     lenis.raf(time);
     requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
 
-// Sync GSAP ScrollTrigger with native scroll
-window.addEventListener('scroll', () => {
-    ScrollTrigger.update();
-});
-
 gsap.ticker.add((time) => {
     lenis.raf(time * 1000);
+});
+*/
+
+// Pure native scroll - sync GSAP ScrollTrigger only
+window.addEventListener('scroll', () => {
+    ScrollTrigger.update();
 });
 
 gsap.ticker.lagSmoothing(0);
