@@ -97,163 +97,242 @@
         
         <!-- Main Content -->
         <div class="col-lg-9 col-xl-10">
-            <!-- Quick Wins Promotion Banner -->
-            <div class="alert alert-info alert-dismissible fade show mb-4" role="alert" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; color: white;">
-                <div class="row align-items-center">
-                    <div class="col-md-9">
-                        <h5 class="alert-heading mb-2"><i class="fas fa-bolt me-2"></i>⚡ Quick Wins Available!</h5>
-                        <p class="mb-0">
-                            <strong>Subscriber Exclusive:</strong> Access urgent leads requiring immediate response with less competition. 
-                            <span class="badge bg-white text-danger ms-2">{{ emergency_count|default(0) }} EMERGENCY</span>
-                            <span class="badge bg-white text-warning ms-1">{{ urgent_count|default(0) }} URGENT</span>
-                        </p>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <a href="{{ url_for('quick_wins') }}" class="btn btn-light btn-sm fw-bold">
-                            <i class="fas fa-fire me-1"></i>View Quick Wins
-                        </a>
+            <!-- Gamified Progress Dashboard -->
+            <div class="row mb-4 g-3">
+                <!-- Daily Streak Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 streak-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0"><i class="fas fa-fire"></i> Daily Streak</h6>
+                                <span class="badge bg-white text-dark pulse-badge">🔥</span>
+                            </div>
+                            <div class="display-4 fw-bold mb-1" id="streakCount">3</div>
+                            <small class="opacity-75">days active this week</small>
+                            <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 43%"></div>
+                            </div>
+                            <small class="opacity-75 mt-1 d-block">Next milestone: 7 days 🎯</small>
+                        </div>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            
-            <!-- Page Header -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="text-center">
-                        <h2 class="mb-2">Customer Leads Portal</h2>
-                        <p class="text-muted mb-3">Access all available leads, request proposal help, and apply directly</p>
-                        <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
-                            <button class="btn btn-outline-primary btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
-                                <i class="fas fa-bars me-1"></i>Menu
-                            </button>
-                            <div class="subscription-display">
-                                <small class="text-muted">Access:</small>
-                                <strong class="text-success" style="font-size: 0.85rem;">Pro Member</strong>
+
+                <!-- Quick Actions Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 hover-lift">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-success"><i class="fas fa-bolt"></i> Hot Opportunities</h6>
+                                <span class="badge bg-danger blink-badge">{{ emergency_count|default(0) }} NEW</span>
+                            </div>
+                            <div class="d-flex align-items-end mb-2">
+                                <span class="display-6 fw-bold text-success me-2">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+                                <span class="text-muted mb-1">urgent leads</span>
+                            </div>
+                            <a href="#" onclick="filterUrgent(); return false;" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-rocket"></i> View Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Score Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 hover-lift">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-primary"><i class="fas fa-chart-line"></i> Your Score</h6>
+                                <span class="badge bg-primary">Level 2</span>
+                            </div>
+                            <div class="d-flex align-items-end mb-2">
+                                <span class="display-6 fw-bold text-primary me-2" id="activityScore">850</span>
+                                <span class="text-success mb-1">+50 today</span>
+                            </div>
+                            <div class="progress mb-1" style="height: 8px;">
+                                <div class="progress-bar bg-gradient" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                            </div>
+                            <small class="text-muted">150 pts to Level 3 🏆</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 hover-lift">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-warning"><i class="fas fa-star"></i> Today's Actions</h6>
+                                <span class="badge bg-warning text-dark" id="todayActionsCount">7</span>
+                            </div>
+                            <div class="small mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>✓ Leads viewed:</span>
+                                    <strong id="viewedCount">4</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>★ Leads saved:</span>
+                                    <strong id="savedCount">2</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>✉ Inquiries sent:</span>
+                                    <strong id="inquiriesCount">1</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-    <!-- Advanced Filters -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-filter"></i> Advanced Filters
-                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="clearAllFilters()">Clear All</button>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-size: 0.9rem;">Lead Type:</label>
-                            <select class="form-select form-select-sm" id="leadTypeFilter">
-                                <option value="">All Types</option>
-                                <option value="government">Government</option>
-                                <option value="commercial">Commercial</option>
-                                <option value="commercial_request">🔥 Business Needs Cleaner</option>
-                                <option value="residential_request">🏠 Homeowner Needs Cleaner</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-size: 0.9rem;">Category:</label>
-                            <select class="form-select form-select-sm" id="categoryFilter">
-                                <option value="">All Categories</option>
-                                <optgroup label="Education">
-                                    <option value="Higher Education">🎓 Colleges & Universities</option>
-                                    <option value="Community College">📚 Community Colleges</option>
-                                    <option value="School District">🏫 School Districts</option>
-                                    <option value="Medical School">⚕️ Medical Schools</option>
-                                </optgroup>
-                                <optgroup label="Government">
-                                    <option value="Municipal Government">🏛️ Municipal/City Government</option>
-                                    <option value="Transit Authority">🚌 Transit Authorities</option>
-                                    <option value="Airport Authority">✈️ Airports</option>
-                                    <option value="Public Library">📖 Public Libraries</option>
-                                    <option value="Military Base">🪖 Military Bases</option>
-                                    <option value="Federal Healthcare">🏥 VA Medical Centers</option>
-                                </optgroup>
-                                <optgroup label="Private Sector">
-                                    <option value="Hospital">🏥 Hospitals</option>
-                                    <option value="Private Healthcare">🩺 Healthcare Facilities</option>
-                                    <option value="Hotel">🏨 Hotels & Resorts</option>
-                                    <option value="Shopping Mall">🛍️ Shopping Centers/Malls</option>
-                                    <option value="Class A Office Building">🏢 Office Buildings</option>
-                                    <option value="Office Park">🏢 Office Parks</option>
-                                    <option value="Convention Center">🎪 Convention Centers</option>
-                                    <option value="Defense Contractor">🔧 Defense Contractors</option>
-                                    <option value="Historic Foundation">🏛️ Historic Sites</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">City:</label>
-                            <select class="form-select form-select-sm" id="locationFilter">
-                                <option value="">All Cities</option>
-                                <option value="Hampton">Hampton</option>
-                                <option value="Norfolk">Norfolk</option>
-                                <option value="Virginia Beach">Virginia Beach</option>
-                                <option value="Newport News">Newport News</option>
-                                <option value="Williamsburg">Williamsburg</option>
-                                <option value="Suffolk">Suffolk</option>
-                                <option value="Chesapeake">Chesapeake</option>
-                                <option value="Portsmouth">Portsmouth</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Value Range:</label>
-                            <select class="form-select form-select-sm" id="valueFilter">
-                                <option value="">All Values</option>
-                                <option value="under-50k">Under $50K</option>
-                                <option value="50k-100k">$50K - $100K</option>
-                                <option value="100k-250k">$100K - $250K</option>
-                                <option value="250k-500k">$250K - $500K</option>
-                                <option value="500k-1m">$500K - $1M</option>
-                                <option value="1m-3m">$1M - $3M</option>
-                                <option value="over-3m">Over $3M</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Search:</label>
-                            <div class="input-group input-group-sm">
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search leads...">
-                                <button class="btn btn-primary" type="button" onclick="applyFilters()">
-                                    <i class="fas fa-search"></i>
+            <!-- Live Activity Feed -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="pulse-dot bg-success"></div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="activity-ticker">
+                                        <span class="activity-item">🎯 <strong>Sarah M.</strong> just saved a $250K hospital contract in Norfolk...</span>
+                                        <span class="activity-item">⚡ <strong>Mike T.</strong> accessed contact info for Hampton Schools RFP...</span>
+                                        <span class="activity-item">🔥 <strong>Lisa K.</strong> requested proposal help for $500K university contract...</span>
+                                        <span class="activity-item">✨ <strong>John D.</strong> reached Level 3 - Keep going! ...</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="showActivityFeed()">
+                                    <i class="fas fa-users"></i> See All Activity
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="row g-3 mt-1">
-                        <div class="col-12">
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-sm btn-outline-primary" onclick="filterByCategory('Higher Education')">
-                                    🎓 Universities
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="filterByCategory('School District')">
-                                    🏫 Schools
-                                </button>
-                                <button class="btn btn-sm btn-outline-success" onclick="filterByCategory('Hospital')">
-                                    🏥 Hospitals
-                                </button>
-                                <button class="btn btn-sm btn-outline-info" onclick="filterByCategory('Hotel')">
-                                    🏨 Hotels
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="filterByCategory('Military Base')">
-                                    🪖 Military
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Norfolk')">
-                                    📍 Norfolk
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Virginia Beach')">
-                                    📍 VB
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="filterByCity('Hampton')">
-                                    📍 Hampton
-                                </button>
+                </div>
+            </div>
+
+            <!-- Achievement Unlocked Notification (Hidden by default) -->
+            <div class="achievement-toast" id="achievementToast" style="display: none;">
+                <div class="achievement-content">
+                    <div class="achievement-icon">🏆</div>
+                    <div>
+                        <div class="achievement-title">Achievement Unlocked!</div>
+                        <div class="achievement-desc">Early Bird - Logged in before 9 AM</div>
+                    </div>
+                </div>
+            </div>
+
+    <!-- Smart Filters with Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <!-- Quick Filter Pills -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex gap-2 flex-wrap flex-grow-1">
+                            <button class="filter-pill active" data-filter="all" onclick="quickFilter(this, 'all')">
+                                <i class="fas fa-th"></i> All Leads <span class="badge bg-primary ms-1">{{ all_leads|length }}</span>
+                            </button>
+                            <button class="filter-pill" data-filter="urgent" onclick="quickFilter(this, 'urgent')">
+                                <i class="fas fa-fire text-danger"></i> Urgent <span class="badge bg-danger ms-1">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+                            </button>
+                            <button class="filter-pill" data-filter="government" onclick="quickFilter(this, 'government')">
+                                <i class="fas fa-landmark text-success"></i> Government
+                            </button>
+                            <button class="filter-pill" data-filter="commercial" onclick="quickFilter(this, 'commercial')">
+                                <i class="fas fa-building text-info"></i> Commercial
+                            </button>
+                            <button class="filter-pill" data-filter="high-value" onclick="quickFilter(this, 'high-value')">
+                                <i class="fas fa-gem text-warning"></i> High Value ($250K+)
+                            </button>
+                            <button class="filter-pill" data-filter="closing-soon" onclick="quickFilter(this, 'closing-soon')">
+                                <i class="fas fa-clock text-danger"></i> Closing Soon
+                            </button>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleAdvancedFilters()">
+                            <i class="fas fa-sliders-h"></i> <span id="advFilterText">More Filters</span>
+                        </button>
+                    </div>
+
+                    <!-- Advanced Filters (Collapsible) -->
+                    <div id="advancedFilters" style="display: none;">
+                        <hr class="my-3">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Category:</label>
+                                <select class="form-select form-select-sm" id="categoryFilter" onchange="applyFilters()">
+                                    <option value="">All Categories</option>
+                                    <optgroup label="🎓 Education">
+                                        <option value="Higher Education">Universities</option>
+                                        <option value="Community College">Community Colleges</option>
+                                        <option value="School District">School Districts</option>
+                                    </optgroup>
+                                    <optgroup label="🏛️ Government">
+                                        <option value="Municipal Government">City/Municipal</option>
+                                        <option value="Transit Authority">Transit</option>
+                                        <option value="Airport Authority">Airports</option>
+                                        <option value="Military Base">Military</option>
+                                    </optgroup>
+                                    <optgroup label="🏥 Healthcare">
+                                        <option value="Hospital">Hospitals</option>
+                                        <option value="Private Healthcare">Healthcare Facilities</option>
+                                    </optgroup>
+                                    <optgroup label="🏨 Commercial">
+                                        <option value="Hotel">Hotels</option>
+                                        <option value="Shopping Mall">Shopping Centers</option>
+                                        <option value="Class A Office Building">Office Buildings</option>
+                                    </optgroup>
+                                </select>
                             </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">City:</label>
+                                <select class="form-select form-select-sm" id="locationFilter" onchange="applyFilters()">
+                                    <option value="">All Cities</option>
+                                    <option value="Hampton">📍 Hampton</option>
+                                    <option value="Norfolk">📍 Norfolk</option>
+                                    <option value="Virginia Beach">📍 Virginia Beach</option>
+                                    <option value="Newport News">📍 Newport News</option>
+                                    <option value="Williamsburg">📍 Williamsburg</option>
+                                    <option value="Suffolk">📍 Suffolk</option>
+                                    <option value="Chesapeake">📍 Chesapeake</option>
+                                    <option value="Portsmouth">📍 Portsmouth</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">Value Range:</label>
+                                <select class="form-select form-select-sm" id="valueFilter" onchange="applyFilters()">
+                                    <option value="">All Values</option>
+                                    <option value="under-50k">💰 Under $50K</option>
+                                    <option value="50k-100k">💵 $50K - $100K</option>
+                                    <option value="100k-250k">💸 $100K - $250K</option>
+                                    <option value="250k-500k">💲 $250K - $500K</option>
+                                    <option value="500k-1m">🤑 $500K - $1M</option>
+                                    <option value="1m-3m">💎 $1M - $3M</option>
+                                    <option value="over-3m">👑 Over $3M</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">Deadline:</label>
+                                <select class="form-select form-select-sm" id="deadlineFilter" onchange="applyFilters()">
+                                    <option value="">Any Time</option>
+                                    <option value="3-days">⚡ Next 3 days</option>
+                                    <option value="7-days">🔥 Next 7 days</option>
+                                    <option value="14-days">📅 Next 2 weeks</option>
+                                    <option value="30-days">📆 Next month</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Search Keywords:</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search..." onkeyup="applyFilters()">
+                                    <button class="btn btn-primary" type="button" onclick="applyFilters()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
+                                <i class="fas fa-undo"></i> Reset All
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -261,25 +340,36 @@
         </div>
     </div>
 
-    <!-- Results Summary -->
+    <!-- Results Summary with Sort Options -->
     <div class="row mb-3">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <span class="badge bg-primary" id="resultsCount">{{ all_leads|length }}</span> leads available
-                    <span class="text-muted ms-2">Updated daily</span>
+                    <h5 class="mb-0">
+                        <span class="badge bg-gradient-primary" id="resultsCount" style="font-size: 1rem;">{{ all_leads|length }}</span>
+                        <span class="ms-2">Active Opportunities</span>
+                    </h5>
+                    <small class="text-muted">
+                        <i class="fas fa-sync-alt"></i> Updated <span id="lastUpdate">2 minutes ago</span>
+                    </small>
                 </div>
-                <div class="d-flex gap-2">
-                    <select class="form-select form-select-sm" id="sortBy" style="width: auto;">
-                        <option value="newest">Newest First</option>
-                        <option value="value-high">Highest Value</option>
-                        <option value="value-low">Lowest Value</option>
-                        <option value="deadline">Deadline Soon</option>
-                        <option value="location">By Location</option>
+                <div class="d-flex gap-2 align-items-center">
+                    <label class="small mb-0 me-2">Sort by:</label>
+                    <select class="form-select form-select-sm" id="sortBy" style="width: auto;" onchange="sortLeads()">
+                        <option value="newest">🆕 Newest First</option>
+                        <option value="value-high">💎 Highest Value</option>
+                        <option value="value-low">💰 Lowest Value</option>
+                        <option value="deadline">⏰ Deadline Soon</option>
+                        <option value="popular">🔥 Most Saved</option>
                     </select>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleView()">
-                        <i class="fas fa-th" id="viewIcon"></i> <span id="viewText">Grid</span>
-                    </button>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary active" onclick="setView('grid')" id="gridViewBtn">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="setView('list')" id="listViewBtn">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -613,13 +703,207 @@
 <script>
 let currentView = 'grid';
 let leadsData = {{ all_leads|tojson|safe }};
+let activityScore = 850;
+let todayActions = { viewed: 4, saved: 2, inquiries: 1 };
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     loadCustomerCredits();
     bindFilterEvents();
     updateResultsCount();
+    initGamification();
+    startActivityTicker();
+    checkAndShowAchievement();
+    simulateRealTimeUpdates();
 });
+
+// Gamification Functions
+function initGamification() {
+    // Load user stats from localStorage or initialize
+    const stats = JSON.parse(localStorage.getItem('userStats') || '{"streak": 3, "level": 2, "score": 850}');
+    document.getElementById('streakCount').textContent = stats.streak;
+    document.getElementById('activityScore').textContent = stats.score;
+    
+    // Increment streak if user visits daily
+    const lastVisit = localStorage.getItem('lastVisit');
+    const today = new Date().toDateString();
+    if (lastVisit !== today) {
+        stats.streak++;
+        localStorage.setItem('lastVisit', today);
+        localStorage.setItem('userStats', JSON.stringify(stats));
+    }
+}
+
+function updateActivityScore(points, action) {
+    activityScore += points;
+    document.getElementById('activityScore').textContent = activityScore;
+    
+    // Animate score change
+    const scoreEl = document.getElementById('activityScore');
+    scoreEl.style.transform = 'scale(1.2)';
+    scoreEl.style.color = '#28a745';
+    setTimeout(() => {
+        scoreEl.style.transform = 'scale(1)';
+        scoreEl.style.color = '';
+    }, 300);
+    
+    // Update today's actions
+    if (action === 'view') todayActions.viewed++;
+    if (action === 'save') todayActions.saved++;
+    if (action === 'inquiry') todayActions.inquiries++;
+    
+    document.getElementById('viewedCount').textContent = todayActions.viewed;
+    document.getElementById('savedCount').textContent = todayActions.saved;
+    document.getElementById('inquiriesCount').textContent = todayActions.inquiries;
+    document.getElementById('todayActionsCount').textContent = 
+        todayActions.viewed + todayActions.saved + todayActions.inquiries;
+    
+    // Save to localStorage
+    const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
+    stats.score = activityScore;
+    localStorage.setItem('userStats', JSON.stringify(stats));
+}
+
+function checkAndShowAchievement() {
+    const hour = new Date().getHours();
+    if (hour < 9 && !sessionStorage.getItem('earlyBirdShown')) {
+        setTimeout(() => showAchievement('Early Bird', 'Logged in before 9 AM', '🌅'), 2000);
+        sessionStorage.setItem('earlyBirdShown', 'true');
+    }
+}
+
+function showAchievement(title, description, icon) {
+    const toast = document.getElementById('achievementToast');
+    toast.querySelector('.achievement-title').textContent = title;
+    toast.querySelector('.achievement-desc').textContent = description;
+    toast.querySelector('.achievement-icon').textContent = icon;
+    toast.style.display = 'block';
+    
+    updateActivityScore(100, 'achievement');
+    
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3500);
+}
+
+function startActivityTicker() {
+    // Duplicate activities for seamless loop
+    const ticker = document.querySelector('.activity-ticker');
+    if (ticker) {
+        ticker.innerHTML = ticker.innerHTML + ticker.innerHTML;
+    }
+}
+
+function simulateRealTimeUpdates() {
+    // Update "last update" time
+    setInterval(() => {
+        const updateEl = document.getElementById('lastUpdate');
+        const randomMinutes = Math.floor(Math.random() * 5) + 1;
+        if (updateEl) updateEl.textContent = `${randomMinutes} minutes ago`;
+    }, 60000);
+}
+
+// Quick Filter Functions
+function quickFilter(button, filter) {
+    // Remove active class from all pills
+    document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+    button.classList.add('active');
+    
+    const cards = document.querySelectorAll('.lead-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        let show = true;
+        
+        if (filter === 'all') {
+            show = true;
+        } else if (filter === 'urgent') {
+            // Show cards with emergency or urgent status
+            show = card.querySelector('.badge.bg-danger') || card.querySelector('.badge.bg-warning');
+        } else if (filter === 'government') {
+            show = card.getAttribute('data-type') === 'government';
+        } else if (filter === 'commercial') {
+            show = card.getAttribute('data-type') === 'commercial';
+        } else if (filter === 'high-value') {
+            const value = card.getAttribute('data-value');
+            show = value && (value.includes('250,000') || value.includes('500,000') || 
+                           value.includes('$1M') || value.includes('$2M') || value.includes('$3M'));
+        } else if (filter === 'closing-soon') {
+            const deadline = card.querySelector('.text-danger');
+            show = deadline !== null;
+        }
+        
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('resultsCount').textContent = visibleCount;
+    document.getElementById('visibleCount').textContent = visibleCount;
+    
+    // Add activity points
+    updateActivityScore(5, 'filter');
+}
+
+function filterUrgent() {
+    const urgentBtn = document.querySelector('[data-filter="urgent"]');
+    if (urgentBtn) quickFilter(urgentBtn, 'urgent');
+}
+
+function toggleAdvancedFilters() {
+    const filters = document.getElementById('advancedFilters');
+    const text = document.getElementById('advFilterText');
+    if (filters.style.display === 'none' || !filters.style.display) {
+        filters.style.display = 'block';
+        text.textContent = 'Hide Filters';
+    } else {
+        filters.style.display = 'none';
+        text.textContent = 'More Filters';
+    }
+}
+
+function setView(view) {
+    currentView = view;
+    const container = document.getElementById('leadsContainer');
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    
+    if (view === 'grid') {
+        container.classList.remove('list-view');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        container.classList.add('list-view');
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    }
+    
+    updateActivityScore(5, 'view-change');
+}
+
+function sortLeads() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.getElementById('leadsContainer');
+    const cards = Array.from(container.querySelectorAll('.lead-card'));
+    
+    cards.sort((a, b) => {
+        if (sortBy === 'newest') {
+            return 0; // Keep original order
+        } else if (sortBy === 'value-high' || sortBy === 'value-low') {
+            const valueA = parseFloat(a.getAttribute('data-value').replace(/[^0-9.]/g, '')) || 0;
+            const valueB = parseFloat(b.getAttribute('data-value').replace(/[^0-9.]/g, '')) || 0;
+            return sortBy === 'value-high' ? valueB - valueA : valueA - valueB;
+        }
+        return 0;
+    });
+    
+    cards.forEach(card => container.appendChild(card));
+    updateActivityScore(5, 'sort');
+}
+
+function showActivityFeed() {
+    alert('Live activity feed coming soon! See what other users are doing in real-time.');
+    updateActivityScore(10, 'explore');
+}
 
 function loadCustomerCredits() {
     fetch('/get-credits-balance?email=demo@example.com')
@@ -968,6 +1252,7 @@ function toggleSaveLead(button, leadType, leadId, leadTitle) {
                 icon.classList.remove('fas');
                 icon.classList.add('far');
                 showToast('Lead removed from saved', 'success');
+                updateActivityScore(-10, 'unsave'); // Deduct points
             } else {
                 showToast('Error: ' + (data.message || 'Failed to unsave lead'), 'error');
             }
@@ -1005,7 +1290,14 @@ function toggleSaveLead(button, leadType, leadId, leadTitle) {
             if (data.success) {
                 icon.classList.remove('far');
                 icon.classList.add('fas');
-                showToast('Lead saved successfully!', 'success');
+                showToast('Lead saved successfully! +25 points', 'success');
+                updateActivityScore(25, 'save'); // Award points for saving
+                
+                // Check if milestone reached
+                if (todayActions.saved >= 5 && !sessionStorage.getItem('saveMasterShown')) {
+                    showAchievement('Save Master', 'Saved 5+ leads today', '📌');
+                    sessionStorage.setItem('saveMasterShown', 'true');
+                }
             } else {
                 showToast('Error: ' + (data.message || 'Failed to save lead'), 'error');
             }
@@ -1264,6 +1556,223 @@ function resetApplyClickCount() {
         position: relative;
     }
 }
+
+/* Gamification & Engagement Styles */
+.hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+}
+
+.pulse-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.blink-badge {
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.4; }
+}
+
+.pulse-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+    animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+.activity-ticker {
+    display: flex;
+    animation: scroll-left 30s linear infinite;
+    white-space: nowrap;
+}
+
+@keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.activity-item {
+    padding-right: 50px;
+    display: inline-block;
+}
+
+.achievement-toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: slideInRight 0.5s ease-out, slideOutRight 0.5s ease-in 3s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.achievement-icon {
+    font-size: 3rem;
+    animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}
+
+.achievement-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.achievement-desc {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.filter-pill {
+    padding: 8px 16px;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.filter-pill:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.filter-pill.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+}
+
+/* Enhanced Lead Cards */
+.lead-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lead-card:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+.lead-card .card {
+    transition: all 0.3s;
+    border: 2px solid transparent !important;
+}
+
+.lead-card:hover .card {
+    border-color: #667eea !important;
+    box-shadow: 0 16px 48px rgba(102, 126, 234, 0.25) !important;
+}
+
+.lead-card .save-btn {
+    transition: all 0.2s;
+}
+
+.lead-card .save-btn:hover i {
+    transform: scale(1.3) rotate(10deg);
+    color: #FFD700 !important;
+}
+
+.lead-card .btn {
+    transition: all 0.2s;
+}
+
+.lead-card .btn:hover {
+    transform: scale(1.05);
+}
+
+/* Progress bars with gradient */
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Streak card animation */
+.streak-card {
+    animation: glow 3s infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    to { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6); }
+}
+
+/* View toggle buttons */
+.btn-group .btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Loading animation for dynamic content */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.skeleton-loader {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 1000px 100%;
+}
+
 </style>
 
 <!-- Mobile Sidebar Offcanvas -->
