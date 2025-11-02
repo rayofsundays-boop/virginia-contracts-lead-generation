@@ -44,113 +44,42 @@
         <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter by City</h5>
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Contracts</h5>
                 </div>
                 <div class="card-body">
-                    <!-- City Tabs -->
-                    <ul class="nav nav-pills mb-4 flex-wrap city-tabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if not current_filter %}active{% endif %}" 
-                               href="{{ url_for('contracts') }}">
-                                <i class="fas fa-th me-1"></i> All Cities
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Virginia Beach' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Virginia Beach') }}">
-                                <i class="fas fa-city me-1"></i> Virginia Beach
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Norfolk' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Norfolk') }}">
-                                <i class="fas fa-anchor me-1"></i> Norfolk
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Chesapeake' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Chesapeake') }}">
-                                <i class="fas fa-city me-1"></i> Chesapeake
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Newport News' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Newport News') }}">
-                                <i class="fas fa-ship me-1"></i> Newport News
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Hampton' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Hampton') }}">
-                                <i class="fas fa-landmark me-1"></i> Hampton
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Portsmouth' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Portsmouth') }}">
-                                <i class="fas fa-water me-1"></i> Portsmouth
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Suffolk' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Suffolk') }}">
-                                <i class="fas fa-tree me-1"></i> Suffolk
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {% if current_filter == 'Williamsburg' %}active{% endif %}" 
-                               href="{{ url_for('contracts', location='Williamsburg') }}">
-                                <i class="fas fa-monument me-1"></i> Williamsburg
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <!-- Advanced Filter Dropdown -->
-                    <div class="accordion" id="advancedFilter">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filterOptions">
-                                    <i class="fas fa-sliders-h me-2"></i> Advanced Filters
-                                </button>
-                            </h2>
-                            <div id="filterOptions" class="accordion-collapse collapse" data-bs-parent="#advancedFilter">
-                                <div class="accordion-body">
-                                    <form method="GET" class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Custom Location:</label>
-                                            <select name="location" class="form-select">
-                                                <option value="">All Locations</option>
-                                                {% for location in locations %}
-                                                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
-                                                        {{ location }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Contract Type:</label>
-                                            <select name="type" class="form-select">
-                                                <option value="">All Types</option>
-                                                <option value="maintenance">Maintenance</option>
-                                                <option value="cleaning">Cleaning Services</option>
-                                                <option value="janitorial">Janitorial</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary me-2">
-                                                <i class="fas fa-search me-1"></i> Apply
-                                            </button>
-                                            {% if current_filter %}
-                                                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">
-                                                    <i class="fas fa-times me-1"></i> Clear
-                                                </a>
-                                            {% endif %}
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                    <!-- Filter Form -->
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-map-marker-alt me-1"></i>Location:</label>
+                            <select name="location" class="form-select">
+                                <option value="">All Locations</option>
+                                {% for location in locations %}
+                                    <option value="{{ location }}" {% if location == current_filter %}selected{% endif %}>
+                                        {{ location }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-file-contract me-1"></i>Contract Type:</label>
+                            <select name="type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="cleaning">Cleaning Services</option>
+                                <option value="janitorial">Janitorial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i> Apply Filter
+                            </button>
+                            {% if current_filter %}
+                                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i> Clear
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
