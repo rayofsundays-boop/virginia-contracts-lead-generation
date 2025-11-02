@@ -476,7 +476,18 @@
                                 <li><a class="dropdown-item" href="{{ url_for('partnerships') }}"><i class="fas fa-handshake me-2"></i>Partnerships</a></li>
                                 {% if session.get('is_admin') %}
                                 <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header text-danger">Admin Controls</li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('admin_panel') }}"><i class="fas fa-shield-alt me-2"></i>Admin Panel</a></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_add_commercial_lead') }}">
+                                        <i class="fas fa-plus-circle me-2 text-success"></i>Add Commercial Lead
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_review_commercial_leads') }}">
+                                        <i class="fas fa-tasks me-2 text-warning"></i>Review Lead Requests
+                                    </a>
+                                </li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>

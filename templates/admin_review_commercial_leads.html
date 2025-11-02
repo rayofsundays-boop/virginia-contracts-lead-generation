@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}Review Commercial Leads - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .leads-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .section-title {
+        color: #333;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .lead-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .lead-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .lead-card.pending {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .lead-card.approved {
+        border-left: 4px solid #28a745;
+        opacity: 0.8;
+    }
+    
+    .lead-card.denied {
+        border-left: 4px solid #dc3545;
+        opacity: 0.7;
+    }
+    
+    .lead-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .lead-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+    
+    .lead-subtitle {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    
+    .lead-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .badge-urgent {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .badge-high {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .badge-normal {
+        background: #28a745;
+        color: white;
+    }
+    
+    .lead-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-icon {
+        color: #667eea;
+        width: 20px;
+    }
+    
+    .info-text {
+        color: #333;
+        font-size: 0.875rem;
+    }
+    
+    .lead-description {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .description-label {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-text {
+        color: #333;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .lead-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-approve {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-approve:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-deny {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-deny:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .tab {
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .tab.active {
+        color: #667eea;
+    }
+    
+    .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #667eea;
+    }
+    
+    .tab:hover {
+        color: #667eea;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-tasks me-3"></i>Review Commercial Lead Requests
+                </h1>
+                <p class="mb-0 opacity-75">Approve, edit, or deny commercial cleaning lead submissions</p>
+            </div>
+            <a href="{{ url_for('admin_add_commercial_lead') }}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-2"></i>Add New Lead
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ pending_requests|length }}</div>
+            <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ approved_requests|length }}</div>
+            <div class="stat-label">Recently Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-danger">{{ denied_requests|length }}</div>
+            <div class="stat-label">Recently Denied</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('pending')">
+            Pending ({{ pending_requests|length }})
+        </button>
+        <button class="tab" onclick="switchTab('approved')">
+            Approved ({{ approved_requests|length }})
+        </button>
+        <button class="tab" onclick="switchTab('denied')">
+            Denied ({{ denied_requests|length }})
+        </button>
+    </div>
+
+    <!-- Pending Requests Tab -->
+    <div id="pending-tab" class="tab-content active">
+        <div class="leads-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-clock me-2 text-warning"></i>Pending Requests
+                </h2>
+            </div>
+            
+            {% if pending_requests %}
+                {% for lead in pending_requests %}
+                <div class="lead-card pending" data-lead-id="{{ lead.id }}">
+                    <div class="lead-header">
+                        <div>
+                            <div class="lead-title">{{ lead.business_name }}</div>
+                            <div class="lead-subtitle">{{ lead.business_type|title }} • {{ lead.city }}, {{ lead.state }}</div>
+                        </div>
+                        <span class="lead-badge badge-{{ lead.urgency }}">{{ lead.urgency|upper }}</span>
+                    </div>
+                    
+                    <div class="lead-info">
+                        <div class="info-item">
+                            <i class="fas fa-user info-icon"></i>
+                            <span class="info-text">{{ lead.contact_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope info-icon"></i>
+                            <span class="info-text">{{ lead.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-phone info-icon"></i>
+                            <span class="info-text">{{ lead.phone }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar info-icon"></i>
+                            <span class="info-text">{{ lead.frequency|title }}</span>
+                        </div>
+                        {% if lead.square_footage %}
+                        <div class="info-item">
+                            <i class="fas fa-ruler-combined info-icon"></i>
+                            <span class="info-text">{{ "{:,}".format(lead.square_footage) }} sq ft</span>
+                        </div>
+                        {% endif %}
+                        {% if lead.budget_range %}
+                        <div class="info-item">
+                            <i class="fas fa-dollar-sign info-icon"></i>
+                            <span class="info-text">{{ lead.budget_range|replace('_', ' - $')|title }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="lead-description">
+                        <div class="description-label">Services Needed:</div>
+                        <div class="description-text">{{ lead.services_needed }}</div>
+                    </div>
+                    
+                    {% if lead.special_requirements %}
+                    <div class="lead-description">
+                        <div class="description-label">Special Requirements:</div>
+                        <div class="description-text">{{ lead.special_requirements }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="lead-actions">
+                        <button class="btn-approve" onclick="approveLead({{ lead.id }})">
+                            <i class="fas fa-check me-2"></i>Approve
+                        </button>
+                        <button class="btn-deny" onclick="showDenyModal({{ lead.id }}, '{{ lead.business_name }}')">
+                            <i class="fas fa-times me-2"></i>Deny
+                        </button>
+                        <a href="{{ url_for('admin_add_commercial_lead', from_request=lead.id) }}" class="btn-edit">
+                            <i class="fas fa-edit me-2"></i>Edit & Approve
+                        </a>
+                    </div>
+                    
+                    <div class="mt-2 text-muted small">
+                        <i class="fas fa-clock me-1"></i>Submitted: {{ lead.created_at.strftime('%B %d, %Y at %I:%M %p') if lead.created_at else 'N/A' }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Pending Requests</h4>
+                    <p>All commercial lead requests have been reviewed.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Approved Requests Tab -->
+    <div id="approved-tab" class="tab-content">
+        <div class="leads-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-check-circle me-2 text-success"></i>Recently Approved
+                </h2>
+            </div>
+            
+            {% if approved_requests %}
+                {% for lead in approved_requests %}
+                <div class="lead-card approved">
+                    <div class="lead-header">
+                        <div>
+                            <div class="lead-title">{{ lead.business_name }}</div>
+                            <div class="lead-subtitle">{{ lead.business_type|title }} • {{ lead.city }}, {{ lead.state }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="lead-info">
+                        <div class="info-item">
+                            <i class="fas fa-user info-icon"></i>
+                            <span class="info-text">{{ lead.contact_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope info-icon"></i>
+                            <span class="info-text">{{ lead.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar info-icon"></i>
+                            <span class="info-text">{{ lead.frequency|title }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2 text-success small">
+                        <i class="fas fa-check-circle me-1"></i>Approved: {{ lead.updated_at.strftime('%B %d, %Y at %I:%M %p') if lead.updated_at else 'N/A' }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Approved Requests</h4>
+                    <p>No recently approved commercial leads.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Denied Requests Tab -->
+    <div id="denied-tab" class="tab-content">
+        <div class="leads-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-times-circle me-2 text-danger"></i>Recently Denied
+                </h2>
+            </div>
+            
+            {% if denied_requests %}
+                {% for lead in denied_requests %}
+                <div class="lead-card denied">
+                    <div class="lead-header">
+                        <div>
+                            <div class="lead-title">{{ lead.business_name }}</div>
+                            <div class="lead-subtitle">{{ lead.business_type|title }} • {{ lead.city }}, {{ lead.state }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="lead-info">
+                        <div class="info-item">
+                            <i class="fas fa-user info-icon"></i>
+                            <span class="info-text">{{ lead.contact_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope info-icon"></i>
+                            <span class="info-text">{{ lead.email }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if 'Denial Reason:' in (lead.special_requirements or '') %}
+                    <div class="lead-description mt-2">
+                        <div class="description-label text-danger">Denial Reason:</div>
+                        <div class="description-text">{{ lead.special_requirements.split('Denial Reason:')[-1].strip() }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-2 text-danger small">
+                        <i class="fas fa-times-circle me-1"></i>Denied: {{ lead.updated_at.strftime('%B %d, %Y at %I:%M %p') if lead.updated_at else 'N/A' }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Denied Requests</h4>
+                    <p>No recently denied commercial leads.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Deny Modal -->
+<div class="modal fade" id="denyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Deny Commercial Lead Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to deny the request from <strong id="denyBusinessName"></strong>?</p>
+                <div class="mb-3">
+                    <label for="denialReason" class="form-label">Reason for denial (optional):</label>
+                    <textarea class="form-control" id="denialReason" rows="3" 
+                              placeholder="e.g., Incomplete information, outside service area..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeny()">
+                    <i class="fas fa-times me-2"></i>Deny Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDenyId = null;
+    
+    // Tab switching
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+    
+    // Approve lead
+    function approveLead(leadId) {
+        if (!confirm('Are you sure you want to approve this lead? It will be visible to subscribers.')) {
+            return;
+        }
+        
+        fetch(`/admin/commercial-leads/approve/${leadId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                showToast('Lead approved successfully!', 'success');
+                // Remove card with animation
+                const card = document.querySelector(`[data-lead-id="${leadId}"]`);
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    card.remove();
+                    // Reload if no more pending
+                    if (document.querySelectorAll('.lead-card.pending').length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+            } else {
+                showToast('Error approving lead: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error approving lead', 'danger');
+        });
+    }
+    
+    // Show deny modal
+    function showDenyModal(leadId, businessName) {
+        currentDenyId = leadId;
+        document.getElementById('denyBusinessName').textContent = businessName;
+        document.getElementById('denialReason').value = '';
+        new bootstrap.Modal(document.getElementById('denyModal')).show();
+    }
+    
+    // Confirm deny
+    function confirmDeny() {
+        const reason = document.getElementById('denialReason').value;
+        
+        fetch(`/admin/commercial-leads/deny/${currentDenyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal
+                bootstrap.Modal.getInstance(document.getElementById('denyModal')).hide();
+                // Show success message
+                showToast('Lead denied successfully', 'success');
+                // Remove card with animation
+                const card = document.querySelector(`[data-lead-id="${currentDenyId}"]`);
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    card.remove();
+                    // Reload if no more pending
+                    if (document.querySelectorAll('.lead-card.pending').length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+            } else {
+                showToast('Error denying lead: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error denying lead', 'danger');
+        });
+    }
+    
+    // Toast notification
+    function showToast(message, type) {
+        const toastHtml = `
+            <div class="toast align-items-center text-white bg-${type} border-0" role="alert" style="position: fixed; top: 100px; right: 20px; z-index: 9999;">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        const toastContainer = document.createElement('div');
+        toastContainer.innerHTML = toastHtml;
+        document.body.appendChild(toastContainer);
+        
+        const toastElement = toastContainer.querySelector('.toast');
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastContainer.remove();
+        });
+    }
+</script>
+{% endblock %}

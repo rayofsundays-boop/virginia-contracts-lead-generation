@@ -4943,7 +4943,7 @@ def commercial_contracts():
             'location': 'HQ: 2025 M Street NW, Suite 700, Washington, DC 20036',
             'state': 'DC',
             'city': 'Washington',
-            'properties': ''50,000+ units',
+            'properties': '50,000+ units',
             'vendor_link': 'https://www.hgihomes.com/contact',
             'description': 'Global real estate investment firm. Contact: 202-296-8800 | Email: procurement@hgihomes.com',
             'property_types': 'Multifamily apartments',
@@ -5192,6 +5192,38 @@ def commercial_contracts():
             'regions': 'Arizona, Colorado, Texas'
         }
     ]
+    
+    # Fetch approved commercial lead requests from database
+    try:
+        approved_leads = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        # Convert approved leads to property manager format
+        for lead in approved_leads:
+            lead_dict = {
+                'name': lead.business_name,
+                'location': f"{lead.address}, {lead.city}, {lead.state} {lead.zip_code or ''}",
+                'state': lead.state,
+                'city': lead.city,
+                'properties': f"{lead.square_footage:,} sq ft" if lead.square_footage else "Contact for details",
+                'vendor_link': f"mailto:{lead.email}?subject=Commercial Cleaning Services Inquiry",
+                'description': f"Contact: {lead.contact_name} | Phone: {lead.phone} | Email: {lead.email} | Frequency: {lead.frequency} | Budget: {lead.budget_range or 'Not specified'}",
+                'property_types': lead.business_type.title() if lead.business_type else 'Commercial',
+                'regions': f"{lead.city}, {lead.state}",
+                'services_needed': lead.services_needed,
+                'special_requirements': lead.special_requirements,
+                'is_lead_request': True,  # Flag to identify these in template
+                'urgency': lead.urgency,
+                'start_date': str(lead.start_date) if lead.start_date else None
+            }
+            property_managers.append(lead_dict)
+    except Exception as e:
+        print(f"Error fetching approved commercial leads: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Apply filters
     filtered_managers = property_managers
@@ -9119,6 +9151,254 @@ def admin_clear_cache():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ============================================
+# ADMIN COMMERCIAL LEADS MANAGEMENT
+# ============================================
+
+@app.route('/admin/commercial-leads/add', methods=['GET', 'POST'])
+def admin_add_commercial_lead():
+    """
+    Admin page to manually add commercial leads
+    Can auto-populate from pending lead requests or add completely new leads
+    """
+    if not session.get('is_admin'):
+        flash('Admin access required', 'danger')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            business_name = request.form.get('business_name')
+            contact_name = request.form.get('contact_name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            address = request.form.get('address')
+            city = request.form.get('city')
+            state = request.form.get('state', 'VA')
+            zip_code = request.form.get('zip_code')
+            business_type = request.form.get('business_type')
+            square_footage = request.form.get('square_footage')
+            frequency = request.form.get('frequency')
+            services_needed = request.form.get('services_needed')
+            special_requirements = request.form.get('special_requirements')
+            budget_range = request.form.get('budget_range')
+            start_date = request.form.get('start_date')
+            urgency = request.form.get('urgency', 'normal')
+            
+            # Insert into commercial_lead_requests as approved
+            db.session.execute(text('''
+                INSERT INTO commercial_lead_requests
+                (business_name, contact_name, email, phone, address, city, state, zip_code,
+                 business_type, square_footage, frequency, services_needed, special_requirements,
+                 budget_range, start_date, urgency, status)
+                VALUES
+                (:business_name, :contact_name, :email, :phone, :address, :city, :state, :zip_code,
+                 :business_type, :square_footage, :frequency, :services_needed, :special_requirements,
+                 :budget_range, :start_date, :urgency, 'approved')
+            '''), {
+                'business_name': business_name,
+                'contact_name': contact_name,
+                'email': email,
+                'phone': phone,
+                'address': address,
+                'city': city,
+                'state': state,
+                'zip_code': zip_code,
+                'business_type': business_type,
+                'square_footage': square_footage or None,
+                'frequency': frequency,
+                'services_needed': services_needed,
+                'special_requirements': special_requirements,
+                'budget_range': budget_range,
+                'start_date': start_date or None,
+                'urgency': urgency
+            })
+            
+            db.session.commit()
+            flash(f'✅ Commercial lead "{business_name}" added successfully!', 'success')
+            return redirect(url_for('admin_add_commercial_lead'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding commercial lead: {str(e)}', 'danger')
+            print(f"Error adding commercial lead: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # GET request - show form
+    # Optionally load data from a pending request to pre-fill form
+    request_id = request.args.get('from_request')
+    prefill_data = None
+    
+    if request_id:
+        try:
+            prefill_data = db.session.execute(text('''
+                SELECT * FROM commercial_lead_requests WHERE id = :id
+            '''), {'id': request_id}).fetchone()
+        except Exception as e:
+            print(f"Error loading request data: {e}")
+    
+    return render_template('admin_add_commercial_lead.html', prefill_data=prefill_data)
+
+@app.route('/admin/commercial-leads/review', methods=['GET'])
+def admin_review_commercial_leads():
+    """
+    Admin page to review, approve, or deny commercial lead requests
+    Shows pending requests from users
+    """
+    if not session.get('is_admin'):
+        flash('Admin access required', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        # Get all pending commercial lead requests
+        pending_requests = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests
+            WHERE status = 'open'
+            ORDER BY created_at DESC
+        ''')).fetchall()
+        
+        # Get approved requests for reference
+        approved_requests = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests
+            WHERE status = 'approved'
+            ORDER BY updated_at DESC
+            LIMIT 20
+        ''')).fetchall()
+        
+        # Get denied requests for reference
+        denied_requests = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests
+            WHERE status = 'denied'
+            ORDER BY updated_at DESC
+            LIMIT 20
+        ''')).fetchall()
+        
+        return render_template('admin_review_commercial_leads.html',
+                             pending_requests=pending_requests,
+                             approved_requests=approved_requests,
+                             denied_requests=denied_requests)
+        
+    except Exception as e:
+        flash(f'Error loading requests: {str(e)}', 'danger')
+        print(f"Error loading commercial requests: {e}")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for('admin_panel'))
+
+@app.route('/admin/commercial-leads/approve/<int:request_id>', methods=['POST'])
+def admin_approve_commercial_lead(request_id):
+    """
+    Approve a commercial lead request
+    Optionally allows editing before approval
+    """
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        # Get the request data
+        lead_request = db.session.execute(text('''
+            SELECT * FROM commercial_lead_requests WHERE id = :id
+        '''), {'id': request_id}).fetchone()
+        
+        if not lead_request:
+            return jsonify({'success': False, 'error': 'Request not found'}), 404
+        
+        # Check if editing data is provided
+        edit_data = request.get_json() if request.is_json else {}
+        
+        # Update the request with any edits and approve
+        db.session.execute(text('''
+            UPDATE commercial_lead_requests
+            SET business_name = COALESCE(:business_name, business_name),
+                contact_name = COALESCE(:contact_name, contact_name),
+                email = COALESCE(:email, email),
+                phone = COALESCE(:phone, phone),
+                address = COALESCE(:address, address),
+                city = COALESCE(:city, city),
+                state = COALESCE(:state, state),
+                zip_code = COALESCE(:zip_code, zip_code),
+                business_type = COALESCE(:business_type, business_type),
+                square_footage = COALESCE(:square_footage, square_footage),
+                frequency = COALESCE(:frequency, frequency),
+                services_needed = COALESCE(:services_needed, services_needed),
+                special_requirements = COALESCE(:special_requirements, special_requirements),
+                budget_range = COALESCE(:budget_range, budget_range),
+                urgency = COALESCE(:urgency, urgency),
+                status = 'approved',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = :id
+        '''), {
+            'id': request_id,
+            'business_name': edit_data.get('business_name'),
+            'contact_name': edit_data.get('contact_name'),
+            'email': edit_data.get('email'),
+            'phone': edit_data.get('phone'),
+            'address': edit_data.get('address'),
+            'city': edit_data.get('city'),
+            'state': edit_data.get('state'),
+            'zip_code': edit_data.get('zip_code'),
+            'business_type': edit_data.get('business_type'),
+            'square_footage': edit_data.get('square_footage'),
+            'frequency': edit_data.get('frequency'),
+            'services_needed': edit_data.get('services_needed'),
+            'special_requirements': edit_data.get('special_requirements'),
+            'budget_range': edit_data.get('budget_range'),
+            'urgency': edit_data.get('urgency')
+        })
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Commercial lead request #{request_id} approved successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error approving commercial lead: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin/commercial-leads/deny/<int:request_id>', methods=['POST'])
+def admin_deny_commercial_lead(request_id):
+    """
+    Deny a commercial lead request
+    """
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        data = request.get_json() if request.is_json else {}
+        denial_reason = data.get('reason', 'Not specified')
+        
+        # Update status to denied
+        db.session.execute(text('''
+            UPDATE commercial_lead_requests
+            SET status = 'denied',
+                special_requirements = CONCAT(COALESCE(special_requirements, ''), '\n\nDenial Reason: ', :reason),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = :id
+        '''), {
+            'id': request_id,
+            'reason': denial_reason
+        })
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Commercial lead request #{request_id} denied'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error denying commercial lead: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/admin/populate-if-empty')
 def admin_populate_if_empty():
