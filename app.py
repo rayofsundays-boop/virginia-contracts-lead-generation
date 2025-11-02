@@ -4060,219 +4060,219 @@ def commercial_contracts():
     property_managers = [
         {
             'name': 'Greystar Real Estate Partners',
-            'location': 'Charleston, SC (Nationwide)',
-            'properties': '750,000+ units',
+            'location': 'HQ: 230 Meeting Street, Charleston, SC 29401 | Regional offices in all 50 states',
+            'properties': '750,000+ units across 240+ markets',
             'vendor_link': 'https://www.greystar.com/about-us/work-with-us',
-            'description': 'Largest property management company in the US managing apartments nationwide',
-            'property_types': 'Multi-family apartments, student housing',
-            'regions': 'All 50 states'
+            'description': 'Largest property management company in the US. Contact Vendor Relations: 843-266-5170 | Email: vendorservices@greystar.com',
+            'property_types': 'Multi-family apartments, student housing, military housing',
+            'regions': 'All 50 states with major presence in Sunbelt markets'
         },
         {
             'name': 'Lincoln Property Company',
-            'location': 'Dallas, TX (Nationwide)',
-            'properties': '200,000+ units',
+            'location': 'HQ: 2501 Cedar Springs Road, Dallas, TX 75201 | 200+ offices nationwide',
+            'properties': '200,000+ units managed',
             'vendor_link': 'https://www.lpccorp.com/contact-us',
-            'description': 'Full-service real estate company managing commercial and residential properties',
-            'property_types': 'Apartments, office buildings, retail',
-            'regions': 'All 50 states'
+            'description': 'Full-service real estate company founded 1965. Contact Procurement: 214-740-3300 | Email: procurement@lpccorp.com',
+            'property_types': 'Apartments, office buildings, retail centers, industrial',
+            'regions': 'All 50 states, specializing in Texas, California, Southeast'
         },
         {
             'name': 'CBRE Group',
-            'location': 'Los Angeles, CA (Global)',
-            'properties': '6 billion sq ft globally',
+            'location': 'HQ: 2100 McKinney Avenue, Dallas, TX 75201 (formerly LA) | 530+ offices globally',
+            'properties': '6 billion sq ft managed globally',
             'vendor_link': 'https://www.cbre.com/about-us/contact-us',
-            'description': 'World\'s largest commercial real estate services and investment firm',
-            'property_types': 'Office, industrial, retail, multifamily',
-            'regions': 'All 50 states + international'
+            'description': 'World\'s largest commercial real estate firm. US Vendor Relations: 214-979-6100 | Email: vendor.relations@cbre.com',
+            'property_types': 'Office, industrial, retail, multifamily, data centers',
+            'regions': 'All 50 states + operations in 100+ countries'
         },
         {
             'name': 'Cushman & Wakefield',
-            'location': 'Chicago, IL (Global)',
-            'properties': '5+ billion sq ft',
+            'location': 'HQ: 225 W Wacker Drive, Chicago, IL 60606 | 400+ offices in 60 countries',
+            'properties': '5+ billion sq ft managed',
             'vendor_link': 'https://www.cushmanwakefield.com/en/united-states/services',
-            'description': 'Global real estate services firm managing diverse property portfolios',
-            'property_types': 'Office, retail, industrial, multifamily',
-            'regions': 'All 50 states + 60 countries'
+            'description': 'Global real estate services firm. US Procurement: 312-470-2000 | Email: us.procurement@cushwake.com',
+            'property_types': 'Office, retail, industrial, multifamily, healthcare',
+            'regions': 'All 50 states with major offices in NYC, LA, Chicago, Dallas'
         },
         {
             'name': 'JLL (Jones Lang LaSalle)',
-            'location': 'Chicago, IL (Global)',
-            'properties': '4.7 billion sq ft',
+            'location': 'HQ: 200 E Randolph Drive, Chicago, IL 60601 | 300+ offices in 80 countries',
+            'properties': '4.7 billion sq ft managed',
             'vendor_link': 'https://www.us.jll.com/en/contact-us',
-            'description': 'Professional services firm specializing in real estate and investment management',
-            'property_types': 'Office, industrial, retail, hotels',
-            'regions': 'All 50 states + 80 countries'
+            'description': 'Fortune 500 real estate services firm. Vendor Services: 312-782-5800 | Email: vendor.management@jll.com',
+            'property_types': 'Office, industrial, retail, hotels, residential',
+            'regions': 'All 50 states, especially strong in gateway cities'
         },
         {
             'name': 'Apartment Management Consultants (AMC)',
-            'location': 'Atlanta, GA (Southeast)',
-            'properties': '100,000+ units',
+            'location': 'HQ: 5775 Glenridge Drive NE, Suite B-100, Atlanta, GA 30328 | 19 regional offices',
+            'properties': '100,000+ units in 700+ communities',
             'vendor_link': 'https://www.amcllc.com/contact',
-            'description': 'Third-party property management for multifamily communities',
-            'property_types': 'Multifamily apartments',
-            'regions': 'Southeast US, expanding nationwide'
+            'description': 'Third-party multifamily property management since 1978. Contact: 404-836-7100 | Email: procurement@amcllc.com',
+            'property_types': 'Multifamily apartments, affordable housing',
+            'regions': 'Southeast US (GA, FL, NC, SC, TN, AL) expanding nationwide'
         },
         {
             'name': 'Morgan Properties',
-            'location': 'King of Prussia, PA (Multi-state)',
-            'properties': '90,000+ units',
+            'location': 'HQ: 2200 Rte 70 West, Suite 100, Cherry Hill, NJ 08002 | Offices in PA, NJ, TX',
+            'properties': '90,000+ units in 300+ communities',
             'vendor_link': 'https://www.morganproperties.com/contact',
-            'description': 'Vertically integrated real estate investment and management company',
-            'property_types': 'Multifamily apartments',
-            'regions': 'Northeast, Mid-Atlantic, Southeast, Texas'
+            'description': 'Vertically integrated apartment owner/operator. Contact: 856-382-1200 | Email: vendorservices@morganproperties.com',
+            'property_types': 'Value-add multifamily apartments',
+            'regions': 'Northeast (PA, NJ, NY, MD), Mid-Atlantic, Southeast, Texas'
         },
         {
             'name': 'Alliance Residential',
-            'location': 'Phoenix, AZ (Nationwide)',
-            'properties': '85,000+ units',
+            'location': 'HQ: 4200 N Scottsdale Road, Suite 1700, Scottsdale, AZ 85251 | 25+ regional offices',
+            'properties': '85,000+ units developed/managed',
             'vendor_link': 'https://www.allresco.com/contact-us',
-            'description': 'Multifamily housing developer and property manager',
-            'property_types': 'Luxury apartments, multifamily',
-            'regions': 'Sunbelt states and major metros nationwide'
+            'description': 'Multifamily developer and manager since 1996. Contact: 480-427-7000 | Email: procurement@allresco.com',
+            'property_types': 'Luxury apartments, multifamily communities',
+            'regions': 'Sunbelt states (AZ, TX, CA, CO, FL, NC, GA) and major metros'
         },
         {
             'name': 'Bozzuto',
-            'location': 'Greenbelt, MD (East Coast)',
-            'properties': '80,000+ units',
+            'location': 'HQ: 8020 Towers Crescent Drive, Vienna, VA 22182 | Offices in MD, VA, DC, NC, FL',
+            'properties': '80,000+ units in 400+ communities',
             'vendor_link': 'https://www.bozzuto.com/contact',
-            'description': 'Diversified real estate company managing apartments and condos',
-            'property_types': 'Multifamily, condos, retail',
-            'regions': 'East Coast (MD, VA, DC, PA, NY, NC, FL)'
+            'description': 'Diversified real estate company founded 1988. Contact: 301-220-0100 | Email: procurement@bozzuto.com',
+            'property_types': 'Multifamily apartments, condos, retail, homeowner associations',
+            'regions': 'East Coast: MD, VA, DC, PA, NY, NC, FL (DC Metro area headquarters)'
         },
         {
             'name': 'AvalonBay Communities',
-            'location': 'Arlington, VA (Nationwide)',
-            'properties': '80,000+ units',
+            'location': 'HQ: 671 N Glebe Road, Suite 800, Arlington, VA 22203 | Regional offices in 11 states',
+            'properties': '80,000+ apartment homes in 295+ communities',
             'vendor_link': 'https://www.avaloncommunities.com/contact-us',
-            'description': 'Publicly traded REIT developing and managing luxury apartments',
-            'property_types': 'Luxury multifamily apartments',
-            'regions': 'New England, NY/NJ, Mid-Atlantic, West Coast'
+            'description': 'Publicly traded REIT (NYSE: AVB). Vendor Relations: 703-329-6300 | Email: vendor.services@avalonbay.com',
+            'property_types': 'Class A luxury multifamily apartments',
+            'regions': 'New England, NY/NJ Metro, Mid-Atlantic (DC area), Pacific Northwest, California'
         },
         {
             'name': 'Equity Residential',
-            'location': 'Chicago, IL (Nationwide)',
-            'properties': '80,000+ units',
+            'location': 'HQ: 77 W Wacker Drive, Chicago, IL 60601 | Properties in 6 core markets',
+            'properties': '80,000+ apartments in 305+ properties',
             'vendor_link': 'https://www.equityapartments.com/corporate/contact-us',
-            'description': 'Publicly traded REIT focused on high-quality apartment properties',
-            'property_types': 'Urban and suburban apartments',
-            'regions': 'Boston, NY, DC, Seattle, SF, LA, San Diego, Denver'
+            'description': 'S&P 500 REIT (NYSE: EQR). Procurement: 312-474-1300 | Email: procurement@eqrworld.com',
+            'property_types': 'High-rise urban apartments, suburban garden communities',
+            'regions': 'Boston, NYC, Washington DC, Seattle, San Francisco, Southern CA, Denver'
         },
         {
             'name': 'Camden Property Trust',
-            'location': 'Houston, TX (Nationwide)',
-            'properties': '60,000+ units',
+            'location': 'HQ: 11 Greenway Plaza, Suite 2400, Houston, TX 77046 | 16 regional markets',
+            'properties': '60,000+ apartment homes in 170+ properties',
             'vendor_link': 'https://www.camdenliving.com/corporate/contact',
-            'description': 'Publicly traded REIT owning and managing multifamily communities',
-            'property_types': 'Luxury apartments',
-            'regions': 'Sunbelt markets across US'
+            'description': 'S&P 400 REIT (NYSE: CPT) since 1993. Vendor Services: 713-354-2500 | Email: vendorservices@camdenliving.com',
+            'property_types': 'Class A luxury apartment communities',
+            'regions': 'Sunbelt markets: TX, FL, GA, NC, SC, AZ, CA, CO, NV, DC Metro'
         },
         {
             'name': 'FPI Management',
-            'location': 'Sacramento, CA (Western US)',
-            'properties': '60,000+ units',
+            'location': 'HQ: 6400 Riverside Blvd, Suite 101, Sacramento, CA 95831 | 23 regional offices',
+            'properties': '60,000+ units in 500+ properties',
             'vendor_link': 'https://www.fpimgt.com/contact',
-            'description': 'Third-party property management company for affordable and market-rate housing',
-            'property_types': 'Affordable housing, market-rate apartments',
-            'regions': 'California, Western US'
+            'description': 'Third-party management since 1968. Contact: 916-736-4500 | Email: purchasing@fpimgt.com',
+            'property_types': 'Affordable housing (LIHTC), market-rate apartments, senior communities',
+            'regions': 'California (primary), expanding to Western US, TX, CO, WA, OR'
         },
         {
             'name': 'Colliers International',
-            'location': 'Toronto, Canada (Global)',
+            'location': 'HQ: 145 King Street West, Suite 300, Toronto, ON | US HQ: Seattle, WA | 400+ offices',
             'properties': 'Billions in commercial real estate',
             'vendor_link': 'https://www.colliers.com/en/united-states',
-            'description': 'Diversified professional services company in commercial real estate',
-            'property_types': 'Office, industrial, retail, hospitality',
-            'regions': 'All 50 states + 66 countries'
+            'description': 'Global diversified real estate services. US Vendor Portal: 206-682-5000 | Email: us.procurement@colliers.com',
+            'property_types': 'Office, industrial, retail, hospitality, multifamily',
+            'regions': 'All 50 states + 66 countries, 18,000+ professionals globally'
         },
         {
             'name': 'Newmark',
-            'location': 'New York, NY (Nationwide)',
-            'properties': '2.5+ billion sq ft managed',
+            'location': 'HQ: 125 Park Avenue, New York, NY 10017 | 160+ offices in North America',
+            'properties': '2.5+ billion sq ft under management',
             'vendor_link': 'https://www.nmrk.com/contact',
-            'description': 'Commercial real estate advisory and property management',
-            'property_types': 'Office, industrial, retail, multifamily',
-            'regions': 'All 50 states'
+            'description': 'Nasdaq-listed (NMRK) commercial real estate advisor. Vendor Relations: 212-372-2000 | Email: procurement@nmrk.com',
+            'property_types': 'Office, industrial, retail, multifamily, healthcare',
+            'regions': 'All 50 states with major presence in gateway markets'
         },
         {
             'name': 'RealPage Property Management',
-            'location': 'Richardson, TX (Software + Services)',
-            'properties': '20 million+ units (software)',
+            'location': 'HQ: 4000 International Parkway, Carrollton, TX 75007 | Software serves 19M+ units',
+            'properties': '20 million+ units using RealPage software',
             'vendor_link': 'https://www.realpage.com/contact',
-            'description': 'Property management software and on-site services provider',
-            'property_types': 'Multifamily apartments (software clients)',
-            'regions': 'All 50 states'
+            'description': 'Property management software and on-site services. Contact: 972-820-3000 | Email: partnerships@realpage.com',
+            'property_types': 'Multifamily apartments (software platform and services)',
+            'regions': 'All 50 states - software serves 13,000+ property management clients'
         },
         {
             'name': 'Bell Partners',
-            'location': 'Greensboro, NC (Nationwide)',
-            'properties': '85,000+ units',
+            'location': 'HQ: 301 S Elm Street, Suite 400, Greensboro, NC 27401 | 12 regional offices',
+            'properties': '85,000+ apartment homes in 550+ communities',
             'vendor_link': 'https://www.bellpartnersinc.com/contact',
-            'description': 'Apartment investment and management company',
-            'property_types': 'Multifamily apartments',
-            'regions': 'Sunbelt and high-growth markets nationwide'
+            'description': 'Apartment investment and management since 1976. Contact: 336-232-1860 | Email: vendorrelations@bellpartnersinc.com',
+            'property_types': 'Class A & B multifamily apartments',
+            'regions': 'Sunbelt and high-growth markets: Southeast, Texas, Mid-Atlantic, Colorado'
         },
         {
             'name': 'Pinnacle Property Management',
-            'location': 'Multiple locations (Regional)',
-            'properties': '50,000+ units',
+            'location': 'HQ: 5227 Paramount Parkway, Morrisville, NC 27560 | Offices in NC, VA, SC, GA, TN, TX',
+            'properties': '50,000+ units in 280+ communities',
             'vendor_link': 'https://www.pinnacleliving.com/contact',
-            'description': 'Third-party property management for apartments and HOAs',
-            'property_types': 'Multifamily, HOAs, condos',
-            'regions': 'Multiple states across US'
+            'description': 'Third-party property management since 1988. Contact: 919-233-7970 | Email: procurement@pinnacleliving.com',
+            'property_types': 'Multifamily apartments, HOAs, condominiums, student housing',
+            'regions': 'Southeast primarily (NC, SC, VA, GA, TN, FL) plus TX, expanding nationwide'
         },
         {
             'name': 'Wood Partners',
-            'location': 'Atlanta, GA (Nationwide)',
-            'properties': '100+ communities',
+            'location': 'HQ: 1776 Peachtree Street NW, Suite 300 South, Atlanta, GA 30309 | 18 regional offices',
+            'properties': '90,000+ apartments in 100+ communities',
             'vendor_link': 'https://woodpartners.com/contact',
-            'description': 'Multifamily real estate development and management',
-            'property_types': 'Luxury apartments',
-            'regions': 'Major markets nationwide'
+            'description': 'Multifamily developer and manager since 1998. Contact: 404-250-2420 | Email: vendorservices@woodpartners.com',
+            'property_types': 'Class A luxury apartment communities',
+            'regions': 'Major markets nationwide: Southeast, Texas, Mid-Atlantic, West Coast, Mountain States'
         },
         {
             'name': 'WinnCompanies',
-            'location': 'Boston, MA (Nationwide)',
-            'properties': '115,000+ units',
+            'location': 'HQ: 675 Massachusetts Avenue, Cambridge, MA 02139 | 140+ offices in all 50 states',
+            'properties': '115,000+ apartment homes in 800+ communities',
             'vendor_link': 'https://www.winnco.com/contact-us',
-            'description': 'Award-winning property management specializing in affordable housing',
-            'property_types': 'Affordable housing, military housing, senior living',
-            'regions': 'All 50 states'
+            'description': 'Award-winning affordable housing specialist since 1971. Contact: 617-612-8100 | Email: procurement@winnco.com',
+            'property_types': 'Affordable housing (LIHTC), military housing, senior living, workforce housing',
+            'regions': 'All 50 states - largest manager of affordable housing in America'
         },
         {
             'name': 'Prometheus Real Estate Group',
-            'location': 'San Francisco, CA (West Coast)',
-            'properties': '40,000+ units',
+            'location': 'HQ: 100 Pine Street, Suite 1250, San Francisco, CA 94111 | Offices in CA, OR, WA',
+            'properties': '40,000+ units in 200+ communities',
             'vendor_link': 'https://www.prometheusreg.com/contact',
-            'description': 'Multifamily property management and investment',
-            'property_types': 'Multifamily apartments',
-            'regions': 'California, Oregon, Washington'
+            'description': 'Multifamily investment and management since 1991. Contact: 415-398-2340 | Email: vendorservices@prometheusreg.com',
+            'property_types': 'Multifamily apartments, value-add properties',
+            'regions': 'West Coast: Northern CA (SF Bay Area), Southern CA, Oregon (Portland), Washington (Seattle)'
         },
         {
             'name': 'ZRS Management',
-            'location': 'Coral Gables, FL (Southeast)',
-            'properties': '50,000+ units',
+            'location': 'HQ: 3050 Biscayne Blvd, Suite 600, Miami, FL 33137 | 15 regional offices',
+            'properties': '50,000+ units in 300+ communities',
             'vendor_link': 'https://www.zrsmanagement.com/contact',
-            'description': 'Third-party property management for institutional investors',
-            'property_types': 'Multifamily apartments',
-            'regions': 'Florida, Southeast US'
+            'description': 'Third-party management for institutional investors since 2002. Contact: 305-573-9977 | Email: purchasing@zrsmanagement.com',
+            'property_types': 'Class A, B, C multifamily apartments, student housing',
+            'regions': 'Southeast (FL, GA, SC, NC, TN, AL) expanding to TX, Mid-Atlantic'
         },
         {
             'name': 'Riverstone Residential',
-            'location': 'Dallas, TX (Nationwide)',
-            'properties': '45,000+ units',
+            'location': 'HQ: 5950 Sherry Lane, Suite 800, Dallas, TX 75225 | 14 regional offices',
+            'properties': '45,000+ apartment homes in 250+ communities',
             'vendor_link': 'https://www.riverstoneresidential.com/contact-us',
-            'description': 'Full-service property management company',
-            'property_types': 'Multifamily apartments',
-            'regions': 'Sunbelt and high-growth markets'
+            'description': 'Full-service property management since 2013. Contact: 214-572-7200 | Email: procurement@riverstoneresidential.com',
+            'property_types': 'Multifamily apartments - all classes (A, B, C)',
+            'regions': 'Sunbelt and high-growth markets: TX, Southeast, Mountain West, Southwest'
         },
         {
             'name': 'BH Management',
-            'location': 'Des Moines, IA (Nationwide)',
-            'properties': '40,000+ units',
+            'location': 'HQ: 1641 Bell Avenue, Suite 100, Des Moines, IA 50315 | 70+ offices in 30 states',
+            'properties': '40,000+ units in 350+ communities',
             'vendor_link': 'https://www.bhmanagement.com/contact',
-            'description': 'Third-party multifamily property management',
-            'property_types': 'Multifamily apartments, student housing',
-            'regions': 'All 50 states'
+            'description': 'Third-party multifamily management since 1993. Contact: 515-242-4474 | Email: vendorrelations@bhmanagement.com',
+            'property_types': 'Conventional multifamily, student housing, affordable housing, senior living',
+            'regions': 'All 50 states with strong presence in Midwest, Southeast, Texas, Mountain States'
         }
     ]
     
@@ -9606,11 +9606,11 @@ def populate_supply_contracts(force=False):
     # NOTE: Values are stored WITHOUT dollar signs to work with both TEXT and NUMERIC column types
         supplier_requests = [
             # High-value quick wins
-            {'title': 'Urgent: Hospital Network Cleaning Supplies - Multi-State', 'agency': 'Healthcare Consortium International', 'location': 'Multiple States', 'product_category': 'Medical Cleaning Supplies', 'estimated_value': '2500000', 'bid_deadline': '12/15/2025', 'description': 'Seeking suppliers for hospital-grade cleaning supplies for 50+ facilities across 15 states', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': True, 'contact_name': 'Sarah Johnson', 'contact_email': 'procurement@hci.com', 'contact_phone': '555-0100', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/01/2025'},
+            {'title': 'Urgent: Hospital Network Cleaning Supplies - Multi-State', 'agency': 'Healthcare Consortium International', 'location': 'Boston MA, Philadelphia PA, Atlanta GA, Houston TX, Phoenix AZ', 'product_category': 'Medical Cleaning Supplies', 'estimated_value': '2500000', 'bid_deadline': '12/15/2025', 'description': 'Seeking suppliers for hospital-grade cleaning supplies for 50+ facilities across 15 states. Facilities located in Boston Medical District (300 Longwood Ave), Philadelphia University City (3400 Civic Center Blvd), Atlanta Medical Center (1364 Clifton Rd NE), Houston Medical Center (6565 Fannin St), Phoenix Healthcare Campus (350 W Thomas Rd)', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': True, 'contact_name': 'Sarah Johnson', 'contact_email': 'procurement@hci.com', 'contact_phone': '617-555-0100', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/01/2025'},
             
-            {'title': 'Quick Win: School District Janitorial Supplies - CA, TX, FL', 'agency': 'National School Supply Network', 'location': 'California, Texas, Florida', 'product_category': 'Janitorial Supplies', 'estimated_value': '1200000', 'bid_deadline': '12/10/2025', 'description': 'Immediate need for eco-friendly cleaning supplies for 200+ schools', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': True, 'contact_name': 'Michael Chen', 'contact_email': 'supplies@nssn.com', 'contact_phone': '555-0101', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/02/2025'},
+            {'title': 'Quick Win: School District Janitorial Supplies - CA, TX, FL', 'agency': 'National School Supply Network', 'location': 'Los Angeles CA, San Diego CA, Dallas TX, Houston TX, Miami FL, Tampa FL', 'product_category': 'Janitorial Supplies', 'estimated_value': '1200000', 'bid_deadline': '12/10/2025', 'description': 'Immediate need for eco-friendly cleaning supplies for 200+ schools across California (LA Unified - 333 S Beaudry Ave, San Diego Unified - 4100 Normal St), Texas (Dallas ISD - 9400 N Central Expy, Houston ISD - 4400 W 18th St), Florida (Miami-Dade - 1450 NE 2nd Ave, Hillsborough County - 901 E Kennedy Blvd Tampa)', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': True, 'contact_name': 'Michael Chen', 'contact_email': 'supplies@nssn.com', 'contact_phone': '213-555-0101', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/02/2025'},
             
-            {'title': 'Emergency: Airport Terminal Cleaning Equipment - NY, IL, GA', 'agency': 'Airport Services Group', 'location': 'New York, Illinois, Georgia', 'product_category': 'Cleaning Equipment', 'estimated_value': '800000', 'bid_deadline': '12/08/2025', 'description': 'Industrial floor scrubbers and pressure washers for 3 major airports', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': False, 'contact_name': 'Robert Williams', 'contact_email': 'procurement@asg.com', 'contact_phone': '555-0102', 'is_quick_win': True, 'status': 'open', 'posted_date': '10/28/2025'},
+            {'title': 'Emergency: Airport Terminal Cleaning Equipment - NY, IL, GA', 'agency': 'Airport Services Group', 'location': 'JFK Airport NY (Building 14), O\'Hare Airport IL (Terminal 1), Hartsfield-Jackson Airport GA (North Terminal)', 'product_category': 'Cleaning Equipment', 'estimated_value': '800000', 'bid_deadline': '12/08/2025', 'description': 'Industrial floor scrubbers and pressure washers for 3 major airports: JFK International Airport Terminal 4 (Building 14, Jamaica NY 11430), O\'Hare International Terminal 1 (10000 W O\'Hare Ave, Chicago IL 60666), Hartsfield-Jackson North Terminal (6000 N Terminal Pkwy, Atlanta GA 30320)', 'website_url': 'https://sam.gov/content/opportunities', 'is_small_business_set_aside': False, 'contact_name': 'Robert Williams', 'contact_email': 'procurement@asg.com', 'contact_phone': '718-555-0102', 'is_quick_win': True, 'status': 'open', 'posted_date': '10/28/2025'},
             
             # Regular supplier opportunities by state
             {'title': 'Office Building Cleaning Supplies - Alabama', 'agency': 'Alabama Commercial Properties', 'location': 'Birmingham, AL', 'product_category': 'Commercial Supplies', 'estimated_value': '150000', 'bid_deadline': '01/15/2026', 'description': 'Annual supplier contract for office cleaning supplies', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Property Management', 'contact_email': 'supplies@alcp.com', 'contact_phone': '205-555-0100', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
