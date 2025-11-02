@@ -6830,6 +6830,69 @@ def admin_init_supply_contracts():
         }), 500
 
 
+@app.route('/admin/test-insert-supply')
+def admin_test_insert():
+    """Test route to insert a single supply contract and verify it works"""
+    try:
+        if not session.get('is_admin', False):
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        # Try to insert one test record
+        test_record = {
+            'title': 'TEST - Hospital Cleaning Supplies',
+            'agency': 'Test Healthcare Inc',
+            'location': 'Test City, VA',
+            'product_category': 'Medical Cleaning Supplies',
+            'estimated_value': '$100,000',
+            'bid_deadline': '12/31/2025',
+            'description': 'This is a test record to verify database insertion works',
+            'website_url': 'https://test.com',
+            'is_small_business_set_aside': True,
+            'contact_name': 'Test Contact',
+            'contact_email': 'test@test.com',
+            'contact_phone': '555-0000',
+            'is_quick_win': False,
+            'status': 'open',
+            'posted_date': '11/02/2025'
+        }
+        
+        print("🧪 Attempting to insert test record...")
+        db.session.execute(text('''
+            INSERT INTO supply_contracts 
+            (title, agency, location, product_category, estimated_value, bid_deadline, 
+             description, website_url, is_small_business_set_aside, contact_name, 
+             contact_email, contact_phone, is_quick_win, status, posted_date)
+            VALUES 
+            (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
+             :description, :website_url, :is_small_business_set_aside, :contact_name,
+             :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
+        '''), test_record)
+        
+        db.session.commit()
+        print("✅ Test record inserted successfully")
+        
+        # Count total records
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+        total_count = count_result[0] if count_result else 0
+        
+        return jsonify({
+            'success': True,
+            'message': 'Test record inserted successfully',
+            'total_count': total_count,
+            'test_record': test_record
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Test insert failed: {error_details}")
+        return jsonify({
+            'error': str(e),
+            'details': error_details
+        }), 500
+
+
 @app.route('/pricing-guide')
 @login_required
 def pricing_guide():
