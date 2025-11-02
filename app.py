@@ -2302,7 +2302,7 @@ def customer_dashboard():
         if cached_data:
             stats = cached_data
         else:
-            # Get stats (will be cached)
+            # Get stats from all lead sources
             gov_contracts = 0
             try:
                 gov_contracts = db.session.execute(text(
@@ -2327,6 +2327,14 @@ def customer_dashboard():
             except:
                 pass
             
+            residential_leads = 0
+            try:
+                residential_leads = db.session.execute(text(
+                    "SELECT COUNT(*) FROM residential_leads WHERE status = 'new'"
+                )).scalar() or 0
+            except:
+                pass
+            
             quick_wins = 0
             try:
                 quick_wins = db.session.execute(text(
@@ -2338,13 +2346,15 @@ def customer_dashboard():
             except:
                 pass
             
-            total_leads = gov_contracts + supply_contracts + commercial_leads
+            # Total includes government, supply, commercial, and residential
+            total_leads = gov_contracts + supply_contracts + commercial_leads + residential_leads
             
             stats = {
                 'total_leads': total_leads,
                 'government_contracts': gov_contracts,
                 'supply_contracts': supply_contracts,
                 'commercial_leads': commercial_leads,
+                'residential_leads': residential_leads,
                 'quick_wins': quick_wins
             }
             
@@ -2383,29 +2393,87 @@ def customer_dashboard():
             print(f"Error getting recommendations: {e}")
             recommended_leads = []
         
-        # Get latest opportunities (optimized query)
+        # Get latest opportunities from all sources (optimized query)
         latest_opportunities = []
         try:
-            # Single query with UNION instead of multiple queries
-            opportunities = db.session.execute(text('''
-                SELECT title, agency, location, value, created_at, 
-                       'Government Contract' as lead_type, id, 'government' as link_type
-                FROM contracts 
-                ORDER BY created_at DESC
-                LIMIT 5
-            ''')).fetchall()
+            # Get government contracts
+            try:
+                gov_opps = db.session.execute(text('''
+                    SELECT title, agency, location, value, created_at, 
+                           'Government Contract' as lead_type, id
+                    FROM contracts 
+                    ORDER BY created_at DESC
+                    LIMIT 10
+                ''')).fetchall()
+                
+                for row in gov_opps:
+                    latest_opportunities.append({
+                        'title': row[0],
+                        'agency': row[1],
+                        'location': row[2],
+                        'value': row[3],
+                        'posted_date': row[4],
+                        'lead_type': row[5],
+                        'id': row[6],
+                        'link': url_for('contracts')
+                    })
+            except Exception as e:
+                print(f"Error fetching government contracts: {e}")
             
-            for row in opportunities:
-                latest_opportunities.append({
-                    'title': row[0],
-                    'agency': row[1],
-                    'location': row[2],
-                    'value': row[3],
-                    'posted_date': row[4],
-                    'lead_type': row[5],
-                    'id': row[6],
-                    'link': url_for('contracts')
-                })
+            # Get commercial requests
+            try:
+                com_reqs = db.session.execute(text('''
+                    SELECT business_name, business_type, city || ', VA', budget_range, created_at, 
+                           'Commercial Request' as lead_type, id
+                    FROM commercial_lead_requests 
+                    WHERE status = 'open'
+                    ORDER BY created_at DESC
+                    LIMIT 5
+                ''')).fetchall()
+                
+                for row in com_reqs:
+                    latest_opportunities.append({
+                        'title': f"Commercial Cleaning - {row[0]}",
+                        'agency': row[1],
+                        'location': row[2],
+                        'value': row[3] or 'Contact for quote',
+                        'posted_date': row[4],
+                        'lead_type': row[5],
+                        'id': row[6],
+                        'link': url_for('customer_leads')
+                    })
+            except Exception as e:
+                print(f"Error fetching commercial requests: {e}")
+            
+            # Get residential requests
+            try:
+                res_reqs = db.session.execute(text('''
+                    SELECT homeowner_name, property_type, city || ', VA', estimated_value, created_at, 
+                           'Residential Request' as lead_type, id
+                    FROM residential_leads 
+                    WHERE status = 'new'
+                    ORDER BY created_at DESC
+                    LIMIT 5
+                ''')).fetchall()
+                
+                for row in res_reqs:
+                    latest_opportunities.append({
+                        'title': f"Residential Cleaning - {row[1]}",
+                        'agency': f"Homeowner: {row[0]}",
+                        'location': row[2],
+                        'value': row[3] or 'Contact for quote',
+                        'posted_date': row[4],
+                        'lead_type': row[5],
+                        'id': row[6],
+                        'link': url_for('customer_leads')
+                    })
+            except Exception as e:
+                print(f"Error fetching residential requests: {e}")
+            
+            # Sort all opportunities by date and limit to 15 most recent
+            latest_opportunities.sort(key=lambda x: x['posted_date'] if x['posted_date'] else '', reverse=True)
+            latest_opportunities = latest_opportunities[:15]
+            
         except Exception as e:
             print(f"Error fetching latest opportunities: {e}")
         
