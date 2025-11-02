@@ -31,7 +31,10 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-danger" onclick="neverShowOnboarding()">
+                    <i class="fas fa-times-circle me-2"></i>Never Show Again
+                </button>
                 <button type="button" class="btn btn-secondary" onclick="skipOnboarding()">Skip Tour</button>
             </div>
         </div>
@@ -676,6 +679,18 @@ function skipOnboarding() {
         body: JSON.stringify({step: 'skipped'})
     }).then(() => {
         bootstrap.Modal.getInstance(document.getElementById('onboardingModal')).hide();
+    });
+}
+
+function neverShowOnboarding() {
+    fetch('/api/disable-onboarding', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('onboardingModal')).hide();
+        }
     });
 }
 

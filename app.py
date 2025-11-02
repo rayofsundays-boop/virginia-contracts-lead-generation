@@ -329,13 +329,18 @@ def get_leads_by_type(lead_type, limit=5):
     return get_quick_win_leads(limit)
 
 def check_onboarding_status(user_email):
-    """Check if user has completed onboarding"""
+    """Check if user has completed onboarding or disabled it"""
     try:
-        status = db.session.execute(text('''
-            SELECT onboarding_completed FROM user_onboarding WHERE user_email = :email
-        '''), {'email': user_email}).scalar()
+        result = db.session.execute(text('''
+            SELECT onboarding_completed, onboarding_disabled 
+            FROM user_onboarding 
+            WHERE user_email = :email
+        '''), {'email': user_email}).fetchone()
         
-        return status or False
+        if result:
+            # If onboarding is disabled or completed, return True (don't show modal)
+            return result[0] or result[1]
+        return False
     except:
         return False
 
@@ -3240,6 +3245,26 @@ def api_complete_onboarding():
             INSERT INTO user_onboarding (user_email, completed_{step})
             VALUES (:email, TRUE)
             ON CONFLICT (user_email) DO UPDATE SET completed_{step} = TRUE
+        '''), {'email': user_email})
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/disable-onboarding', methods=['POST'])
+@login_required
+def api_disable_onboarding():
+    """Permanently disable onboarding modal for user"""
+    try:
+        user_email = session.get('user_email')
+        
+        # Mark onboarding as permanently disabled
+        db.session.execute(text('''
+            INSERT INTO user_onboarding (user_email, onboarding_disabled)
+            VALUES (:email, TRUE)
+            ON CONFLICT (user_email) DO UPDATE SET onboarding_disabled = TRUE
         '''), {'email': user_email})
         db.session.commit()
         
