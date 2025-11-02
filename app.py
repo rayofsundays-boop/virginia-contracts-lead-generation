@@ -5449,6 +5449,7 @@ def college_university_leads():
             'contract_value': '$2.5M - $3.5M annually',
             'services_needed': 'Daily janitorial services, floor care, carpet cleaning, window washing, special event cleaning',
             'current_contractor': 'Contract up for renewal 2025',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Facilities Management Department',
             'phone': '(757) 221-1234',
             'email': 'facilitiesprocurement@wm.edu',
@@ -5467,6 +5468,7 @@ def college_university_leads():
             'contract_value': '$1.8M - $2.3M annually',
             'services_needed': 'Custodial services, dormitory cleaning, athletic facility maintenance, dining hall sanitation',
             'current_contractor': 'Accepting proposals for 2025-2028 contract',
+            'status': 'active',  # Currently accepting bids
             'procurement_contact': 'Purchasing & Contract Services',
             'phone': '(757) 594-7000',
             'email': 'procurement@cnu.edu',
@@ -5485,6 +5487,7 @@ def college_university_leads():
             'contract_value': '$2.2M - $3.0M annually',
             'services_needed': 'Campus-wide janitorial, residence hall deep cleaning, laboratory sanitation, historic building care',
             'current_contractor': 'Competitive bidding open for 2025',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Facilities Planning & Management',
             'phone': '(757) 727-5000',
             'email': 'facilities@hamptonu.edu',
@@ -5503,6 +5506,7 @@ def college_university_leads():
             'contract_value': '$4.5M - $5.5M annually',
             'services_needed': 'Comprehensive campus cleaning, research lab sanitation, medical building maintenance, athletic facilities',
             'current_contractor': 'Major contract bid expected Q4 2024',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Procurement Services',
             'phone': '(757) 683-3000',
             'email': 'procurement@odu.edu',
@@ -5521,6 +5525,7 @@ def college_university_leads():
             'contract_value': '$1.5M - $2.0M annually',
             'services_needed': 'General campus custodial services, dormitory cleaning, classroom maintenance, cafeteria sanitation',
             'current_contractor': 'Reviewing vendor applications for 2025-2027',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Office of Procurement & Strategic Sourcing',
             'phone': '(757) 823-8600',
             'email': 'procurement@nsu.edu',
@@ -5539,6 +5544,7 @@ def college_university_leads():
             'contract_value': '$1.2M - $1.8M annually',
             'services_needed': 'Medical-grade cleaning, laboratory decontamination, operating theater sanitation, biohazard cleanup',
             'current_contractor': 'Specialized medical facility cleaning required',
+            'status': 'active',  # Ongoing need
             'procurement_contact': 'Facilities & Safety Services',
             'phone': '(757) 446-5000',
             'email': 'facilitiesinfo@evms.edu',
@@ -5557,6 +5563,7 @@ def college_university_leads():
             'contract_value': '$3.0M - $4.0M annually (all campuses)',
             'services_needed': 'Multi-site custodial services, classroom cleaning, vocational lab maintenance, library sanitation',
             'current_contractor': 'System-wide contract awarded through VCCS',
+            'status': 'active',  # Current contract
             'procurement_contact': 'Virginia Community College System Procurement',
             'phone': '(757) 822-1122',
             'email': 'vccs.procurement@vccs.edu',
@@ -5575,6 +5582,7 @@ def college_university_leads():
             'contract_value': '$900K - $1.4M annually',
             'services_needed': 'Campus custodial, chapel/sanctuary cleaning, media production facility maintenance, residence halls',
             'current_contractor': 'Accepting bids for 2025 academic year',
+            'status': 'active',  # Currently accepting bids
             'procurement_contact': 'Facilities Management',
             'phone': '(757) 352-4127',
             'email': 'facilities@regent.edu',
@@ -5641,6 +5649,7 @@ def k12_school_leads():
             'contract_value': '$3.5M - $4.2M annually',
             'services_needed': 'Daily custodial services, floor care, cafeteria deep cleaning, gymnasium maintenance, summer deep clean',
             'current_contractor': 'Bid opening Q1 2025',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Hampton City Schools Procurement',
             'phone': '(757) 727-2000',
             'email': 'procurement@hampton.k12.va.us',
@@ -5659,6 +5668,7 @@ def k12_school_leads():
             'contract_value': '$5.0M - $6.0M annually',
             'services_needed': 'Comprehensive custodial, kitchen/cafeteria sanitation, athletic facility cleaning, event setup/cleanup',
             'current_contractor': 'Major contract renewal cycle 2025-2028',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'NNPS Facilities & Operations',
             'phone': '(757) 591-4500',
             'email': 'procurement@nn.k12.va.us',
@@ -5677,6 +5687,7 @@ def k12_school_leads():
             'contract_value': '$12M - $15M annually',
             'services_needed': 'District-wide custodial, coastal facility care (salt air), sports complex maintenance, performing arts centers',
             'current_contractor': 'RFP expected Fall 2024',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'VBCPS Purchasing Department',
             'phone': '(757) 263-1000',
             'email': 'purchasing@vbschools.com',
@@ -5695,6 +5706,7 @@ def k12_school_leads():
             'contract_value': '$2.0M - $2.8M annually',
             'services_needed': 'School custodial services, agricultural education facility maintenance, vocational building cleaning',
             'current_contractor': 'Accepting proposals for 2025-2027 contract',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Suffolk Schools Purchasing',
             'phone': '(757) 925-5600',
             'email': 'purchasing@spsk12.net',
@@ -5713,6 +5725,7 @@ def k12_school_leads():
             'contract_value': '$2.2M - $2.9M annually',
             'services_needed': 'Daily janitorial, historic building preservation cleaning, new construction maintenance, grounds support',
             'current_contractor': 'Contract cycle begins Q3 2024',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'WJCC Schools Business Office',
             'phone': '(757) 603-6300',
             'email': 'businessoffice@wjccschools.org',
@@ -5731,6 +5744,7 @@ def k12_school_leads():
             'contract_value': '$7.5M - $9.0M annually',
             'services_needed': 'System-wide custodial, Career & Technical Education facility maintenance, aquatic center cleaning, turf field care',
             'current_contractor': 'Major RFP planned for FY2025-2026',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Chesapeake Public Schools Procurement',
             'phone': '(757) 547-0153',
             'email': 'procurement@cpschools.com',
@@ -5749,6 +5763,7 @@ def k12_school_leads():
             'contract_value': '$5.5M - $7.0M annually',
             'services_needed': 'Urban school custodial, historic building care, magnet program facilities, special education centers',
             'current_contractor': 'Contract under review for 2025',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'NPS Procurement Services',
             'phone': '(757) 628-3830',
             'email': 'procurement@nps.k12.va.us',
@@ -5767,6 +5782,7 @@ def k12_school_leads():
             'contract_value': '$2.5M - $3.2M annually',
             'services_needed': 'School cleaning services, waterfront facility maintenance, Title I school support, summer program cleaning',
             'current_contractor': 'Open bidding for 2025-2027',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'Portsmouth Schools Purchasing',
             'phone': '(757) 393-8751',
             'email': 'purchasing@portsmouthschools.org',
@@ -5785,6 +5801,7 @@ def k12_school_leads():
             'contract_value': '$2.4M - $3.1M annually',
             'services_needed': 'Custodial services, athletic complex cleaning, performing arts theater maintenance, STEM lab sanitation',
             'current_contractor': 'RFP cycle Q4 2024',
+            'status': 'upcoming',  # Not yet posted
             'procurement_contact': 'York County Schools Business Office',
             'phone': '(757) 898-0300',
             'email': 'procurement@york.k12.va.us',
@@ -5803,6 +5820,7 @@ def k12_school_leads():
             'contract_value': '$180K - $250K annually',
             'services_needed': 'Daily janitorial, chapel cleaning, athletic facility maintenance, event setup',
             'current_contractor': 'Accepting vendor proposals',
+            'status': 'active',  # Currently accepting bids
             'procurement_contact': 'Business Office',
             'phone': '(757) 596-7247',
             'email': 'business@peninsulacatholic.org',
