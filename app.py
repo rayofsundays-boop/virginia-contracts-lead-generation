@@ -8878,40 +8878,134 @@ def procurement_lifecycle():
 
 @app.route('/community-forum')
 def community_forum():
-    """Public community forum displaying approved cleaning requests"""
+    """Public community forum displaying approved cleaning requests with filters and pagination"""
     try:
-        # Get approved commercial requests
-        commercial_requests = db.session.execute(text('''
-            SELECT id, business_name, contact_name, city, business_type, 
-                   square_footage, frequency, services_needed, budget_range, 
-                   urgency, created_at
-            FROM commercial_lead_requests 
-            WHERE status = 'approved'
-            ORDER BY created_at DESC
-        ''')).fetchall()
-        
-        # Get approved residential requests
-        residential_requests = db.session.execute(text('''
-            SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
-                   square_footage, cleaning_frequency, services_needed, 
-                   estimated_value, created_at
-            FROM residential_leads 
-            WHERE status = 'approved'
-            ORDER BY created_at DESC
-        ''')).fetchall()
-        
-        return render_template('community_forum.html',
-                             commercial_requests=commercial_requests,
-                             residential_requests=residential_requests,
-                             total_requests=len(commercial_requests) + len(residential_requests))
-    
+        # Query params
+        q = (request.args.get('q') or '').strip()
+        city = (request.args.get('city') or '').strip()
+        urgency = (request.args.get('urgency') or '').strip().lower()
+        req_type = (request.args.get('type') or 'all').strip().lower()  # 'all' | 'commercial' | 'residential'
+        active_tab = (request.args.get('tab') or 'all').strip().lower()
+
+        # Pagination params (separate for commercial/residential to keep tabs independent)
+        def _int_arg(name, default, min_v=1, max_v=1000):
+            try:
+                v = int(request.args.get(name, default))
+                return max(min_v, min(v, max_v))
+            except Exception:
+                return default
+
+        per_page = _int_arg('per_page', 10, 5, 50)
+        page_comm = _int_arg('page_comm', 1)
+        page_res = _int_arg('page_res', 1)
+
+        # Build filters for commercial
+        comm_where = ["status = 'approved'"]
+        comm_params = {}
+        if city:
+            comm_where.append('LOWER(city) = :comm_city')
+            comm_params['comm_city'] = city.lower()
+        if q:
+            comm_where.append('(LOWER(business_name) LIKE :comm_q OR LOWER(contact_name) LIKE :comm_q OR LOWER(services_needed) LIKE :comm_q OR LOWER(city) LIKE :comm_q)')
+            comm_params['comm_q'] = f"%{q.lower()}%"
+        if urgency:
+            # Only applicable to commercial
+            comm_where.append('LOWER(urgency) = :comm_urg')
+            comm_params['comm_urg'] = urgency
+
+        comm_where_sql = ' AND '.join(comm_where)
+
+        # Build filters for residential
+        res_where = ["status = 'approved'"]
+        res_params = {}
+        if city:
+            res_where.append('LOWER(city) = :res_city')
+            res_params['res_city'] = city.lower()
+        if q:
+            res_where.append('(LOWER(homeowner_name) LIKE :res_q OR LOWER(services_needed) LIKE :res_q OR LOWER(city) LIKE :res_q OR LOWER(property_type) LIKE :res_q)')
+            res_params['res_q'] = f"%{q.lower()}%"
+
+        res_where_sql = ' AND '.join(res_where)
+
+        # Counts for pagination
+        comm_count = db.session.execute(text(f'''
+            SELECT COUNT(1) FROM commercial_lead_requests WHERE {comm_where_sql}
+        '''), comm_params).scalar()
+        res_count = db.session.execute(text(f'''
+            SELECT COUNT(1) FROM residential_leads WHERE {res_where_sql}
+        '''), res_params).scalar()
+
+        # Pages
+        def _pages(count):
+            return max(1, (count + per_page - 1) // per_page)
+
+        comm_pages = _pages(comm_count)
+        res_pages = _pages(res_count)
+        page_comm = min(page_comm, comm_pages)
+        page_res = min(page_res, res_pages)
+
+        # Queries with pagination
+        comm_offset = (page_comm - 1) * per_page
+        res_offset = (page_res - 1) * per_page
+
+        commercial_requests = []
+        residential_requests = []
+
+        if req_type in ('all', 'commercial'):
+            commercial_requests = db.session.execute(text(f'''
+                SELECT id, business_name, contact_name, city, business_type, 
+                       square_footage, frequency, services_needed, budget_range, 
+                       urgency, created_at
+                FROM commercial_lead_requests 
+                WHERE {comm_where_sql}
+                ORDER BY created_at DESC
+                LIMIT :comm_limit OFFSET :comm_offset
+            '''), {**comm_params, 'comm_limit': per_page, 'comm_offset': comm_offset}).fetchall()
+
+        if req_type in ('all', 'residential'):
+            residential_requests = db.session.execute(text(f'''
+                SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
+                       square_footage, cleaning_frequency, services_needed, 
+                       estimated_value, created_at
+                FROM residential_leads 
+                WHERE {res_where_sql}
+                ORDER BY created_at DESC
+                LIMIT :res_limit OFFSET :res_offset
+            '''), {**res_params, 'res_limit': per_page, 'res_offset': res_offset}).fetchall()
+
+        # City options (distinct)
+        comm_cities = [r[0] for r in db.session.execute(text('''
+            SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''
+        ''')).fetchall()]
+        res_cities = [r[0] for r in db.session.execute(text('''
+            SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''
+        ''')).fetchall()]
+        all_cities = sorted({c for c in comm_cities + res_cities if isinstance(c, str) and c.strip()})
+
+        return render_template(
+            'community_forum.html',
+            commercial_requests=commercial_requests,
+            residential_requests=residential_requests,
+            total_requests=(comm_count if req_type in ('all', 'commercial') else 0) + (res_count if req_type in ('all', 'residential') else 0),
+            # filters
+            q=q, city=city, urgency=urgency, req_type=req_type, active_tab=active_tab,
+            cities=all_cities,
+            # pagination
+            per_page=per_page,
+            page_comm=page_comm, comm_pages=comm_pages, comm_count=comm_count,
+            page_res=page_res, res_pages=res_pages, res_count=res_count,
+        )
+
     except Exception as e:
         print(f"Error loading community forum: {e}")
         flash('Error loading community forum', 'error')
         return render_template('community_forum.html',
                              commercial_requests=[],
                              residential_requests=[],
-                             total_requests=0)
+                             total_requests=0,
+                             q='', city='', urgency='', req_type='all', active_tab='all',
+                             cities=[], per_page=10, page_comm=1, comm_pages=1, comm_count=0,
+                             page_res=1, res_pages=1, res_count=0)
 
 @app.route('/admin-approve-request', methods=['POST'])
 def admin_approve_request():
