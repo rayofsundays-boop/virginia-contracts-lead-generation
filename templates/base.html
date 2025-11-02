@@ -322,8 +322,10 @@
         }
     </style>
     
-    <!-- Global Search System -->
+    <!-- Global Search System (Subscribers Only) -->
+    {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/search-system.css') }}">
+    {% endif %}
 </head>
 <body>
     <!-- Navigation Header -->
@@ -909,7 +911,9 @@
         });
     </script>
     
-    <!-- Global Search System -->
+    <!-- Global Search System (Subscribers Only) -->
+    {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
     <script src="{{ url_for('static', filename='js/search-system.js') }}"></script>
+    {% endif %}
 </body>
 </html>
