@@ -295,6 +295,23 @@
                 <div class="card-body py-5">
                     <i class="fas fa-search fa-4x text-muted mb-4"></i>
                     <h3 class="fw-bold mb-3">No Quick Wins Available</h3>
+                    {% if is_admin %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Admin Notice:</strong> The supply_contracts table appears to be empty.
+                    </div>
+                    <p class="text-muted mb-4">
+                        Click the button below to populate the database with 200+ supply contracts.
+                    </p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="/admin/populate-if-empty" class="btn btn-success btn-lg">
+                            <i class="fas fa-database me-2"></i>Populate Database
+                        </a>
+                        <a href="/admin/db-stats" class="btn btn-info btn-lg" target="_blank">
+                            <i class="fas fa-chart-bar me-2"></i>View Stats
+                        </a>
+                    </div>
+                    {% else %}
                     <p class="text-muted mb-4">
                         There are no urgent opportunities matching your filters right now.
                         <br>Quick Win opportunities are added daily - check back soon!
@@ -307,6 +324,7 @@
                             <i class="fas fa-list me-2"></i>View All Leads
                         </a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -7098,6 +7098,10 @@ def quick_wins():
                 'source': 'supply'
             })
         
+        # If admin and no supply contracts, show helpful message
+        if is_admin and len(supply_contracts_data) == 0:
+            flash('No supply contracts found. Visit /admin/populate-if-empty to populate the database.', 'info')
+        
         # Add commercial requests
         for comm in urgent_commercial:
             all_quick_wins.append({
