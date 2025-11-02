@@ -2303,9 +2303,13 @@ def customer_dashboard():
             stats = cached_data
         else:
             # Get stats (will be cached)
-            gov_contracts = db.session.execute(text(
-                "SELECT COUNT(*) FROM contracts WHERE status = 'open'"
-            )).scalar() or 0
+            gov_contracts = 0
+            try:
+                gov_contracts = db.session.execute(text(
+                    "SELECT COUNT(*) FROM contracts"
+                )).scalar() or 0
+            except:
+                pass
             
             supply_contracts = 0
             try:
@@ -2364,11 +2368,10 @@ def customer_dashboard():
         try:
             # Single query with UNION instead of multiple queries
             opportunities = db.session.execute(text('''
-                SELECT title, agency, location, estimated_value, posted_date, 
+                SELECT title, agency, location, value, created_at, 
                        'Government Contract' as lead_type, id, 'government' as link_type
                 FROM contracts 
-                WHERE status = 'open'
-                ORDER BY posted_date DESC
+                ORDER BY created_at DESC
                 LIMIT 5
             ''')).fetchall()
             
@@ -2381,7 +2384,7 @@ def customer_dashboard():
                     'posted_date': row[4],
                     'lead_type': row[5],
                     'id': row[6],
-                    'link': url_for('government_contracts')
+                    'link': url_for('contracts')
                 })
         except Exception as e:
             print(f"Error fetching latest opportunities: {e}")
