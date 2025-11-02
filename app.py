@@ -7371,6 +7371,21 @@ def quick_wins():
         # Combine all leads
         all_quick_wins = []
         
+        # Phone sanitizer: reject placeholders like 555-XXXX and clearly invalid numbers
+        import re as _re
+        def _sanitize_phone(p):
+            if not p:
+                return 'N/A'
+            s = str(p).strip()
+            # Remove non-digits for validation
+            digits = ''.join(ch for ch in s if ch.isdigit())
+            if len(digits) < 10:
+                return 'N/A'
+            # Reject North American 555 exchange placeholders
+            if _re.match(r'^\D*\(?\d{3}\)?\D*555\D*\d{4}\D*$', s):
+                return 'N/A'
+            return s
+
         # Helpers: normalize deadline strings to display-friendly format
         def _norm_deadline(s):
             try:
@@ -7415,7 +7430,7 @@ def quick_wins():
                 'is_small_business': supply[9],
                 'contact_name': supply[10] or 'Procurement Office',
                 'email': supply[11] or 'N/A',
-                'phone': supply[12] or 'N/A',
+                'phone': _sanitize_phone(supply[12]),
                 'lead_type': 'Supply Contract' + (' - Quick Win' if is_quick_win else ''),
                 'urgency_level': urgency_level,
                 'source': 'supply'
@@ -7438,7 +7453,7 @@ def quick_wins():
                 'description': f"Urgency: {comm[6]}",
                 'contact_name': comm[8] or 'Business Contact',
                 'email': comm[9] or 'N/A',
-                'phone': comm[10] or 'N/A',
+                'phone': _sanitize_phone(comm[10]),
                 'website_url': None,
                 'is_small_business': False,
                 'lead_type': 'Commercial Request',

@@ -49,7 +49,18 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4. Configure Environment (Optional but Recommended)
+Copy `.env.example` to `.env` and fill in values as needed:
+```bash
+cp .env.example .env
+```
+
+Key variables:
+- `INTERNATIONAL_RSS_URL` – public procurement RSS feed for international quick wins (cleaning-related)
+- `CRON_SECRET` – token for hitting `/cron/supply-daily`
+- `PAYPAL_*` – subscription and payment configuration
+
+### 5. Run the Application
 ```bash
 python app.py
 ```
@@ -146,6 +157,18 @@ The application comes pre-loaded with 10 sample government contracts:
 1. View registered companies in the "Leads" section
 2. Track company capabilities and experience levels
 3. Monitor registration trends and statistics
+4. Populate/refresh supply contracts:
+	- `GET /admin/populate-if-empty` – populate if empty
+	- `GET /admin/repopulate-supply-contracts` – force repopulation
+	- `GET /admin/fetch-international-quick-wins` – fetch UK + RSS (deduped)
+	- `GET /admin/db-stats` – view DB stats
+	- `GET /cron/supply-daily?token=CRON_SECRET` – cron-safe refresh
+
+### International Sources (Quick Wins)
+- UK Contracts Finder via OCDS Search API (cleaning keyword)
+- Generic RSS adapter (set `INTERNATIONAL_RSS_URL`)
+
+All inbound values and deadlines are normalized with guards; missing/ambiguous fields are logged with warnings.
 
 ## Development
 
@@ -159,6 +182,14 @@ Contracts can be added directly to the database or by modifying the sample data 
 
 ### Database Management
 The SQLite database (`leads.db`) is created automatically on first run. For production use, consider upgrading to PostgreSQL or MySQL.
+
+### Testing International Ingestion (Optional)
+Use the included script for a quick smoke test:
+```bash
+export TEST_LIMIT=10
+export INTERNATIONAL_RSS_URL="https://your-procurement-feed.example/rss"
+"/Users/chinneaquamatthews/Lead Generartion for Cleaning Contracts (VA) ELITE/.venv/bin/python" scripts/test_international_sources.py
+```
 
 ## Contributing
 
