@@ -4872,8 +4872,8 @@ def admin_logout():
     return redirect('/')
 
 @app.route('/admin-reset-password', methods=['POST'])
-def admin_reset_password():
-    """Admin function to reset user password"""
+def admin_reset_password_api():
+    """Admin function to reset user password via API"""
     if not session.get('is_admin'):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
