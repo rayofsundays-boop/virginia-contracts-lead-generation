@@ -287,6 +287,9 @@
             }
         }
     </style>
+    
+    <!-- Global Search System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/search-system.css') }}">
 </head>
 <body>
     <!-- Navigation Header -->
@@ -656,5 +659,8 @@
         function checkCreditsBeforeRequest(callback) { return true; }
         function updateCreditsAfterRequest(creditsUsed = 0) {}
     </script>
+    
+    <!-- Global Search System -->
+    <script src="{{ url_for('static', filename='js/search-system.js') }}"></script>
 </body>
 </html>
