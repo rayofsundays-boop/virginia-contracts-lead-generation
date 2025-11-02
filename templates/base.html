@@ -95,6 +95,9 @@
         .text-primary {
             color: var(--primary-color) !important;
         }
+        .text-purple {
+            color: #764ba2 !important;
+        }
         .navbar-dark.bg-primary {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
         }
@@ -167,6 +170,37 @@
         .dropdown-item i {
             width: 18px;
             text-align: center;
+        }
+        
+        .dropdown-header {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.75rem 1.15rem 0.35rem;
+        }
+        
+        .dropdown-item small {
+            font-size: 0.75rem;
+        }
+        
+        .lead-link {
+            cursor: pointer;
+        }
+        
+        .lead-link:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white !important;
+        }
+        
+        .lead-link:hover .badge {
+            background-color: white !important;
+            color: var(--warning-color) !important;
+        }
+        
+        .lead-link:hover small {
+            color: rgba(255, 255, 255, 0.9) !important;
         }
         
         .btn-outline-light {
@@ -308,18 +342,75 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('index') }}">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('contracts') }}">Local Government</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('federal_contracts') }}">Federal</a>
-                        </li>
-                        <li class="nav-item quick-wins-nav">
-                            <a class="nav-link quick-wins-link" href="{{ url_for('quick_wins') }}" title="Includes Supply Opportunities">
-                                <i class="fas fa-bolt me-1"></i>Quick Wins & Supply
-                                <span class="badge bg-warning text-dark ms-1 pulse-badge">PRO</span>
+                        
+                        <!-- Leads Dropdown with All Lead Types -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="leadsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-briefcase me-1"></i>Leads
                             </a>
+                            <ul class="dropdown-menu" aria-labelledby="leadsMenu">
+                                <li class="dropdown-header">Government Contracts</li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('federal_contracts') }}"
+                                       data-lead-category="federal"
+                                       data-requires-subscription="false">
+                                        <i class="fas fa-landmark me-2 text-primary"></i>Federal Contracts
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('contracts') }}"
+                                       data-lead-category="local"
+                                       data-requires-subscription="false">
+                                        <i class="fas fa-city me-2 text-info"></i>Local Government (VA Cities)
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <li class="dropdown-header">Commercial & Education</li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('commercial_contracts') }}"
+                                       data-lead-category="commercial"
+                                       data-requires-subscription="false">
+                                        <i class="fas fa-building me-2 text-success"></i>Commercial Properties
+                                        <small class="text-muted d-block ms-4">124+ Property Managers</small>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('k12_school_leads') }}"
+                                       data-lead-category="education"
+                                       data-requires-subscription="true">
+                                        <i class="fas fa-school me-2 text-warning"></i>K-12 Schools
+                                        <span class="badge bg-warning text-dark ms-2">Subscribers</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('college_university_leads') }}"
+                                       data-lead-category="education"
+                                       data-requires-subscription="true">
+                                        <i class="fas fa-university me-2 text-purple"></i>Colleges & Universities
+                                        <span class="badge bg-warning text-dark ms-2">Subscribers</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <li class="dropdown-header">Supply Opportunities</li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('quick_wins') }}"
+                                       data-lead-category="supply"
+                                       data-requires-subscription="false">
+                                        <i class="fas fa-bolt me-2 text-danger"></i>Quick Wins & Supply
+                                        <span class="badge bg-danger ms-2">PRO</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('mini_toolbox') }}">
                                 <i class="fas fa-toolbox me-1"></i>Mini Toolbox
@@ -658,6 +749,153 @@
     <script>
         function checkCreditsBeforeRequest(callback) { return true; }
         function updateCreditsAfterRequest(creditsUsed = 0) {}
+    </script>
+    
+    <!-- Leads Dropdown 3-Click Limit Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle leads dropdown links with click tracking
+            const leadLinks = document.querySelectorAll('.lead-link');
+            
+            leadLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const requiresSubscription = this.getAttribute('data-requires-subscription') === 'true';
+                    const category = this.getAttribute('data-lead-category');
+                    
+                    // If this is an education lead that requires subscription
+                    if (requiresSubscription) {
+                        e.preventDefault();
+                        
+                        // Check subscription status and lead access
+                        fetch('/api/check-lead-access')
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.is_unlimited) {
+                                    // Subscriber - allow access
+                                    window.location.href = this.href;
+                                } else if (data.can_view) {
+                                    // Free user with clicks remaining
+                                    // Track the click
+                                    fetch('/api/track-lead-click', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            lead_id: category,
+                                            lead_type: 'education'
+                                        })
+                                    })
+                                    .then(res => res.json())
+                                    .then(trackData => {
+                                        if (trackData.success) {
+                                            // Show remaining clicks message
+                                            const remaining = trackData.remaining_free_views;
+                                            if (remaining > 0) {
+                                                showToast(`You have ${remaining} free view${remaining !== 1 ? 's' : ''} remaining`, 'info');
+                                            }
+                                            // Allow navigation
+                                            window.location.href = this.href;
+                                        } else {
+                                            showSubscriptionModal();
+                                        }
+                                    });
+                                } else {
+                                    // Free user - limit reached
+                                    showSubscriptionModal();
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error checking lead access:', err);
+                                // Allow access on error (fail open)
+                                window.location.href = this.href;
+                            });
+                    }
+                    // For non-subscription leads, allow normal navigation
+                });
+            });
+            
+            function showSubscriptionModal() {
+                // Create modal
+                const modalHTML = `
+                    <div class="modal fade" id="subscriptionRequiredModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-lock me-2"></i>Subscription Required
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center py-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-star fa-3x text-warning"></i>
+                                    </div>
+                                    <h4 class="mb-3">Unlock Education Leads!</h4>
+                                    <p class="mb-4">You've used your 3 free views. Subscribe now to access:</p>
+                                    <ul class="text-start mb-4" style="max-width: 400px; margin: 0 auto;">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited K-12 School Leads</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>College & University Contracts</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Commercial Property Leads</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Global Search Access</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Personalized Suggestions</li>
+                                    </ul>
+                                    <a href="/pricing" class="btn btn-warning btn-lg px-5">
+                                        <i class="fas fa-crown me-2"></i>Subscribe Now
+                                    </a>
+                                </div>
+                                <div class="modal-footer justify-content-center">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Maybe Later</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                const existingModal = document.getElementById('subscriptionRequiredModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('subscriptionRequiredModal'));
+                modal.show();
+                
+                // Clean up after modal is hidden
+                document.getElementById('subscriptionRequiredModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            }
+            
+            function showToast(message, type = 'info') {
+                const toastHTML = `
+                    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                        <div class="toast align-items-center text-white bg-${type === 'info' ? 'primary' : 'warning'} border-0" role="alert">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', toastHTML);
+                const toastElement = document.querySelector('.toast-container:last-child .toast');
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show();
+                
+                // Remove after hidden
+                toastElement.addEventListener('hidden.bs.toast', function() {
+                    this.closest('.toast-container').remove();
+                });
+            }
+        });
     </script>
     
     <!-- Global Search System -->
