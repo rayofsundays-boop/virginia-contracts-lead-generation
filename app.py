@@ -2728,7 +2728,7 @@ def user_profile():
                     SELECT 
                         (SELECT COUNT(*) FROM commercial_lead_requests WHERE status != 'open') +
                         (SELECT COUNT(*) FROM residential_leads WHERE status != 'new')
-                '')).scalar() or 0
+                ''')).scalar() or 0
             except:
                 pass
             
