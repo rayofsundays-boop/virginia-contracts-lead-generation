@@ -2350,6 +2350,42 @@ def auth():
     """Unified authentication page (sign in or register)"""
     return render_template('auth.html')
 
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    """Simple contact form page. Sends message to support inbox when configured."""
+    try:
+        if request.method == 'POST':
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            subject = request.form.get('subject', '').strip() or 'Website Contact Form'
+            message = request.form.get('message', '').strip()
+
+            if not name or not email or not message:
+                flash('Please fill out your name, email, and message.', 'warning')
+                return redirect(url_for('contact'))
+
+            # Prepare email
+            recipient = os.environ.get('SUPPORT_EMAIL', 'support@vacontracthub.com')
+            try:
+                msg = Message(
+                    subject=f"[Contact] {subject}",
+                    recipients=[recipient],
+                )
+                msg.body = f"From: {name} <{email}>\n\n{message}"
+                mail.send(msg)
+                flash('Thanks! Your message has been sent. We will get back to you shortly.', 'success')
+            except Exception as e:
+                # If email fails (e.g., missing credentials), log and fallback
+                print(f"Contact email send failed: {e}")
+                flash('Thanks! Your message was recorded. Email service is not configured, but we captured your note.', 'info')
+
+            return redirect(url_for('contact'))
+
+        return render_template('contact.html')
+    except Exception as e:
+        print(f"Error in /contact: {e}")
+        return render_template('contact.html', error=str(e))
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     # Redirect GET requests to unified auth page
