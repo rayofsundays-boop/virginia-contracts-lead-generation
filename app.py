@@ -4953,6 +4953,7 @@ def admin_login():
     
     if password == ADMIN_PASSWORD:
         session['is_admin'] = True
+        session['user_id'] = 0  # Admin user ID
         session['user_email'] = 'admin@vacontracts.com'
         session['email'] = 'admin@vacontracts.com'
         session['subscription_status'] = 'paid'
@@ -6948,7 +6949,12 @@ def quick_wins():
         is_admin = session.get('is_admin', False)
         is_paid = False
         
-        if not is_admin:
+        # Admin always gets full access - no need to check subscription
+        if is_admin:
+            is_paid = True
+            print("✅ Admin access granted to Quick Wins")
+        else:
+            # Check if regular user is paid subscriber
             if 'user_id' in session:
                 result = db.session.execute(text('''
                     SELECT subscription_status FROM leads WHERE id = :user_id
@@ -6960,10 +6966,6 @@ def quick_wins():
             if not is_paid:
                 flash('Quick Wins is exclusive to paid subscribers. Upgrade now to access urgent leads and time-sensitive contracts!', 'warning')
                 return redirect(url_for('pricing_guide'))
-        
-        # Admin gets full access
-        if is_admin:
-            is_paid = True
         
         expiring_filter = request.args.get('expiring', '')
         lead_type_filter = request.args.get('lead_type', '')
@@ -6996,8 +6998,11 @@ def quick_wins():
                     CASE WHEN is_quick_win THEN 0 ELSE 1 END,
                     bid_deadline ASC
             '''), params).fetchall()
+            print(f"📦 Found {len(supply_contracts_data)} supply contracts")
         except Exception as e:
-            print(f"Supply contracts error: {e}")
+            print(f"❌ Supply contracts error: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Get urgent commercial requests
         urgent_commercial = []
@@ -7016,8 +7021,9 @@ def quick_wins():
                     END,
                     created_at DESC
             ''')).fetchall()
+            print(f"🚨 Found {len(urgent_commercial)} urgent commercial requests")
         except Exception as e:
-            print(f"Commercial requests error: {e}")
+            print(f"❌ Commercial requests error: {e}")
         
         # Get regular contracts with upcoming deadlines (as fallback quick wins)
         urgent_contracts = []
@@ -7033,8 +7039,9 @@ def quick_wins():
                 ORDER BY deadline ASC
                 LIMIT 20
             ''')).fetchall()
+            print(f"📋 Found {len(urgent_contracts)} government contracts with deadlines")
         except Exception as e:
-            print(f"Regular contracts error: {e}")
+            print(f"❌ Regular contracts error: {e}")
         
         # Combine all leads
         all_quick_wins = []
@@ -7109,6 +7116,7 @@ def quick_wins():
         
         # Pagination
         total_count = len(all_quick_wins)
+        print(f"✅ Total Quick Wins combined: {total_count} (Supply: {len(supply_contracts_data)}, Commercial: {len(urgent_commercial)}, Gov: {len(urgent_contracts)})")
         
         # Filter by expiring in 7 days if requested
         if expiring_filter == '7days':
