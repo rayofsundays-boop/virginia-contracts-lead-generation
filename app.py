@@ -2685,11 +2685,43 @@ def user_profile():
                 'created_at': result[8]
             }
             
-            # Get user stats (placeholder for now)
+            # Get real user activity stats
+            user_email = session.get('user_email')
+            
+            # Count saved leads
+            saved_count = 0
+            try:
+                saved_count = db.session.execute(text('''
+                    SELECT COUNT(*) FROM saved_leads WHERE user_email = :email
+                '''), {'email': user_email}).scalar() or 0
+            except:
+                pass
+            
+            # Count lead views from activity log
+            views_count = 0
+            try:
+                views_count = db.session.execute(text('''
+                    SELECT COUNT(*) FROM user_activity 
+                    WHERE user_email = :email AND action IN ('viewed_lead', 'accessed_contact')
+                '''), {'email': user_email}).scalar() or 0
+            except:
+                pass
+            
+            # Count proposals (commercial + residential requests sent to them)
+            proposals_count = 0
+            try:
+                proposals_count = db.session.execute(text('''
+                    SELECT 
+                        (SELECT COUNT(*) FROM commercial_lead_requests WHERE status != 'open') +
+                        (SELECT COUNT(*) FROM residential_leads WHERE status != 'new')
+                '')).scalar() or 0
+            except:
+                pass
+            
             stats = {
-                'leads_viewed': 0,
-                'saved_leads': 0,
-                'proposals_submitted': 0
+                'leads_viewed': views_count,
+                'saved_leads': saved_count,
+                'proposals_submitted': proposals_count
             }
             
             return render_template('user_profile.html', user=user, stats=stats)
