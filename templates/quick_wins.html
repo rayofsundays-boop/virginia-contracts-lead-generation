@@ -153,6 +153,22 @@
                                     </div>
                                 </div>
 
+                                {% if lead.website_url %}
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-secondary mb-2">
+                                        <i class="fas fa-globe me-2"></i>Official Source
+                                    </h6>
+                                    <div class="p-3 bg-light rounded">
+                                        <a href="{{ lead.website_url | safe_url }}" target="_blank" class="btn btn-primary w-100 mb-2" rel="noopener noreferrer">
+                                            <i class="fas fa-external-link-alt me-2"></i>View Full Opportunity Details
+                                        </a>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-link me-1"></i>{{ lead.website_url | safe_url }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endif %}
+
                                 {% if lead.is_small_business %}
                                 <div class="alert alert-info mb-0">
                                     <i class="fas fa-award me-2"></i>

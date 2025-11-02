@@ -7522,7 +7522,7 @@ def quick_wins():
             urgent_contracts = db.session.execute(text('''
                 SELECT 
                     id, title, agency, location, value, deadline, 
-                    description, naics_code, set_aside, posted_date, solicitation_number
+                    description, naics_code, set_aside, posted_date, solicitation_number, website_url
                 FROM contracts 
                 WHERE deadline IS NOT NULL 
                 AND deadline != ''
@@ -7685,7 +7685,7 @@ def quick_wins():
                 'value': contract[4],
                 'deadline': contract[5],
                 'description': contract[6][:200] if contract[6] else 'Government cleaning contract',
-                'website_url': None,
+                'website_url': contract[11] if len(contract) > 11 else None,
                 'is_small_business': bool(contract[8]),
                 'contact_name': 'Procurement Office',
                 'email': 'See contract details',
