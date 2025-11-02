@@ -152,13 +152,18 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <a href="{{ college.vendor_portal }}" 
-                           target="_blank" 
+                        <a href="mailto:{{ college.email }}?subject=Cleaning Services Inquiry - {{ college.institution_name }}&body=Hello {{ college.procurement_contact }},%0D%0A%0D%0AI am reaching out regarding professional cleaning services for {{ college.institution_name }}. I would like to learn more about your procurement process and upcoming opportunities.%0D%0A%0D%0AThank you for your time." 
                            class="btn btn-primary view-details-btn" 
                            data-lead-id="{{ college.institution_name | urlencode }}" 
                            data-lead-type="college">
-                            <i class="fas fa-external-link-alt me-2"></i>Visit Vendor Portal
+                            <i class="fas fa-envelope me-2"></i>Contact Procurement Team
                         </a>
+                        <a href="tel:{{ college.phone }}" class="btn btn-outline-primary">
+                            <i class="fas fa-phone me-2"></i>Call {{ college.phone }}
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ college.vendor_portal }}'); alert('Vendor portal URL copied to clipboard!');">
+                            <i class="fas fa-copy me-2"></i>Copy Portal URL
+                        </button>
                         <button class="btn btn-outline-success" onclick="alert('Bookmark feature coming soon!')">
                             <i class="fas fa-bookmark me-2"></i>Save This Lead
                         </button>

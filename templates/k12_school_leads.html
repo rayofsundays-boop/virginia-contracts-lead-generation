@@ -152,16 +152,22 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <a href="{{ school.vendor_portal }}" 
-                           target="_blank" 
+                        <a href="mailto:{{ school.email }}?subject=Cleaning Services Inquiry - {{ school.school_name }}&body=Dear {{ school.procurement_contact }},%0D%0A%0D%0AI am interested in providing professional cleaning services for {{ school.school_name }}.%0D%0A%0D%0APlease let me know how I can submit a proposal or get more information about upcoming opportunities.%0D%0A%0D%0AThank you!" 
                            class="btn btn-danger view-details-btn" 
-                           data-lead-id="{{ school.district_name | urlencode }}" 
+                           data-lead-id="{{ school.school_name | urlencode }}" 
                            data-lead-type="k12">
-                            <i class="fas fa-external-link-alt me-2"></i>Visit Vendor Portal
+                            <i class="fas fa-envelope me-2"></i>Contact Procurement Team
                         </a>
-                        <button class="btn btn-outline-success" onclick="alert('Bookmark feature coming soon!')">
-                            <i class="fas fa-bookmark me-2"></i>Save This Lead
+                        <a href="tel:{{ school.phone }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-phone me-2"></i>Call {{ school.phone }}
+                        </a>
+                        {% if school.vendor_portal %}
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                onclick="navigator.clipboard.writeText('{{ school.vendor_portal }}'); alert('Vendor portal URL copied to clipboard!')">
+                            <i class="fas fa-copy me-2"></i>Copy Portal URL
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
