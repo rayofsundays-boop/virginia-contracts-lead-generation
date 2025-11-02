@@ -18,6 +18,7 @@ import paypalrestsdk
 import math
 import string
 import random
+import re
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -2355,6 +2356,19 @@ def contact():
     """Simple contact form page. Sends message to support inbox when configured."""
     try:
         if request.method == 'POST':
+            # Basic anti-spam: honeypot field and simple rate limit
+            honeypot = request.form.get('website', '').strip()
+            if honeypot:
+                # Silently accept but do nothing
+                flash('Thanks! Your message has been received.', 'success')
+                return redirect(url_for('contact'))
+
+            last_ts = session.get('last_contact_ts')
+            now_ts = time.time()
+            if last_ts and now_ts - last_ts < 30:
+                flash('Please wait a few seconds before sending another message.', 'warning')
+                return redirect(url_for('contact'))
+
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
             subject = request.form.get('subject', '').strip() or 'Website Contact Form'
@@ -2379,12 +2393,91 @@ def contact():
                 print(f"Contact email send failed: {e}")
                 flash('Thanks! Your message was recorded. Email service is not configured, but we captured your note.', 'info')
 
+            # Persist message to DB for audit
+            try:
+                ensure_contact_messages_table()
+                save_contact_message(name, email, subject, message)
+            except Exception as e:
+                print(f"Failed to save contact message: {e}")
+
+            # Update rate limit timestamp
+            session['last_contact_ts'] = now_ts
             return redirect(url_for('contact'))
 
         return render_template('contact.html')
     except Exception as e:
         print(f"Error in /contact: {e}")
         return render_template('contact.html', error=str(e))
+
+# ============================
+# Contact message persistence
+# ============================
+def ensure_contact_messages_table():
+    if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.session.execute(text('''
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                subject TEXT,
+                message TEXT NOT NULL,
+                ip_address TEXT,
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        '''))
+        db.session.commit()
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS contact_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    subject TEXT,
+                    message TEXT NOT NULL,
+                    ip_address TEXT,
+                    user_agent TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+        finally:
+            if conn:
+                conn.close()
+
+def save_contact_message(name, email, subject, message):
+    ip = request.remote_addr
+    ua = request.user_agent.string if request.user_agent else ''
+    if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.session.execute(text('''
+            INSERT INTO contact_messages (name, email, subject, message, ip_address, user_agent)
+            VALUES (:name, :email, :subject, :message, :ip, :ua)
+        '''), {
+            'name': name,
+            'email': email,
+            'subject': subject,
+            'message': message,
+            'ip': ip,
+            'ua': ua[:255]
+        })
+        db.session.commit()
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO contact_messages (name, email, subject, message, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (name, email, subject, message, ip, ua[:255]))
+            conn.commit()
+        finally:
+            if conn:
+                conn.close()
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
