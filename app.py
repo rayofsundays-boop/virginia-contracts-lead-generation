@@ -1222,12 +1222,12 @@ def start_background_jobs_once():
             print("🚀 Running initial local government fetch on startup...")
             update_local_gov_contracts()
 
-    datagov_fetch_thread = threading.Thread(target=initial_datagov_fetch, daemon=True)
-    datagov_fetch_thread.start()
+        datagov_fetch_thread = threading.Thread(target=initial_datagov_fetch, daemon=True)
+        datagov_fetch_thread.start()
 
-    # Optional initial SAM.gov fetch if enabled
-    samgov_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
-    samgov_fetch_thread.start()
+        # Optional initial SAM.gov fetch if enabled
+        samgov_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
+        samgov_fetch_thread.start()
 
         localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
         localgov_fetch_thread.start()
