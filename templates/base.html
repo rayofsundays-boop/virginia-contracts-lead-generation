@@ -480,6 +480,11 @@
                                 <li class="dropdown-header text-danger">Admin Controls</li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('admin_panel') }}"><i class="fas fa-shield-alt me-2"></i>Admin Panel</a></li>
                                 <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_populate_federal_contracts') }}">
+                                        <i class="fas fa-sync-alt me-2 text-primary"></i>Update Federal Contracts
+                                    </a>
+                                </li>
+                                <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_add_commercial_lead') }}">
                                         <i class="fas fa-plus-circle me-2 text-success"></i>Add Commercial Lead
                                     </a>
