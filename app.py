@@ -1232,12 +1232,14 @@ def update_contracts_from_usaspending():
                         'agency': agency,
                         'department': department,
                         'location': location,
-                        'contract_value': f"${amount:,.2f}" if amount else "Not specified",
+                        'value': f"${amount:,.2f}" if amount else "Not specified",
                         'posted_date': start_dt if start_dt else datetime.now().strftime('%Y-%m-%d'),
                         'deadline': 'Open',
                         'description': description[:500],
-                        'contact_info': agency,
-                        'bid_link': f'https://www.usaspending.gov/award/{award_id}'
+                        'naics_code': str(award.get('NAICS Code', '')),
+                        'sam_gov_url': f'https://www.usaspending.gov/award/{award_id}',
+                        'notice_id': award_id,
+                        'set_aside': ''
                     }
                     
                     all_contracts.append(contract)
@@ -1269,10 +1271,11 @@ def update_contracts_from_usaspending():
                         if not existing:
                             db.session.execute(text('''
                                 INSERT INTO federal_contracts 
-                                (title, agency, department, location, contract_value, posted_date, 
-                                 deadline, description, contact_info, bid_link)
-                                VALUES (:title, :agency, :department, :location, :contract_value, 
-                                        :posted_date, :deadline, :description, :contact_info, :bid_link)
+                                (title, agency, department, location, value, posted_date, 
+                                 deadline, description, naics_code, sam_gov_url, notice_id, set_aside)
+                                VALUES (:title, :agency, :department, :location, :value, 
+                                        :posted_date, :deadline, :description, :naics_code, 
+                                        :sam_gov_url, :notice_id, :set_aside)
                             '''), contract)
                             new_count += 1
                     except Exception as e:
