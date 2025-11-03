@@ -7942,8 +7942,9 @@ def admin_enhanced():
             ORDER BY date
         ''')).fetchall()
         
-        context['growth_labels'] = [row[0].strftime('%m/%d') for row in growth_data]
-        context['growth_data'] = [row[1] for row in growth_data]
+        # Handle datetime objects properly
+        context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
+        context['growth_data'] = [row.count for row in growth_data]
         
     elif section == 'users':
         search = request.args.get('search', '')
