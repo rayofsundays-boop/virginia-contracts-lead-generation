@@ -1141,6 +1141,39 @@ def update_federal_contracts_from_datagov():
     except Exception as e:
         print(f"❌ Error updating from Data.gov: {e}")
 
+def _build_sam_search_url(naics_code: str | None, city: str | None = None, state: str = "VA") -> str:
+    """Build a resilient SAM.gov search URL that won't 404.
+
+    Strategy:
+    - Use the public search endpoint with index=opp (opportunities)
+    - Prefer a keywords-only search (most reliable) combining
+      janitorial + NAICS (if present) + location hints
+    - Avoid brittle filter param names (SAM can change them)
+    - Always append sort=-relevance for better UX
+
+    Example output:
+    https://sam.gov/search/?index=opp&keywords=janitorial%20561720%20Virginia%20Norfolk&sort=-relevance
+    """
+    try:
+        from urllib.parse import quote_plus
+
+        parts = ["janitorial"]
+        if naics_code and str(naics_code).strip():
+            parts.append(str(naics_code).strip())
+        # Prefer city if present; always include state name for better matches
+        if city and str(city).strip():
+            parts.append(str(city).strip())
+        if state and str(state).strip():
+            # Use full name rather than postal to broaden matches
+            parts.append("Virginia" if state.upper() == "VA" else state)
+
+        keywords = quote_plus(" ".join(parts))
+        return f"https://sam.gov/search/?index=opp&keywords={keywords}&sort=-relevance"
+    except Exception:
+        # Fallback to Opportunities landing page which never 404s
+        return "https://sam.gov/content/opportunities"
+
+
 def update_contracts_from_usaspending():
     """Fetch and update contracts from USAspending.gov API (Data.gov)"""
     print("\n" + "="*70)
@@ -1241,10 +1274,13 @@ def update_contracts_from_usaspending():
                         desc_parts.append(f"Awarded to: {recipient}")
                     description = " | ".join(desc_parts) if desc_parts else "Federal contract"
                     
-                    # Create SAM.gov opportunities URL
-                    # Use the main contract opportunities search page
+                    # Create SAM.gov search URL using keywords (resilient, no 404s)
                     naics_code = str(award.get('NAICS Code', ''))
-                    sam_url = 'https://sam.gov/content/opportunities'
+                    sam_url = _build_sam_search_url(
+                        naics_code=naics_code,
+                        city=award.get('Place of Performance City Name', ''),
+                        state='VA'
+                    )
                     
                     contract = {
                         'title': f"Contract {award_id}",
@@ -10016,8 +10052,8 @@ def admin_fix_sam_urls():
             contract_id = contract[0]
             naics_code = contract[1] if contract[1] else ''
             
-            # Use SAM.gov main opportunities page (always works)
-            sam_url = 'https://sam.gov/content/opportunities'
+            # Recompute a resilient SAM.gov search URL
+            sam_url = _build_sam_search_url(naics_code=naics_code, city=None, state='VA')
             
             # Update the contract
             db.session.execute(text('''
