@@ -9870,6 +9870,87 @@ def admin_populate_federal_contracts():
         """
 
 
+@app.route('/admin/check-contracts')
+def admin_check_contracts():
+    """Debug route to check federal contracts in database"""
+    try:
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
+        total = count_result[0] if count_result else 0
+        
+        # Get sample contracts
+        sample_contracts = db.session.execute(text('''
+            SELECT title, agency, location, value, notice_id 
+            FROM federal_contracts 
+            LIMIT 10
+        ''')).fetchall()
+        
+        html = f"""
+        <html>
+        <head>
+            <title>Database Check</title>
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+                th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }}
+                th {{ background: #667eea; color: white; }}
+                .count {{ font-size: 48px; color: #007bff; font-weight: bold; margin: 20px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📊 Database Check</h1>
+                <div class="count">{total}</div>
+                <p>total federal contracts in database</p>
+                
+                <h3>Sample Contracts:</h3>
+                <table>
+                    <tr>
+                        <th>Title</th>
+                        <th>Agency</th>
+                        <th>Location</th>
+                        <th>Value</th>
+                        <th>Notice ID</th>
+                    </tr>
+        """
+        
+        for contract in sample_contracts:
+            html += f"""
+                    <tr>
+                        <td>{contract[0][:50]}...</td>
+                        <td>{contract[1][:30]}...</td>
+                        <td>{contract[2]}</td>
+                        <td>{contract[3]}</td>
+                        <td>{contract[4]}</td>
+                    </tr>
+            """
+        
+        html += """
+                </table>
+                <br>
+                <a href="/federal-contracts" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Federal Contracts</a>
+                <a href="/admin/populate-federal-contracts" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Run Scraper</a>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        import traceback
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: red;">❌ Database Error</h1>
+            <p>{str(e)}</p>
+            <pre>{traceback.format_exc()}</pre>
+        </body>
+        </html>
+        """
+
+
 @app.route('/admin/init-supply-contracts')
 def admin_init_supply_contracts():
     """Quick admin route to initialize supply contracts table
