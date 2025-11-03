@@ -9809,6 +9809,63 @@ def admin_populate_if_empty():
         return redirect(url_for('quick_wins'))
 
 
+@app.route('/admin/populate-federal-contracts')
+def admin_populate_federal_contracts():
+    """Admin route to populate federal contracts from USAspending.gov"""
+    try:
+        print("\n" + "="*70)
+        print("🔧 ADMIN: Populating Federal Contracts")
+        print("="*70)
+        
+        # Run the scraper function
+        update_contracts_from_usaspending()
+        
+        # Check count
+        count_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
+        current_count = count_result[0] if count_result else 0
+        
+        return f"""
+        <html>
+        <head>
+            <title>Federal Contracts Populated</title>
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #28a745; }}
+                .count {{ font-size: 48px; color: #007bff; font-weight: bold; }}
+                a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>✅ Federal Contracts Populated!</h1>
+                <p>Successfully fetched and populated contracts from USAspending.gov</p>
+                <div class="count">{current_count}</div>
+                <p>contracts now in database</p>
+                <a href="/federal-contracts">View Federal Contracts</a>
+                <a href="/" style="background: #6c757d; margin-left: 10px;">Go Home</a>
+            </div>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Error populating federal contracts: {error_details}")
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: red;">❌ Error</h1>
+            <p>{str(e)}</p>
+            <pre>{error_details}</pre>
+            <a href="/">Go Home</a>
+        </body>
+        </html>
+        """
+
+
 @app.route('/admin/init-supply-contracts')
 def admin_init_supply_contracts():
     """Quick admin route to initialize supply contracts table
