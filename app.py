@@ -9829,12 +9829,27 @@ def admin_populate_federal_contracts():
         print("🔧 ADMIN: Populating Federal Contracts")
         print("="*70)
         
-        # Run the scraper function
-        update_contracts_from_usaspending()
+        # Run the scraper function (it's already within Flask app context)
+        result = update_contracts_from_usaspending()
         
         # Check count
         count_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
         current_count = count_result[0] if count_result else 0
+        
+        # Get sample contracts to show
+        sample_contracts = db.session.execute(text('''
+            SELECT title, agency, value, notice_id 
+            FROM federal_contracts 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''')).fetchall()
+        
+        sample_html = ""
+        if sample_contracts:
+            sample_html = "<h3>Recent Contracts:</h3><ul>"
+            for contract in sample_contracts:
+                sample_html += f"<li><strong>{contract[0]}</strong> - {contract[1]} - {contract[2]} (ID: {contract[3]})</li>"
+            sample_html += "</ul>"
         
         return f"""
         <html>
@@ -9842,17 +9857,28 @@ def admin_populate_federal_contracts():
             <title>Federal Contracts Populated</title>
             <style>
                 body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
                 h1 {{ color: #28a745; }}
                 .count {{ font-size: 48px; color: #007bff; font-weight: bold; }}
                 a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+                ul {{ text-align: left; }}
+                li {{ margin: 10px 0; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>✅ Federal Contracts Populated!</h1>
-                <p>Successfully fetched and populated contracts from USAspending.gov</p>
+                <h1>✅ Federal Contracts Updated!</h1>
+                <p>Scraper has completed fetching from USAspending.gov</p>
                 <div class="count">{current_count}</div>
+                <p>total contracts in database</p>
+                {sample_html}
+                <a href="/federal-contracts">View All Federal Contracts</a>
+                <a href="/admin/check-contracts" style="background: #6c757d; margin-left: 10px;">Database Status</a>
+                <a href="/" style="background: #28a745; margin-left: 10px;">Go Home</a>
+            </div>
+        </body>
+        </html>
+        """
                 <p>contracts now in database</p>
                 <a href="/federal-contracts">View Federal Contracts</a>
                 <a href="/" style="background: #6c757d; margin-left: 10px;">Go Home</a>
