@@ -1261,38 +1261,44 @@ def update_contracts_from_usaspending():
         
         print(f"\n✅ Fetched {len(all_contracts)} contracts from USAspending.gov")
         
-        # Update database
+        # Update database (work with existing app context if present)
         if all_contracts:
-            with app.app_context():
-                new_count = 0
-                skip_count = 0
-                for contract in all_contracts:
-                    try:
-                        # Check if contract exists by notice_id (more reliable than title)
-                        existing = db.session.execute(text('''
-                            SELECT id FROM federal_contracts WHERE notice_id = :notice_id
-                        '''), {'notice_id': contract['notice_id']}).fetchone()
-                        
-                        if not existing:
-                            db.session.execute(text('''
-                                INSERT INTO federal_contracts 
-                                (title, agency, department, location, value, posted_date, 
-                                 deadline, description, naics_code, sam_gov_url, notice_id, set_aside)
-                                VALUES (:title, :agency, :department, :location, :value, 
-                                        :posted_date, :deadline, :description, :naics_code, 
-                                        :sam_gov_url, :notice_id, :set_aside)
-                            '''), contract)
-                            new_count += 1
-                        else:
-                            skip_count += 1
-                    except Exception as e:
-                        print(f"⚠️  Error inserting contract: {e}")
-                        continue
-                
-                db.session.commit()
-                print(f"✅ Inserted {new_count} new contracts, skipped {skip_count} duplicates")
-                print(f"✅ USAspending update complete: {new_count} new contracts added")
-                print("="*70 + "\n")
+            new_count = 0
+            skip_count = 0
+            for contract in all_contracts:
+                try:
+                    # Check if contract exists by notice_id (more reliable than title)
+                    existing = db.session.execute(text('''
+                        SELECT id FROM federal_contracts WHERE notice_id = :notice_id
+                    '''), {'notice_id': contract['notice_id']}).fetchone()
+                    
+                    if not existing:
+                        db.session.execute(text('''
+                            INSERT INTO federal_contracts 
+                            (title, agency, department, location, value, posted_date, 
+                             deadline, description, naics_code, sam_gov_url, notice_id, set_aside)
+                            VALUES (:title, :agency, :department, :location, :value, 
+                                    :posted_date, :deadline, :description, :naics_code, 
+                                    :sam_gov_url, :notice_id, :set_aside)
+                        '''), contract)
+                        new_count += 1
+                        print(f"   ✅ Inserted: {contract['title']}")
+                    else:
+                        skip_count += 1
+                except Exception as e:
+                    print(f"⚠️  Error inserting contract: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+            
+            db.session.commit()
+            print(f"✅ Inserted {new_count} new contracts, skipped {skip_count} duplicates")
+            print(f"✅ USAspending update complete: {new_count} new contracts added")
+            print("="*70 + "\n")
+            return new_count
+        else:
+            print("⚠️  No contracts fetched from API")
+            return 0
                 
     except Exception as e:
         print(f"❌ Error updating from USAspending.gov: {e}")
