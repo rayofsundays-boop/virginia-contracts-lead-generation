@@ -9879,13 +9879,6 @@ def admin_populate_federal_contracts():
         </body>
         </html>
         """
-                <p>contracts now in database</p>
-                <a href="/federal-contracts">View Federal Contracts</a>
-                <a href="/" style="background: #6c757d; margin-left: 10px;">Go Home</a>
-            </div>
-        </body>
-        </html>
-        """
         
     except Exception as e:
         import traceback
