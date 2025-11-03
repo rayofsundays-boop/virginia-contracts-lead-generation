@@ -27,6 +27,16 @@ except Exception:
     pass
 
 # Virginia Government Contracting Lead Generation Application
+#
+# DATA FETCHING SCHEDULE (OFF-PEAK HOURS: MIDNIGHT-6 AM EST)
+# ============================================================
+# SAM.gov Federal Contracts: Hourly at 12 AM, 1 AM, 2 AM, 3 AM, 4 AM, 5 AM
+# Data.gov Bulk Updates: Daily at 2 AM
+# Local Government Contracts: Daily at 4 AM
+# 
+# Off-peak scheduling reduces API load, improves performance, and avoids rate limits
+# Set FETCH_ON_INIT=1 to force immediate fetch on startup (use for development only)
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
@@ -1108,31 +1118,36 @@ def update_federal_contracts_from_datagov():
         print(f"❌ Error updating from Data.gov: {e}")
 
 def schedule_samgov_updates():
-    """Run SAM.gov updates every 15 minutes for real-time contract data"""
-    # Schedule to run every 15 minutes
-    schedule.every(15).minutes.do(update_federal_contracts_from_samgov)
+    """Run SAM.gov updates during off-peak hours (midnight-6 AM EST)"""
+    # Schedule hourly during off-peak hours for reduced API load
+    schedule.every().day.at("00:00").do(update_federal_contracts_from_samgov)  # Midnight
+    schedule.every().day.at("01:00").do(update_federal_contracts_from_samgov)  # 1 AM
+    schedule.every().day.at("02:00").do(update_federal_contracts_from_samgov)  # 2 AM
+    schedule.every().day.at("03:00").do(update_federal_contracts_from_samgov)  # 3 AM
+    schedule.every().day.at("04:00").do(update_federal_contracts_from_samgov)  # 4 AM
+    schedule.every().day.at("05:00").do(update_federal_contracts_from_samgov)  # 5 AM
     
-    print("⏰ SAM.gov scheduler started - will update federal contracts every 15 minutes")
+    print("⏰ SAM.gov scheduler started - will update federal contracts hourly during off-peak hours (midnight-6 AM EST)")
     
     while True:
         schedule.run_pending()
-        time.sleep(60)  # Check every minute
+        time.sleep(300)  # Check every 5 minutes
 
 def schedule_local_gov_updates():
-    """Run local government updates daily at 3 AM"""
-    schedule.every().day.at("03:00").do(update_local_gov_contracts)
+    """Run local government updates during off-peak hours (4 AM EST)"""
+    schedule.every().day.at("04:00").do(update_local_gov_contracts)
     
-    print("⏰ Local Government scheduler started - will update city/county contracts daily at 3 AM")
+    print("⏰ Local Government scheduler started - will update city/county contracts daily at 4 AM EST (off-peak)")
     
     while True:
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
 def schedule_datagov_bulk_updates():
-    """Run Data.gov bulk updates daily at 1 AM (large files, less frequent)"""
-    schedule.every().day.at("01:00").do(update_federal_contracts_from_datagov)
+    """Run Data.gov bulk updates during off-peak hours (2 AM EST)"""
+    schedule.every().day.at("02:00").do(update_federal_contracts_from_datagov)
     
-    print("⏰ Data.gov bulk scheduler started - will update federal contracts from bulk files daily at 1 AM")
+    print("⏰ Data.gov bulk scheduler started - will update federal contracts from bulk files daily at 2 AM EST (off-peak)")
     
     while True:
         schedule.run_pending()
@@ -1156,8 +1171,16 @@ def start_background_jobs_once():
     localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
     localgov_scheduler_thread.start()
 
-    # Optional initial update on startup (controlled by env to reduce load)
-    if os.environ.get('FETCH_ON_INIT', '1') == '1':  # Changed default to '1' for immediate data
+    # Optional initial update on startup (only during off-peak hours or when explicitly enabled)
+    # Check if current time is during off-peak hours (midnight-6 AM EST)
+    current_hour = datetime.now().hour
+    is_off_peak = 0 <= current_hour < 6
+    
+    fetch_on_init = os.environ.get('FETCH_ON_INIT', '0')  # Changed default to '0' to respect off-peak hours
+    
+    if fetch_on_init == '1' or (fetch_on_init == 'auto' and is_off_peak):
+        print(f"🕐 Current time: {datetime.now().strftime('%I:%M %p')} - Off-peak: {is_off_peak}")
+        
         def initial_samgov_fetch():
             time.sleep(5)  # Wait 5 seconds for app to fully start
             print("🚀 Running initial SAM.gov fetch on startup...")
@@ -1170,6 +1193,7 @@ def start_background_jobs_once():
 
         def initial_localgov_fetch():
             time.sleep(25)  # Wait 25 seconds, after Data.gov
+            print("🚀 Running initial local government fetch on startup...")
             update_local_gov_contracts()
 
         initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
@@ -1180,6 +1204,9 @@ def start_background_jobs_once():
 
         localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
         localgov_fetch_thread.start()
+    else:
+        print(f"⏸️  Skipping initial fetch (current time: {datetime.now().strftime('%I:%M %p')}, off-peak: {is_off_peak})")
+        print("   Set FETCH_ON_INIT=1 to force immediate fetch, or wait for scheduled off-peak updates")
 
 # Launch background jobs once per container/process cluster
 start_background_jobs_once()
