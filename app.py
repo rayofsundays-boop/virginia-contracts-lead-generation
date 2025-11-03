@@ -2,6 +2,10 @@ import os
 import json
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
