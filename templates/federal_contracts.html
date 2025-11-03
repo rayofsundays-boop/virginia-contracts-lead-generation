@@ -24,7 +24,7 @@
                 </div>
                 <div class="card-body">
                     <form method="GET" class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-8">
                             <label class="form-label">Department:</label>
                             <select name="department" class="form-select">
                                 <option value="">All Departments</option>
@@ -35,20 +35,9 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Set-Aside:</label>
-                            <select name="set_aside" class="form-select">
-                                <option value="">All Set-Asides</option>
-                                {% for set_aside in set_asides %}
-                                    <option value="{{ set_aside }}" {% if set_aside == current_set_aside %}selected{% endif %}>
-                                        {{ set_aside }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
-                            {% if current_department or current_set_aside %}
+                            {% if current_department %}
                                 <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-secondary">Clear All</a>
                             {% endif %}
                         </div>
@@ -59,12 +48,10 @@
     </div>
 </div>
 
-{% if current_department or current_set_aside %}
+{% if current_department %}
     <div class="container mt-3">
         <div class="alert alert-info">
-            Filters applied:
-            {% if current_department %}<strong>Department:</strong> {{ current_department }}{% endif %}
-            {% if current_set_aside %}{% if current_department %} | {% endif %}<strong>Set-Aside:</strong> {{ current_set_aside }}{% endif %}
+            Filters applied: <strong>Department:</strong> {{ current_department }}
         </div>
     </div>
 {% endif %}

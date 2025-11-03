@@ -4249,7 +4249,6 @@ def industry_days():
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
     department_filter = request.args.get('department', '')
-    set_aside_filter = request.args.get('set_aside', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
     per_page = int(request.args.get('per_page', 12) or 12)
     per_page = min(max(per_page, 6), 48)
@@ -4291,9 +4290,6 @@ def federal_contracts():
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
-        if set_aside_filter:
-            base_sql += ' AND LOWER(set_aside) LIKE LOWER(:sa)'
-            params['sa'] = f"%{set_aside_filter}%"
         # Count total
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
@@ -4305,9 +4301,6 @@ def federal_contracts():
         # Filters
         departments = [r[0] for r in db.session.execute(text('''
             SELECT DISTINCT department FROM federal_contracts WHERE department IS NOT NULL AND department <> '' ORDER BY department
-        ''')).fetchall()]
-        set_asides = [r[0] for r in db.session.execute(text('''
-            SELECT DISTINCT set_aside FROM federal_contracts WHERE set_aside IS NOT NULL AND set_aside <> '' ORDER BY set_aside
         ''')).fetchall()]
 
         pages = max(math.ceil(total / per_page), 1)
@@ -4330,9 +4323,7 @@ def federal_contracts():
         return render_template('federal_contracts.html', 
                                contracts=rows,
                                departments=departments,
-                               set_asides=set_asides,
                                current_department=department_filter,
-                               current_set_aside=set_aside_filter,
                                pagination=pagination,
                                is_admin=is_admin,
                                is_paid_subscriber=is_paid_subscriber,
