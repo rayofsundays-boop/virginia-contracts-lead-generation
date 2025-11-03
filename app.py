@@ -944,18 +944,38 @@ def paid_or_limited_access(f):
 # ============================================================================
 
 def update_federal_contracts_from_samgov():
-    """Fetch and update federal contracts from SAM.gov API"""
+    """Fetch and update federal contracts using Data.gov primarily; optionally use SAM.gov if enabled"""
+    contracts = []
+    source = "Data.gov (USAspending)"
+    
     try:
-        print("📡 Fetching real federal contracts from SAM.gov API...")
-        from sam_gov_fetcher import SAMgovFetcher
+        # Primary: Data.gov (USAspending) – no API key required
+        print("📦 Fetching federal contracts from Data.gov (USAspending)...")
+        try:
+            from datagov_bulk_fetcher import DataGovBulkFetcher
+            datagov_fetcher = DataGovBulkFetcher()
+            contracts = datagov_fetcher.fetch_usaspending_contracts(days_back=90)
+        except Exception as dg_err:
+            print(f"❌ Data.gov fetch error: {dg_err}")
+            contracts = []
 
-        fetcher = SAMgovFetcher()
-        # Use a shorter lookback to reduce rate-limit risk; fetcher has built-in retries
-        contracts = fetcher.fetch_va_cleaning_contracts(days_back=14)
-        
+        # Optional: If no results and SAM.gov explicitly enabled, try SAM.gov
+        if not contracts and os.environ.get('USE_SAM_GOV', '0') == '1':
+            print("⚠️  No contracts from Data.gov. Trying SAM.gov (USE_SAM_GOV=1)...")
+            try:
+                from sam_gov_fetcher import SAMgovFetcher
+                fetcher = SAMgovFetcher()
+                contracts = fetcher.fetch_va_cleaning_contracts(days_back=14)
+                source = "SAM.gov"
+            except Exception as sam_err:
+                print(f"❌ SAM.gov fetch error: {sam_err}")
+                contracts = []
+
         if not contracts:
-            print("⚠️  No new contracts found. Check SAM_GOV_API_KEY.")
+            print("⚠️  No contracts retrieved from Data.gov or SAM.gov (if enabled).")
             return
+
+        print(f"✅ Retrieved {len(contracts)} contracts from {source}")
         
         # Use SQLAlchemy for database operations
         with app.app_context():
@@ -984,10 +1004,10 @@ def update_federal_contracts_from_samgov():
                     continue
             
             db.session.commit()
-            print(f"✅ Updated {new_count} real federal contracts from SAM.gov")
+            print(f"✅ Updated {new_count} real federal contracts from {source}")
             
     except Exception as e:
-        print(f"❌ Error updating federal contracts: {e}")
+        print(f"❌ Error updating federal contracts from {source}: {e}")
 
 def update_local_gov_contracts():
     """Fetch and update local government contracts from Virginia city websites"""
@@ -1159,9 +1179,13 @@ def start_background_jobs_once():
         # Another worker already launched background jobs
         return
 
-    # Start SAM.gov scheduler in background thread
-    samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
-    samgov_scheduler_thread.start()
+    # Start SAM.gov scheduler in background thread ONLY if enabled
+    if os.environ.get('USE_SAM_GOV', '0') == '1':
+        print("🛰️  SAM.gov scheduler enabled via USE_SAM_GOV=1")
+        samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
+        samgov_scheduler_thread.start()
+    else:
+        print("⏸️  SAM.gov scheduler disabled (using Data.gov as primary)")
 
     # Start Data.gov bulk scheduler in background thread  
     datagov_scheduler_thread = threading.Thread(target=schedule_datagov_bulk_updates, daemon=True)
@@ -1181,26 +1205,29 @@ def start_background_jobs_once():
     if fetch_on_init == '1' or (fetch_on_init == 'auto' and is_off_peak):
         print(f"🕐 Current time: {datetime.now().strftime('%I:%M %p')} - Off-peak: {is_off_peak}")
         
-        def initial_samgov_fetch():
-            time.sleep(5)  # Wait 5 seconds for app to fully start
-            print("🚀 Running initial SAM.gov fetch on startup...")
-            update_federal_contracts_from_samgov()
-        
         def initial_datagov_fetch():
-            time.sleep(15)  # Wait 15 seconds, after SAM.gov
+            time.sleep(5)  # Wait 5 seconds for app to fully start
             print("🚀 Running initial Data.gov bulk fetch on startup...")
             update_federal_contracts_from_datagov()
+
+        def initial_samgov_fetch():
+            # Only if explicitly enabled
+            if os.environ.get('USE_SAM_GOV', '0') == '1':
+                time.sleep(15)  # After Data.gov
+                print("🚀 Running initial SAM.gov fetch on startup (USE_SAM_GOV=1)...")
+                update_federal_contracts_from_samgov()
 
         def initial_localgov_fetch():
             time.sleep(25)  # Wait 25 seconds, after Data.gov
             print("🚀 Running initial local government fetch on startup...")
             update_local_gov_contracts()
 
-        initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
-        initial_fetch_thread.start()
-        
-        datagov_fetch_thread = threading.Thread(target=initial_datagov_fetch, daemon=True)
-        datagov_fetch_thread.start()
+    datagov_fetch_thread = threading.Thread(target=initial_datagov_fetch, daemon=True)
+    datagov_fetch_thread.start()
+
+    # Optional initial SAM.gov fetch if enabled
+    samgov_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
+    samgov_fetch_thread.start()
 
         localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
         localgov_fetch_thread.start()
