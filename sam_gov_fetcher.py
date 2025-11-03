@@ -186,6 +186,10 @@ class SAMgovFetcher:
                             delay = base_delay * (2 ** attempt) + random.random()
                     else:
                         delay = base_delay * (2 ** attempt) + random.random()
+                    
+                    # Cap wait time at 60 seconds maximum
+                    delay = min(delay, 60)
+                    
                     logger.warning(f"SAM.gov rate limit hit (429). Retrying in {delay:.1f}s...")
                     time.sleep(delay)
                     attempt += 1
@@ -194,6 +198,10 @@ class SAMgovFetcher:
                 # Retry on 5xx
                 if 500 <= resp.status_code < 600:
                     delay = base_delay * (2 ** attempt) + random.random()
+                    
+                    # Cap wait time at 60 seconds maximum
+                    delay = min(delay, 60)
+                    
                     logger.warning(f"SAM.gov server error {resp.status_code}. Retrying in {delay:.1f}s...")
                     time.sleep(delay)
                     attempt += 1
