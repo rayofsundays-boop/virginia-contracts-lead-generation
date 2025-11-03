@@ -1241,6 +1241,14 @@ def update_contracts_from_usaspending():
                         desc_parts.append(f"Awarded to: {recipient}")
                     description = " | ".join(desc_parts) if desc_parts else "Federal contract"
                     
+                    # Create SAM.gov search URL with agency and NAICS if available
+                    naics_code = str(award.get('NAICS Code', ''))
+                    if naics_code:
+                        sam_url = f'https://sam.gov/search/?index=opp&page=1&naics={naics_code}&sort=-relevance'
+                    else:
+                        # General cleaning services NAICS
+                        sam_url = 'https://sam.gov/search/?index=opp&page=1&naics=561720&sort=-relevance'
+                    
                     contract = {
                         'title': f"Contract {award_id}",
                         'agency': agency,
@@ -1250,8 +1258,8 @@ def update_contracts_from_usaspending():
                         'posted_date': start_dt if start_dt else datetime.now().strftime('%Y-%m-%d'),
                         'deadline': 'Open',
                         'description': description[:500],
-                        'naics_code': str(award.get('NAICS Code', '')),
-                        'sam_gov_url': f'https://www.usaspending.gov/award/{award_id}',
+                        'naics_code': naics_code,
+                        'sam_gov_url': sam_url,
                         'notice_id': award_id,
                         'set_aside': ''
                     }
