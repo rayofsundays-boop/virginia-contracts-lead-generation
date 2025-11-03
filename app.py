@@ -4100,12 +4100,6 @@ def industry_days():
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
-    # Redirect to coming soon page until November 3, 2025
-    from datetime import datetime
-    launch_date = datetime(2025, 11, 3, 0, 0, 0)
-    if datetime.now() < launch_date:
-        return redirect(url_for('federal_coming_soon'))
-    
     department_filter = request.args.get('department', '')
     set_aside_filter = request.args.get('set_aside', '')
     page = max(int(request.args.get('page', 1) or 1), 1)

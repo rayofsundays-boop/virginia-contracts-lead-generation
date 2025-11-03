@@ -27,6 +27,34 @@ class SAMgovFetcher:
             '561790',  # Other Services to Buildings and Dwellings
         ]
     
+    def fetch_with_throttle(self, urls, delay=2):
+        """
+        Generic throttled fetch function with 429 handling
+        
+        Args:
+            urls: List of URLs to fetch
+            delay: Delay between requests in seconds (default 2)
+        
+        Returns:
+            List of response objects
+        """
+        responses = []
+        for url in urls:
+            try:
+                response = requests.get(url)
+                if response.status_code == 429:
+                    logger.warning("Rate limit hit (429) — sleeping for 60s...")
+                    time.sleep(60)
+                    # Retry after waiting
+                    response = requests.get(url)
+                else:
+                    logger.info(f"Fetched: {url[:100]}...")
+                    responses.append(response)
+                time.sleep(delay)  # 1–2 seconds between requests
+            except Exception as e:
+                logger.error(f"Error fetching {url}: {e}")
+        return responses
+    
     def fetch_va_cleaning_contracts(self, days_back=14):
         """
         Fetch real cleaning contracts from Virginia
