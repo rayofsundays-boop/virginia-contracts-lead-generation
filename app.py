@@ -1257,16 +1257,14 @@ def update_contracts_from_usaspending():
         # Update database
         if all_contracts:
             with app.app_context():
-                # Clear old contracts (optional - comment out to keep accumulating)
-                # db.session.execute(text('DELETE FROM federal_contracts'))
-                
                 new_count = 0
+                skip_count = 0
                 for contract in all_contracts:
                     try:
-                        # Check if contract exists by title
+                        # Check if contract exists by notice_id (more reliable than title)
                         existing = db.session.execute(text('''
-                            SELECT id FROM federal_contracts WHERE title = :title
-                        '''), {'title': contract['title']}).fetchone()
+                            SELECT id FROM federal_contracts WHERE notice_id = :notice_id
+                        '''), {'notice_id': contract['notice_id']}).fetchone()
                         
                         if not existing:
                             db.session.execute(text('''
@@ -1278,11 +1276,14 @@ def update_contracts_from_usaspending():
                                         :sam_gov_url, :notice_id, :set_aside)
                             '''), contract)
                             new_count += 1
+                        else:
+                            skip_count += 1
                     except Exception as e:
                         print(f"⚠️  Error inserting contract: {e}")
                         continue
                 
                 db.session.commit()
+                print(f"✅ Inserted {new_count} new contracts, skipped {skip_count} duplicates")
                 print(f"✅ USAspending update complete: {new_count} new contracts added")
                 print("="*70 + "\n")
                 
