@@ -206,6 +206,7 @@ body {
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
 }
 
 .cta-button {
@@ -219,7 +220,11 @@ body {
     position: relative;
     overflow: hidden;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    height: 56px;
 }
 
 .cta-button-primary {
