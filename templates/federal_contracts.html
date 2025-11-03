@@ -272,7 +272,15 @@ function shareFederalContract(title, description, agency, value, deadline) {
 }
 
 /* Paywall overlay styles */
-.contract-limited[data-index]:nth-child(n+4) {
+.contract-limited[data-index="4"],
+.contract-limited[data-index="5"],
+.contract-limited[data-index="6"],
+.contract-limited[data-index="7"],
+.contract-limited[data-index="8"],
+.contract-limited[data-index="9"],
+.contract-limited[data-index="10"],
+.contract-limited[data-index="11"],
+.contract-limited[data-index="12"] {
     filter: blur(5px);
     pointer-events: none;
 }
