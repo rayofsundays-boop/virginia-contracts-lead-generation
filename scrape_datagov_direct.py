@@ -1,0 +1,277 @@
+"""
+Direct SQL Data.gov Contract Scraper
+Fetches real federal contracts and inserts directly into leads.db
+"""
+import requests
+import sqlite3
+from datetime import datetime, timedelta
+
+# USAspending.gov API endpoint
+USASPENDING_API = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
+DB_PATH = "leads.db"
+
+def fetch_virginia_contracts(days_back=90, max_results=200):
+    """Fetch real contracts from USAspending.gov for Virginia"""
+    print("=" * 70)
+    print("DATA.GOV CONTRACT SCRAPER")
+    print("=" * 70)
+    print()
+    
+    # Calculate date range
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days_back)
+    
+    print(f"📅 Searching period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    print(f"🎯 Target: Virginia federal contracts")
+    print(f"📊 Max results: {max_results}")
+    print()
+    
+    all_contracts = []
+    page = 1
+    per_page = 100  # API max limit
+    
+    while len(all_contracts) < max_results:
+        print(f"📄 Fetching page {page}...")
+        
+        payload = {
+            "filters": {
+                "time_period": [{
+                    "start_date": start_date.strftime("%Y-%m-%d"),
+                    "end_date": end_date.strftime("%Y-%m-%d")
+                }],
+                "place_of_performance_locations": [{"country": "USA", "state": "VA"}],
+                "award_type_codes": ["A", "B", "C", "D"],
+            },
+            "fields": [
+                "Award ID", "Recipient Name", "Start Date", "End Date",
+                "Award Amount", "Awarding Agency", "Awarding Sub Agency",
+                "Place of Performance City Name", "Place of Performance State Code",
+                "NAICS Code", "NAICS Description", "Product or Service Code",
+                "PSC Description"
+            ],
+            "limit": per_page,
+            "page": page
+        }
+        
+        try:
+            response = requests.post(USASPENDING_API, json=payload, headers={"Content-Type": "application/json"}, timeout=30)
+            
+            if response.status_code != 200:
+                print(f"❌ API Error: {response.status_code}")
+                break
+            
+            data = response.json()
+            if 'results' not in data or not data['results']:
+                print(f"✅ No more results")
+                break
+            
+            results = data['results']
+            print(f"   Received {len(results)} awards")
+            
+            # Parse awards
+            for idx, award in enumerate(results, len(all_contracts) + 1):
+                try:
+                    award_id = award.get('Award ID', f'USASPEND-{idx}')
+                    recipient = award.get('Recipient Name', 'Unknown Recipient')
+                    amount = award.get('Award Amount', 0)
+                    agency = award.get('Awarding Agency', 'Unknown Agency')
+                    sub_agency = award.get('Awarding Sub Agency', '')
+                    naics = award.get('NAICS Code', '')
+                    naics_desc = award.get('NAICS Description', '')
+                    psc_desc = award.get('PSC Description', '')
+                    start_dt = award.get('Start Date', '')
+                    end_dt = award.get('End Date', '')
+                    city = award.get('Place of Performance City Name', '')
+                    state = award.get('Place of Performance State Code', 'VA')
+                    
+                    location = f"{city}, {state}" if city else state
+                    
+                    # Build description
+                    desc_parts = []
+                    if naics_desc:
+                        desc_parts.append(f"NAICS: {naics_desc}")
+                    if psc_desc:
+                        desc_parts.append(f"Service: {psc_desc}")
+                    if recipient:
+                        desc_parts.append(f"Awarded to: {recipient}")
+                    if start_dt and end_dt:
+                        desc_parts.append(f"Period: {start_dt} to {end_dt}")
+                    
+                    description = " | ".join(desc_parts) if desc_parts else "Federal contract from USAspending.gov"
+                    value = f"${amount:,.0f}" if amount else "Amount not disclosed"
+                    
+                    # Build title
+                    if naics_desc:
+                        title = naics_desc[:100]
+                    elif psc_desc:
+                        title = psc_desc[:100]
+                    else:
+                        title = f"Contract {award_id}"
+                    
+                    contract = {
+                        'title': title,
+                        'agency': agency,
+                        'department': sub_agency,
+                        'location': location,
+                        'value': value,
+                        'deadline': None,
+                        'description': description,
+                        'naics_code': str(naics) if naics else '',
+                        'sam_gov_url': f"https://www.usaspending.gov/award/{award_id}" if award_id else '',
+                        'notice_id': award_id,
+                        'set_aside': '',
+                        'posted_date': start_dt if start_dt else datetime.now().strftime('%Y-%m-%d')
+                    }
+                    
+                    all_contracts.append(contract)
+                    
+                except Exception as e:
+                    print(f"   ❌ Error parsing award: {e}")
+                    continue
+            
+            if len(all_contracts) >= max_results or len(results) < per_page:
+                break
+            
+            page += 1
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            break
+    
+    print()
+    print(f"✅ Successfully fetched {len(all_contracts)} contracts")
+    
+    if all_contracts:
+        print("\n📋 Sample contracts:")
+        for i, c in enumerate(all_contracts[:5], 1):
+            print(f"   {i}. {c['title'][:60]}... ({c['value']})")
+    
+    return all_contracts
+
+def filter_cleaning_contracts(contracts):
+    """Filter contracts for cleaning/janitorial services"""
+    print("\n🔍 Filtering for cleaning/janitorial contracts...")
+    
+    cleaning_keywords = [
+        'clean', 'janitor', 'custodial', 'housekeep', 'sanitiz',
+        'maint', 'facility', 'building service', 'floor care'
+    ]
+    
+    facility_naics = ['561', '5617', '56172', '56173', '56179']
+    
+    filtered = []
+    for contract in contracts:
+        naics = contract.get('naics_code', '')
+        if any(naics.startswith(code) for code in facility_naics):
+            filtered.append(contract)
+            continue
+        
+        text = (contract.get('title', '') + ' ' + contract.get('description', '')).lower()
+        if any(keyword in text for keyword in cleaning_keywords):
+            filtered.append(contract)
+    
+    print(f"   Found {len(filtered)} cleaning-related contracts")
+    return filtered
+
+def upload_to_database(contracts):
+    """Upload contracts directly to SQLite database"""
+    if not contracts:
+        print("\n❌ No contracts to upload")
+        return
+    
+    print(f"\n💾 Uploading {len(contracts)} contracts to {DB_PATH}...")
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Remove demo data
+        cursor.execute("DELETE FROM federal_contracts WHERE description LIKE '%DEMO DATA%'")
+        deleted = cursor.rowcount
+        if deleted > 0:
+            print(f"   Removed {deleted} demo contracts")
+        
+        # Insert new contracts
+        inserted = 0
+        skipped = 0
+        
+        for contract in contracts:
+            try:
+                # Check if exists
+                cursor.execute("SELECT COUNT(*) FROM federal_contracts WHERE notice_id = ?", 
+                             (contract['notice_id'],))
+                if cursor.fetchone()[0] > 0:
+                    skipped += 1
+                    continue
+                
+                # Insert
+                cursor.execute('''
+                    INSERT INTO federal_contracts 
+                    (title, agency, department, location, value, deadline, description, 
+                     naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    contract['title'],
+                    contract['agency'],
+                    contract['department'],
+                    contract['location'],
+                    contract['value'],
+                    contract['deadline'],
+                    contract['description'],
+                    contract['naics_code'],
+                    contract['sam_gov_url'],
+                    contract['notice_id'],
+                    contract['set_aside'],
+                    contract['posted_date']
+                ))
+                inserted += 1
+                
+            except Exception as e:
+                print(f"   ❌ Error inserting {contract['title'][:50]}: {e}")
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"\n✅ Upload complete!")
+        print(f"   Inserted: {inserted} new contracts")
+        print(f"   Skipped: {skipped} duplicates")
+        
+        # Show total
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM federal_contracts")
+        total = cursor.fetchone()[0]
+        conn.close()
+        print(f"   Total in database: {total}")
+        
+    except Exception as e:
+        print(f"❌ Database error: {e}")
+
+def main():
+    """Main scraper execution"""
+    print("\n🚀 Starting Data.gov contract scraper...\n")
+    
+    # Fetch contracts
+    contracts = fetch_virginia_contracts(days_back=90, max_results=200)
+    
+    if not contracts:
+        print("\n❌ No contracts fetched")
+        return
+    
+    # Filter for cleaning services
+    cleaning_contracts = filter_cleaning_contracts(contracts)
+    
+    if not cleaning_contracts:
+        print("\n⚠️  No cleaning contracts found")
+        print("   Uploading all Virginia contracts instead...")
+        cleaning_contracts = contracts[:50]  # Limit to 50
+    
+    # Upload to database
+    upload_to_database(cleaning_contracts)
+    
+    print("\n" + "=" * 70)
+    print("✅ Scraping complete! Refresh your federal contracts page.")
+    print("=" * 70)
+
+if __name__ == '__main__':
+    main()
