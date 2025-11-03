@@ -1241,13 +1241,10 @@ def update_contracts_from_usaspending():
                         desc_parts.append(f"Awarded to: {recipient}")
                     description = " | ".join(desc_parts) if desc_parts else "Federal contract"
                     
-                    # Create SAM.gov search URL with agency and NAICS if available
+                    # Create SAM.gov opportunities URL
+                    # Use the main contract opportunities search page
                     naics_code = str(award.get('NAICS Code', ''))
-                    if naics_code:
-                        sam_url = f'https://sam.gov/search/?index=opp&page=1&naics={naics_code}&sort=-relevance'
-                    else:
-                        # General cleaning services NAICS
-                        sam_url = 'https://sam.gov/search/?index=opp&page=1&naics=561720&sort=-relevance'
+                    sam_url = 'https://sam.gov/content/opportunities'
                     
                     contract = {
                         'title': f"Contract {award_id}",
@@ -10007,29 +10004,32 @@ def admin_fix_sam_urls():
         print("🔧 ADMIN: Fixing SAM.gov URLs")
         print("="*70)
         
-        # Simple direct update - set all to default cleaning services search
-        result = db.session.execute(text("""
-            UPDATE federal_contracts 
-            SET sam_gov_url = 'https://sam.gov/search/?index=opp&page=1&naics=561720&sort=-relevance'
-        """))
+        # Get all contracts
+        contracts = db.session.execute(text('''
+            SELECT id, naics_code FROM federal_contracts
+        ''')).fetchall()
+        
+        print(f"Found {len(contracts)} contracts to update")
+        
+        updated = 0
+        for contract in contracts:
+            contract_id = contract[0]
+            naics_code = contract[1] if contract[1] else ''
+            
+            # Use SAM.gov main opportunities page (always works)
+            sam_url = 'https://sam.gov/content/opportunities'
+            
+            # Update the contract
+            db.session.execute(text('''
+                UPDATE federal_contracts 
+                SET sam_gov_url = :url 
+                WHERE id = :id
+            '''), {'url': sam_url, 'id': contract_id})
+            
+            updated += 1
         
         db.session.commit()
-        
-        # Get count
-        count_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
-        updated = count_result[0] if count_result else 0
-        
         print(f"✅ Successfully updated {updated} contracts")
-        
-        # Show sample URLs
-        samples = db.session.execute(text("""
-            SELECT notice_id, sam_gov_url FROM federal_contracts LIMIT 3
-        """)).fetchall()
-        
-        sample_html = "<h3>Sample URLs:</h3><ul>"
-        for sample in samples:
-            sample_html += f"<li><strong>{sample[0]}</strong>: {sample[1][:60]}...</li>"
-        sample_html += "</ul>"
         
         return f"""
         <html>
@@ -10037,7 +10037,7 @@ def admin_fix_sam_urls():
             <title>SAM.gov URLs Fixed</title>
             <style>
                 body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
-                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
                 h1 {{ color: #28a745; }}
             </style>
         </head>
@@ -10045,7 +10045,6 @@ def admin_fix_sam_urls():
             <div class="container">
                 <h1>✅ SAM.gov URLs Fixed!</h1>
                 <p>Updated {updated} contracts with proper SAM.gov search URLs</p>
-                {sample_html}
                 <a href="/federal-contracts" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Contracts</a>
                 <a href="/admin/check-contracts" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Database Status</a>
                 <a href="/" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Home</a>
