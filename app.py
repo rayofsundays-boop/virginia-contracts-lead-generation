@@ -1191,16 +1191,23 @@ def update_contracts_from_usaspending():
             response = requests.post(USASPENDING_API, json=payload, 
                                    headers={"Content-Type": "application/json"}, timeout=30)
             
+            print(f"   API Response Status: {response.status_code}")
+            
             if response.status_code != 200:
                 print(f"❌ API Error: {response.status_code}")
+                print(f"   Response: {response.text[:500]}")
                 break
             
             data = response.json()
+            print(f"   Response keys: {list(data.keys())}")
+            print(f"   Total available: {data.get('page_metadata', {}).get('total', 0)}")
+            
             if 'results' not in data or not data['results']:
+                print(f"   ⚠️  No results in response")
                 break
             
             results = data['results']
-            print(f"   Received {len(results)} awards")
+            print(f"   ✅ Received {len(results)} awards")
             
             for idx, award in enumerate(results, len(all_contracts) + 1):
                 try:
