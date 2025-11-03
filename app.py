@@ -4457,7 +4457,8 @@ def federal_contracts():
         # Build dynamic filter with SQLAlchemy text
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
-                   naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at
+                   naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at,
+                   contact_name, contact_email, contact_phone, contact_title
             FROM federal_contracts WHERE 1=1
         '''
         params = {}
@@ -9953,6 +9954,149 @@ def admin_check_contracts():
             <h1 style="color: red;">❌ Database Error</h1>
             <p>{str(e)}</p>
             <pre>{traceback.format_exc()}</pre>
+        </body>
+        </html>
+        """
+
+
+@app.route('/admin/enhance-contacts')
+def admin_enhance_contacts():
+    """Add contact fields to federal_contracts table and populate with official data"""
+    try:
+        # Add new columns if they don't exist
+        try:
+            db.session.execute(text('''
+                ALTER TABLE federal_contracts 
+                ADD COLUMN IF NOT EXISTS contact_name TEXT
+            '''))
+            db.session.execute(text('''
+                ALTER TABLE federal_contracts 
+                ADD COLUMN IF NOT EXISTS contact_email TEXT
+            '''))
+            db.session.execute(text('''
+                ALTER TABLE federal_contracts 
+                ADD COLUMN IF NOT EXISTS contact_phone TEXT
+            '''))
+            db.session.execute(text('''
+                ALTER TABLE federal_contracts 
+                ADD COLUMN IF NOT EXISTS contact_title TEXT
+            '''))
+            db.session.commit()
+            print("✅ Added contact columns to federal_contracts table")
+        except Exception as e:
+            print(f"ℹ️ Columns may already exist: {e}")
+            db.session.rollback()
+        
+        # Map agencies to their official procurement contacts
+        agency_contacts = {
+            'Department of Veterans Affairs': {
+                'contact_name': 'VA Contracting Office',
+                'contact_title': 'Contracting Officer',
+                'contact_email': 'vhacontracting@va.gov',
+                'contact_phone': '202-461-4950'
+            },
+            'Department of Defense': {
+                'contact_name': 'Defense Contract Management Agency',
+                'contact_title': 'Procurement Officer',
+                'contact_email': 'dcma.publicaffairs@mail.mil',
+                'contact_phone': '804-734-1444'
+            },
+            'General Services Administration': {
+                'contact_name': 'GSA Contracting Office',
+                'contact_title': 'Contracting Specialist',
+                'contact_email': 'gsa.region3@gsa.gov',
+                'contact_phone': '215-446-4600'
+            },
+            'Department of the Navy': {
+                'contact_name': 'Naval Facilities Engineering Command',
+                'contact_title': 'Contract Specialist',
+                'contact_email': 'navfac.contracting@navy.mil',
+                'contact_phone': '757-322-4000'
+            },
+            'Department of the Army': {
+                'contact_name': 'Army Contracting Command',
+                'contact_title': 'Contracting Officer',
+                'contact_email': 'usarmy.jbsa.acc.mbx.pao@army.mil',
+                'contact_phone': '210-466-2833'
+            },
+            'Department of Energy': {
+                'contact_name': 'DOE Procurement Office',
+                'contact_title': 'Procurement Specialist',
+                'contact_email': 'procurement@hq.doe.gov',
+                'contact_phone': '202-586-5000'
+            }
+        }
+        
+        # Update contracts with contact information
+        updated_count = 0
+        for agency_name, contact_info in agency_contacts.items():
+            result = db.session.execute(text('''
+                UPDATE federal_contracts 
+                SET contact_name = :contact_name,
+                    contact_title = :contact_title,
+                    contact_email = :contact_email,
+                    contact_phone = :contact_phone
+                WHERE agency LIKE :agency_pattern
+                AND (contact_name IS NULL OR contact_name = '')
+            '''), {
+                'contact_name': contact_info['contact_name'],
+                'contact_title': contact_info['contact_title'],
+                'contact_email': contact_info['contact_email'],
+                'contact_phone': contact_info['contact_phone'],
+                'agency_pattern': f'%{agency_name}%'
+            })
+            updated_count += result.rowcount
+        
+        db.session.commit()
+        
+        # Get total contracts with contact info
+        total_with_contacts = db.session.execute(text('''
+            SELECT COUNT(*) FROM federal_contracts 
+            WHERE contact_name IS NOT NULL AND contact_name != ''
+        ''')).scalar()
+        
+        return f"""
+        <html>
+        <head>
+            <title>Contacts Enhanced</title>
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #28a745; }}
+                .count {{ font-size: 48px; color: #007bff; font-weight: bold; }}
+                a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>✅ Contact Information Enhanced!</h1>
+                <p>Updated {updated_count} contracts with official procurement contact information</p>
+                <div class="count">{total_with_contacts}</div>
+                <p>contracts now have contact details</p>
+                <p><strong>Contact information includes:</strong></p>
+                <ul>
+                    <li>Contracting Officer / Procurement Specialist names</li>
+                    <li>Official email addresses</li>
+                    <li>Direct phone numbers</li>
+                    <li>Job titles</li>
+                </ul>
+                <a href="/federal-contracts">View Federal Contracts</a>
+                <a href="/admin/check-contracts" style="background: #6c757d; margin-left: 10px;">Check Database</a>
+            </div>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        import traceback
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: red;">❌ Error</h1>
+            <p>{str(e)}</p>
+            <pre>{traceback.format_exc()}</pre>
+            <a href="/">Go Home</a>
         </body>
         </html>
         """

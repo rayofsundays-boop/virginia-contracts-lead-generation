@@ -134,6 +134,33 @@
                             <small class="text-muted">Notice ID:</small>
                             <code class="small">{{ contract[10] }}</code>
                         </div>
+                        
+                        {% if contract[14] or contract[15] or contract[16] %}
+                        <div class="mt-3 pt-3 border-top">
+                            <h6 class="text-primary mb-2"><i class="fas fa-user-tie me-2"></i>Contact Information</h6>
+                            {% if contract[14] %}
+                            <div class="mb-1">
+                                <small class="text-muted">Contact:</small>
+                                <strong>{{ contract[14] }}</strong>
+                                {% if contract[17] %}
+                                <span class="badge bg-info ms-1">{{ contract[17] }}</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if contract[15] %}
+                            <div class="mb-1">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                <a href="mailto:{{ contract[15] }}" class="text-decoration-none">{{ contract[15] }}</a>
+                            </div>
+                            {% endif %}
+                            {% if contract[16] %}
+                            <div class="mb-1">
+                                <i class="fas fa-phone text-success me-2"></i>
+                                <a href="tel:{{ contract[16] }}" class="text-decoration-none">{{ contract[16] }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <div>
