@@ -9978,6 +9978,7 @@ def admin_check_contracts():
                 <br>
                 <a href="/federal-contracts" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Federal Contracts</a>
                 <a href="/admin/populate-federal-contracts" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Run Scraper</a>
+                <a href="/admin/fix-sam-urls" style="padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Fix SAM.gov URLs</a>
             </div>
         </body>
         </html>
@@ -9994,6 +9995,83 @@ def admin_check_contracts():
             <h1 style="color: red;">❌ Database Error</h1>
             <p>{str(e)}</p>
             <pre>{traceback.format_exc()}</pre>
+        </body>
+        </html>
+        """
+
+@app.route('/admin/fix-sam-urls')
+def admin_fix_sam_urls():
+    """Admin route to fix SAM.gov URLs for all federal contracts"""
+    try:
+        print("\n" + "="*70)
+        print("🔧 ADMIN: Fixing SAM.gov URLs")
+        print("="*70)
+        
+        # Get all contracts
+        contracts = db.session.execute(text('''
+            SELECT id, naics_code FROM federal_contracts
+        ''')).fetchall()
+        
+        print(f"Found {len(contracts)} contracts to update")
+        
+        updated = 0
+        for contract in contracts:
+            contract_id = contract[0]
+            naics_code = contract[1] if contract[1] else ''
+            
+            # Create proper SAM.gov URL
+            if naics_code and naics_code != 'None' and naics_code.strip():
+                sam_url = f'https://sam.gov/search/?index=opp&page=1&naics={naics_code}&sort=-relevance'
+            else:
+                # Default to general cleaning services
+                sam_url = 'https://sam.gov/search/?index=opp&page=1&naics=561720&sort=-relevance'
+            
+            # Update the contract
+            db.session.execute(text('''
+                UPDATE federal_contracts 
+                SET sam_gov_url = :url 
+                WHERE id = :id
+            '''), {'url': sam_url, 'id': contract_id})
+            
+            updated += 1
+        
+        db.session.commit()
+        print(f"✅ Successfully updated {updated} contracts")
+        
+        return f"""
+        <html>
+        <head>
+            <title>SAM.gov URLs Fixed</title>
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                h1 {{ color: #28a745; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>✅ SAM.gov URLs Fixed!</h1>
+                <p>Updated {updated} contracts with proper SAM.gov search URLs</p>
+                <a href="/federal-contracts" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Contracts</a>
+                <a href="/admin/check-contracts" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Database Status</a>
+                <a href="/" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Home</a>
+            </div>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Error fixing SAM.gov URLs: {error_details}")
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: red;">❌ Error</h1>
+            <p>{str(e)}</p>
+            <pre>{error_details}</pre>
+            <a href="/admin/check-contracts">Back to Admin</a>
         </body>
         </html>
         """
