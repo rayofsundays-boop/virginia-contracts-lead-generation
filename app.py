@@ -1037,6 +1037,76 @@ def update_local_gov_contracts():
     except Exception as e:
         print(f"❌ Error updating local government contracts: {e}")
 
+def update_federal_contracts_from_datagov():
+    """Fetch and update federal contracts from Data.gov bulk files (USAspending.gov)"""
+    try:
+        print("📦 Fetching federal contracts from Data.gov bulk files (USAspending.gov)...")
+        from datagov_bulk_fetcher import DataGovBulkFetcher
+        
+        fetcher = DataGovBulkFetcher()
+        
+        # Fetch from USAspending.gov bulk download API (last 30 days)
+        contracts = fetcher.fetch_usaspending_contracts(days_back=90)
+        
+        if not contracts:
+            print("⚠️  No contracts found in Data.gov bulk files.")
+            return
+        
+        print(f"📊 Processing {len(contracts)} contracts from bulk data...")
+        
+        # Use SQLAlchemy for database operations
+        with app.app_context():
+            # Insert contracts with conflict handling
+            new_count = 0
+            updated_count = 0
+            
+            for contract in contracts:
+                try:
+                    # Check if contract exists
+                    existing = db.session.execute(text('''
+                        SELECT id FROM federal_contracts WHERE notice_id = :notice_id
+                    '''), {'notice_id': contract['notice_id']}).fetchone()
+                    
+                    if existing:
+                        # Update existing contract
+                        db.session.execute(text('''
+                            UPDATE federal_contracts SET
+                                title = :title,
+                                agency = :agency,
+                                department = :department,
+                                location = :location,
+                                value = :value,
+                                deadline = :deadline,
+                                description = :description,
+                                naics_code = :naics_code,
+                                sam_gov_url = :sam_gov_url,
+                                set_aside = :set_aside,
+                                posted_date = :posted_date
+                            WHERE notice_id = :notice_id
+                        '''), contract)
+                        updated_count += 1
+                    else:
+                        # Insert new contract
+                        db.session.execute(text('''
+                            INSERT INTO federal_contracts 
+                            (title, agency, department, location, value, deadline, description, 
+                             naics_code, sam_gov_url, notice_id, set_aside, posted_date)
+                            VALUES (:title, :agency, :department, :location, :value, :deadline, 
+                                    :description, :naics_code, :sam_gov_url, :notice_id, 
+                                    :set_aside, :posted_date)
+                        '''), contract)
+                        new_count += 1
+                        
+                except Exception as e:
+                    print(f"⚠️  Error processing contract {contract.get('notice_id')}: {e}")
+                    continue
+            
+            db.session.commit()
+            print(f"✅ Data.gov bulk update: {new_count} new contracts, {updated_count} updated")
+            
+    except Exception as e:
+        print(f"❌ Error updating from Data.gov: {e}")
+
 def schedule_samgov_updates():
     """Run SAM.gov updates every 15 minutes for real-time contract data"""
     # Schedule to run every 15 minutes
@@ -1058,6 +1128,16 @@ def schedule_local_gov_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
+def schedule_datagov_bulk_updates():
+    """Run Data.gov bulk updates daily at 1 AM (large files, less frequent)"""
+    schedule.every().day.at("01:00").do(update_federal_contracts_from_datagov)
+    
+    print("⏰ Data.gov bulk scheduler started - will update federal contracts from bulk files daily at 1 AM")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 def start_background_jobs_once():
     """Start schedulers and optional initial fetch only in a single worker."""
     if not _acquire_background_lock():
@@ -1067,6 +1147,10 @@ def start_background_jobs_once():
     # Start SAM.gov scheduler in background thread
     samgov_scheduler_thread = threading.Thread(target=schedule_samgov_updates, daemon=True)
     samgov_scheduler_thread.start()
+
+    # Start Data.gov bulk scheduler in background thread  
+    datagov_scheduler_thread = threading.Thread(target=schedule_datagov_bulk_updates, daemon=True)
+    datagov_scheduler_thread.start()
 
     # Start Local Government scheduler in background thread
     localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
@@ -1078,13 +1162,21 @@ def start_background_jobs_once():
             time.sleep(5)  # Wait 5 seconds for app to fully start
             print("🚀 Running initial SAM.gov fetch on startup...")
             update_federal_contracts_from_samgov()
+        
+        def initial_datagov_fetch():
+            time.sleep(15)  # Wait 15 seconds, after SAM.gov
+            print("🚀 Running initial Data.gov bulk fetch on startup...")
+            update_federal_contracts_from_datagov()
 
         def initial_localgov_fetch():
-            time.sleep(10)  # Wait 10 seconds, after SAM.gov
+            time.sleep(25)  # Wait 25 seconds, after Data.gov
             update_local_gov_contracts()
 
         initial_fetch_thread = threading.Thread(target=initial_samgov_fetch, daemon=True)
         initial_fetch_thread.start()
+        
+        datagov_fetch_thread = threading.Thread(target=initial_datagov_fetch, daemon=True)
+        datagov_fetch_thread.start()
 
         localgov_fetch_thread = threading.Thread(target=initial_localgov_fetch, daemon=True)
         localgov_fetch_thread.start()
