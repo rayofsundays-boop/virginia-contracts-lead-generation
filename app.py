@@ -1038,14 +1038,15 @@ def update_local_gov_contracts():
         print(f"❌ Error updating local government contracts: {e}")
 
 def schedule_samgov_updates():
-    """Run SAM.gov updates daily at 2 AM"""
-    schedule.every().day.at("02:00").do(update_federal_contracts_from_samgov)
+    """Run SAM.gov updates every 15 minutes for real-time contract data"""
+    # Schedule to run every 15 minutes
+    schedule.every(15).minutes.do(update_federal_contracts_from_samgov)
     
-    print("⏰ SAM.gov scheduler started - will update federal contracts daily at 2 AM")
+    print("⏰ SAM.gov scheduler started - will update federal contracts every 15 minutes")
     
     while True:
         schedule.run_pending()
-        time.sleep(3600)  # Check every hour
+        time.sleep(60)  # Check every minute
 
 def schedule_local_gov_updates():
     """Run local government updates daily at 3 AM"""
@@ -1072,9 +1073,10 @@ def start_background_jobs_once():
     localgov_scheduler_thread.start()
 
     # Optional initial update on startup (controlled by env to reduce load)
-    if os.environ.get('FETCH_ON_INIT', '0') == '1':
+    if os.environ.get('FETCH_ON_INIT', '1') == '1':  # Changed default to '1' for immediate data
         def initial_samgov_fetch():
             time.sleep(5)  # Wait 5 seconds for app to fully start
+            print("🚀 Running initial SAM.gov fetch on startup...")
             update_federal_contracts_from_samgov()
 
         def initial_localgov_fetch():
