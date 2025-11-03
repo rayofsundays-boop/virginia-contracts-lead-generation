@@ -1214,6 +1214,13 @@ def update_contracts_from_usaspending():
                     start_dt = award.get('Start Date', '')
                     city = award.get('Place of Performance City Name', '')
                     
+                    # Convert start_dt to string if it's a datetime object
+                    if start_dt and not isinstance(start_dt, str):
+                        try:
+                            start_dt = start_dt.strftime('%Y-%m-%d') if hasattr(start_dt, 'strftime') else str(start_dt)
+                        except:
+                            start_dt = ''
+                    
                     location = f"{city}, VA" if city else "Virginia"
                     department = sub_agency if sub_agency else agency
                     
