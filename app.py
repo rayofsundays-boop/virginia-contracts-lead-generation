@@ -69,7 +69,7 @@ SUBSCRIPTION_PLANS = {
         'plan_id': os.environ.get('PAYPAL_MONTHLY_PLAN_ID', 'P-MONTHLY-PLAN-ID')
     },
     'annual': {
-        'name': 'Annual Subscription (Save 20%)',
+        'name': 'Annual Subscription',
         'price': 950.00,
         'plan_id': os.environ.get('PAYPAL_ANNUAL_PLAN_ID', 'P-ANNUAL-PLAN-ID')
     }
@@ -1141,6 +1141,151 @@ def update_federal_contracts_from_datagov():
     except Exception as e:
         print(f"❌ Error updating from Data.gov: {e}")
 
+def update_contracts_from_usaspending():
+    """Fetch and update contracts from USAspending.gov API (Data.gov)"""
+    print("\n" + "="*70)
+    print("🌐 USASPENDING.GOV CONTRACT UPDATE (SCHEDULED)")
+    print("="*70)
+    
+    try:
+        import requests
+        from datetime import timedelta
+        
+        # USAspending.gov API endpoint
+        USASPENDING_API = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
+        
+        # Calculate date range (last 90 days)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=90)
+        
+        print(f"📅 Searching: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+        print(f"🎯 Target: Virginia federal contracts")
+        
+        all_contracts = []
+        page = 1
+        max_results = 200
+        per_page = 100
+        
+        while len(all_contracts) < max_results:
+            print(f"📄 Fetching page {page}...")
+            
+            payload = {
+                "filters": {
+                    "time_period": [{
+                        "start_date": start_date.strftime("%Y-%m-%d"),
+                        "end_date": end_date.strftime("%Y-%m-%d")
+                    }],
+                    "place_of_performance_locations": [{"country": "USA", "state": "VA"}],
+                    "award_type_codes": ["A", "B", "C", "D"],
+                },
+                "fields": [
+                    "Award ID", "Recipient Name", "Start Date", "End Date",
+                    "Award Amount", "Awarding Agency", "Awarding Sub Agency",
+                    "Place of Performance City Name", "NAICS Code", "NAICS Description",
+                    "Product or Service Code", "PSC Description"
+                ],
+                "limit": per_page,
+                "page": page
+            }
+            
+            response = requests.post(USASPENDING_API, json=payload, 
+                                   headers={"Content-Type": "application/json"}, timeout=30)
+            
+            if response.status_code != 200:
+                print(f"❌ API Error: {response.status_code}")
+                break
+            
+            data = response.json()
+            if 'results' not in data or not data['results']:
+                break
+            
+            results = data['results']
+            print(f"   Received {len(results)} awards")
+            
+            for idx, award in enumerate(results, len(all_contracts) + 1):
+                try:
+                    award_id = award.get('Award ID', f'USASPEND-{idx}')
+                    recipient = award.get('Recipient Name', 'Unknown')
+                    amount = award.get('Award Amount', 0)
+                    agency = award.get('Awarding Agency', 'Unknown Agency')
+                    sub_agency = award.get('Awarding Sub Agency', '')
+                    naics_desc = award.get('NAICS Description', '')
+                    psc_desc = award.get('PSC Description', '')
+                    start_dt = award.get('Start Date', '')
+                    city = award.get('Place of Performance City Name', '')
+                    
+                    location = f"{city}, VA" if city else "Virginia"
+                    department = sub_agency if sub_agency else agency
+                    
+                    # Build description
+                    desc_parts = []
+                    if naics_desc:
+                        desc_parts.append(f"NAICS: {naics_desc}")
+                    if psc_desc:
+                        desc_parts.append(f"Service: {psc_desc}")
+                    if recipient:
+                        desc_parts.append(f"Awarded to: {recipient}")
+                    description = " | ".join(desc_parts) if desc_parts else "Federal contract"
+                    
+                    contract = {
+                        'title': f"Contract {award_id}",
+                        'agency': agency,
+                        'department': department,
+                        'location': location,
+                        'contract_value': f"${amount:,.2f}" if amount else "Not specified",
+                        'posted_date': start_dt if start_dt else datetime.now().strftime('%Y-%m-%d'),
+                        'deadline': 'Open',
+                        'description': description[:500],
+                        'contact_info': agency,
+                        'bid_link': f'https://www.usaspending.gov/award/{award_id}'
+                    }
+                    
+                    all_contracts.append(contract)
+                    
+                except Exception as e:
+                    print(f"⚠️  Error parsing award: {e}")
+                    continue
+            
+            page += 1
+            if len(results) < per_page:
+                break
+        
+        print(f"\n✅ Fetched {len(all_contracts)} contracts from USAspending.gov")
+        
+        # Update database
+        if all_contracts:
+            with app.app_context():
+                # Clear old contracts (optional - comment out to keep accumulating)
+                # db.session.execute(text('DELETE FROM federal_contracts'))
+                
+                new_count = 0
+                for contract in all_contracts:
+                    try:
+                        # Check if contract exists by title
+                        existing = db.session.execute(text('''
+                            SELECT id FROM federal_contracts WHERE title = :title
+                        '''), {'title': contract['title']}).fetchone()
+                        
+                        if not existing:
+                            db.session.execute(text('''
+                                INSERT INTO federal_contracts 
+                                (title, agency, department, location, contract_value, posted_date, 
+                                 deadline, description, contact_info, bid_link)
+                                VALUES (:title, :agency, :department, :location, :contract_value, 
+                                        :posted_date, :deadline, :description, :contact_info, :bid_link)
+                            '''), contract)
+                            new_count += 1
+                    except Exception as e:
+                        print(f"⚠️  Error inserting contract: {e}")
+                        continue
+                
+                db.session.commit()
+                print(f"✅ USAspending update complete: {new_count} new contracts added")
+                print("="*70 + "\n")
+                
+    except Exception as e:
+        print(f"❌ Error updating from USAspending.gov: {e}")
+
 def schedule_samgov_updates():
     """Run SAM.gov updates during off-peak hours (midnight-6 AM EST)"""
     # Schedule hourly during off-peak hours for reduced API load
@@ -1177,6 +1322,16 @@ def schedule_datagov_bulk_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
+def schedule_usaspending_updates():
+    """Run USAspending.gov API updates at 4 AM daily"""
+    schedule.every().day.at("04:00").do(update_contracts_from_usaspending)
+    
+    print("⏰ USAspending.gov scheduler started - will fetch contracts daily at 4 AM EST")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 def start_background_jobs_once():
     """Start schedulers and optional initial fetch only in a single worker."""
     if not _acquire_background_lock():
@@ -1194,6 +1349,10 @@ def start_background_jobs_once():
     # Start Data.gov bulk scheduler in background thread  
     datagov_scheduler_thread = threading.Thread(target=schedule_datagov_bulk_updates, daemon=True)
     datagov_scheduler_thread.start()
+
+    # Start USAspending.gov scheduler in background thread (runs at 4 AM daily)
+    usaspending_scheduler_thread = threading.Thread(target=schedule_usaspending_updates, daemon=True)
+    usaspending_scheduler_thread.start()
 
     # Start Local Government scheduler in background thread
     localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)

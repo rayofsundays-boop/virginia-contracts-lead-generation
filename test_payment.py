@@ -5,6 +5,10 @@ Tests PayPal integration and subscription functionality
 import os
 import sys
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def test_paypal_config():
     """Test PayPal configuration"""
