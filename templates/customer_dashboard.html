@@ -686,11 +686,22 @@ function neverShowOnboarding() {
     fetch('/api/disable-onboarding', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'}
-    }).then(response => response.json())
+    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('onboardingModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('onboardingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            console.error('Failed to disable onboarding:', data.error);
+            alert('Failed to save preference. Please try again.');
         }
+    })
+    .catch(error => {
+        console.error('Error disabling onboarding:', error);
+        alert('An error occurred. Please try again.');
     });
 }
 

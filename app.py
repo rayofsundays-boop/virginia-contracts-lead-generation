@@ -331,6 +331,7 @@ def get_leads_by_type(lead_type, limit=5):
 def check_onboarding_status(user_email):
     """Check if user has completed onboarding or disabled it"""
     try:
+        # Try to check both columns
         result = db.session.execute(text('''
             SELECT onboarding_completed, onboarding_disabled 
             FROM user_onboarding 
@@ -341,8 +342,20 @@ def check_onboarding_status(user_email):
             # If onboarding is disabled or completed, return True (don't show modal)
             return result[0] or result[1]
         return False
-    except:
-        return False
+    except Exception as e:
+        # If onboarding_disabled column doesn't exist, fall back to only checking onboarding_completed
+        try:
+            result = db.session.execute(text('''
+                SELECT onboarding_completed 
+                FROM user_onboarding 
+                WHERE user_email = :email
+            '''), {'email': user_email}).fetchone()
+            
+            if result:
+                return result[0]
+            return False
+        except:
+            return False
 
 def get_dashboard_cache(user_email):
     """Get cached dashboard data if available and not expired"""
@@ -3260,17 +3273,29 @@ def api_disable_onboarding():
     try:
         user_email = session.get('user_email')
         
-        # Mark onboarding as permanently disabled
-        db.session.execute(text('''
-            INSERT INTO user_onboarding (user_email, onboarding_disabled)
-            VALUES (:email, TRUE)
-            ON CONFLICT (user_email) DO UPDATE SET onboarding_disabled = TRUE
-        '''), {'email': user_email})
-        db.session.commit()
+        # Check if the onboarding_disabled column exists
+        try:
+            # Try to mark onboarding as permanently disabled
+            db.session.execute(text('''
+                INSERT INTO user_onboarding (user_email, onboarding_disabled)
+                VALUES (:email, TRUE)
+                ON CONFLICT (user_email) DO UPDATE SET onboarding_disabled = TRUE
+            '''), {'email': user_email})
+            db.session.commit()
+        except Exception as col_error:
+            # If column doesn't exist, fall back to marking onboarding as completed
+            db.session.rollback()
+            db.session.execute(text('''
+                INSERT INTO user_onboarding (user_email, onboarding_completed)
+                VALUES (:email, TRUE)
+                ON CONFLICT (user_email) DO UPDATE SET onboarding_completed = TRUE
+            '''), {'email': user_email})
+            db.session.commit()
         
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
+        print(f"Error disabling onboarding: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/saved-leads')
