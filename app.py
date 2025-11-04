@@ -13210,6 +13210,8 @@ def community_forum():
 
     except Exception as e:
         print(f"Error loading community forum: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error loading community forum', 'error')
         return render_template('community_forum.html',
                              commercial_requests=[],
