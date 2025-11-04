@@ -2328,6 +2328,30 @@ def init_postgres_db():
         
         db.session.commit()
         
+        # Messages table for in-app messaging and notifications
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS messages
+                     (id SERIAL PRIMARY KEY,
+                      sender_id INTEGER,
+                      recipient_id INTEGER,
+                      subject TEXT NOT NULL,
+                      body TEXT NOT NULL,
+                      is_read BOOLEAN DEFAULT FALSE,
+                      is_admin BOOLEAN DEFAULT FALSE,
+                      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      read_at TIMESTAMP,
+                      FOREIGN KEY (sender_id) REFERENCES leads(id),
+                      FOREIGN KEY (recipient_id) REFERENCES leads(id))'''))
+        
+        # Create indexes for better query performance
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_messages_recipient 
+                                   ON messages(recipient_id)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_messages_sender 
+                                   ON messages(sender_id)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_messages_is_read 
+                                   ON messages(is_read)'''))
+        
+        db.session.commit()
+        
         # Supply contracts table (international supplier requests and quick wins)
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS supply_contracts
                      (id SERIAL PRIMARY KEY,
