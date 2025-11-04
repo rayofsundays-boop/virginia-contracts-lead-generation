@@ -4559,10 +4559,11 @@ def federal_contracts():
         params.update({'limit': per_page, 'offset': offset})
         rows = db.session.execute(text(base_sql), params).fetchall()
 
-        # Filters
-        departments = [r[0] for r in db.session.execute(text('''
+        # Filters - use Row attribute access
+        departments_rows = db.session.execute(text('''
             SELECT DISTINCT department FROM federal_contracts WHERE department IS NOT NULL AND department <> '' ORDER BY department
-        ''')).fetchall()]
+        ''')).fetchall()
+        departments = [r.department for r in departments_rows]
 
         pages = max(math.ceil(total / per_page), 1)
         args_base = dict(request.args)
