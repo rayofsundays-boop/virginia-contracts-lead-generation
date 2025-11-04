@@ -7884,47 +7884,48 @@ def admin_dashboard():
 @admin_required
 def admin_enhanced():
     """Enhanced admin panel with left sidebar"""
-    section = request.args.get('section', 'dashboard')
-    page = max(int(request.args.get('page', 1) or 1), 1)
-    
-    # Get cached stats (5-minute cache buckets)
-    cache_timestamp = int(datetime.now().timestamp() / 300)  # Round to 5-minute intervals
-    stats_result = get_admin_stats_cached(cache_timestamp)
-    
-    stats = {
-        'paid_subscribers': stats_result[0] if stats_result else 0,
-        'free_users': stats_result[1] if stats_result else 0,
-        'new_users_30d': stats_result[2] if stats_result else 0,
-        'revenue_30d': stats_result[3] if stats_result else 0,
-        'page_views_24h': stats_result[4] if stats_result else 0,
-        'active_users_24h': stats_result[5] if stats_result else 0,
-        'total_users': (stats_result[0] if stats_result else 0) + (stats_result[1] if stats_result else 0),
-        'new_users_7d': db.session.execute(text('''
-            SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
+    try:
+        section = request.args.get('section', 'dashboard')
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        
+        # Get cached stats (5-minute cache buckets)
+        cache_timestamp = int(datetime.now().timestamp() / 300)  # Round to 5-minute intervals
+        stats_result = get_admin_stats_cached(cache_timestamp)
+        
+        stats = {
+            'paid_subscribers': stats_result[0] if stats_result else 0,
+            'free_users': stats_result[1] if stats_result else 0,
+            'new_users_30d': stats_result[2] if stats_result else 0,
+            'revenue_30d': stats_result[3] if stats_result else 0,
+            'page_views_24h': stats_result[4] if stats_result else 0,
+            'active_users_24h': stats_result[5] if stats_result else 0,
+            'total_users': (stats_result[0] if stats_result else 0) + (stats_result[1] if stats_result else 0),
+            'new_users_7d': db.session.execute(text('''
+                SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
+            ''')).scalar() or 0
+        }
+        
+        # Get unread admin messages count
+        unread_admin_messages = db.session.execute(text('''
+            SELECT COUNT(*) FROM messages 
+            WHERE recipient_id = :user_id AND is_read = FALSE
+        '''), {'user_id': session['user_id']}).scalar() or 0
+        
+        # Get pending proposals count
+        pending_proposals = db.session.execute(text('''
+            SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
         ''')).scalar() or 0
-    }
-    
-    # Get unread admin messages count
-    unread_admin_messages = db.session.execute(text('''
-        SELECT COUNT(*) FROM messages 
-        WHERE recipient_id = :user_id AND is_read = FALSE
-    '''), {'user_id': session['user_id']}).scalar() or 0
-    
-    # Get pending proposals count
-    pending_proposals = db.session.execute(text('''
-        SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
-    ''')).scalar() or 0
-    
-    context = {
-        'section': section,
-        'stats': stats,
-        'unread_admin_messages': unread_admin_messages,
-        'pending_proposals': pending_proposals,
-        'page': page
-    }
-    
-    # Section-specific data
-    if section == 'dashboard':
+        
+        context = {
+            'section': section,
+            'stats': stats,
+            'unread_admin_messages': unread_admin_messages,
+            'pending_proposals': pending_proposals,
+            'page': page
+        }
+        
+        # Section-specific data
+        if section == 'dashboard':
         # Recent users
         context['recent_users'] = db.session.execute(text('''
             SELECT * FROM leads 
@@ -8104,7 +8105,35 @@ def admin_enhanced():
                 created_at DESC
         ''')).fetchall()
         
-    return render_template('admin_enhanced.html', **context)
+        return render_template('admin_enhanced.html', **context)
+    
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in admin_enhanced: {e}")
+        print(error_trace)
+        
+        return f"""
+        <html>
+        <head>
+            <title>Error loading admin panel</title>
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                h1 {{ color: #dc3545; }}
+                pre {{ background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Error loading admin panel</h1>
+                <p><strong>{str(e)}</strong></p>
+                <pre>{error_trace}</pre>
+                <a href="/" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Back to Home</a>
+            </div>
+        </body>
+        </html>
+        """
 
 
 @app.route('/admin/reset-password', methods=['POST'])
