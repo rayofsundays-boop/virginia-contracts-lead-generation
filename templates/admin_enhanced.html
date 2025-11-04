@@ -155,6 +155,9 @@
                     <a class="nav-link {% if section == 'settings' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='settings') }}">
                         <i class="fas fa-cog"></i>System Settings
                     </a>
+                    <a class="nav-link {% if section == 'manage-admins' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='manage-admins') }}">
+                        <i class="fas fa-user-shield"></i>Manage Admins
+                    </a>
                     
                     <!-- System Tools -->
                     <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
@@ -230,6 +233,9 @@
             
             {% elif section == 'edit-residential' %}
             {% include 'admin_sections/edit_residential.html' %}
+            
+            {% elif section == 'manage-admins' %}
+            {% include 'admin_sections/manage_admins.html' %}
             
             {% endif %}
         </div>

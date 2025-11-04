@@ -8080,6 +8080,29 @@ def admin_enhanced():
         context['status_filter'] = status_filter
         context['total_pages'] = total_pages
         context['current_page'] = page
+    
+    elif section == 'manage-admins':
+        # Check if current user is super admin
+        current_user = db.session.execute(text('''
+            SELECT admin_role FROM leads WHERE id = :id
+        '''), {'id': session['user_id']}).fetchone()
+        
+        context['is_super_admin'] = current_user and current_user.admin_role == 'super_admin'
+        context['current_admin_id'] = session['user_id']
+        
+        # Get all admin users
+        context['admin_users'] = db.session.execute(text('''
+            SELECT id, contact_name, email, is_admin, admin_role, created_at
+            FROM leads 
+            WHERE is_admin = TRUE
+            ORDER BY 
+                CASE 
+                    WHEN admin_role = 'super_admin' THEN 1
+                    WHEN admin_role = 'admin' THEN 2
+                    ELSE 3
+                END,
+                created_at DESC
+        ''')).fetchall()
         
     return render_template('admin_enhanced.html', **context)
 
@@ -8334,6 +8357,145 @@ def admin_delete_lead():
     except Exception as e:
         db.session.rollback()
         print(f"Error deleting lead: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/create-admin-user', methods=['POST'])
+@login_required
+@admin_required
+def admin_create_admin_user():
+    """Create a new admin user - super admins only"""
+    try:
+        # Check if current user is super admin
+        current_user = db.session.execute(text('''
+            SELECT admin_role FROM leads WHERE id = :id
+        '''), {'id': session['user_id']}).fetchone()
+        
+        if not current_user or current_user.admin_role != 'super_admin':
+            return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
+        
+        data = request.get_json()
+        
+        # Hash password
+        from werkzeug.security import generate_password_hash
+        password_hash = generate_password_hash(data.get('password'))
+        
+        # Add admin_role column if it doesn't exist (migration)
+        try:
+            db.session.execute(text('''
+                ALTER TABLE leads ADD COLUMN IF NOT EXISTS admin_role TEXT DEFAULT NULL
+            '''))
+            db.session.commit()
+        except:
+            db.session.rollback()
+        
+        # Create new admin user
+        db.session.execute(text('''
+            INSERT INTO leads (
+                company_name, contact_name, email, username, password_hash, 
+                phone, is_admin, admin_role, subscription_status
+            )
+            VALUES (
+                :company_name, :contact_name, :email, :username, :password_hash,
+                '', TRUE, :admin_role, 'paid'
+            )
+        '''), {
+            'company_name': data.get('company_name', 'Admin User'),
+            'contact_name': data.get('contact_name'),
+            'email': data.get('email'),
+            'username': data.get('username'),
+            'password_hash': password_hash,
+            'admin_role': data.get('admin_role', 'admin')
+        })
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Admin user created successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating admin user: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/change-admin-role', methods=['POST'])
+@login_required
+@admin_required
+def admin_change_admin_role():
+    """Change an admin user's role - super admins only"""
+    try:
+        # Check if current user is super admin
+        current_user = db.session.execute(text('''
+            SELECT admin_role FROM leads WHERE id = :id
+        '''), {'id': session['user_id']}).fetchone()
+        
+        if not current_user or current_user.admin_role != 'super_admin':
+            return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
+        
+        data = request.get_json()
+        admin_id = data.get('admin_id')
+        new_role = data.get('new_role')
+        
+        if not admin_id or not new_role:
+            return jsonify({'success': False, 'message': 'Missing admin_id or new_role'}), 400
+        
+        if new_role not in ['admin', 'super_admin']:
+            return jsonify({'success': False, 'message': 'Invalid role'}), 400
+        
+        # Don't allow changing own role
+        if int(admin_id) == session['user_id']:
+            return jsonify({'success': False, 'message': 'Cannot change your own role'}), 400
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET admin_role = :role 
+            WHERE id = :id AND is_admin = TRUE
+        '''), {'role': new_role, 'id': admin_id})
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Admin role changed to {new_role}'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error changing admin role: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/revoke-admin-access', methods=['POST'])
+@login_required
+@admin_required
+def admin_revoke_admin_access():
+    """Revoke admin access from a user - super admins only"""
+    try:
+        # Check if current user is super admin
+        current_user = db.session.execute(text('''
+            SELECT admin_role FROM leads WHERE id = :id
+        '''), {'id': session['user_id']}).fetchone()
+        
+        if not current_user or current_user.admin_role != 'super_admin':
+            return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
+        
+        data = request.get_json()
+        admin_id = data.get('admin_id')
+        
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'Missing admin_id'}), 400
+        
+        # Don't allow revoking own access
+        if int(admin_id) == session['user_id']:
+            return jsonify({'success': False, 'message': 'Cannot revoke your own access'}), 400
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET is_admin = FALSE, admin_role = NULL
+            WHERE id = :id
+        '''), {'id': admin_id})
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Admin access revoked successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error revoking admin access: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/manual-update', methods=['POST'])
