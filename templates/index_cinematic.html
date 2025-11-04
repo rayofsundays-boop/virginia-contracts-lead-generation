@@ -30,21 +30,11 @@
     <p class="hero-subtext">
         AI-driven platform connecting Virginia businesses with high-value government & commercial contracts
     </p>
-    <div class="hero-cta-group">
-        <a href="{{ url_for('register') }}" class="cta-button cta-button-primary">
-            <i class="fas fa-star"></i> Start Free Trial
-        </a>
-        <a href="{{ url_for('auth') }}" class="cta-button cta-button-secondary">
-            <i class="fas fa-user-plus"></i> Register / Sign In
-        </a>
-    </div>
     
-    <!-- AI Assessment Button - Featured Below -->
-    <div class="hero-ai-assessment">
-        <a href="{{ url_for('landing') }}" class="cta-button cta-button-ai-featured">
-            <i class="fas fa-brain"></i> AI Assessment
-            <span class="ai-badge">AI POWERED</span>
-        </a>
+    <div class="cta-buttons">
+        <a href="{{ url_for('register') }}" class="btn primary">⭐ Start Free Trial</a>
+        <a href="{{ url_for('auth') }}" class="btn outline">👤 Register / Sign In</a>
+        <a href="{{ url_for('landing') }}" class="btn glow">🤖 AI Assessment</a>
     </div>
     
     <!-- Geometric shapes -->

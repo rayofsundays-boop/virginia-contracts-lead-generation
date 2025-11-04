@@ -12346,36 +12346,45 @@ def community_forum():
         page_res = _int_arg('page_res', 1)
         page_disc = _int_arg('page_disc', 1)  # discussions page
 
-        # Get forum posts (discussions)
-        disc_where = ["status = 'active'"]
-        disc_params = {}
-        if q:
-            disc_where.append('(LOWER(title) LIKE :disc_q OR LOWER(content) LIKE :disc_q)')
-            disc_params['disc_q'] = f"%{q.lower()}%"
+        # Initialize defaults
+        forum_posts = []
+        disc_count = 0
+        disc_pages = 1
         
-        disc_where_sql = ' AND '.join(disc_where)
-        
-        # Count discussions
-        disc_count = db.session.execute(text(f'''
-            SELECT COUNT(1) FROM forum_posts WHERE {disc_where_sql}
-        '''), disc_params).scalar()
-        
-        disc_pages = max(1, (disc_count + per_page - 1) // per_page)
-        page_disc = min(page_disc, disc_pages)
-        disc_offset = (page_disc - 1) * per_page
-        
-        # Get discussions with comment counts
-        forum_posts = db.session.execute(text(f'''
-            SELECT 
-                fp.id, fp.title, fp.content, fp.post_type, fp.user_email, 
-                fp.user_name, fp.is_admin_post, fp.views, fp.created_at,
-                (SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) as comment_count,
-                (SELECT COUNT(*) FROM forum_post_likes WHERE post_id = fp.id) as like_count
-            FROM forum_posts fp
-            WHERE {disc_where_sql}
-            ORDER BY fp.created_at DESC
-            LIMIT :disc_limit OFFSET :disc_offset
-        '''), {**disc_params, 'disc_limit': per_page, 'disc_offset': disc_offset}).fetchall()
+        # Get forum posts (discussions) - handle if table doesn't exist
+        try:
+            disc_where = ["status = 'active'"]
+            disc_params = {}
+            if q:
+                disc_where.append('(LOWER(title) LIKE :disc_q OR LOWER(content) LIKE :disc_q)')
+                disc_params['disc_q'] = f"%{q.lower()}%"
+            
+            disc_where_sql = ' AND '.join(disc_where)
+            
+            # Count discussions
+            disc_count = db.session.execute(text(f'''
+                SELECT COUNT(1) FROM forum_posts WHERE {disc_where_sql}
+            '''), disc_params).scalar()
+            
+            disc_pages = max(1, (disc_count + per_page - 1) // per_page)
+            page_disc = min(page_disc, disc_pages)
+            disc_offset = (page_disc - 1) * per_page
+            
+            # Get discussions with comment counts
+            forum_posts = db.session.execute(text(f'''
+                SELECT 
+                    fp.id, fp.title, fp.content, fp.post_type, fp.user_email, 
+                    fp.user_name, fp.is_admin_post, fp.views, fp.created_at,
+                    (SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) as comment_count,
+                    (SELECT COUNT(*) FROM forum_post_likes WHERE post_id = fp.id) as like_count
+                FROM forum_posts fp
+                WHERE {disc_where_sql}
+                ORDER BY fp.created_at DESC
+                LIMIT :disc_limit OFFSET :disc_offset
+            '''), {**disc_params, 'disc_limit': per_page, 'disc_offset': disc_offset}).fetchall()
+        except Exception as forum_error:
+            print(f"Forum posts query failed (table may not exist): {forum_error}")
+            # Continue without forum posts
 
         # Build filters for commercial
         comm_where = ["status = 'approved'"]

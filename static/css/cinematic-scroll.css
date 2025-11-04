@@ -267,71 +267,64 @@ body {
     left: 100%;
 }
 
-/* AI Assessment Featured Button - Centered Below Main CTAs */
-.hero-ai-assessment {
+/* New Button Layout */
+.cta-buttons {
     display: flex;
     justify-content: center;
-    margin-top: 30px;
-    animation: float 3s ease-in-out infinite;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
 
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
+.btn {
+    padding: 1.1rem 2.2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    font-size: 1.1rem;
+    border: none;
+    cursor: pointer;
 }
 
-.cta-button-ai-featured {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.btn.primary {
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(106, 17, 203, 0.5);
+}
+
+.btn.primary:hover {
+    box-shadow: 0 0 25px rgba(106, 17, 203, 0.8);
+    transform: translateY(-2px);
+}
+
+.btn.outline {
+    border: 2px solid #7a7cff;
+    color: #cfcfff;
+    background: transparent;
+}
+
+.btn.outline:hover {
+    background: rgba(122, 124, 255, 0.1);
+    border-color: #9fa1ff;
+}
+
+.btn.glow {
+    background: linear-gradient(90deg, #ff00cc, #ffbf00);
     color: white;
-    padding: 18px 50px;
-    font-size: 18px;
-    font-weight: 700;
-    box-shadow: 0 15px 50px rgba(245, 87, 108, 0.5);
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    position: relative;
-    overflow: visible;
-    animation: pulse-glow 2s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.8), 0 0 50px rgba(255, 191, 0, 0.4);
+    transform: scale(1.1);
+    animation: pulseGlow 2s infinite alternate;
 }
 
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 15px 50px rgba(245, 87, 108, 0.5), 0 0 30px rgba(240, 147, 251, 0.4);
-    }
-    50% {
-        box-shadow: 0 20px 60px rgba(245, 87, 108, 0.7), 0 0 50px rgba(240, 147, 251, 0.6);
-    }
-}
-
-.cta-button-ai-featured:hover {
-    transform: translateY(-5px) scale(1.08);
-    box-shadow: 0 25px 70px rgba(245, 87, 108, 0.8), 0 0 60px rgba(240, 147, 251, 0.7);
-}
-
-.cta-button-ai-featured .ai-badge {
-    position: absolute;
-    top: -12px;
-    right: -12px;
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    color: #000;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 12px;
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6);
-    animation: badge-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes badge-pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.8), 0 0 50px rgba(255, 191, 0, 0.4);
         transform: scale(1.1);
+    }
+    100% {
+        box-shadow: 0 0 45px rgba(255, 0, 128, 1), 0 0 90px rgba(255, 191, 0, 0.6);
+        transform: scale(1.2);
     }
 }
 
