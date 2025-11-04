@@ -3093,7 +3093,7 @@ def login():
         
         log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_enhanced'))
     
     # Validate regular user
     result = db.session.execute(
@@ -3119,10 +3119,10 @@ def login():
         
         if session['is_admin']:
             flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_enhanced'))
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
-            return redirect(url_for('customer_leads'))
+            return redirect(url_for('customer_dashboard'))
     else:
         flash('Invalid username or password. Please try again.', 'error')
         return redirect(url_for('auth'))
@@ -7905,11 +7905,11 @@ def delete_note():
 
 @app.route('/admin')
 def admin_dashboard():
-    """Redirect admin homepage to admin panel"""
+    """Redirect admin homepage to enhanced admin panel"""
     if session.get('is_admin'):
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('admin_enhanced'))
     else:
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('auth'))
 
 @app.route('/admin-enhanced')
 @login_required
