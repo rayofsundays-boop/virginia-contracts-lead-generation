@@ -53,8 +53,8 @@
             </div>
             <input type="hidden" name="tab" value="{{ active_tab or 'all' }}">
             <div class="col-md-12 d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>Apply Filters</button>
-                <a href="{{ url_for('community_forum') }}" class="btn btn-outline-secondary">Reset</a>
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold"><i class="fas fa-filter me-2"></i>Apply Filters</button>
+                <a href="{{ url_for('community_forum') }}" class="btn btn-outline-secondary px-4 py-2 fw-semibold" style="border-width: 2px;">Reset</a>
             </div>
         </div>
     </form>
@@ -133,13 +133,13 @@
                                 <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
-                        <div class="card-footer bg-light d-flex gap-2">
-                            <a href="{{ url_for('customer_leads') }}" class="btn btn-primary flex-fill">
+                        <div class="card-footer bg-light d-flex gap-2 align-items-center">
+                            <a href="{{ url_for('customer_leads') }}" class="btn btn-primary flex-fill py-2 fw-semibold">
                                 <i class="fas fa-eye me-2"></i>View Full Details
                             </a>
                             {% if session.get('is_admin') %}
                             <div class="btn-group">
-                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle py-2 fw-semibold" data-bs-toggle="dropdown" aria-expanded="false" style="border-width: 2px;">
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -204,13 +204,13 @@
                                 <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
-                        <div class="card-footer bg-light d-flex gap-2">
-                            <a href="{{ url_for('customer_leads') }}" class="btn btn-success flex-fill">
+                        <div class="card-footer bg-light d-flex gap-2 align-items-center">
+                            <a href="{{ url_for('customer_leads') }}" class="btn btn-success flex-fill py-2 fw-semibold">
                                 <i class="fas fa-eye me-2"></i>View Full Details
                             </a>
                             {% if session.get('is_admin') %}
                             <div class="btn-group">
-                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle py-2 fw-semibold" data-bs-toggle="dropdown" aria-expanded="false" style="border-width: 2px;">
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -484,18 +484,18 @@
         <div class="card-body text-center py-5">
             <h3 class="fw-bold mb-3">Are You a Cleaning Contractor?</h3>
             <p class="lead mb-4">Sign up to access full contact details, or submit your own cleaning request.</p>
-            <div class="d-flex flex-wrap justify-content-center gap-2">
-                <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg px-4 rounded-pill">
+            <div class="d-flex flex-wrap justify-content-center gap-3 align-items-center">
+                <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg px-4 py-3 rounded-pill shadow-sm fw-semibold" style="min-width: 180px;">
                     <i class="fas fa-user-plus me-2"></i>Register Now
                 </a>
-                <a href="{{ url_for('submit_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-                    <i class="fas fa-clipboard-list me-2"></i>Submit Commercial Request
+                <a href="{{ url_for('submit_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 2px;">
+                    <i class="fas fa-clipboard-list me-2"></i>Submit Commercial
                 </a>
-                <a href="{{ url_for('submit_residential_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-                    <i class="fas fa-home me-2"></i>Submit Residential Request
+                <a href="{{ url_for('submit_residential_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 2px;">
+                    <i class="fas fa-home me-2"></i>Submit Residential
                 </a>
-                <button type="button" id="shareBtn" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-                    <i class="fas fa-share-alt me-2"></i>Share This Page
+                <button type="button" id="shareBtn" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 180px; border-width: 2px;">
+                    <i class="fas fa-share-alt me-2"></i>Share Page
                 </button>
             </div>
         </div>
@@ -516,14 +516,67 @@
     color: #495057;
     font-weight: 600;
     padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
 }
 
 .nav-pills .nav-link.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #f8f9fa;
+    color: #667eea;
+}
+
 .card-header h5 {
     font-size: 1.1rem;
+}
+
+/* Enhanced CTA Outline Buttons */
+.cta-outline-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.cta-outline-btn:hover {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    color: #667eea !important;
+    border-color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Better contrast for filter buttons */
+.btn-outline-secondary {
+    color: #495057;
+    border-color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Card footer button improvements */
+.card-footer .btn {
+    transition: all 0.3s ease;
+}
+
+.card-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive button stacking */
+@media (max-width: 768px) {
+    .cta-outline-btn, .btn-light {
+        min-width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
 }
 </style>
 <script>
