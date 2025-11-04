@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}All Contracts - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="fas fa-file-contract me-2"></i>All Contracts with Contact Information
+        </h1>
+        <div>
+            <a href="{{ url_for('admin_enhanced') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Admin
+            </a>
+            <button onclick="exportToCSV()" class="btn btn-success">
+                <i class="fas fa-file-export me-2"></i>Export to CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Contracts</h5>
+                    <h2>{{ contracts|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>With Contact Info</h5>
+                    <h2>{{ contracts|selectattr('contact_email')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>With Phone</h5>
+                    <h2>{{ contracts|selectattr('contact_phone')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>With Contact Name</h5>
+                    <h2>{{ contracts|selectattr('contact_name')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search title, agency, contact...">
+                </div>
+                <div class="col-md-3">
+                    <select id="filterAgency" class="form-select">
+                        <option value="">All Agencies</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="filterContact" class="form-select">
+                        <option value="">All Contacts</option>
+                        <option value="has_email">Has Email</option>
+                        <option value="has_phone">Has Phone</option>
+                        <option value="complete">Complete Info</option>
+                        <option value="missing">Missing Info</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button onclick="clearFilters()" class="btn btn-outline-secondary w-100">Clear Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contracts Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="contractsTable">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>ID</th>
+                            <th>Notice ID</th>
+                            <th>Title</th>
+                            <th>Agency</th>
+                            <th>Department</th>
+                            <th>Location</th>
+                            <th>Value</th>
+                            <th>Deadline</th>
+                            <th>Contact Name</th>
+                            <th>Contact Email</th>
+                            <th>Contact Phone</th>
+                            <th>Contact Title</th>
+                            <th>NAICS</th>
+                            <th>Set Aside</th>
+                            <th>Posted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr>
+                            <td>{{ contract.id }}</td>
+                            <td><small>{{ contract.notice_id or 'N/A' }}</small></td>
+                            <td style="max-width: 300px;">
+                                <strong>{{ contract.title[:80] }}{% if contract.title|length > 80 %}...{% endif %}</strong>
+                            </td>
+                            <td>{{ contract.agency }}</td>
+                            <td>{{ contract.department or 'N/A' }}</td>
+                            <td>{{ contract.location or 'N/A' }}</td>
+                            <td>{{ contract.value or 'N/A' }}</td>
+                            <td>{{ contract.deadline }}</td>
+                            <td>
+                                {% if contract.contact_name %}
+                                    <span class="badge bg-success">{{ contract.contact_name }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.contact_email %}
+                                    <a href="mailto:{{ contract.contact_email }}" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-1"></i>{{ contract.contact_email }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.contact_phone %}
+                                    <a href="tel:{{ contract.contact_phone }}" class="text-decoration-none">
+                                        <i class="fas fa-phone me-1"></i>{{ contract.contact_phone }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ contract.contact_title or 'N/A' }}</td>
+                            <td><small>{{ contract.naics_code or 'N/A' }}</small></td>
+                            <td><small>{{ contract.set_aside or 'N/A' }}</small></td>
+                            <td><small>{{ contract.posted_date }}</small></td>
+                            <td>
+                                {% if contract.sam_gov_url %}
+                                    <a href="{{ contract.sam_gov_url }}" target="_blank" class="btn btn-sm btn-primary" title="View on SAM.gov">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 text-muted">
+        <small>Total: {{ contracts|length }} contracts displayed</small>
+    </div>
+</div>
+
+<style>
+    .table-responsive {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    thead.sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .table td, .table th {
+        white-space: nowrap;
+        padding: 0.5rem;
+    }
+    
+    .table td:nth-child(3) {
+        white-space: normal;
+    }
+</style>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('filterAgency').addEventListener('change', filterTable);
+document.getElementById('filterContact').addEventListener('change', filterTable);
+
+// Populate agency filter
+const agencies = [...new Set([...document.querySelectorAll('tbody tr td:nth-child(4)')].map(td => td.textContent.trim()))];
+agencies.sort().forEach(agency => {
+    if (agency && agency !== 'N/A') {
+        const option = document.createElement('option');
+        option.value = agency;
+        option.textContent = agency;
+        document.getElementById('filterAgency').appendChild(option);
+    }
+});
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const agencyFilter = document.getElementById('filterAgency').value.toLowerCase();
+    const contactFilter = document.getElementById('filterContact').value;
+    const rows = document.querySelectorAll('#contractsTable tbody tr');
+    
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const agency = row.cells[3].textContent.toLowerCase();
+        const contactEmail = row.cells[9].textContent.trim();
+        const contactPhone = row.cells[10].textContent.trim();
+        const contactName = row.cells[8].textContent.trim();
+        
+        let matchesSearch = text.includes(searchTerm);
+        let matchesAgency = !agencyFilter || agency.includes(agencyFilter);
+        let matchesContact = true;
+        
+        if (contactFilter === 'has_email') {
+            matchesContact = !contactEmail.includes('N/A') && contactEmail !== '';
+        } else if (contactFilter === 'has_phone') {
+            matchesContact = !contactPhone.includes('N/A') && contactPhone !== '';
+        } else if (contactFilter === 'complete') {
+            matchesContact = !contactEmail.includes('N/A') && !contactPhone.includes('N/A') && !contactName.includes('N/A');
+        } else if (contactFilter === 'missing') {
+            matchesContact = contactEmail.includes('N/A') || contactPhone.includes('N/A');
+        }
+        
+        if (matchesSearch && matchesAgency && matchesContact) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterAgency').value = '';
+    document.getElementById('filterContact').value = '';
+    filterTable();
+}
+
+function exportToCSV() {
+    const rows = [];
+    const table = document.getElementById('contractsTable');
+    
+    // Headers
+    const headers = [];
+    table.querySelectorAll('thead th').forEach(th => headers.push(th.textContent.trim()));
+    rows.push(headers.join(','));
+    
+    // Data rows (only visible ones)
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        if (tr.style.display !== 'none') {
+            const cols = [];
+            tr.querySelectorAll('td').forEach((td, index) => {
+                if (index !== 15) { // Skip actions column
+                    let text = td.textContent.trim().replace(/"/g, '""');
+                    cols.push('"' + text + '"');
+                }
+            });
+            rows.push(cols.join(','));
+        }
+    });
+    
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'all_contracts_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

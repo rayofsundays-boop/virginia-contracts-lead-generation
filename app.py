@@ -7601,6 +7601,53 @@ def admin_delete_user():
         print(f"Error deleting user: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-all-contracts')
+@login_required
+@admin_required
+def admin_all_contracts():
+    """View all contracts with contact information in one table"""
+    try:
+        # Get all federal contracts with contact info
+        federal_contracts = db.session.execute(text('''
+            SELECT 
+                id, title, notice_id, agency, department, location, value, 
+                deadline, naics_code, set_aside, posted_date, 
+                contact_name, contact_email, contact_phone, contact_title, sam_gov_url
+            FROM federal_contracts
+            ORDER BY posted_date DESC, created_at DESC
+        ''')).fetchall()
+        
+        # Convert to list of dicts for easier template access
+        contracts_list = []
+        for contract in federal_contracts:
+            contracts_list.append({
+                'id': contract.id if hasattr(contract, 'id') else contract[0],
+                'title': contract.title if hasattr(contract, 'title') else contract[1],
+                'notice_id': contract.notice_id if hasattr(contract, 'notice_id') else contract[2],
+                'agency': contract.agency if hasattr(contract, 'agency') else contract[3],
+                'department': contract.department if hasattr(contract, 'department') else contract[4],
+                'location': contract.location if hasattr(contract, 'location') else contract[5],
+                'value': contract.value if hasattr(contract, 'value') else contract[6],
+                'deadline': contract.deadline.strftime('%Y-%m-%d') if (hasattr(contract, 'deadline') and contract.deadline and hasattr(contract.deadline, 'strftime')) else (str(contract[7]) if len(contract) > 7 and contract[7] else 'N/A'),
+                'naics_code': contract.naics_code if hasattr(contract, 'naics_code') else contract[8],
+                'set_aside': contract.set_aside if hasattr(contract, 'set_aside') else contract[9],
+                'posted_date': contract.posted_date.strftime('%Y-%m-%d') if (hasattr(contract, 'posted_date') and contract.posted_date and hasattr(contract.posted_date, 'strftime')) else (str(contract[10]) if len(contract) > 10 and contract[10] else 'N/A'),
+                'contact_name': contract.contact_name if hasattr(contract, 'contact_name') else (contract[11] if len(contract) > 11 else None),
+                'contact_email': contract.contact_email if hasattr(contract, 'contact_email') else (contract[12] if len(contract) > 12 else None),
+                'contact_phone': contract.contact_phone if hasattr(contract, 'contact_phone') else (contract[13] if len(contract) > 13 else None),
+                'contact_title': contract.contact_title if hasattr(contract, 'contact_title') else (contract[14] if len(contract) > 14 else None),
+                'sam_gov_url': contract.sam_gov_url if hasattr(contract, 'sam_gov_url') else (contract[15] if len(contract) > 15 else None)
+            })
+        
+        return render_template('admin_all_contracts.html', contracts=contracts_list)
+        
+    except Exception as e:
+        print(f"Error loading all contracts: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error loading contracts: {str(e)}', 'error')
+        return redirect(url_for('admin_enhanced'))
+
 # Helper function to log user activity
 def log_activity(user_email, action_type, description, reference_id=None, reference_type=None):
     """Log user activity for tracking"""
