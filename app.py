@@ -13113,12 +13113,16 @@ def community_forum():
             '''), {**res_params, 'res_limit': per_page, 'res_offset': res_offset}).fetchall()
 
         # City options (distinct)
-        comm_cities = [r[0] for r in db.session.execute(text('''
+        comm_cities_rows = db.session.execute(text('''
             SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''
-        ''')).fetchall()]
-        res_cities = [r[0] for r in db.session.execute(text('''
+        ''')).fetchall()
+        comm_cities = [r.city for r in comm_cities_rows]
+        
+        res_cities_rows = db.session.execute(text('''
             SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''
-        ''')).fetchall()]
+        ''')).fetchall()
+        res_cities = [r.city for r in res_cities_rows]
+        
         all_cities = sorted({c for c in comm_cities + res_cities if isinstance(c, str) and c.strip()})
 
         return render_template(
