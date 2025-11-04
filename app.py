@@ -3442,11 +3442,10 @@ def customer_dashboard():
             # Government Contracts - using federal_contracts table
             gov_rows = db.session.execute(text(
                 """
-                SELECT description as title, agency_name as agency, city as location, 
-                       award_amount as value, created_at,
-                       'Government Contract' as lead_type, id
+                SELECT title, agency, location, value, posted_date, created_at,
+                       'Government Contract' as lead_type, id, sam_gov_url
                 FROM federal_contracts
-                ORDER BY created_at DESC
+                ORDER BY COALESCE(posted_date, created_at) DESC
                 LIMIT 10
                 """
             )).fetchall()
@@ -3456,10 +3455,10 @@ def customer_dashboard():
                     'agency': r.agency or 'Federal Agency', 
                     'location': r.location or 'Virginia',
                     'value': r.value or 'See details',
-                    'posted_date': r.created_at, 
+                    'posted_date': r.posted_date or r.created_at, 
                     'lead_type': r.lead_type, 
                     'id': r.id, 
-                    'link': url_for('federal_contracts')
+                    'link': r.sam_gov_url or url_for('federal_contracts')
                 }
                 latest_opportunities.append(rec); gov_opps_list.append(rec)
 
