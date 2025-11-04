@@ -4918,19 +4918,6 @@ def commercial_contracts():
             'regions': '25 states nationwide - Southeast, West Coast, expanding'
         },
         {
-            'name': 'Morgan Properties',
-            'location': 'HQ: 2200 Rte 70 West, Suite 100, Cherry Hill, NJ 08002 | Offices in PA, NJ, TX',
-            'state': 'NJ',
-            'city': 'Cherry Hill',
-            'state': 'NJ',
-            'city': 'Cherry Hill',
-            'properties': '90,000+ units in 300+ communities',
-            'vendor_link': 'https://www.morganproperties.com/about-us/contact-us',
-            'description': 'Vertically integrated apartment owner/operator. Contact: 856-382-1200 | Email: vendorservices@morganproperties.com',
-            'property_types': 'Value-add multifamily apartments',
-            'regions': 'Northeast (PA, NJ, NY, MD), Mid-Atlantic, Southeast, Texas'
-        },
-        {
             'name': 'Alliance Residential',
             'location': 'HQ: 4200 N Scottsdale Road, Suite 1700, Scottsdale, AZ 85251 | 19 regional offices',
             'state': 'AZ',
