@@ -4466,7 +4466,7 @@ def contracts():
                 SELECT COUNT(*) FROM federal_contracts WHERE LOWER(location) LIKE LOWER(:loc)
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, response_deadline as deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
+                SELECT title, agency, location, value, deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
                 FROM federal_contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc) AND title IS NOT NULL
                 ORDER BY COALESCE(posted_date, created_at) DESC
@@ -4475,7 +4475,7 @@ def contracts():
         else:
             total = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts WHERE title IS NOT NULL')).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, response_deadline as deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
+                SELECT title, agency, location, value, deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
                 FROM federal_contracts 
                 WHERE title IS NOT NULL
                 ORDER BY COALESCE(posted_date, created_at) DESC
@@ -6554,7 +6554,7 @@ def customer_leads():
                     fc.location,
                     fc.description,
                     fc.value as contract_value,
-                    fc.response_deadline as deadline,
+                    fc.deadline,
                     fc.naics_code,
                     fc.posted_date as created_at,
                     fc.sam_gov_url as website_url,
