@@ -76,18 +76,58 @@
                     <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    <button class="btn btn-success me-2 mb-2" onclick="showUploadLeadModal('government')">
-                        <i class="fas fa-upload me-2"></i>Upload Government Contract
-                    </button>
-                    <button class="btn btn-info me-2 mb-2" onclick="showUploadLeadModal('commercial')">
-                        <i class="fas fa-building me-2"></i>Upload Commercial Lead
-                    </button>
-                    <a href="{{ url_for('customer_leads') }}" class="btn btn-secondary me-2 mb-2" target="_blank">
-                        <i class="fas fa-eye me-2"></i>View Customer Portal
-                    </a>
-                    <a href="{{ url_for('contracts') }}" class="btn btn-warning me-2 mb-2" target="_blank">
-                        <i class="fas fa-list me-2"></i>View All Contracts
-                    </a>
+                    <div class="row">
+                        <!-- Lead Management -->
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="fas fa-file-contract me-2"></i>Lead Management</h6>
+                            <button class="btn btn-success w-100 mb-2" onclick="showUploadLeadModal('government')">
+                                <i class="fas fa-upload me-2"></i>Upload Government Contract
+                            </button>
+                            <button class="btn btn-info w-100 mb-2" onclick="showUploadLeadModal('commercial')">
+                                <i class="fas fa-building me-2"></i>Upload Commercial Lead
+                            </button>
+                            <button class="btn btn-warning w-100 mb-2" onclick="bulkDeleteLeads()">
+                                <i class="fas fa-trash-alt me-2"></i>Bulk Delete Leads
+                            </button>
+                            <a href="{{ url_for('admin_all_contracts') }}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-table me-2"></i>View All Contracts
+                            </a>
+                        </div>
+
+                        <!-- User Management -->
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="fas fa-users-cog me-2"></i>User Management</h6>
+                            <button class="btn btn-success w-100 mb-2" onclick="bulkActivateUsers()">
+                                <i class="fas fa-check-circle me-2"></i>Bulk Activate Selected
+                            </button>
+                            <button class="btn btn-secondary w-100 mb-2" onclick="bulkDeactivateUsers()">
+                                <i class="fas fa-times-circle me-2"></i>Bulk Deactivate Selected
+                            </button>
+                            <button class="btn btn-warning w-100 mb-2" onclick="exportUsersCSV()">
+                                <i class="fas fa-file-export me-2"></i>Export Users to CSV
+                            </button>
+                            <button class="btn btn-info w-100 mb-2" onclick="sendBulkEmail()">
+                                <i class="fas fa-envelope me-2"></i>Send Bulk Email
+                            </button>
+                        </div>
+
+                        <!-- Payment & Reports -->
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="fas fa-credit-card me-2"></i>Payments & Reports</h6>
+                            <button class="btn btn-success w-100 mb-2" onclick="viewPaymentHistory()">
+                                <i class="fas fa-history me-2"></i>Payment History
+                            </button>
+                            <button class="btn btn-info w-100 mb-2" onclick="generateMonthlyReport()">
+                                <i class="fas fa-chart-line me-2"></i>Monthly Report
+                            </button>
+                            <a href="{{ url_for('customer_leads') }}" class="btn btn-outline-secondary w-100 mb-2" target="_blank">
+                                <i class="fas fa-eye me-2"></i>View Customer Portal
+                            </a>
+                            <button class="btn btn-warning w-100 mb-2" onclick="systemSettings()">
+                                <i class="fas fa-cog me-2"></i>System Settings
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -209,13 +249,19 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>User Account Management</h5>
-            <input type="text" id="searchUsers" class="form-control form-control-sm" style="max-width: 300px;" placeholder="Search users...">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-warning" onclick="selectAllUsers()" title="Select/Deselect All">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+                <input type="text" id="searchUsers" class="form-control form-control-sm" style="max-width: 300px;" placeholder="Search users...">
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0" id="usersTable">
                     <thead class="bg-light">
                         <tr>
+                            <th><input type="checkbox" id="selectAllCheckbox" onclick="selectAllUsers()"></th>
                             <th>ID</th>
                             <th>Email</th>
                             <th>Name</th>
@@ -230,6 +276,7 @@
                     <tbody>
                         {% for user in users %}
                         <tr class="user-row">
+                            <td><input type="checkbox" class="user-checkbox" data-user-id="{{ user[0] }}" data-user-email="{{ user[1] }}"></td>
                             <td>{{ user[0] }}</td>
                             <td>{{ user[1] }}</td>
                             <td>{{ user[2] or 'N/A' }}</td>
@@ -730,6 +777,148 @@ function deleteLead(leadId, title) {
         // TODO: Implement delete endpoint
         // fetch('/admin-delete-lead', { method: 'POST', ... })
     }
+}
+
+// Select all users
+function selectAllUsers() {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    const selectAll = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+// Get selected users
+function getSelectedUsers() {
+    const selected = [];
+    document.querySelectorAll('.user-checkbox:checked').forEach(cb => {
+        selected.push({
+            id: cb.dataset.userId,
+            email: cb.dataset.userEmail
+        });
+    });
+    return selected;
+}
+
+// Bulk activate users
+function bulkActivateUsers() {
+    const selected = getSelectedUsers();
+    if (selected.length === 0) {
+        alert('Please select users first');
+        return;
+    }
+    
+    if (confirm(`Activate ${selected.length} selected users?`)) {
+        Promise.all(selected.map(user => 
+            fetch('/admin-update-payment-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, status: 'active' })
+            })
+        )).then(() => {
+            alert(`✅ ${selected.length} users activated!`);
+            location.reload();
+        }).catch(error => alert(`❌ Error: ${error}`));
+    }
+}
+
+// Bulk deactivate users
+function bulkDeactivateUsers() {
+    const selected = getSelectedUsers();
+    if (selected.length === 0) {
+        alert('Please select users first');
+        return;
+    }
+    
+    if (confirm(`Deactivate ${selected.length} selected users?`)) {
+        Promise.all(selected.map(user => 
+            fetch('/admin-update-payment-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, status: 'inactive' })
+            })
+        )).then(() => {
+            alert(`✅ ${selected.length} users deactivated!`);
+            location.reload();
+        }).catch(error => alert(`❌ Error: ${error}`));
+    }
+}
+
+// Export users to CSV
+function exportUsersCSV() {
+    const table = document.getElementById('usersTable');
+    const rows = [];
+    
+    // Headers
+    const headers = ['ID', 'Email', 'Name', 'Company', 'Phone', 'State', 'Payment Status', 'Registered'];
+    rows.push(headers.join(','));
+    
+    // Data rows (visible only)
+    table.querySelectorAll('tbody tr:not([style*="display: none"])').forEach(tr => {
+        const cols = [];
+        tr.querySelectorAll('td').forEach((td, index) => {
+            if (index > 0 && index < 9) { // Skip checkbox and actions columns
+                let text = td.textContent.trim().replace(/"/g, '""');
+                cols.push('"' + text + '"');
+            }
+        });
+        rows.push(cols.join(','));
+    });
+    
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users_export_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Send bulk email
+function sendBulkEmail() {
+    const selected = getSelectedUsers();
+    if (selected.length === 0) {
+        alert('Please select users to email');
+        return;
+    }
+    
+    const subject = prompt(`Send email to ${selected.length} users\n\nEnter subject:`);
+    if (!subject) return;
+    
+    const message = prompt('Enter message:');
+    if (!message) return;
+    
+    if (confirm(`Send email to ${selected.length} users?`)) {
+        alert('📧 Bulk email feature coming soon!\n\nRecipients: ' + selected.length + '\nSubject: ' + subject);
+        // TODO: Implement bulk email endpoint
+    }
+}
+
+// View payment history
+function viewPaymentHistory() {
+    alert('💳 Payment History\n\nFeature coming soon! Will show:\n- Transaction history\n- Revenue reports\n- Payment method details\n- Subscription changes');
+}
+
+// Generate monthly report
+function generateMonthlyReport() {
+    const month = prompt('Generate report for month (MM/YYYY):', new Date().toISOString().substr(0, 7));
+    if (month) {
+        alert(`📊 Generating Monthly Report for ${month}\n\nFeature coming soon! Will include:\n- New users\n- Revenue\n- Active contracts\n- User engagement\n- Download as PDF`);
+    }
+}
+
+// System settings
+function systemSettings() {
+    alert('⚙️ System Settings\n\nFeature coming soon! Will allow:\n- Email configuration\n- Payment gateway settings\n- Notification preferences\n- Data retention policies\n- API keys management');
+}
+
+// Bulk delete leads
+function bulkDeleteLeads() {
+    alert('🗑️ Bulk Delete Leads\n\nFeature coming soon! Will allow:\n- Select multiple contracts\n- Delete expired contracts\n- Archive old leads\n- Bulk status updates');
+}
+
+// View user details
+function viewUserDetails(userId) {
+    alert(`👤 User Details (ID: ${userId})\n\nFeature coming soon! Will show:\n- Full profile information\n- Activity history\n- Saved leads\n- Payment history\n- Login history`);
 }
 
 </script>
