@@ -2,6 +2,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-edit text-primary"></i> Manage SAM.gov URLs</h2>
         <div>
+            <button class="btn btn-info me-2" onclick="aiVerifySelected()" id="aiVerifyBtn">
+                <i class="fas fa-robot"></i> AI Verify Selected
+            </button>
             <a href="{{ url_for('admin_fix_sam_urls') }}" class="btn btn-success" onclick="return confirm('Auto-update all URLs using keyword search?');">
                 <i class="fas fa-sync-alt"></i> Auto-Update All
             </a>
@@ -37,17 +40,23 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
+                            <th width="3%">
+                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                            </th>
                             <th width="5%">ID</th>
                             <th width="25%">Agency / Description</th>
                             <th width="10%">NAICS</th>
                             <th width="10%">Award #</th>
-                            <th width="35%">Current URL</th>
+                            <th width="32%">Current URL</th>
                             <th width="15%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for contract in contracts %}
                         <tr id="contract-row-{{ contract.id }}">
+                            <td>
+                                <input type="checkbox" class="contract-checkbox" value="{{ contract.id }}">
+                            </td>
                             <td>{{ contract.id }}</td>
                             <td>
                                 <strong>{{ contract.agency_name[:40] }}...</strong><br>
@@ -202,7 +211,7 @@ function regenerateUrl(contractId, naicsCode) {
 }
 
 function showToast(title, message, type) {
-    // Create toast notification
+function showToast(title, message, type) {
     const toastHtml = `
         <div class="toast align-items-center text-white bg-${type} border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
             <div class="d-flex">
@@ -220,6 +229,124 @@ function showToast(title, message, type) {
     toast.show();
     
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.contract-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+function aiVerifySelected() {
+    const checkboxes = document.querySelectorAll('.contract-checkbox:checked');
+    const contractIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (contractIds.length === 0) {
+        showToast('No Selection', 'Please select at least one contract to verify', 'warning');
+        return;
+    }
+    
+    if (contractIds.length > 10) {
+        showToast('Too Many', 'Please select 10 or fewer contracts at a time', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('aiVerifyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI Verifying...';
+    
+    fetch('/admin/ai-verify-urls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contract_ids: contractIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-robot"></i> AI Verify Selected';
+        
+        if (data.success) {
+            // Display results in a modal or alert
+            let resultsHtml = '<div class="ai-results"><h4>AI Verification Results:</h4>';
+            data.results.forEach(result => {
+                const statusIcon = result.current_url_valid ? '✅' : '⚠️';
+                resultsHtml += `
+                    <div class="result-item mb-3 p-3 border rounded">
+                        <strong>${statusIcon} ${result.agency_name}</strong><br>
+                        <small>Contract ID: ${result.contract_id}</small><br>
+                        <div class="mt-2">
+                            <strong>Status:</strong> ${result.current_url_valid ? 'Valid' : 'Needs Update'}<br>
+                            <strong>Reason:</strong> ${result.reason}<br>
+                            ${!result.current_url_valid ? `<strong>Suggested URL:</strong> <a href="${result.suggested_url}" target="_blank">${result.suggested_url}</a><br>` : ''}
+                            ${!result.current_url_valid ? `<button class="btn btn-sm btn-primary mt-2" onclick="applyAiUrl(${result.contract_id}, '${result.suggested_url}')">Apply Suggestion</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            resultsHtml += '</div>';
+            
+            // Show in a Bootstrap modal
+            showAiResultsModal(resultsHtml);
+        } else {
+            showToast('Error', data.message || 'AI verification failed', 'danger');
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-robot"></i> AI Verify Selected';
+        showToast('Error', 'Network error: ' + error.message, 'danger');
+    });
+}
+
+function showAiResultsModal(html) {
+    const modalHtml = `
+        <div class="modal fade" id="aiResultsModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-robot"></i> AI Verification Results</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+                        ${html}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('aiResultsModal'));
+    modal.show();
+    
+    document.getElementById('aiResultsModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+function applyAiUrl(contractId, newUrl) {
+    if (!confirm('Apply AI-suggested URL to this contract?')) return;
+    
+    fetch('/admin/update-contract-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contract_id: contractId, new_url: newUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Success!', 'URL updated successfully', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Error', data.message || 'Failed to update URL', 'danger');
+        }
+    })
+    .catch(error => {
+        showToast('Error', 'Network error: ' + error.message, 'danger');
+    });
 }
 </script>
 

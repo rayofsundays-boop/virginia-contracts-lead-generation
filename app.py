@@ -24,6 +24,12 @@ import string
 import random
 import re
 try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("OpenAI not installed. AI features will be disabled.")
+try:
     from dotenv import load_dotenv
     load_dotenv()
 except Exception:
@@ -53,6 +59,14 @@ app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=8)
 # Admin credentials (bypass paywall)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'VAContracts2024!')
+
+# OpenAI Configuration for AI Features
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+if OPENAI_API_KEY and OPENAI_AVAILABLE:
+    openai.api_key = OPENAI_API_KEY
+    print("✓ OpenAI API configured for AI-powered features")
+else:
+    print("⚠ OpenAI API key not set. AI features will be disabled.")
 
 # PayPal Configuration
 paypalrestsdk.configure({
@@ -8526,6 +8540,116 @@ def admin_revoke_admin_access():
         db.session.rollback()
         print(f"Error revoking admin access: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/ai-verify-urls', methods=['POST'])
+@login_required
+@admin_required
+def admin_ai_verify_urls():
+    """Use AI to verify and suggest better SAM.gov URLs for contracts"""
+    try:
+        if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+            return jsonify({
+                'success': False, 
+                'message': 'OpenAI API not configured. Please set OPENAI_API_KEY environment variable.'
+            }), 400
+        
+        data = request.get_json()
+        contract_ids = data.get('contract_ids', [])
+        
+        if not contract_ids:
+            return jsonify({'success': False, 'message': 'No contract IDs provided'}), 400
+        
+        # Limit to 10 contracts at a time to avoid timeout
+        contract_ids = contract_ids[:10]
+        
+        # Get contract data
+        contracts = db.session.execute(text('''
+            SELECT id, agency_name, description, naics_code, award_id, sam_gov_url
+            FROM federal_contracts
+            WHERE id = ANY(:ids)
+        '''), {'ids': contract_ids}).fetchall()
+        
+        if not contracts:
+            return jsonify({'success': False, 'message': 'No contracts found'}), 404
+        
+        # Prepare data for AI
+        contract_data = []
+        for contract in contracts:
+            contract_data.append({
+                'id': contract.id,
+                'agency_name': contract.agency_name,
+                'description': contract.description[:200],  # Truncate for token limit
+                'naics_code': contract.naics_code,
+                'award_id': contract.award_id,
+                'current_url': contract.sam_gov_url
+            })
+        
+        # AI Prompt
+        prompt = f"""You are a data validation assistant for SAM.gov federal contract URLs.
+
+Given the following contract records, verify if the current URLs are valid and suggest better URLs if needed.
+
+SAM.gov URL patterns:
+- Search URLs work best: https://sam.gov/search/?index=opp&keywords=<terms>&sort=-relevance
+- Avoid deep links to specific opportunities (they expire quickly)
+- Use keywords: contract type (janitorial/cleaning), NAICS code, location, agency
+
+Contract data:
+{json.dumps(contract_data, indent=2)}
+
+Respond with a JSON array of objects with these fields:
+- contract_id: The contract ID
+- agency_name: The agency name
+- current_url_valid: true/false - is the current URL structure good?
+- suggested_url: A better URL if needed (or same URL if current is good)
+- reason: Brief explanation of why you suggest this URL
+
+Only respond with the JSON array, no other text."""
+
+        # Call OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # or gpt-3.5-turbo for cost savings
+            messages=[
+                {"role": "system", "content": "You are a data validation expert specializing in government contract URLs."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        
+        # Parse AI response
+        ai_content = response['choices'][0]['message']['content']
+        
+        # Extract JSON from response (handle markdown code blocks)
+        if '```json' in ai_content:
+            ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+        elif '```' in ai_content:
+            ai_content = ai_content.split('```')[1].split('```')[0].strip()
+        
+        results = json.loads(ai_content)
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'contracts_checked': len(results),
+            'message': f'AI verified {len(results)} contract URLs'
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse AI response: {e}")
+        print(f"Raw response: {ai_content}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to parse AI response: {str(e)}'
+        }), 500
+    except Exception as e:
+        print(f"Error in AI URL verification: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 @app.route('/admin/manual-update', methods=['POST'])
 def manual_update():
