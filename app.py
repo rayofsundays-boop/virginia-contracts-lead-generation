@@ -4460,30 +4460,31 @@ def contracts():
     per_page = min(max(per_page, 6), 48)  # sane bounds
     offset = (page - 1) * per_page
     try:
-        # Count total with optional filter
+        # Count total with optional filter - using federal_contracts table
         if location_filter:
             total = db.session.execute(text('''
-                SELECT COUNT(*) FROM contracts WHERE LOWER(location) LIKE LOWER(:loc)
+                SELECT COUNT(*) FROM federal_contracts WHERE LOWER(location) LIKE LOWER(:loc)
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
-                FROM contracts 
-                WHERE LOWER(location) LIKE LOWER(:loc)
-                ORDER BY deadline ASC
+                SELECT title, agency, location, value, response_deadline as deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
+                FROM federal_contracts 
+                WHERE LOWER(location) LIKE LOWER(:loc) AND title IS NOT NULL
+                ORDER BY COALESCE(posted_date, created_at) DESC
                 LIMIT :limit OFFSET :offset
             '''), { 'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset }).fetchall()
         else:
-            total = db.session.execute(text('SELECT COUNT(*) FROM contracts')).scalar() or 0
+            total = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts WHERE title IS NOT NULL')).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
-                FROM contracts 
-                ORDER BY deadline ASC
+                SELECT title, agency, location, value, response_deadline as deadline, description, naics_code, sam_gov_url as website_url, COALESCE(posted_date, created_at) as created_at
+                FROM federal_contracts 
+                WHERE title IS NOT NULL
+                ORDER BY COALESCE(posted_date, created_at) DESC
                 LIMIT :limit OFFSET :offset
             '''), {'limit': per_page, 'offset': offset}).fetchall()
 
-        # For filter dropdown
+        # For filter dropdown - using federal_contracts table
         locations = [r[0] for r in db.session.execute(text('''
-            SELECT DISTINCT location FROM contracts ORDER BY location
+            SELECT DISTINCT location FROM federal_contracts WHERE location IS NOT NULL ORDER BY location
         ''')).fetchall()]
 
         pages = max(math.ceil(total / per_page), 1)
