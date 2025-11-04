@@ -4932,14 +4932,14 @@ def commercial_contracts():
         },
         {
             'name': 'Alliance Residential',
-            'location': 'HQ: 4200 N Scottsdale Road, Suite 1700, Scottsdale, AZ 85251 | 25+ regional offices',
+            'location': 'HQ: 4200 N Scottsdale Road, Suite 1700, Scottsdale, AZ 85251 | 19 regional offices',
             'state': 'AZ',
             'city': 'Scottsdale',
-            'properties': '85,000+ units developed/managed',
-            'vendor_link': 'https://www.allresco.com/about-us/contact-us',
-            'description': 'Multifamily developer and manager since 1996. Contact: 480-427-7000 | Email: procurement@allresco.com',
-            'property_types': 'Luxury apartments, multifamily communities',
-            'regions': 'Sunbelt states (AZ, TX, CA, CO, FL, NC, GA) and major metros'
+            'properties': '121,500+ units developed (over $24B invested capital since 2000)',
+            'vendor_link': 'https://www.allresco.com/about',
+            'description': 'Multifamily developer and manager since 2000. Contact: 480-427-7000 | Email: procurement@allresco.com',
+            'property_types': 'Luxury apartments (Broadstone brand), multifamily communities',
+            'regions': '19 offices nationwide: West, Southwest, South-Central, Southeast, Mid-Atlantic, Northeast'
         },
         {
             'name': 'Bozzuto',
@@ -4947,8 +4947,8 @@ def commercial_contracts():
             'state': 'VA',
             'city': 'Vienna',
             'properties': '80,000+ units in 400+ communities',
-            'vendor_link': 'https://www.bozzuto.com/about/partnerships',
-            'description': 'Diversified real estate company founded 1988. Contact: 301-220-0100 | Email: procurement@bozzuto.com',
+            'vendor_link': 'https://www.bozzuto.com/contact-us',
+            'description': 'Diversified real estate company founded 1988. Contact: 301-220-0100 | Email: procurement@bozzuto.com | #1 property management company (resident ratings) 7 consecutive years',
             'property_types': 'Multifamily apartments, condos, retail, homeowner associations',
             'regions': 'East Coast: MD, VA, DC, PA, NY, NC, FL (DC Metro area headquarters)'
         },
@@ -4958,8 +4958,8 @@ def commercial_contracts():
             'state': 'VA',
             'city': 'Arlington',
             'properties': '80,000+ apartment homes in 295+ communities',
-            'vendor_link': 'https://www.avaloncommunities.com/corporate/corporate-information',
-            'description': 'Publicly traded REIT (NYSE: AVB). Vendor Relations: 703-329-6300 | Email: vendor.services@avalonbay.com',
+            'vendor_link': 'https://www.avaloncommunities.com/construction-vendor-prequalification-process',
+            'description': 'Publicly traded REIT (NYSE: AVB). Vendor Relations: 703-329-6300 | Email: prequal@avalonbay.com | Construction vendor prequalification required',
             'property_types': 'Class A luxury multifamily apartments',
             'regions': 'New England, NY/NJ Metro, Mid-Atlantic (DC area), Pacific Northwest, California'
         },
