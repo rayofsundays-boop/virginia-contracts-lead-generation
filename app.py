@@ -7280,17 +7280,45 @@ def admin_panel():
                 ORDER BY posted_date DESC
             ''')).fetchall()
             
-            # Convert datetime objects to strings for template rendering
+            # Convert Row objects to dictionaries for template rendering
             all_leads = []
             for lead in raw_leads:
-                lead_list = list(lead)
-                # Convert posted_date (index 9) to string if it's a datetime
-                if lead_list[9] and hasattr(lead_list[9], 'strftime'):
-                    lead_list[9] = lead_list[9].strftime('%Y-%m-%d')
-                all_leads.append(tuple(lead_list))
+                try:
+                    # Handle both Row objects and tuples
+                    if hasattr(lead, 'id'):
+                        # It's a Row object - use attribute access
+                        lead_dict = {
+                            'id': lead.id,
+                            'title': lead.title,
+                            'agency': lead.agency,
+                            'location': lead.location,
+                            'value': lead.value,
+                            'deadline': lead.deadline.strftime('%Y-%m-%d') if lead.deadline and hasattr(lead.deadline, 'strftime') else str(lead.deadline) if lead.deadline else None,
+                            'description': lead.description,
+                            'naics_code': lead.naics_code,
+                            'set_aside': lead.set_aside,
+                            'posted_date': lead.posted_date.strftime('%Y-%m-%d') if lead.posted_date and hasattr(lead.posted_date, 'strftime') else str(lead.posted_date) if lead.posted_date else None,
+                            'solicitation_number': lead.solicitation_number
+                        }
+                        all_leads.append(lead_dict)
+                    else:
+                        # It's a tuple - use index access
+                        lead_list = list(lead)
+                        # Convert posted_date (index 9) to string if it's a datetime
+                        if lead_list[9] and hasattr(lead_list[9], 'strftime'):
+                            lead_list[9] = lead_list[9].strftime('%Y-%m-%d')
+                        # Convert deadline (index 5) to string if it's a datetime
+                        if lead_list[5] and hasattr(lead_list[5], 'strftime'):
+                            lead_list[5] = lead_list[5].strftime('%Y-%m-%d')
+                        all_leads.append(tuple(lead_list))
+                except Exception as lead_error:
+                    print(f"Error processing lead: {lead_error}")
+                    continue
                 
         except Exception as e:
             print(f"Note: contracts table error: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Try to get commercial opportunities count
         try:
