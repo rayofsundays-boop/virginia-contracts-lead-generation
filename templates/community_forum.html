@@ -481,19 +481,19 @@
     <!-- Call to Action -->
     <div class="card bg-gradient text-white mt-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="card-body text-center py-5">
-            <h3 class="fw-bold mb-3">Are You a Cleaning Contractor?</h3>
-            <p class="lead mb-4">Sign up to access full contact details, or submit your own cleaning request.</p>
+            <h3 class="fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Are You a Cleaning Contractor?</h3>
+            <p class="lead mb-4" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Sign up to access full contact details, or submit your own cleaning request.</p>
             <div class="d-flex flex-wrap justify-content-center gap-3 align-items-center">
                 <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg px-4 py-3 rounded-pill shadow-sm fw-semibold" style="min-width: 180px;">
                     <i class="fas fa-user-plus me-2"></i>Register Now
                 </a>
-                <a href="{{ url_for('submit_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 2px;">
+                <a href="{{ url_for('submit_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 3px;">
                     <i class="fas fa-clipboard-list me-2"></i>Submit Commercial
                 </a>
-                <a href="{{ url_for('submit_residential_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 2px;">
+                <a href="{{ url_for('submit_residential_cleaning_request') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 240px; border-width: 3px;">
                     <i class="fas fa-home me-2"></i>Submit Residential
                 </a>
-                <button type="button" id="shareBtn" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 180px; border-width: 2px;">
+                <button type="button" id="shareBtn" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-semibold cta-outline-btn" style="min-width: 180px; border-width: 3px;">
                     <i class="fas fa-share-alt me-2"></i>Share Page
                 </button>
             </div>
@@ -542,9 +542,10 @@
 
 /* Enhanced CTA Outline Buttons */
 .cta-outline-btn {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
 
 .cta-outline-btn:hover {
@@ -553,6 +554,7 @@
     border-color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    text-shadow: none !important;
 }
 
 /* Better contrast for filter buttons */
