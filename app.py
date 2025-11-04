@@ -4875,12 +4875,12 @@ def commercial_contracts():
         },
         {
             'name': 'CBRE Group',
-            'location': 'HQ: 2100 McKinney Avenue, Dallas, TX 75201 (formerly LA) | 530+ offices globally',
+            'location': 'HQ: 2121 North Pearl Street, Suite 300, Dallas, TX 75201 | 530+ offices globally',
             'state': 'TX',
             'city': 'Dallas',
             'properties': '6 billion sq ft managed globally',
-            'vendor_link': 'https://www.cbre.com/about/doing-business-with-cbre',
-            'description': 'World\'s largest commercial real estate firm. US Vendor Relations: 214-979-6100 | Email: vendor.relations@cbre.com',
+            'vendor_link': 'https://www.cbre.com/about-us/corporate-responsibility/supplier-engagement-program',
+            'description': 'World\'s largest commercial real estate firm. Corporate HQ: 2121 N Pearl St, Dallas | Supplier Engagement Program',
             'property_types': 'Office, industrial, retail, multifamily, data centers',
             'regions': 'All 50 states + operations in 100+ countries'
         },
