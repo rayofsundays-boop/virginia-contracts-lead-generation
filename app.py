@@ -7466,8 +7466,8 @@ def admin_reset_password_api():
         
         # Update user's password
         db.session.execute(
-            text('UPDATE leads SET password = :password WHERE email = :email'),
-            {'password': hashed_password, 'email': email}
+            text('UPDATE leads SET password_hash = :password_hash WHERE email = :email'),
+            {'password_hash': hashed_password, 'email': email}
         )
         db.session.commit()
         
