@@ -1,0 +1,246 @@
+<div class="manage-urls-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-edit text-primary"></i> Manage SAM.gov URLs</h2>
+        <div>
+            <a href="{{ url_for('admin_fix_sam_urls') }}" class="btn btn-success" onclick="return confirm('Auto-update all URLs using keyword search?');">
+                <i class="fas fa-sync-alt"></i> Auto-Update All
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin_enhanced', section='manage-urls') }}" class="row g-3">
+                <input type="hidden" name="section" value="manage-urls">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search by agency, description, or award number...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="filter">
+                        <option value="">All Contracts</option>
+                        <option value="broken" {% if filter_type == 'broken' %}selected{% endif %}>Potentially Broken URLs</option>
+                        <option value="recent" {% if filter_type == 'recent' %}selected{% endif %}>Recently Added</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- URL Management Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="5%">ID</th>
+                            <th width="25%">Agency / Description</th>
+                            <th width="10%">NAICS</th>
+                            <th width="10%">Award #</th>
+                            <th width="35%">Current URL</th>
+                            <th width="15%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr id="contract-row-{{ contract.id }}">
+                            <td>{{ contract.id }}</td>
+                            <td>
+                                <strong>{{ contract.agency_name[:40] }}...</strong><br>
+                                <small class="text-muted">{{ contract.description[:60] }}...</small>
+                            </td>
+                            <td>{{ contract.naics_code or 'N/A' }}</td>
+                            <td><small>{{ contract.award_id[:15] if contract.award_id else 'N/A' }}</small></td>
+                            <td>
+                                <div class="url-display" id="url-display-{{ contract.id }}">
+                                    <small>{{ contract.sam_gov_url[:80] }}...</small>
+                                    <a href="{{ contract.sam_gov_url }}" target="_blank" class="ms-2">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                                <div class="url-edit d-none" id="url-edit-{{ contract.id }}">
+                                    <input type="text" class="form-control form-control-sm" id="url-input-{{ contract.id }}" value="{{ contract.sam_gov_url }}">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" onclick="toggleEditUrl({{ contract.id }})" id="edit-btn-{{ contract.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success d-none" onclick="saveUrl({{ contract.id }})" id="save-btn-{{ contract.id }}">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary d-none" onclick="cancelEdit({{ contract.id }})" id="cancel-btn-{{ contract.id }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="regenerateUrl({{ contract.id }}, '{{ contract.naics_code }}')" title="Auto-generate URL">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_enhanced', section='manage-urls', page=current_page-1, search=search_query, filter=filter_type) }}">Previous</a>
+                    </li>
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == current_page %}
+                        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                        {% elif p <= 3 or p > total_pages - 3 or (p >= current_page - 1 and p <= current_page + 1) %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('admin_enhanced', section='manage-urls', page=p, search=search_query, filter=filter_type) }}">{{ p }}</a></li>
+                        {% elif p == 4 or p == total_pages - 3 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_enhanced', section='manage-urls', page=current_page+1, search=search_query, filter=filter_type) }}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditUrl(contractId) {
+    // Hide display, show edit
+    document.getElementById(`url-display-${contractId}`).classList.add('d-none');
+    document.getElementById(`url-edit-${contractId}`).classList.remove('d-none');
+    
+    // Toggle buttons
+    document.getElementById(`edit-btn-${contractId}`).classList.add('d-none');
+    document.getElementById(`save-btn-${contractId}`).classList.remove('d-none');
+    document.getElementById(`cancel-btn-${contractId}`).classList.remove('d-none');
+}
+
+function cancelEdit(contractId) {
+    // Show display, hide edit
+    document.getElementById(`url-display-${contractId}`).classList.remove('d-none');
+    document.getElementById(`url-edit-${contractId}`).classList.add('d-none');
+    
+    // Toggle buttons
+    document.getElementById(`edit-btn-${contractId}`).classList.remove('d-none');
+    document.getElementById(`save-btn-${contractId}`).classList.add('d-none');
+    document.getElementById(`cancel-btn-${contractId}`).classList.add('d-none');
+}
+
+function saveUrl(contractId) {
+    const newUrl = document.getElementById(`url-input-${contractId}`).value;
+    
+    fetch('/admin/update-contract-url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contract_id: contractId,
+            new_url: newUrl
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update display
+            document.querySelector(`#url-display-${contractId} small`).textContent = newUrl.substring(0, 80) + '...';
+            document.querySelector(`#url-display-${contractId} a`).href = newUrl;
+            cancelEdit(contractId);
+            
+            // Show success message
+            showToast('Success!', 'URL updated successfully', 'success');
+        } else {
+            showToast('Error', data.message || 'Failed to update URL', 'danger');
+        }
+    })
+    .catch(error => {
+        showToast('Error', 'Network error: ' + error.message, 'danger');
+    });
+}
+
+function regenerateUrl(contractId, naicsCode) {
+    if (!confirm('Auto-generate URL using keyword search for this contract?')) return;
+    
+    fetch('/admin/regenerate-contract-url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contract_id: contractId,
+            naics_code: naicsCode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update display and input
+            const newUrl = data.new_url;
+            document.querySelector(`#url-display-${contractId} small`).textContent = newUrl.substring(0, 80) + '...';
+            document.querySelector(`#url-display-${contractId} a`).href = newUrl;
+            document.getElementById(`url-input-${contractId}`).value = newUrl;
+            
+            showToast('Success!', 'URL regenerated successfully', 'success');
+        } else {
+            showToast('Error', data.message || 'Failed to regenerate URL', 'danger');
+        }
+    })
+    .catch(error => {
+        showToast('Error', 'Network error: ' + error.message, 'danger');
+    });
+}
+
+function showToast(title, message, type) {
+    // Create toast notification
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    const toastEl = document.body.lastElementChild;
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+</script>
+
+<style>
+.manage-urls-section .table td {
+    vertical-align: middle;
+}
+
+.url-display a {
+    text-decoration: none;
+}
+
+.url-display a:hover {
+    color: #0056b3;
+}
+
+.url-edit input {
+    font-size: 0.85rem;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>

@@ -7995,8 +7995,52 @@ def admin_enhanced():
         context['status'] = status
         context['sort'] = sort
         context['total_pages'] = total_pages
+    
+    elif section == 'manage-urls':
+        search_query = request.args.get('search', '')
+        filter_type = request.args.get('filter', '')
+        per_page = 20
+        offset = (page - 1) * per_page
+        
+        # Build query
+        where_conditions = ["1=1"]
+        params = {}
+        
+        if search_query:
+            where_conditions.append("(agency_name ILIKE :search OR description ILIKE :search OR award_id ILIKE :search)")
+            params['search'] = f'%{search_query}%'
+        
+        if filter_type == 'broken':
+            where_conditions.append("(sam_gov_url LIKE '%opportunity-detail%' OR sam_gov_url LIKE '%award-detail%')")
+        elif filter_type == 'recent':
+            where_conditions.append("created_at > NOW() - INTERVAL '7 days'")
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        total_count = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM federal_contracts WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        context['contracts'] = db.session.execute(text(f'''
+            SELECT id, agency_name, description, naics_code, award_id, sam_gov_url, created_at
+            FROM federal_contracts 
+            WHERE {where_clause}
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        context['search_query'] = search_query
+        context['filter_type'] = filter_type
+        context['total_pages'] = total_pages
+        context['current_page'] = page
         
     return render_template('admin_enhanced.html', **context)
+
 
 @app.route('/admin/reset-password', methods=['POST'])
 @login_required
@@ -8060,6 +8104,65 @@ def admin_toggle_subscription():
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/update-contract-url', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_contract_url():
+    """Update a contract's SAM.gov URL manually"""
+    try:
+        data = request.get_json()
+        contract_id = data.get('contract_id')
+        new_url = data.get('new_url')
+        
+        if not contract_id or not new_url:
+            return jsonify({'success': False, 'message': 'Missing contract_id or new_url'}), 400
+        
+        db.session.execute(text('''
+            UPDATE federal_contracts 
+            SET sam_gov_url = :url 
+            WHERE id = :id
+        '''), {'url': new_url, 'id': contract_id})
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'URL updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating contract URL: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/regenerate-contract-url', methods=['POST'])
+@login_required
+@admin_required
+def admin_regenerate_contract_url():
+    """Regenerate a contract's SAM.gov URL using keyword search"""
+    try:
+        data = request.get_json()
+        contract_id = data.get('contract_id')
+        naics_code = data.get('naics_code', '')
+        
+        if not contract_id:
+            return jsonify({'success': False, 'message': 'Missing contract_id'}), 400
+        
+        # Build new URL using keyword search
+        new_url = _build_sam_search_url(naics_code=naics_code, city=None, state='VA')
+        
+        db.session.execute(text('''
+            UPDATE federal_contracts 
+            SET sam_gov_url = :url 
+            WHERE id = :id
+        '''), {'url': new_url, 'id': contract_id})
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'URL regenerated successfully', 'new_url': new_url})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error regenerating contract URL: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/manual-update', methods=['POST'])

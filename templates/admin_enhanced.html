@@ -146,8 +146,11 @@
                     <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                         System Tools
                     </div>
+                    <a class="nav-link {% if section == 'manage-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='manage-urls') }}">
+                        <i class="fas fa-edit"></i>Manage SAM.gov URLs
+                    </a>
                     <a class="nav-link" href="{{ url_for('admin_fix_sam_urls') }}" onclick="return confirm('This will update all SAM.gov URLs for federal contracts. Continue?');">
-                        <i class="fas fa-sync-alt"></i>Update SAM.gov URLs
+                        <i class="fas fa-sync-alt"></i>Auto-Update All URLs
                     </a>
                     
                     <div class="dropdown-divider bg-white-50"></div>
@@ -201,6 +204,9 @@
             
             {% elif section == 'settings' %}
             {% include 'admin_sections/settings.html' %}
+            
+            {% elif section == 'manage-urls' %}
+            {% include 'admin_sections/manage_urls.html' %}
             
             {% endif %}
         </div>
