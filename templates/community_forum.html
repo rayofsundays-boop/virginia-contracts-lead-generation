@@ -570,45 +570,100 @@
     font-size: 1.1rem;
 }
 
-/* Enhanced CTA Outline Buttons */
+/* Enhanced CTA Outline Buttons - IMPROVED CONTRAST */
 .cta-outline-btn {
-    background-color: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.cta-outline-btn:hover {
     background-color: rgba(255, 255, 255, 0.95) !important;
     color: #667eea !important;
     border-color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-width: 3px !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
     text-shadow: none !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Better contrast for filter buttons */
+.cta-outline-btn:hover {
+    background-color: white !important;
+    color: #5a67d8 !important;
+    border-color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Better contrast for filter buttons - IMPROVED VISIBILITY */
 .btn-outline-secondary {
-    color: #495057;
-    border-color: #6c757d;
+    color: #212529 !important;
+    background-color: white;
+    border-color: #495057 !important;
+    border-width: 2px !important;
+    font-weight: 600;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-outline-secondary:hover {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
+    background-color: #495057 !important;
+    border-color: #495057 !important;
+    color: white !important;
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Card footer button improvements */
 .card-footer .btn {
     transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .card-footer .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced primary button visibility */
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
+/* Enhanced success button visibility */
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+}
+
+.btn-success:hover {
+    background-color: #157347;
+    border-color: #146c43;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
+}
+
+/* Light button with better contrast on gradient */
+.btn-light {
+    background-color: white;
+    color: #667eea;
+    font-weight: 700;
+    border: 2px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-light:hover {
+    background-color: #f8f9fa;
+    color: #5a67d8;
+    border-color: #f8f9fa;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Responsive button stacking */
