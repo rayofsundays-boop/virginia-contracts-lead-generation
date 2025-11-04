@@ -8955,6 +8955,273 @@ VA Contracts Lead Generation Team
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Self-service password reset - sends reset link to user's email"""
+    if request.method == 'GET':
+        return render_template('forgot_password.html')
+    
+    try:
+        data = request.get_json() if request.is_json else request.form
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({'success': False, 'error': 'Email is required'}), 400
+        
+        # Look up user
+        user = db.session.execute(text('''
+            SELECT id, email, first_name, last_name 
+            FROM leads 
+            WHERE LOWER(email) = LOWER(:email)
+        '''), {'email': email}).fetchone()
+        
+        if not user:
+            # Don't reveal if email exists or not (security best practice)
+            return jsonify({'success': True, 'message': 'If that email exists, a reset link has been sent.'})
+        
+        # Generate reset token (valid for 1 hour)
+        import secrets
+        reset_token = secrets.token_urlsafe(32)
+        
+        # Store token in database with expiry
+        db.session.execute(text('''
+            UPDATE leads 
+            SET reset_token = :token,
+                reset_token_expires = NOW() + INTERVAL '1 hour'
+            WHERE id = :user_id
+        '''), {'token': reset_token, 'user_id': user.id})
+        db.session.commit()
+        
+        # Send reset email to user
+        if mail:
+            try:
+                from flask_mail import Message
+                
+                reset_url = f"https://virginia-contracts-lead-generation.onrender.com/reset-password/{reset_token}"
+                user_name = f"{user.first_name} {user.last_name}" if user.first_name else "User"
+                
+                msg = Message(
+                    subject="Password Reset Request - VA Contracts Lead Generation",
+                    recipients=[email],
+                    sender=app.config['MAIL_DEFAULT_SENDER']
+                )
+                
+                msg.body = f"""Hello {user_name},
+
+You requested a password reset for your VA Contracts Lead Generation account.
+
+Click the link below to reset your password (valid for 1 hour):
+{reset_url}
+
+If you didn't request this, please ignore this email. Your password will remain unchanged.
+
+Best regards,
+VA Contracts Lead Generation Team
+"""
+                
+                msg.html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #667eea;">Password Reset Request</h2>
+        
+        <p>Hello {user_name},</p>
+        
+        <p>You requested a password reset for your <strong>VA Contracts Lead Generation</strong> account.</p>
+        
+        <p>Click the button below to reset your password:</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{reset_url}" 
+               style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Reset My Password
+            </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px;">
+            Or copy and paste this link into your browser:<br>
+            <a href="{reset_url}" style="color: #667eea;">{reset_url}</a>
+        </p>
+        
+        <p style="color: #999; font-size: 12px; margin-top: 30px;">
+            This link will expire in 1 hour for security reasons.
+        </p>
+        
+        <p style="color: #dc3545; margin-top: 30px;">
+            <strong>⚠️ Didn't request this?</strong> Please ignore this email. Your password will remain unchanged.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            VA Contracts Lead Generation<br>
+            Government Contract Opportunities for Virginia Cleaning Companies
+        </p>
+    </div>
+</body>
+</html>
+"""
+                
+                mail.send(msg)
+                print(f"✅ Password reset email sent to {email}")
+                
+            except Exception as email_error:
+                print(f"⚠️ Failed to send password reset email: {email_error}")
+        
+        # Send notification to admin
+        send_admin_password_reset_notification(email, user_name)
+        
+        return jsonify({'success': True, 'message': 'If that email exists, a reset link has been sent.'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Forgot password error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'An error occurred processing your request'}), 500
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password_with_token(token):
+    """Reset password using token from email"""
+    if request.method == 'GET':
+        # Verify token is valid
+        user = db.session.execute(text('''
+            SELECT id, email, first_name 
+            FROM leads 
+            WHERE reset_token = :token 
+            AND reset_token_expires > NOW()
+        '''), {'token': token}).fetchone()
+        
+        if not user:
+            flash('This password reset link is invalid or has expired.', 'error')
+            return redirect(url_for('auth'))
+        
+        return render_template('reset_password.html', token=token)
+    
+    # POST - actually reset the password
+    try:
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password or not confirm_password:
+            flash('Both password fields are required', 'error')
+            return redirect(url_for('reset_password_with_token', token=token))
+        
+        if new_password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return redirect(url_for('reset_password_with_token', token=token))
+        
+        if len(new_password) < 8:
+            flash('Password must be at least 8 characters', 'error')
+            return redirect(url_for('reset_password_with_token', token=token))
+        
+        # Verify token again
+        user = db.session.execute(text('''
+            SELECT id, email 
+            FROM leads 
+            WHERE reset_token = :token 
+            AND reset_token_expires > NOW()
+        '''), {'token': token}).fetchone()
+        
+        if not user:
+            flash('This password reset link is invalid or has expired.', 'error')
+            return redirect(url_for('auth'))
+        
+        # Hash and update password
+        from werkzeug.security import generate_password_hash
+        hashed_password = generate_password_hash(new_password)
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET password = :password,
+                reset_token = NULL,
+                reset_token_expires = NULL
+            WHERE id = :user_id
+        '''), {'password': hashed_password, 'user_id': user.id})
+        db.session.commit()
+        
+        flash('✅ Your password has been reset successfully! Please log in.', 'success')
+        return redirect(url_for('auth'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Password reset error: {e}")
+        flash('An error occurred. Please try again.', 'error')
+        return redirect(url_for('reset_password_with_token', token=token))
+
+def send_admin_password_reset_notification(user_email, user_name):
+    """Notify admin when a user requests password reset"""
+    if not mail:
+        return
+    
+    try:
+        from flask_mail import Message
+        
+        admin_email = 'rayofsundays@gmail.com'  # Your admin email
+        
+        msg = Message(
+            subject=f"Password Reset Request - {user_email}",
+            recipients=[admin_email],
+            sender=app.config['MAIL_DEFAULT_SENDER']
+        )
+        
+        msg.body = f"""Admin Notification: Password Reset Request
+
+User: {user_name}
+Email: {user_email}
+Time: {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}
+
+A user has requested a password reset. They have been sent a secure reset link.
+
+If this seems suspicious or you want to manually assist them:
+1. Go to Admin Panel > Password Resets
+2. Enter their email: {user_email}
+3. Generate a new password and send it to them
+
+--
+VA Contracts Lead Generation Admin System
+"""
+        
+        msg.html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border-radius: 10px;">
+        <h2 style="color: #667eea;">🔐 Password Reset Request</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>User:</strong> {user_name}</p>
+            <p><strong>Email:</strong> {user_email}</p>
+            <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}</p>
+        </div>
+        
+        <p>A user has requested a password reset. They have been sent a secure reset link (valid for 1 hour).</p>
+        
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>💡 Need to help them manually?</strong></p>
+            <ol style="margin: 10px 0;">
+                <li>Go to <a href="https://virginia-contracts-lead-generation.onrender.com/admin-enhanced?section=password-resets">Admin Panel > Password Resets</a></li>
+                <li>Enter their email: <code>{user_email}</code></li>
+                <li>Generate a new password and send it to them</li>
+            </ol>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            VA Contracts Lead Generation Admin System<br>
+            This is an automated notification
+        </p>
+    </div>
+</body>
+</html>
+"""
+        
+        mail.send(msg)
+        print(f"✅ Admin notification sent for password reset request from {user_email}")
+        
+    except Exception as e:
+        print(f"⚠️ Failed to send admin notification: {e}")
+
 @app.route('/admin/toggle-subscription', methods=['POST'])
 @login_required
 @admin_required
