@@ -21,8 +21,10 @@
                             <option value="">All Types</option>
                             <option value="commercial" {% if request.args.get('lead_type') == 'commercial' %}selected{% endif %}>Commercial</option>
                             <option value="residential" {% if request.args.get('lead_type') == 'residential' %}selected{% endif %}>Residential</option>
-                            <option value="government" {% if request.args.get('lead_type') == 'government' %}selected{% endif %}>Government Contracts</option>
+                            <option value="quick_wins" {% if request.args.get('lead_type') == 'quick_wins' %}selected{% endif %}>Quick Wins</option>
                             <option value="supply" {% if request.args.get('lead_type') == 'supply' %}selected{% endif %}>Supply Contracts</option>
+                            <option value="educational" {% if request.args.get('lead_type') == 'educational' %}selected{% endif %}>Educational</option>
+                            <option value="government" {% if request.args.get('lead_type') == 'government' %}selected{% endif %}>Government Contracts</option>
                         </select>
                     </div>
 
