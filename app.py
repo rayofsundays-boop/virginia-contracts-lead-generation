@@ -10072,19 +10072,25 @@ def admin_fix_sam_urls():
         <html>
         <head>
             <title>SAM.gov URLs Fixed</title>
+            <meta http-equiv="refresh" content="3;url=/admin-enhanced">
             <style>
-                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
-                h1 {{ color: #28a745; }}
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; text-align: center; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #28a745; margin-bottom: 20px; }}
+                .success-icon {{ font-size: 60px; margin-bottom: 20px; }}
+                p {{ color: #333; font-size: 18px; margin-bottom: 20px; }}
+                .redirect-msg {{ color: #666; font-size: 14px; }}
+                a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+                a:hover {{ background: #0056b3; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>✅ SAM.gov URLs Fixed!</h1>
-                <p>Updated {updated} contracts with proper SAM.gov search URLs</p>
-                <a href="/federal-contracts" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Contracts</a>
-                <a href="/admin/check-contracts" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Database Status</a>
-                <a href="/" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">Home</a>
+                <div class="success-icon">✅</div>
+                <h1>SAM.gov URLs Updated Successfully!</h1>
+                <p>Updated <strong>{updated}</strong> contracts with proper SAM.gov search URLs</p>
+                <p class="redirect-msg">Redirecting to admin panel in 3 seconds...</p>
+                <a href="/admin-enhanced">Return to Admin Panel</a>
             </div>
         </body>
         </html>
@@ -10096,12 +10102,28 @@ def admin_fix_sam_urls():
         print(f"❌ Error fixing SAM.gov URLs: {error_details}")
         return f"""
         <html>
-        <head><title>Error</title></head>
-        <body style="font-family: Arial; padding: 40px;">
-            <h1 style="color: red;">❌ Error</h1>
-            <p>{str(e)}</p>
-            <pre>{error_details}</pre>
-            <a href="/admin/check-contracts">Back to Admin</a>
+        <head>
+            <title>Error - SAM.gov URLs Update</title>
+            <meta http-equiv="refresh" content="5;url=/admin-enhanced">
+            <style>
+                body {{ font-family: Arial; padding: 40px; background: #f5f5f5; text-align: center; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #dc3545; margin-bottom: 20px; }}
+                .error-icon {{ font-size: 60px; margin-bottom: 20px; }}
+                pre {{ text-align: left; background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }}
+                a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+                a:hover {{ background: #0056b3; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">❌</div>
+                <h1>Error Updating URLs</h1>
+                <p>{str(e)}</p>
+                <pre>{error_details}</pre>
+                <p class="redirect-msg">Redirecting to admin panel in 5 seconds...</p>
+                <a href="/admin-enhanced">Return to Admin Panel</a>
+            </div>
         </body>
         </html>
         """
