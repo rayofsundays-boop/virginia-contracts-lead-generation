@@ -9201,6 +9201,295 @@ Only respond with the JSON array, no other text."""
             'message': str(e)
         }), 500
 
+@app.route('/admin/track-all-urls', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_track_all_urls():
+    """Use AI to track and analyze URLs from ALL lead types (comprehensive tracking)"""
+    try:
+        if request.method == 'GET':
+            # Get all leads with URLs from all tables
+            all_leads = []
+            
+            # 1. Federal Contracts
+            try:
+                federal = db.session.execute(text('''
+                    SELECT id, title, agency, location, value, deadline, sam_gov_url, 'federal' as type
+                    FROM federal_contracts 
+                    WHERE sam_gov_url IS NOT NULL AND sam_gov_url != ''
+                    LIMIT 100
+                ''')).fetchall()
+                for lead in federal:
+                    all_leads.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2], 
+                        'location': lead[3], 'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                        'url': lead[6], 'type': 'federal'
+                    })
+            except Exception as e:
+                print(f"Error fetching federal contracts: {e}")
+            
+            # 2. Supply Contracts
+            try:
+                supply = db.session.execute(text('''
+                    SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, 'supply' as type
+                    FROM supply_contracts 
+                    WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
+                    LIMIT 100
+                ''')).fetchall()
+                for lead in supply:
+                    all_leads.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                        'url': lead[6], 'type': 'supply'
+                    })
+            except Exception as e:
+                print(f"Error fetching supply contracts: {e}")
+            
+            # 3. Government Contracts (general)
+            try:
+                gov = db.session.execute(text('''
+                    SELECT id, title, agency, location, value, deadline, website_url, 'government' as type
+                    FROM government_contracts 
+                    WHERE website_url IS NOT NULL AND website_url != ''
+                    LIMIT 100
+                ''')).fetchall()
+                for lead in gov:
+                    all_leads.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                        'url': lead[6], 'type': 'government'
+                    })
+            except Exception as e:
+                print(f"Error fetching government contracts: {e}")
+            
+            # 4. Regular Contracts
+            try:
+                contracts = db.session.execute(text('''
+                    SELECT id, title, agency, location, value, deadline, website_url, 'contract' as type
+                    FROM contracts 
+                    WHERE website_url IS NOT NULL AND website_url != ''
+                    LIMIT 100
+                ''')).fetchall()
+                for lead in contracts:
+                    all_leads.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                        'url': lead[6], 'type': 'contract'
+                    })
+            except Exception as e:
+                print(f"Error fetching contracts: {e}")
+            
+            # 5. Commercial Opportunities
+            try:
+                commercial = db.session.execute(text('''
+                    SELECT id, business_name, city, budget, created_at, website, 'commercial' as type
+                    FROM commercial_opportunities 
+                    WHERE website IS NOT NULL AND website != ''
+                    LIMIT 100
+                ''')).fetchall()
+                for lead in commercial:
+                    all_leads.append({
+                        'id': lead[0], 'title': lead[1], 'agency': 'Commercial',
+                        'location': lead[2], 'value': lead[3], 'deadline': str(lead[4]) if lead[4] else 'N/A',
+                        'url': lead[5], 'type': 'commercial'
+                    })
+            except Exception as e:
+                print(f"Error fetching commercial opportunities: {e}")
+            
+            return jsonify({
+                'success': True,
+                'total_leads': len(all_leads),
+                'leads_by_type': {
+                    'federal': len([l for l in all_leads if l['type'] == 'federal']),
+                    'supply': len([l for l in all_leads if l['type'] == 'supply']),
+                    'government': len([l for l in all_leads if l['type'] == 'government']),
+                    'contract': len([l for l in all_leads if l['type'] == 'contract']),
+                    'commercial': len([l for l in all_leads if l['type'] == 'commercial'])
+                },
+                'leads': all_leads
+            })
+        
+        # POST request - Analyze URLs with AI
+        if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+            return jsonify({
+                'success': False, 
+                'message': 'OpenAI API not configured. Please set OPENAI_API_KEY environment variable.'
+            }), 400
+        
+        data = request.get_json()
+        limit = int(data.get('limit', 20))
+        lead_types = data.get('lead_types', ['federal', 'supply', 'government', 'contract', 'commercial'])
+        
+        # Collect leads from specified types
+        all_leads_data = []
+        
+        if 'federal' in lead_types:
+            federal = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, sam_gov_url, description
+                FROM federal_contracts 
+                WHERE sam_gov_url IS NOT NULL AND sam_gov_url != ''
+                ORDER BY posted_date DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in federal:
+                all_leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                    'url': lead[6], 'description': lead[7][:300] if lead[7] else '',
+                    'type': 'federal'
+                })
+        
+        if 'supply' in lead_types:
+            supply = db.session.execute(text('''
+                SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, description
+                FROM supply_contracts 
+                WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
+                ORDER BY created_at DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in supply:
+                all_leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                    'url': lead[6], 'description': lead[7][:300] if lead[7] else '',
+                    'type': 'supply'
+                })
+        
+        if 'government' in lead_types:
+            gov = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, website_url, description
+                FROM government_contracts 
+                WHERE website_url IS NOT NULL AND website_url != ''
+                ORDER BY posted_date DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in gov:
+                all_leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'value': lead[4], 'deadline': str(lead[5]) if lead[5] else 'N/A',
+                    'url': lead[6], 'description': lead[7][:300] if lead[7] else '',
+                    'type': 'government'
+                })
+        
+        if not all_leads_data:
+            return jsonify({'success': False, 'message': 'No leads with URLs found'}), 404
+        
+        # Limit total for API costs
+        all_leads_data = all_leads_data[:limit]
+        
+        # AI Prompt for comprehensive URL tracking
+        prompt = f"""You are a comprehensive contract and lead analyst. Analyze these URLs from various lead types and provide insights.
+
+For each lead, assess:
+1. URL validity and accessibility
+2. URL type and structure
+3. Urgency level based on deadline
+4. Contact information availability
+5. Lead quality and opportunity value
+6. Recommended immediate actions
+
+Lead Data (Multiple Types):
+{json.dumps(all_leads_data, indent=2)}
+
+Respond with a JSON array with these fields for each lead:
+- lead_id: The lead ID
+- lead_type: Type of lead (federal/supply/government/contract/commercial)
+- title: Lead title
+- url_status: "valid", "suspicious", "expired", "redirect", or "broken"
+- url_type: URL classification
+- urgency_score: 1-10 (urgency level)
+- accessibility: "easy", "medium", "difficult"
+- has_contact_info: true/false
+- lead_quality: "excellent", "good", "fair", "poor"
+- recommended_action: Specific action recommendation
+- tracking_notes: Important insights
+
+Only respond with the JSON array, no other text."""
+
+        # Call OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a comprehensive procurement and lead analysis expert."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4,
+            max_tokens=4000
+        )
+        
+        # Parse AI response
+        ai_content = response['choices'][0]['message']['content']
+        
+        if '```json' in ai_content:
+            ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+        elif '```' in ai_content:
+            ai_content = ai_content.split('```')[1].split('```')[0].strip()
+        
+        results = json.loads(ai_content)
+        
+        # Store tracking results
+        for result in results:
+            try:
+                db.session.execute(text('''
+                    INSERT INTO url_tracking 
+                    (contract_id, contract_type, url, url_status, url_type, urgency_score, 
+                     accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at)
+                    VALUES 
+                    (:contract_id, :contract_type, :url, :url_status, :url_type, :urgency_score,
+                     :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW())
+                    ON CONFLICT (contract_id, contract_type) 
+                    DO UPDATE SET
+                        url_status = EXCLUDED.url_status,
+                        url_type = EXCLUDED.url_type,
+                        urgency_score = EXCLUDED.urgency_score,
+                        accessibility = EXCLUDED.accessibility,
+                        has_contact_info = EXCLUDED.has_contact_info,
+                        recommended_action = EXCLUDED.recommended_action,
+                        tracking_notes = EXCLUDED.tracking_notes,
+                        analyzed_at = NOW()
+                '''), {
+                    'contract_id': result['lead_id'],
+                    'contract_type': result['lead_type'],
+                    'url': next((l['url'] for l in all_leads_data if l['id'] == result['lead_id']), ''),
+                    'url_status': result.get('url_status', 'unknown'),
+                    'url_type': result.get('url_type', 'unknown'),
+                    'urgency_score': result.get('urgency_score', 5),
+                    'accessibility': result.get('accessibility', 'medium'),
+                    'has_contact_info': result.get('has_contact_info', False),
+                    'recommended_action': result.get('recommended_action', ''),
+                    'tracking_notes': result.get('tracking_notes', '')
+                })
+            except Exception as e:
+                print(f"Note: Could not store tracking data: {e}")
+        
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'leads_analyzed': len(results),
+            'types_analyzed': list(set([r['lead_type'] for r in results])),
+            'message': f'AI analyzed {len(results)} leads across multiple types'
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse AI response: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to parse AI response: {str(e)}'
+        }), 500
+    except Exception as e:
+        print(f"Error in comprehensive URL tracking: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @app.route('/admin/cleanup-leads', methods=['POST'])
 def cleanup_leads():
     """Clean up old leads"""

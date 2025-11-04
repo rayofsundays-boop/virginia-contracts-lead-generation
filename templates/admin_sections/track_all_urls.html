@@ -1,0 +1,619 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-globe text-primary"></i> Comprehensive URL Tracking (All Leads)</h2>
+            <p class="text-muted">Track and analyze ALL URLs across Federal, Supply, Government, Commercial, and Contract leads using OpenAI</p>
+        </div>
+        <div>
+            <button class="btn btn-success" onclick="exportAllResults()">
+                <i class="fas fa-file-export me-2"></i>Export Results
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-link"></i> Total URLs</h6>
+                    <h2 id="totalUrls">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-flag"></i> Federal</h6>
+                    <h2 id="federalCount">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-box"></i> Supply</h6>
+                    <h2 id="supplyCount">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-building"></i> Government</h6>
+                    <h2 id="govCount">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-file-contract"></i> Contracts</h6>
+                    <h2 id="contractCount">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-store"></i> Commercial</h6>
+                    <h2 id="commercialCount">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Controls -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-robot me-2"></i>AI Analysis Controls</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-list-check me-2"></i>Select Lead Types to Analyze</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="federal" id="checkFederal" checked>
+                        <label class="form-check-label" for="checkFederal">Federal Contracts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="supply" id="checkSupply" checked>
+                        <label class="form-check-label" for="checkSupply">Supply Contracts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="government" id="checkGovernment" checked>
+                        <label class="form-check-label" for="checkGovernment">Government Contracts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="contract" id="checkContract">
+                        <label class="form-check-label" for="checkContract">Regular Contracts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="commercial" id="checkCommercial">
+                        <label class="form-check-label" for="checkCommercial">Commercial Opportunities</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-sliders-h me-2"></i>Analysis Limit</label>
+                    <input type="number" id="analyzeLimit" class="form-control mb-3" value="20" min="1" max="100">
+                    <small class="text-muted">Recommended: 20-50 per analysis to control API costs</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-play-circle me-2"></i>Actions</label>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="analyzeAllUrls()">
+                            <i class="fas fa-magic me-2"></i>Analyze Selected Types
+                        </button>
+                        <button class="btn btn-info" onclick="loadAllLeads()">
+                            <i class="fas fa-download me-2"></i>Load All Leads
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewHistory()">
+                            <i class="fas fa-history me-2"></i>View Analysis History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" id="searchTable" class="form-control" placeholder="🔍 Search title, agency, URL...">
+                </div>
+                <div class="col-md-2">
+                    <select id="filterType" class="form-select" onchange="filterResults()">
+                        <option value="">All Types</option>
+                        <option value="federal">Federal</option>
+                        <option value="supply">Supply</option>
+                        <option value="government">Government</option>
+                        <option value="contract">Contract</option>
+                        <option value="commercial">Commercial</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterStatus" class="form-select" onchange="filterResults()">
+                        <option value="">All Status</option>
+                        <option value="valid">Valid</option>
+                        <option value="suspicious">Suspicious</option>
+                        <option value="expired">Expired</option>
+                        <option value="broken">Broken</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterUrgency" class="form-select" onchange="filterResults()">
+                        <option value="">All Urgency</option>
+                        <option value="high">High (8-10)</option>
+                        <option value="medium">Medium (5-7)</option>
+                        <option value="low">Low (1-4)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterQuality" class="form-select" onchange="filterResults()">
+                        <option value="">All Quality</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Comprehensive URL Analysis Results</h5>
+            <span id="resultsCount" class="badge bg-light text-dark">0 results</span>
+        </div>
+        <div class="card-body p-0">
+            <div id="loadingSpinner" class="text-center p-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3"><strong>Analyzing URLs with OpenAI...</strong></p>
+                <p class="text-muted">This may take 30-60 seconds depending on the number of leads</p>
+            </div>
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0" id="trackingTable">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Title</th>
+                            <th>Agency</th>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>URL Type</th>
+                            <th>Urgency</th>
+                            <th>Quality</th>
+                            <th>Access</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackingTableBody">
+                        <tr>
+                            <td colspan="12" class="text-center text-muted p-5">
+                                <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
+                                <h5>No Data Loaded</h5>
+                                <p>Click "Load All Leads" to view available URLs or "Analyze Selected Types" to start AI analysis</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Lead Analysis Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a id="visitUrlBtn" href="#" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-2"></i>Visit URL
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allLeads = [];
+let analysisResults = [];
+
+// Load all leads from database
+async function loadAllLeads() {
+    try {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        const response = await fetch('/admin/track-all-urls');
+        const data = await response.json();
+        
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.success) {
+            allLeads = data.leads;
+            updateStats(data);
+            displayLeads(data.leads);
+            alert(`✅ Loaded ${data.total_leads} leads with URLs across all types`);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        console.error('Error:', error);
+        alert('❌ Failed to load leads');
+    }
+}
+
+// Analyze URLs with OpenAI
+async function analyzeAllUrls() {
+    const limit = document.getElementById('analyzeLimit').value;
+    
+    // Get selected lead types
+    const leadTypes = [];
+    if (document.getElementById('checkFederal').checked) leadTypes.push('federal');
+    if (document.getElementById('checkSupply').checked) leadTypes.push('supply');
+    if (document.getElementById('checkGovernment').checked) leadTypes.push('government');
+    if (document.getElementById('checkContract').checked) leadTypes.push('contract');
+    if (document.getElementById('checkCommercial').checked) leadTypes.push('commercial');
+    
+    if (leadTypes.length === 0) {
+        alert('⚠️ Please select at least one lead type to analyze');
+        return;
+    }
+    
+    if (!confirm(`Analyze up to ${limit} URLs from ${leadTypes.join(', ')} leads?\n\nThis will use OpenAI API credits.`)) {
+        return;
+    }
+    
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('trackingTableBody').innerHTML = '';
+    
+    try {
+        const response = await fetch('/admin/track-all-urls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                limit: parseInt(limit),
+                lead_types: leadTypes
+            })
+        });
+        
+        const data = await response.json();
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.success) {
+            analysisResults = data.results;
+            displayAnalysisResults(data.results);
+            alert(`✅ AI analyzed ${data.leads_analyzed} URLs successfully!\n\nTypes: ${data.types_analyzed.join(', ')}`);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        console.error('Error:', error);
+        alert('❌ AI analysis failed: ' + error.message);
+    }
+}
+
+// Display leads in table
+function displayLeads(leads) {
+    const tbody = document.getElementById('trackingTableBody');
+    tbody.innerHTML = '';
+    
+    if (leads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center p-4">No leads found</td></tr>';
+        return;
+    }
+    
+    leads.forEach(lead => {
+        const row = document.createElement('tr');
+        const typeBadge = getTypeBadge(lead.type);
+        
+        row.innerHTML = `
+            <td>${lead.id}</td>
+            <td>${typeBadge}</td>
+            <td style="max-width: 250px;" class="text-truncate">${lead.title}</td>
+            <td>${lead.agency}</td>
+            <td><a href="${lead.url}" target="_blank" class="text-truncate d-inline-block" style="max-width: 150px;" title="${lead.url}">${lead.url}</a></td>
+            <td><span class="badge bg-secondary">Not Analyzed</span></td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td><button class="btn btn-sm btn-info" onclick="viewLeadDetails(${lead.id}, '${lead.type}')"><i class="fas fa-eye"></i></button></td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    document.getElementById('resultsCount').textContent = `${leads.length} results`;
+}
+
+// Display AI analysis results
+function displayAnalysisResults(results) {
+    const tbody = document.getElementById('trackingTableBody');
+    tbody.innerHTML = '';
+    
+    results.forEach(result => {
+        const row = document.createElement('tr');
+        const typeBadge = getTypeBadge(result.lead_type);
+        const statusBadge = getStatusBadge(result.url_status);
+        const urgencyBadge = getUrgencyBadge(result.urgency_score);
+        const qualityBadge = getQualityBadge(result.lead_quality);
+        
+        row.innerHTML = `
+            <td>${result.lead_id}</td>
+            <td>${typeBadge}</td>
+            <td style="max-width: 250px;" class="text-truncate" title="${result.title}">${result.title}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>${statusBadge}</td>
+            <td><small>${result.url_type}</small></td>
+            <td>${urgencyBadge}</td>
+            <td>${qualityBadge}</td>
+            <td><span class="badge bg-info">${result.accessibility}</span></td>
+            <td>${result.has_contact_info ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewAnalysisDetails('${result.lead_id}', '${result.lead_type}')">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </td>
+        `;
+        row.dataset.type = result.lead_type;
+        row.dataset.status = result.url_status;
+        row.dataset.urgency = result.urgency_score;
+        row.dataset.quality = result.lead_quality;
+        
+        tbody.appendChild(row);
+    });
+    
+    document.getElementById('resultsCount').textContent = `${results.length} results`;
+}
+
+// Helper functions for badges
+function getTypeBadge(type) {
+    const badges = {
+        'federal': '<span class="badge bg-success">Federal</span>',
+        'supply': '<span class="badge bg-info">Supply</span>',
+        'government': '<span class="badge bg-warning text-dark">Government</span>',
+        'contract': '<span class="badge bg-secondary">Contract</span>',
+        'commercial': '<span class="badge bg-dark">Commercial</span>'
+    };
+    return badges[type] || '<span class="badge bg-light text-dark">' + type + '</span>';
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'valid': '<span class="badge bg-success">Valid</span>',
+        'suspicious': '<span class="badge bg-warning text-dark">Suspicious</span>',
+        'expired': '<span class="badge bg-danger">Expired</span>',
+        'broken': '<span class="badge bg-dark">Broken</span>',
+        'redirect': '<span class="badge bg-info">Redirect</span>'
+    };
+    return badges[status] || '<span class="badge bg-secondary">' + status + '</span>';
+}
+
+function getUrgencyBadge(score) {
+    if (score >= 8) return `<span class="badge bg-danger">${score}/10</span>`;
+    if (score >= 6) return `<span class="badge bg-warning text-dark">${score}/10</span>`;
+    return `<span class="badge bg-success">${score}/10</span>`;
+}
+
+function getQualityBadge(quality) {
+    const badges = {
+        'excellent': '<span class="badge bg-success">Excellent</span>',
+        'good': '<span class="badge bg-primary">Good</span>',
+        'fair': '<span class="badge bg-warning text-dark">Fair</span>',
+        'poor': '<span class="badge bg-danger">Poor</span>'
+    };
+    return badges[quality] || '<span class="badge bg-secondary">' + quality + '</span>';
+}
+
+// Update stats
+function updateStats(data) {
+    document.getElementById('totalUrls').textContent = data.total_leads;
+    document.getElementById('federalCount').textContent = data.leads_by_type.federal || 0;
+    document.getElementById('supplyCount').textContent = data.leads_by_type.supply || 0;
+    document.getElementById('govCount').textContent = data.leads_by_type.government || 0;
+    document.getElementById('contractCount').textContent = data.leads_by_type.contract || 0;
+    document.getElementById('commercialCount').textContent = data.leads_by_type.commercial || 0;
+}
+
+// View lead details
+function viewLeadDetails(leadId, leadType) {
+    const lead = allLeads.find(l => l.id === leadId && l.type === leadType);
+    if (!lead) {
+        alert('Lead not found');
+        return;
+    }
+    
+    document.getElementById('modalBody').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="fas fa-info-circle me-2"></i>Lead Information</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><th width="30%">ID:</th><td>${lead.id}</td></tr>
+                    <tr><th>Type:</th><td>${getTypeBadge(lead.type)}</td></tr>
+                    <tr><th>Title:</th><td>${lead.title}</td></tr>
+                    <tr><th>Agency:</th><td>${lead.agency}</td></tr>
+                    <tr><th>Location:</th><td>${lead.location}</td></tr>
+                    <tr><th>Value:</th><td>${lead.value || 'N/A'}</td></tr>
+                    <tr><th>Deadline:</th><td>${lead.deadline}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="fas fa-link me-2"></i>URL Information</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><th width="30%">URL:</th><td><a href="${lead.url}" target="_blank">${lead.url}</a></td></tr>
+                    <tr><th>Status:</th><td><span class="badge bg-secondary">Not Analyzed</span></td></tr>
+                </table>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>Run AI analysis to get detailed insights about this URL
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('visitUrlBtn').href = lead.url;
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+
+// View analysis details
+function viewAnalysisDetails(leadId, leadType) {
+    const result = analysisResults.find(r => r.lead_id === leadId && r.lead_type === leadType);
+    if (!result) {
+        alert('Analysis not found');
+        return;
+    }
+    
+    document.getElementById('modalBody').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="fas fa-chart-bar me-2"></i>Analysis Summary</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><th width="40%">Lead ID:</th><td>${result.lead_id}</td></tr>
+                    <tr><th>Type:</th><td>${getTypeBadge(result.lead_type)}</td></tr>
+                    <tr><th>Title:</th><td>${result.title}</td></tr>
+                    <tr><th>URL Status:</th><td>${getStatusBadge(result.url_status)}</td></tr>
+                    <tr><th>URL Type:</th><td>${result.url_type}</td></tr>
+                    <tr><th>Urgency Score:</th><td>${getUrgencyBadge(result.urgency_score)}</td></tr>
+                    <tr><th>Lead Quality:</th><td>${getQualityBadge(result.lead_quality)}</td></tr>
+                    <tr><th>Accessibility:</th><td><span class="badge bg-info">${result.accessibility}</span></td></tr>
+                    <tr><th>Has Contact:</th><td>${result.has_contact_info ? '<i class="fas fa-check text-success"></i> Yes' : '<i class="fas fa-times text-danger"></i> No'}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="fas fa-robot me-2"></i>AI Recommendations</h6>
+                <div class="alert alert-primary">
+                    <strong><i class="fas fa-tasks me-2"></i>Recommended Action:</strong>
+                    <p class="mb-0 mt-2">${result.recommended_action}</p>
+                </div>
+                <div class="alert alert-secondary">
+                    <strong><i class="fas fa-sticky-note me-2"></i>Tracking Notes:</strong>
+                    <p class="mb-0 mt-2">${result.tracking_notes}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+
+// Filter results
+function filterResults() {
+    const typeFilter = document.getElementById('filterType').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    const urgencyFilter = document.getElementById('filterUrgency').value;
+    const qualityFilter = document.getElementById('filterQuality').value;
+    const searchTerm = document.getElementById('searchTable').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('#trackingTableBody tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        if (row.cells.length === 1) return; // Skip empty state row
+        
+        const matchesType = !typeFilter || row.dataset.type === typeFilter;
+        const matchesStatus = !statusFilter || row.dataset.status === statusFilter;
+        const matchesQuality = !qualityFilter || row.dataset.quality === qualityFilter;
+        
+        let matchesUrgency = true;
+        if (urgencyFilter) {
+            const score = parseInt(row.dataset.urgency);
+            if (urgencyFilter === 'high') matchesUrgency = score >= 8;
+            else if (urgencyFilter === 'medium') matchesUrgency = score >= 5 && score < 8;
+            else if (urgencyFilter === 'low') matchesUrgency = score < 5;
+        }
+        
+        const matchesSearch = !searchTerm || row.textContent.toLowerCase().includes(searchTerm);
+        
+        if (matchesType && matchesStatus && matchesUrgency && matchesQuality && matchesSearch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('resultsCount').textContent = `${visibleCount} results`;
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterUrgency').value = '';
+    document.getElementById('filterQuality').value = '';
+    document.getElementById('searchTable').value = '';
+    filterResults();
+}
+
+// Export results
+function exportAllResults() {
+    if (analysisResults.length === 0) {
+        alert('⚠️ No analysis results to export. Run AI analysis first.');
+        return;
+    }
+    
+    const headers = ['Lead ID', 'Type', 'Title', 'URL Status', 'URL Type', 'Urgency', 'Quality', 'Accessibility', 'Has Contact', 'Recommendation', 'Notes'];
+    const rows = [headers];
+    
+    analysisResults.forEach(r => {
+        rows.push([
+            r.lead_id, r.lead_type, r.title, r.url_status, r.url_type,
+            r.urgency_score, r.lead_quality, r.accessibility,
+            r.has_contact_info ? 'Yes' : 'No',
+            r.recommended_action, r.tracking_notes
+        ]);
+    });
+    
+    const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `url_analysis_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// View history
+function viewHistory() {
+    alert('📊 Analysis History\n\nFeature coming soon!\n\nWill show:\n- Previous analysis sessions\n- Trends over time\n- Status changes\n- URL health metrics');
+}
+
+// Search functionality
+document.getElementById('searchTable').addEventListener('keyup', filterResults);
+</script>
+
+<style>
+.table-sm th, .table-sm td {
+    padding: 0.4rem;
+    font-size: 0.875rem;
+}
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+</style>

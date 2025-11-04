@@ -169,6 +169,9 @@
                     <a class="nav-link {% if section == 'track-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='track-urls') }}">
                         <i class="fas fa-chart-line"></i>Track Supply URLs (AI)
                     </a>
+                    <a class="nav-link {% if section == 'track-all-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='track-all-urls') }}">
+                        <i class="fas fa-globe"></i>Track ALL URLs (AI)
+                    </a>
                     <a class="nav-link" href="{{ url_for('admin_fix_sam_urls') }}" onclick="return confirm('This will update all SAM.gov URLs for federal contracts. Continue?');">
                         <i class="fas fa-sync-alt"></i>Auto-Update All URLs
                     </a>
@@ -230,6 +233,9 @@
             
             {% elif section == 'track-urls' %}
             {% include 'admin_sections/track_urls.html' %}
+            
+            {% elif section == 'track-all-urls' %}
+            {% include 'admin_sections/track_all_urls.html' %}
             
             {% elif section == 'edit-leads' %}
             {% include 'admin_sections/edit_leads.html' %}
