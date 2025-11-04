@@ -2195,6 +2195,46 @@ def init_postgres_db():
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
+        db.session.commit()
+        
+        # Forum posts table (community discussions)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS forum_posts
+                     (id SERIAL PRIMARY KEY,
+                      title TEXT NOT NULL,
+                      content TEXT NOT NULL,
+                      post_type TEXT DEFAULT 'discussion',
+                      user_email TEXT,
+                      user_name TEXT,
+                      is_admin_post BOOLEAN DEFAULT FALSE,
+                      views INTEGER DEFAULT 0,
+                      status TEXT DEFAULT 'active',
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
+        db.session.commit()
+        
+        # Forum comments table
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS forum_comments
+                     (id SERIAL PRIMARY KEY,
+                      post_id INTEGER NOT NULL,
+                      user_email TEXT,
+                      user_name TEXT,
+                      comment_text TEXT NOT NULL,
+                      is_admin_comment BOOLEAN DEFAULT FALSE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE)'''))
+        
+        db.session.commit()
+        
+        # Forum post likes table
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS forum_post_likes
+                     (id SERIAL PRIMARY KEY,
+                      post_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      UNIQUE(post_id, user_email),
+                      FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE)'''))
+        
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS password_reset_tokens
                      (id SERIAL PRIMARY KEY,
                       email TEXT NOT NULL UNIQUE,
