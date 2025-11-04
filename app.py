@@ -8679,13 +8679,83 @@ def api_admin_reset_password():
         
         db.session.commit()
         
-        # TODO: Send email notification if requested
+        # Send email notification if requested
         email_sent = False
-        if send_email_notification:
-            # Email functionality would go here
-            # For now, just log it
-            print(f"Would send password reset email to {email}")
-            email_sent = True
+        if send_email_notification and mail:
+            try:
+                from flask_mail import Message
+                
+                msg = Message(
+                    subject="Your Password Has Been Reset - VA Contracts Lead Generation",
+                    recipients=[email],
+                    sender=app.config['MAIL_DEFAULT_SENDER']
+                )
+                
+                user_name = f"{user.first_name} {user.last_name}" if user.first_name else "User"
+                
+                msg.body = f"""Hello {user_name},
+
+Your password for VA Contracts Lead Generation has been reset by an administrator.
+
+Your new temporary password is: {new_password}
+
+Please log in at https://virginia-contracts-lead-generation.onrender.com/auth and change your password immediately for security.
+
+If you did not request this password reset, please contact support immediately.
+
+Best regards,
+VA Contracts Lead Generation Team
+"""
+                
+                msg.html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #667eea;">Password Reset Confirmation</h2>
+        
+        <p>Hello {user_name},</p>
+        
+        <p>Your password for <strong>VA Contracts Lead Generation</strong> has been reset by an administrator.</p>
+        
+        <div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Your new temporary password:</strong></p>
+            <p style="font-size: 18px; font-family: monospace; color: #667eea; margin: 10px 0;"><strong>{new_password}</strong></p>
+        </div>
+        
+        <p>For security purposes, please log in and change your password immediately:</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="https://virginia-contracts-lead-generation.onrender.com/auth" 
+               style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Log In Now
+            </a>
+        </p>
+        
+        <p style="color: #dc3545; margin-top: 30px;">
+            <strong>⚠️ Security Notice:</strong> If you did not request this password reset, please contact support immediately.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            VA Contracts Lead Generation<br>
+            Government Contract Opportunities for Virginia Cleaning Companies
+        </p>
+    </div>
+</body>
+</html>
+"""
+                
+                mail.send(msg)
+                email_sent = True
+                print(f"✅ Password reset email sent to {email}")
+                
+            except Exception as email_error:
+                print(f"⚠️ Failed to send password reset email: {email_error}")
+                import traceback
+                traceback.print_exc()
+                # Don't fail the whole request if email fails
+                email_sent = False
         
         response = {
             'success': True,
@@ -8757,7 +8827,7 @@ def api_bulk_reset_password():
             return jsonify({'success': False, 'error': 'Filter type required'}), 400
         
         # Build query based on filter
-        query = 'SELECT id, email FROM leads WHERE 1=1'
+        query = 'SELECT id, email, first_name, last_name FROM leads WHERE 1=1'
         
         if filter_type == 'free':
             query += " AND (subscription_status = 'free' OR subscription_status IS NULL)"
@@ -8775,10 +8845,13 @@ def api_bulk_reset_password():
         
         # Generate and update passwords
         from werkzeug.security import generate_password_hash
+        from flask_mail import Message
         import random
         import string
         
         count = 0
+        emails_sent = 0
+        
         for user in users:
             new_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%^&*', k=12))
             hashed_password = generate_password_hash(new_password)
@@ -8792,7 +8865,70 @@ def api_bulk_reset_password():
             # Log each reset
             log_admin_action('password_reset', f'Bulk reset for {user.email} (filter: {filter_type})', user.id)
             
-            # TODO: Send email to user with new password
+            # Send email to user with new password
+            if mail:
+                try:
+                    user_name = f"{user.first_name} {user.last_name}" if user.first_name else "User"
+                    
+                    msg = Message(
+                        subject="Your Password Has Been Reset - VA Contracts Lead Generation",
+                        recipients=[user.email],
+                        sender=app.config['MAIL_DEFAULT_SENDER']
+                    )
+                    
+                    msg.body = f"""Hello {user_name},
+
+Your password for VA Contracts Lead Generation has been reset by an administrator as part of a system-wide security update.
+
+Your new temporary password is: {new_password}
+
+Please log in at https://virginia-contracts-lead-generation.onrender.com/auth and change your password immediately for security.
+
+Best regards,
+VA Contracts Lead Generation Team
+"""
+                    
+                    msg.html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #667eea;">Password Reset - Security Update</h2>
+        
+        <p>Hello {user_name},</p>
+        
+        <p>Your password for <strong>VA Contracts Lead Generation</strong> has been reset as part of a system-wide security update.</p>
+        
+        <div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Your new temporary password:</strong></p>
+            <p style="font-size: 18px; font-family: monospace; color: #667eea; margin: 10px 0;"><strong>{new_password}</strong></p>
+        </div>
+        
+        <p>Please log in and change your password immediately:</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="https://virginia-contracts-lead-generation.onrender.com/auth" 
+               style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Log In Now
+            </a>
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            VA Contracts Lead Generation<br>
+            Government Contract Opportunities for Virginia Cleaning Companies
+        </p>
+    </div>
+</body>
+</html>
+"""
+                    
+                    mail.send(msg)
+                    emails_sent += 1
+                    
+                except Exception as email_error:
+                    print(f"⚠️ Failed to send email to {user.email}: {email_error}")
+            
             count += 1
         
         db.session.commit()
@@ -8800,7 +8936,8 @@ def api_bulk_reset_password():
         return jsonify({
             'success': True,
             'count': count,
-            'message': f'Reset {count} passwords'
+            'emails_sent': emails_sent,
+            'message': f'Reset {count} passwords, sent {emails_sent} emails'
         })
         
     except Exception as e:
