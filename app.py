@@ -2633,6 +2633,13 @@ def init_db():
 @app.route('/')
 def index():
     """Main homepage with contract samples - Optimized with caching"""
+    # If user is already logged in, redirect to appropriate dashboard
+    if 'user_id' in session:
+        if session.get('is_admin'):
+            return redirect(url_for('admin_enhanced'))
+        else:
+            return redirect(url_for('customer_dashboard'))
+    
     # Check if we're being redirected (prevent infinite loop)
     init_attempted = request.args.get('init_attempted', '0')
     
@@ -2925,6 +2932,13 @@ def manual_init_db():
 @app.route('/auth')
 def auth():
     """Unified authentication page (sign in or register)"""
+    # If user is already logged in, redirect to appropriate dashboard
+    if 'user_id' in session:
+        if session.get('is_admin'):
+            return redirect(url_for('admin_enhanced'))
+        else:
+            return redirect(url_for('customer_dashboard'))
+    
     return render_template('auth.html')
 
 @app.route('/contact', methods=['GET', 'POST'])
