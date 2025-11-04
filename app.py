@@ -359,10 +359,22 @@ def get_leads_by_type(lead_type, limit=5):
 def check_onboarding_status(user_email):
     """Check if user has completed onboarding or disabled it"""
     # First check session (fastest)
-    if session.get('onboarding_disabled'):
+    if session.get('onboarding_disabled') == True:
         return True
     
     try:
+        # Check if user_onboarding table exists first
+        table_exists = db.session.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'user_onboarding'
+            )
+        """)).scalar()
+        
+        if not table_exists:
+            # Table doesn't exist yet, return False (show onboarding)
+            return False
+        
         # Try to check both columns in database
         result = db.session.execute(text('''
             SELECT onboarding_completed, onboarding_disabled 
@@ -372,10 +384,18 @@ def check_onboarding_status(user_email):
         
         if result:
             # If onboarding is disabled or completed, return True (don't show modal)
-            return result[0] or result[1]
+            disabled = result[1] if len(result) > 1 else False
+            completed = result[0] if len(result) > 0 else False
+            
+            # If disabled, also set in session for faster future checks
+            if disabled:
+                session['onboarding_disabled'] = True
+                session.modified = True
+            
+            return completed or disabled
         return False
     except Exception as e:
-        # If table or columns don't exist, fall back to checking onboarding_completed only
+        # If any error occurs, fallback to checking only onboarding_completed
         try:
             result = db.session.execute(text('''
                 SELECT onboarding_completed 
@@ -3864,25 +3884,58 @@ def api_disable_onboarding():
         if not user_email or not user_id:
             return jsonify({'success': False, 'error': 'User not logged in'}), 401
         
-        # Try using user_onboarding table first
+        # Set in session first (immediate effect)
+        session['onboarding_disabled'] = True
+        session.modified = True
+        
+        # Check if table exists
+        table_exists = False
+        try:
+            table_exists = db.session.execute(text("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'user_onboarding'
+                )
+            """)).scalar()
+        except Exception:
+            pass
+        
+        # If table doesn't exist, create it
+        if not table_exists:
+            try:
+                db.session.execute(text('''
+                    CREATE TABLE IF NOT EXISTS user_onboarding (
+                        id SERIAL PRIMARY KEY,
+                        user_email TEXT UNIQUE NOT NULL,
+                        onboarding_completed BOOLEAN DEFAULT FALSE,
+                        onboarding_disabled BOOLEAN DEFAULT FALSE,
+                        completed_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                '''))
+                db.session.commit()
+                print(f"Created user_onboarding table")
+            except Exception as create_error:
+                db.session.rollback()
+                print(f"Error creating user_onboarding table: {create_error}")
+                # Table creation failed, but session is set, so return success
+                return jsonify({'success': True, 'message': 'Preference saved in session only'})
+        
+        # Try to save to database
         try:
             db.session.execute(text('''
                 INSERT INTO user_onboarding (user_email, onboarding_disabled)
                 VALUES (:email, TRUE)
-                ON CONFLICT (user_email) DO UPDATE SET onboarding_disabled = TRUE
+                ON CONFLICT (user_email) 
+                DO UPDATE SET onboarding_disabled = TRUE
             '''), {'email': user_email})
             db.session.commit()
-            print(f"Disabled onboarding for {user_email} in user_onboarding table")
-            return jsonify({'success': True})
-        except Exception as table_error:
-            # Table doesn't exist, use session storage instead
+            print(f"✅ Disabled onboarding for {user_email} in database")
+            return jsonify({'success': True, 'message': 'Onboarding disabled permanently'})
+        except Exception as db_error:
             db.session.rollback()
-            print(f"user_onboarding table doesn't exist, using session: {table_error}")
-            
-            # Store in session as fallback
-            session['onboarding_disabled'] = True
-            session.modified = True
-            
+            print(f"Database save failed but session is set: {db_error}")
+            # Database save failed, but session is set, so return success
             return jsonify({'success': True, 'message': 'Preference saved in session'})
             
     except Exception as e:
