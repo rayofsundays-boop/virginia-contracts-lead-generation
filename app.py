@@ -4911,11 +4911,11 @@ def commercial_contracts():
             'location': 'HQ: 5775 Glenridge Drive NE, Suite B-100, Atlanta, GA 30328 | 19 regional offices',
             'state': 'GA',
             'city': 'Atlanta',
-            'properties': '100,000+ units in 700+ communities',
-            'vendor_link': 'https://www.amcllc.com/careers-and-opportunities',
-            'description': 'Third-party multifamily property management since 1978. Contact: 404-836-7100 | Email: procurement@amcllc.com',
+            'properties': '158,000+ units in 700+ communities (25 states)',
+            'vendor_link': 'https://www.liveamc.com/vendors',
+            'description': 'Third-party multifamily property management since 2000. Vendor registration available online. Contact: 801-565-7430',
             'property_types': 'Multifamily apartments, affordable housing',
-            'regions': 'Southeast US (GA, FL, NC, SC, TN, AL) expanding nationwide'
+            'regions': '25 states nationwide - Southeast, West Coast, expanding'
         },
         {
             'name': 'Morgan Properties',
