@@ -3310,24 +3310,31 @@ def customer_dashboard():
         latest_opportunities = []
         gov_opps_list, supply_opps_list, com_reqs_list, res_reqs_list = [], [], [], []
         try:
-            # Government
+            # Government Contracts - using federal_contracts table
             gov_rows = db.session.execute(text(
                 """
-                SELECT title, agency, location, value, created_at,
+                SELECT description as title, agency_name as agency, city as location, 
+                       award_amount as value, created_at,
                        'Government Contract' as lead_type, id
-                FROM contracts
+                FROM federal_contracts
                 ORDER BY created_at DESC
                 LIMIT 10
                 """
             )).fetchall()
             for r in gov_rows:
                 rec = {
-                    'title': r[0], 'agency': r[1], 'location': r[2], 'value': r[3],
-                    'posted_date': r[4], 'lead_type': r[5], 'id': r[6], 'link': url_for('contracts')
+                    'title': r.title or 'Federal Contract Opportunity', 
+                    'agency': r.agency or 'Federal Agency', 
+                    'location': r.location or 'Virginia',
+                    'value': r.value or 'See details',
+                    'posted_date': r.created_at, 
+                    'lead_type': r.lead_type, 
+                    'id': r.id, 
+                    'link': url_for('federal_contracts')
                 }
                 latest_opportunities.append(rec); gov_opps_list.append(rec)
 
-            # Supply
+            # Supply Opportunities
             supply_rows = db.session.execute(text(
                 """
                 SELECT title, agency, location, estimated_value, posted_date,
@@ -3340,15 +3347,16 @@ def customer_dashboard():
             )).fetchall()
             for r in supply_rows:
                 rec = {
-                    'title': r[0], 'agency': r[1], 'location': r[2], 'value': r[3],
-                    'posted_date': r[4], 'lead_type': r[5], 'id': r[6], 'link': r[7] or url_for('quick_wins')
+                    'title': r.title, 'agency': r.agency, 'location': r.location, 'value': r.estimated_value,
+                    'posted_date': r.posted_date, 'lead_type': r.lead_type, 'id': r.id, 
+                    'link': r.website_url or url_for('quick_wins')
                 }
                 latest_opportunities.append(rec); supply_opps_list.append(rec)
 
-            # Commercial
+            # Commercial Requests
             com_rows = db.session.execute(text(
                 """
-                SELECT business_name, business_type, city || ', VA', budget_range, created_at,
+                SELECT business_name, business_type, city || ', VA' as full_city, budget_range, created_at,
                        'Commercial Request' as lead_type, id
                 FROM commercial_lead_requests
                 WHERE status = 'open'
@@ -3358,16 +3366,21 @@ def customer_dashboard():
             )).fetchall()
             for r in com_rows:
                 rec = {
-                    'title': f"Commercial Cleaning - {r[0]}", 'agency': r[1], 'location': r[2],
-                    'value': r[3] or 'Contact for quote', 'posted_date': r[4], 'lead_type': r[5], 'id': r[6],
+                    'title': f"Commercial Cleaning - {r.business_name}", 
+                    'agency': r.business_type, 
+                    'location': r.full_city,
+                    'value': r.budget_range or 'Contact for quote', 
+                    'posted_date': r.created_at, 
+                    'lead_type': r.lead_type, 
+                    'id': r.id,
                     'link': url_for('customer_leads')
                 }
                 latest_opportunities.append(rec); com_reqs_list.append(rec)
 
-            # Residential
+            # Residential Requests
             res_rows = db.session.execute(text(
                 """
-                SELECT homeowner_name, property_type, city || ', VA', estimated_value, created_at,
+                SELECT homeowner_name, property_type, city || ', VA' as full_city, estimated_value, created_at,
                        'Residential Request' as lead_type, id
                 FROM residential_leads
                 WHERE status = 'new'
@@ -3377,8 +3390,13 @@ def customer_dashboard():
             )).fetchall()
             for r in res_rows:
                 rec = {
-                    'title': f"Residential Cleaning - {r[1]}", 'agency': f"Homeowner: {r[0]}", 'location': r[2],
-                    'value': r[3] or 'Contact for quote', 'posted_date': r[4], 'lead_type': r[5], 'id': r[6],
+                    'title': f"Residential Cleaning - {r.property_type}", 
+                    'agency': f"Homeowner: {r.homeowner_name}", 
+                    'location': r.full_city,
+                    'value': r.estimated_value or 'Contact for quote', 
+                    'posted_date': r.created_at, 
+                    'lead_type': r.lead_type, 
+                    'id': r.id,
                     'link': url_for('customer_leads')
                 }
                 latest_opportunities.append(rec); res_reqs_list.append(rec)
