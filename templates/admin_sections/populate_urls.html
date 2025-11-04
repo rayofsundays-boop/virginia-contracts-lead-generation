@@ -1,0 +1,388 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-magic text-primary"></i> Populate Missing URLs with AI</h2>
+            <p class="text-muted">Use OpenAI to automatically generate and populate URLs for leads that are missing them</p>
+        </div>
+        <div>
+            <span class="badge bg-info fs-6">AI-Powered URL Generation</span>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>How it works:</strong> AI analyzes lead details (title, agency, location) and generates appropriate URLs using SAM.gov searches, agency portals, and procurement sites. You can preview suggested URLs before updating the database.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-unlink"></i> Total Missing URLs</h6>
+                    <h2 id="totalMissing">0</h2>
+                    <small>Leads without URLs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-flag"></i> Federal</h6>
+                    <h2 id="federalMissing">0</h2>
+                    <small>Missing SAM.gov URLs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-box"></i> Supply</h6>
+                    <h2 id="supplyMissing">0</h2>
+                    <small>Missing website URLs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-check"></i> Generated</h6>
+                    <h2 id="urlsGenerated">0</h2>
+                    <small>URLs created</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generation Controls -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>URL Generation Settings</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><i class="fas fa-list-check me-2"></i>Select Lead Types</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="federal" id="genFederal" checked>
+                        <label class="form-check-label" for="genFederal">
+                            <strong>Federal Contracts</strong> (SAM.gov searches)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="supply" id="genSupply" checked>
+                        <label class="form-check-label" for="genSupply">
+                            <strong>Supply Contracts</strong> (Agency portals)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="government" id="genGovernment" checked>
+                        <label class="form-check-label" for="genGovernment">
+                            <strong>Government Contracts</strong> (State portals)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <h6><i class="fas fa-sliders-h me-2"></i>Generation Options</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Number of leads to process</label>
+                        <input type="number" id="generateLimit" class="form-control" value="10" min="1" max="50">
+                        <small class="text-muted">Recommended: 10-20 (API cost consideration)</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoUpdate" checked>
+                        <label class="form-check-label" for="autoUpdate">
+                            <strong>Automatically update database</strong>
+                            <br><small class="text-muted">Uncheck to preview URLs first</small>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <h6><i class="fas fa-play-circle me-2"></i>Actions</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-lg" onclick="generateUrls()">
+                            <i class="fas fa-magic me-2"></i>Generate URLs with AI
+                        </button>
+                        <button class="btn btn-info" onclick="loadMissingLeads()">
+                            <i class="fas fa-search me-2"></i>Find Leads Without URLs
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewGenerationLog()">
+                            <i class="fas fa-history me-2"></i>View Generation Log
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Generated URLs</h5>
+            <button class="btn btn-sm btn-light" onclick="exportResults()" id="exportBtn" disabled>
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div id="loadingSpinner" class="text-center p-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3"><strong>Generating URLs with OpenAI...</strong></p>
+                <p class="text-muted">Analyzing leads and creating appropriate URLs...</p>
+            </div>
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0" id="resultsTable">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Title</th>
+                            <th>Agency</th>
+                            <th>Generated URL</th>
+                            <th>URL Type</th>
+                            <th>Confidence</th>
+                            <th>Reasoning</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        <tr>
+                            <td colspan="10" class="text-center text-muted p-5">
+                                <i class="fas fa-search fa-3x mb-3 d-block"></i>
+                                <h5>No Results Yet</h5>
+                                <p>Click "Find Leads Without URLs" to see what needs URLs,<br>or "Generate URLs with AI" to start creating them</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let generatedResults = [];
+let missingLeads = [];
+
+// Load leads that are missing URLs
+async function loadMissingLeads() {
+    try {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        const response = await fetch('/admin/populate-missing-urls');
+        const data = await response.json();
+        
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.success) {
+            missingLeads = data.leads;
+            updateMissingStats(data);
+            displayMissingLeads(data.leads);
+            alert(`📋 Found ${data.total_missing} leads without URLs\n\nFederal: ${data.leads_by_type.federal}\nSupply: ${data.leads_by_type.supply}\nGovernment: ${data.leads_by_type.government}`);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        console.error('Error:', error);
+        alert('❌ Failed to load missing leads');
+    }
+}
+
+// Generate URLs with AI
+async function generateUrls() {
+    const limit = document.getElementById('generateLimit').value;
+    const autoUpdate = document.getElementById('autoUpdate').checked;
+    
+    // Get selected types
+    const leadTypes = [];
+    if (document.getElementById('genFederal').checked) leadTypes.push('federal');
+    if (document.getElementById('genSupply').checked) leadTypes.push('supply');
+    if (document.getElementById('genGovernment').checked) leadTypes.push('government');
+    
+    if (leadTypes.length === 0) {
+        alert('⚠️ Please select at least one lead type');
+        return;
+    }
+    
+    const updateMsg = autoUpdate ? 
+        '\n\n✅ URLs will be AUTOMATICALLY added to the database.' : 
+        '\n\n👁️ Preview mode - URLs will NOT be saved (you can review first).';
+    
+    if (!confirm(`Generate URLs for up to ${limit} leads?\n\nTypes: ${leadTypes.join(', ')}${updateMsg}\n\nThis will use OpenAI API credits.`)) {
+        return;
+    }
+    
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('resultsTableBody').innerHTML = '';
+    
+    try {
+        const response = await fetch('/admin/populate-missing-urls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                limit: parseInt(limit),
+                lead_types: leadTypes,
+                auto_update: autoUpdate
+            })
+        });
+        
+        const data = await response.json();
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.success) {
+            generatedResults = data.results;
+            displayGeneratedUrls(data.results);
+            document.getElementById('exportBtn').disabled = false;
+            
+            const successMsg = autoUpdate ?
+                `✅ Success!\n\n${data.urls_generated} URLs generated\n${data.urls_updated} leads updated in database` :
+                `✅ Success!\n\n${data.urls_generated} URLs generated (preview mode)\n\nReview the URLs below. To save them, run again with "Automatically update database" checked.`;
+            
+            alert(successMsg);
+            
+            // Update stats
+            document.getElementById('urlsGenerated').textContent = data.urls_generated;
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        console.error('Error:', error);
+        alert('❌ URL generation failed: ' + error.message);
+    }
+}
+
+// Display missing leads
+function displayMissingLeads(leads) {
+    const tbody = document.getElementById('resultsTableBody');
+    tbody.innerHTML = '';
+    
+    if (leads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center p-4 text-success"><i class="fas fa-check-circle fa-2x mb-2 d-block"></i><h5>All leads have URLs!</h5><p>No missing URLs found</p></td></tr>';
+        return;
+    }
+    
+    leads.forEach(lead => {
+        const row = document.createElement('tr');
+        const typeBadge = getTypeBadge(lead.type);
+        
+        row.innerHTML = `
+            <td>${lead.id}</td>
+            <td>${typeBadge}</td>
+            <td style="max-width: 300px;" class="text-truncate" title="${lead.title}">${lead.title}</td>
+            <td>${lead.agency}</td>
+            <td colspan="4" class="text-center text-muted"><em>No URL - needs generation</em></td>
+            <td><span class="badge bg-danger">Missing</span></td>
+            <td>-</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Display generated URLs
+function displayGeneratedUrls(results) {
+    const tbody = document.getElementById('resultsTableBody');
+    tbody.innerHTML = '';
+    
+    results.forEach(result => {
+        const row = document.createElement('tr');
+        const typeBadge = getTypeBadge(result.lead_type);
+        const confidenceBadge = getConfidenceBadge(result.confidence);
+        
+        row.innerHTML = `
+            <td>${result.lead_id}</td>
+            <td>${typeBadge}</td>
+            <td style="max-width: 250px;" class="text-truncate" title="${result.title}">${result.title}</td>
+            <td>-</td>
+            <td style="max-width: 300px;">
+                <a href="${result.suggested_url}" target="_blank" class="text-truncate d-inline-block w-100" title="${result.suggested_url}">
+                    ${result.suggested_url}
+                </a>
+            </td>
+            <td><span class="badge bg-secondary">${result.url_type}</span></td>
+            <td>${confidenceBadge}</td>
+            <td style="max-width: 200px;" class="text-truncate" title="${result.reasoning}">${result.reasoning}</td>
+            <td><span class="badge bg-success">Generated</span></td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="testUrl('${result.suggested_url}')" title="Test URL">
+                    <i class="fas fa-external-link-alt"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Helper functions
+function getTypeBadge(type) {
+    const badges = {
+        'federal': '<span class="badge bg-success">Federal</span>',
+        'supply': '<span class="badge bg-info">Supply</span>',
+        'government': '<span class="badge bg-warning text-dark">Government</span>'
+    };
+    return badges[type] || '<span class="badge bg-secondary">' + type + '</span>';
+}
+
+function getConfidenceBadge(confidence) {
+    const badges = {
+        'high': '<span class="badge bg-success">High</span>',
+        'medium': '<span class="badge bg-warning text-dark">Medium</span>',
+        'low': '<span class="badge bg-danger">Low</span>'
+    };
+    return badges[confidence] || '<span class="badge bg-secondary">' + confidence + '</span>';
+}
+
+function updateMissingStats(data) {
+    document.getElementById('totalMissing').textContent = data.total_missing;
+    document.getElementById('federalMissing').textContent = data.leads_by_type.federal || 0;
+    document.getElementById('supplyMissing').textContent = data.leads_by_type.supply || 0;
+}
+
+function testUrl(url) {
+    window.open(url, '_blank');
+}
+
+function exportResults() {
+    if (generatedResults.length === 0) {
+        alert('⚠️ No results to export');
+        return;
+    }
+    
+    const headers = ['Lead ID', 'Type', 'Title', 'Generated URL', 'URL Type', 'Confidence', 'Reasoning'];
+    const rows = [headers];
+    
+    generatedResults.forEach(r => {
+        rows.push([
+            r.lead_id, r.lead_type, r.title, r.suggested_url,
+            r.url_type, r.confidence, r.reasoning
+        ]);
+    });
+    
+    const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `generated_urls_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function viewGenerationLog() {
+    alert('📋 URL Generation Log\n\nFeature coming soon!\n\nWill show:\n- History of URL generations\n- Success/failure rates\n- Confidence trends\n- Most used URL patterns');
+}
+</script>
+
+<style>
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+</style>

@@ -172,6 +172,12 @@
                     <a class="nav-link {% if section == 'track-all-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='track-all-urls') }}">
                         <i class="fas fa-globe"></i>Track ALL URLs (AI)
                     </a>
+                    <a class="nav-link {% if section == 'populate-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='populate-urls') }}">
+                        <i class="fas fa-magic"></i>Populate Missing URLs (AI)
+                    </a>
+                    <a class="nav-link {% if section == 'url-automation' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='url-automation') }}">
+                        <i class="fas fa-robot"></i>URL Automation Log
+                    </a>
                     <a class="nav-link" href="{{ url_for('admin_fix_sam_urls') }}" onclick="return confirm('This will update all SAM.gov URLs for federal contracts. Continue?');">
                         <i class="fas fa-sync-alt"></i>Auto-Update All URLs
                     </a>
@@ -236,6 +242,12 @@
             
             {% elif section == 'track-all-urls' %}
             {% include 'admin_sections/track_all_urls.html' %}
+            
+            {% elif section == 'populate-urls' %}
+            {% include 'admin_sections/populate_urls.html' %}
+            
+            {% elif section == 'url-automation' %}
+            {% include 'admin_sections/url_automation_log.html' %}
             
             {% elif section == 'edit-leads' %}
             {% include 'admin_sections/edit_leads.html' %}

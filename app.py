@@ -1117,6 +1117,9 @@ def update_federal_contracts_from_datagov():
         
         # Use SQLAlchemy for database operations
         with app.app_context():
+            # Track new lead IDs for real-time URL population
+            new_federal_ids = []
+            
             # Insert contracts with conflict handling
             new_count = 0
             updated_count = 0
@@ -1148,14 +1151,17 @@ def update_federal_contracts_from_datagov():
                         updated_count += 1
                     else:
                         # Insert new contract
-                        db.session.execute(text('''
+                        result = db.session.execute(text('''
                             INSERT INTO federal_contracts 
                             (title, agency, department, location, value, deadline, description, 
                              naics_code, sam_gov_url, notice_id, set_aside, posted_date)
                             VALUES (:title, :agency, :department, :location, :value, :deadline, 
                                     :description, :naics_code, :sam_gov_url, :notice_id, 
                                     :set_aside, :posted_date)
+                            RETURNING id
                         '''), contract)
+                        new_lead_id = result.fetchone()[0]
+                        new_federal_ids.append(new_lead_id)
                         new_count += 1
                         
                 except Exception as e:
@@ -1164,6 +1170,13 @@ def update_federal_contracts_from_datagov():
             
             db.session.commit()
             print(f"✅ Data.gov bulk update: {new_count} new contracts, {updated_count} updated")
+            
+            # Auto-populate URLs for new leads (if OpenAI is available)
+            if new_federal_ids and len(new_federal_ids) <= 10:
+                try:
+                    populate_urls_for_new_leads('federal', new_federal_ids)
+                except Exception as e:
+                    print(f"⚠️  Could not auto-populate URLs: {e}")
             
     except Exception as e:
         print(f"❌ Error updating from Data.gov: {e}")
@@ -1424,6 +1437,16 @@ def schedule_usaspending_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
+def schedule_url_population():
+    """Run automated URL population at 3 AM daily (off-peak)"""
+    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
+    
+    print("⏰ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 def start_background_jobs_once():
     """Start schedulers and optional initial fetch only in a single worker."""
     if not _acquire_background_lock():
@@ -1449,6 +1472,14 @@ def start_background_jobs_once():
     # Start Local Government scheduler in background thread
     localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
     localgov_scheduler_thread.start()
+
+    # Start Auto URL Population scheduler in background thread (runs at 3 AM daily)
+    if OPENAI_AVAILABLE and OPENAI_API_KEY:
+        url_population_thread = threading.Thread(target=schedule_url_population, daemon=True)
+        url_population_thread.start()
+        print("✅ Auto URL Population enabled - will run daily at 3 AM")
+    else:
+        print("⏸️  Auto URL Population disabled (OpenAI not configured)")
 
     # Optional initial update on startup (only during off-peak hours or when explicitly enabled)
     # Check if current time is during off-peak hours (midnight-6 AM EST)
@@ -9489,6 +9520,610 @@ Only respond with the JSON array, no other text."""
             'success': False,
             'message': str(e)
         }), 500
+
+@app.route('/admin/populate-missing-urls', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_populate_missing_urls():
+    """Use OpenAI to generate and populate missing URLs for leads"""
+    try:
+        if request.method == 'GET':
+            # Get leads without URLs from all tables
+            leads_without_urls = []
+            
+            # 1. Federal Contracts without URLs
+            try:
+                federal = db.session.execute(text('''
+                    SELECT id, title, agency, location, naics_code, description, 'federal' as type
+                    FROM federal_contracts 
+                    WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
+                    LIMIT 50
+                ''')).fetchall()
+                for lead in federal:
+                    leads_without_urls.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2], 
+                        'location': lead[3], 'naics': lead[4], 'description': lead[5][:200] if lead[5] else '',
+                        'type': 'federal'
+                    })
+            except Exception as e:
+                print(f"Error fetching federal: {e}")
+            
+            # 2. Supply Contracts without URLs
+            try:
+                supply = db.session.execute(text('''
+                    SELECT id, title, agency, location, product_category, description, 'supply' as type
+                    FROM supply_contracts 
+                    WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
+                    LIMIT 50
+                ''')).fetchall()
+                for lead in supply:
+                    leads_without_urls.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'category': lead[4], 'description': lead[5][:200] if lead[5] else '',
+                        'type': 'supply'
+                    })
+            except Exception as e:
+                print(f"Error fetching supply: {e}")
+            
+            # 3. Government Contracts without URLs
+            try:
+                gov = db.session.execute(text('''
+                    SELECT id, title, agency, location, naics_code, description, 'government' as type
+                    FROM government_contracts 
+                    WHERE (website_url IS NULL OR website_url = '')
+                    LIMIT 50
+                ''')).fetchall()
+                for lead in gov:
+                    leads_without_urls.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'naics': lead[4], 'description': lead[5][:200] if lead[5] else '',
+                        'type': 'government'
+                    })
+            except Exception as e:
+                print(f"Error fetching government: {e}")
+            
+            return jsonify({
+                'success': True,
+                'total_missing': len(leads_without_urls),
+                'leads_by_type': {
+                    'federal': len([l for l in leads_without_urls if l['type'] == 'federal']),
+                    'supply': len([l for l in leads_without_urls if l['type'] == 'supply']),
+                    'government': len([l for l in leads_without_urls if l['type'] == 'government'])
+                },
+                'leads': leads_without_urls
+            })
+        
+        # POST request - Generate URLs with AI
+        if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+            return jsonify({
+                'success': False, 
+                'message': 'OpenAI API not configured. Please set OPENAI_API_KEY environment variable.'
+            }), 400
+        
+        data = request.get_json()
+        limit = int(data.get('limit', 10))
+        auto_update = data.get('auto_update', False)  # Whether to automatically update database
+        lead_types = data.get('lead_types', ['federal', 'supply', 'government'])
+        
+        # Collect leads without URLs
+        leads_data = []
+        
+        if 'federal' in lead_types:
+            federal = db.session.execute(text('''
+                SELECT id, title, agency, location, naics_code, description, solicitation_number
+                FROM federal_contracts 
+                WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
+                ORDER BY posted_date DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in federal:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'solicitation': lead[6], 'type': 'federal'
+                })
+        
+        if 'supply' in lead_types:
+            supply = db.session.execute(text('''
+                SELECT id, title, agency, location, product_category, description
+                FROM supply_contracts 
+                WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
+                ORDER BY created_at DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in supply:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'category': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'type': 'supply'
+                })
+        
+        if 'government' in lead_types:
+            gov = db.session.execute(text('''
+                SELECT id, title, agency, location, naics_code, description
+                FROM government_contracts 
+                WHERE (website_url IS NULL OR website_url = '')
+                ORDER BY posted_date DESC
+                LIMIT :limit
+            '''), {'limit': limit}).fetchall()
+            for lead in gov:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'type': 'government'
+                })
+        
+        if not leads_data:
+            return jsonify({'success': False, 'message': 'No leads without URLs found'}), 404
+        
+        # Limit for API costs
+        leads_data = leads_data[:limit]
+        
+        # AI Prompt to generate URLs
+        prompt = f"""You are a procurement URL research expert. For each lead below, suggest the most likely URL where this opportunity can be found.
+
+For Federal contracts: Use SAM.gov search patterns like:
+- https://sam.gov/search/?index=opp&page=1&keywords=<agency+keywords>&sort=-relevance
+- Or specific agency procurement portals
+
+For Supply contracts: Suggest agency procurement portals, RFP sites, or supplier registration pages
+
+For Government contracts: Suggest state/local government procurement websites
+
+IMPORTANT: Generate REAL, working URLs that are likely to contain the opportunity. Use:
+- Agency websites
+- SAM.gov searches with relevant keywords
+- State/local procurement portals
+- Industry-specific bidding platforms
+
+Leads Data:
+{json.dumps(leads_data, indent=2)}
+
+Respond with a JSON array with these fields:
+- lead_id: The lead ID
+- lead_type: Type (federal/supply/government)
+- title: Lead title
+- suggested_url: The generated/suggested URL
+- url_type: "sam_gov_search", "agency_portal", "procurement_site", "state_portal", etc.
+- confidence: "high", "medium", "low" (how confident you are this URL will work)
+- reasoning: Brief explanation of why this URL was suggested
+
+Only respond with the JSON array, no other text."""
+
+        # Call OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a procurement research expert specializing in finding contract opportunities online."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,  # Lower temperature for more consistent URLs
+            max_tokens=3000
+        )
+        
+        # Parse AI response
+        ai_content = response['choices'][0]['message']['content']
+        
+        if '```json' in ai_content:
+            ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+        elif '```' in ai_content:
+            ai_content = ai_content.split('```')[1].split('```')[0].strip()
+        
+        results = json.loads(ai_content)
+        
+        # Optionally update database with suggested URLs
+        updated_count = 0
+        if auto_update:
+            for result in results:
+                try:
+                    lead_type = result['lead_type']
+                    lead_id = result['lead_id']
+                    suggested_url = result['suggested_url']
+                    
+                    if lead_type == 'federal':
+                        db.session.execute(text('''
+                            UPDATE federal_contracts 
+                            SET sam_gov_url = :url
+                            WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    elif lead_type == 'supply':
+                        db.session.execute(text('''
+                            UPDATE supply_contracts 
+                            SET website_url = :url
+                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    elif lead_type == 'government':
+                        db.session.execute(text('''
+                            UPDATE government_contracts 
+                            SET website_url = :url
+                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    
+                    updated_count += 1
+                except Exception as e:
+                    print(f"Error updating lead {result['lead_id']}: {e}")
+            
+            try:
+                db.session.commit()
+                
+                # Send notifications to customers about new URLs
+                if updated_count > 0:
+                    notify_customers_about_new_urls(results)
+                    
+            except:
+                db.session.rollback()
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'leads_processed': len(results),
+            'urls_generated': len(results),
+            'urls_updated': updated_count if auto_update else 0,
+            'auto_update': auto_update,
+            'message': f'AI generated {len(results)} URLs' + (f' and updated {updated_count} leads' if auto_update else '')
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse AI response: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to parse AI response: {str(e)}'
+        }), 500
+    except Exception as e:
+        print(f"Error in URL population: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ============================================================================
+# AUTOMATED URL POPULATION SYSTEM
+# ============================================================================
+
+def auto_populate_missing_urls_background():
+    """
+    Automatically populate missing URLs for leads using OpenAI.
+    Runs as a scheduled background job (daily at 3 AM).
+    """
+    if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+        print("⚠️  Auto URL population skipped - OpenAI not configured")
+        return
+    
+    print("\n" + "="*70)
+    print("🤖 AUTO URL POPULATION - Starting scheduled job")
+    print("="*70)
+    
+    try:
+        with app.app_context():
+            # Collect leads without URLs (limit to 20 per run to manage API costs)
+            leads_data = []
+            
+            # Federal contracts
+            federal = db.session.execute(text('''
+                SELECT id, title, agency, location, naics_code, description, solicitation_number
+                FROM federal_contracts 
+                WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
+                AND posted_date >= CURRENT_DATE - INTERVAL '30 days'
+                ORDER BY posted_date DESC
+                LIMIT 10
+            ''')).fetchall()
+            
+            for lead in federal:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'solicitation': lead[6], 'type': 'federal'
+                })
+            
+            # Supply contracts
+            supply = db.session.execute(text('''
+                SELECT id, title, agency, location, product_category, description
+                FROM supply_contracts 
+                WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 5
+            ''')).fetchall()
+            
+            for lead in supply:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'category': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'type': 'supply'
+                })
+            
+            # Government contracts
+            gov = db.session.execute(text('''
+                SELECT id, title, agency, location, naics_code, description
+                FROM government_contracts 
+                WHERE (website_url IS NULL OR website_url = '')
+                AND posted_date >= CURRENT_DATE - INTERVAL '30 days'
+                ORDER BY posted_date DESC
+                LIMIT 5
+            ''')).fetchall()
+            
+            for lead in gov:
+                leads_data.append({
+                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+                    'type': 'government'
+                })
+            
+            if not leads_data:
+                print("✅ No leads without URLs found - all up to date!")
+                return
+            
+            print(f"📊 Found {len(leads_data)} leads without URLs")
+            
+            # Generate URLs with OpenAI
+            prompt = f"""You are a procurement URL research expert. For each lead below, suggest the most likely URL where this opportunity can be found.
+
+For Federal contracts: Use SAM.gov search patterns like:
+- https://sam.gov/search/?index=opp&page=1&keywords=<agency+keywords>&sort=-relevance
+- Or specific agency procurement portals
+
+For Supply contracts: Suggest agency procurement portals, RFP sites, or supplier registration pages
+
+For Government contracts: Suggest state/local government procurement websites
+
+IMPORTANT: Generate REAL, working URLs that are likely to contain the opportunity.
+
+Leads Data:
+{json.dumps(leads_data, indent=2)}
+
+Respond with a JSON array with these fields:
+- lead_id: The lead ID
+- lead_type: Type (federal/supply/government)
+- suggested_url: The generated/suggested URL
+- url_type: "sam_gov_search", "agency_portal", "procurement_site", etc.
+- confidence: "high", "medium", "low"
+
+Only respond with the JSON array, no other text."""
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a procurement research expert."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=2000
+            )
+            
+            ai_content = response['choices'][0]['message']['content']
+            if '```json' in ai_content:
+                ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+            elif '```' in ai_content:
+                ai_content = ai_content.split('```')[1].split('```')[0].strip()
+            
+            results = json.loads(ai_content)
+            
+            # Update database
+            updated_count = 0
+            for result in results:
+                try:
+                    lead_type = result['lead_type']
+                    lead_id = result['lead_id']
+                    suggested_url = result['suggested_url']
+                    
+                    if lead_type == 'federal':
+                        db.session.execute(text('''
+                            UPDATE federal_contracts 
+                            SET sam_gov_url = :url
+                            WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    elif lead_type == 'supply':
+                        db.session.execute(text('''
+                            UPDATE supply_contracts 
+                            SET website_url = :url
+                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    elif lead_type == 'government':
+                        db.session.execute(text('''
+                            UPDATE government_contracts 
+                            SET website_url = :url
+                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
+                        '''), {'url': suggested_url, 'id': lead_id})
+                    
+                    updated_count += 1
+                except Exception as e:
+                    print(f"❌ Error updating lead {result.get('lead_id')}: {e}")
+            
+            db.session.commit()
+            
+            print(f"✅ Successfully populated {updated_count} URLs")
+            
+            # Notify customers about new URLs
+            notify_customers_about_new_urls(results)
+            
+            print("="*70)
+            print(f"✅ AUTO URL POPULATION COMPLETE - {updated_count} URLs added")
+            print("="*70 + "\n")
+            
+    except Exception as e:
+        print(f"❌ Error in auto URL population: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def populate_urls_for_new_leads(lead_type, lead_ids):
+    """
+    Real-time URL population for newly imported leads.
+    Called automatically after new leads are imported.
+    
+    Args:
+        lead_type: 'federal', 'supply', or 'government'
+        lead_ids: List of lead IDs that were just imported
+    """
+    if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+        return
+    
+    if not lead_ids:
+        return
+    
+    try:
+        with app.app_context():
+            leads_data = []
+            
+            # Fetch the new leads based on type
+            if lead_type == 'federal':
+                leads = db.session.execute(text('''
+                    SELECT id, title, agency, location, naics_code, description, solicitation_number
+                    FROM federal_contracts 
+                    WHERE id = ANY(:ids) AND (sam_gov_url IS NULL OR sam_gov_url = '')
+                '''), {'ids': lead_ids}).fetchall()
+                
+                for lead in leads:
+                    leads_data.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'naics': lead[4], 
+                        'description': lead[5][:300] if lead[5] else '',
+                        'solicitation': lead[6], 'type': 'federal'
+                    })
+            
+            elif lead_type == 'supply':
+                leads = db.session.execute(text('''
+                    SELECT id, title, agency, location, product_category, description
+                    FROM supply_contracts 
+                    WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')
+                '''), {'ids': lead_ids}).fetchall()
+                
+                for lead in leads:
+                    leads_data.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'category': lead[4],
+                        'description': lead[5][:300] if lead[5] else '',
+                        'type': 'supply'
+                    })
+            
+            elif lead_type == 'government':
+                leads = db.session.execute(text('''
+                    SELECT id, title, agency, location, naics_code, description
+                    FROM government_contracts 
+                    WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')
+                '''), {'ids': lead_ids}).fetchall()
+                
+                for lead in leads:
+                    leads_data.append({
+                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
+                        'location': lead[3], 'naics': lead[4],
+                        'description': lead[5][:300] if lead[5] else '',
+                        'type': 'government'
+                    })
+            
+            if not leads_data:
+                return
+            
+            print(f"🤖 Auto-generating URLs for {len(leads_data)} new {lead_type} leads...")
+            
+            # Generate URLs with OpenAI (abbreviated prompt for speed)
+            prompt = f"""Generate URLs for these procurement leads:
+
+{json.dumps(leads_data, indent=2)}
+
+Return JSON array: [{{"lead_id": int, "lead_type": str, "suggested_url": str, "confidence": str}}]"""
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Generate procurement URLs."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=1500
+            )
+            
+            ai_content = response['choices'][0]['message']['content']
+            if '```' in ai_content:
+                ai_content = ai_content.split('```')[1].replace('json', '').strip()
+            
+            results = json.loads(ai_content)
+            
+            # Update database
+            for result in results:
+                try:
+                    lt = result['lead_type']
+                    lid = result['lead_id']
+                    url = result['suggested_url']
+                    
+                    if lt == 'federal':
+                        db.session.execute(text('UPDATE federal_contracts SET sam_gov_url = :url WHERE id = :id'), 
+                                         {'url': url, 'id': lid})
+                    elif lt == 'supply':
+                        db.session.execute(text('UPDATE supply_contracts SET website_url = :url WHERE id = :id'),
+                                         {'url': url, 'id': lid})
+                    elif lt == 'government':
+                        db.session.execute(text('UPDATE government_contracts SET website_url = :url WHERE id = :id'),
+                                         {'url': url, 'id': lid})
+                except Exception as e:
+                    print(f"Error updating lead {result.get('lead_id')}: {e}")
+            
+            db.session.commit()
+            print(f"✅ Auto-populated {len(results)} URLs for new {lead_type} leads")
+            
+    except Exception as e:
+        print(f"❌ Error in real-time URL population: {e}")
+
+
+def notify_customers_about_new_urls(url_results):
+    """
+    Send notifications to customers when URLs are added to leads they're interested in.
+    Checks saved leads and sends in-app messages.
+    
+    Args:
+        url_results: List of dicts with lead_id, lead_type, suggested_url
+    """
+    try:
+        with app.app_context():
+            for result in url_results:
+                lead_id = result.get('lead_id')
+                lead_type = result.get('lead_type')
+                url = result.get('suggested_url')
+                
+                if not lead_id or not lead_type:
+                    continue
+                
+                # Find customers who have saved this lead
+                customers = db.session.execute(text('''
+                    SELECT DISTINCT l.id as user_id, l.email, l.contact_name
+                    FROM leads l
+                    INNER JOIN saved_leads sl ON sl.user_id = l.id
+                    WHERE sl.contract_id = :lead_id 
+                    AND sl.contract_type = :lead_type
+                    AND l.subscription_status = 'active'
+                '''), {'lead_id': lead_id, 'lead_type': lead_type}).fetchall()
+                
+                for customer in customers:
+                    try:
+                        # Send in-app notification
+                        db.session.execute(text('''
+                            INSERT INTO messages 
+                            (sender_id, recipient_id, subject, body, is_read, sent_at)
+                            VALUES 
+                            (1, :user_id, :subject, :body, FALSE, CURRENT_TIMESTAMP)
+                        '''), {
+                            'user_id': customer[0],
+                            'subject': '🔗 New URL Added to Your Saved Lead',
+                            'body': f'''Good news! We've added a URL to one of your saved leads.
+
+Lead ID: {lead_id}
+Type: {lead_type.title()}
+URL: {url}
+
+You can now access this opportunity directly. View your saved leads to see the full details.
+
+This URL was automatically generated by our AI system to help you find opportunities faster.'''
+                        })
+                    except Exception as e:
+                        print(f"Error sending notification to user {customer[0]}: {e}")
+                
+            db.session.commit()
+            print(f"✉️  Sent notifications for {len(url_results)} URL updates")
+            
+    except Exception as e:
+        print(f"❌ Error sending notifications: {e}")
+
 
 @app.route('/admin/cleanup-leads', methods=['POST'])
 def cleanup_leads():
