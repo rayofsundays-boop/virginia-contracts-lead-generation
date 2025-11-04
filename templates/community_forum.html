@@ -20,11 +20,11 @@
     <!-- Filters -->
     <form class="card card-body shadow-sm mb-4" method="get" action="{{ url_for('community_forum') }}">
         <div class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="q" class="form-label">Search</label>
                 <input type="text" id="q" name="q" class="form-control" placeholder="Search by name, city, or services" value="{{ q or '' }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="city" class="form-label">City</label>
                 <select id="city" name="city" class="form-select">
                     <option value="">All Cities</option>
@@ -33,7 +33,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="type" class="form-label">Type</label>
                 <select id="type" name="type" class="form-select">
                     <option value="all" {% if req_type=='all' %}selected{% endif %}>All</option>
@@ -42,25 +42,24 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="urgency" class="form-label">Urgency</label>
+                <label for="urgency" class="form-label">Urgency <small class="text-muted">(Commercial)</small></label>
                 <select id="urgency" name="urgency" class="form-select">
                     <option value="" {% if not urgency %}selected{% endif %}>Any</option>
                     <option value="urgent" {% if urgency=='urgent' %}selected{% endif %}>Urgent</option>
                     <option value="high" {% if urgency=='high' %}selected{% endif %}>High</option>
                     <option value="normal" {% if urgency=='normal' %}selected{% endif %}>Normal</option>
                 </select>
-                <div class="form-text">Applies to commercial only</div>
             </div>
             <input type="hidden" name="tab" value="{{ active_tab or 'all' }}">
-            <div class="col-md-12 d-flex gap-2">
-                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold"><i class="fas fa-filter me-2"></i>Apply Filters</button>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold flex-fill"><i class="fas fa-filter me-2"></i>Apply Filters</button>
                 <a href="{{ url_for('community_forum') }}" class="btn btn-outline-secondary px-4 py-2 fw-semibold" style="border-width: 2px;">Reset</a>
             </div>
         </div>
     </form>
 
     <!-- Filter Tabs -->
-    <ul class="nav nav-pills justify-content-center mb-4" id="forumTabs" role="tablist">
+    <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="forumTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <a class="nav-link {% if (active_tab or 'all') == 'all' %}active{% endif %}" id="all-tab" data-bs-toggle="pill" href="#all" role="tab" aria-controls="all" aria-selected="{% if (active_tab or 'all') == 'all' %}true{% else %}false{% endif %}">
                 <i class="fas fa-list me-2"></i>All Requests
@@ -517,15 +516,24 @@
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    margin: 0 0.25rem;
 }
 
 .nav-pills .nav-link.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .nav-pills .nav-link:hover:not(.active) {
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     color: #667eea;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card-header h5 {
