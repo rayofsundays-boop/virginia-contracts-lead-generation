@@ -32,13 +32,13 @@ Last Verified: November 4, 2025
 - [ ] ⚠️ https://www.sba.gov/federal-contracting/contracting-assistance-programs/women-owned-small-business-federal-contracting-program - **NOT YET TESTED**
 - [ ] ⚠️ https://www.sba.gov/federal-contracting/contracting-assistance-programs/veteran-contracting-assistance-programs - **NOT YET TESTED**
 - [ ] ⚠️ https://www.sba.gov/local-assistance/district-offices/va/richmond - **NOT YET TESTED**
-- [ ] ⚠️ https://www.sba.gov/learning-center - **NOT YET TESTED**
+- [x] ✅ https://www.sba.gov/learning-center - **VERIFIED WORKING** (Nov 4, 2025)
 
 ### GSA Resources
-- [ ] ⚠️ https://www.gsa.gov/buy-through-us/purchasing-programs/gsa-schedules - **NOT YET TESTED**
+- [x] ✅ https://www.gsa.gov/buy-through-us/purchasing-programs/gsa-schedules - **VERIFIED WORKING** (Nov 4, 2025)
 - [ ] ⚠️ https://www.gsa.gov/buy-through-us/purchasing-programs/gsa-schedules/sell-through-schedules - **NOT YET TESTED**
-- [ ] ⚠️ https://www.gsaelibrary.gsa.gov/ - GSA eLibrary - **NOT YET TESTED**
-- [ ] ⚠️ https://hallways.cap.gsa.gov/ - Hallways (GSA vendor research) - **NOT YET TESTED**
+- [x] ❌ https://www.gsaelibrary.gsa.gov/ - GSA eLibrary - **INVALID URL** - Use https://buy.gsa.gov instead
+- [x] ⚠️ https://hallways.cap.gsa.gov/ - Hallways - **REDIRECTS** - Now at https://acquisitiongateway.gov
 
 ### Federal Agencies & Certifications
 - [ ] ⚠️ https://www.transportation.gov/civil-rights/disadvantaged-business-enterprise - DOT DBE Program - **NOT YET TESTED**
@@ -47,9 +47,10 @@ Last Verified: November 4, 2025
 - [ ] ⚠️ https://www.dau.edu - Defense Acquisition University - **NOT YET TESTED**
 
 ### Industry Certifications & Standards
+- [x] ✅ https://www.iso.org - ISO (WORKING - Nov 4, 2025)
 - [ ] ⚠️ https://www.iso.org/iso-9001-quality-management.html - ISO 9001 - **NOT YET TESTED**
 - [ ] ⚠️ https://www.issa.com/certification/cims - CIMS Certification - **NOT YET TESTED**
-- [ ] ⚠️ https://www.issa.com - ISSA (Cleaning Industry Association) - **NOT YET TESTED**
+- [x] ✅ https://www.issa.com - ISSA (Cleaning Industry Association) - **VERIFIED WORKING** (Nov 4, 2025)
 - [ ] ⚠️ https://www.bscai.org - BSCAI - **NOT YET TESTED**
 - [ ] ⚠️ https://www.usgbc.org - U.S. Green Building Council - **NOT YET TESTED**
 
@@ -76,18 +77,37 @@ Last Verified: November 4, 2025
 
 ---
 
-## 🔴 BROKEN LINKS FOUND
+## Broken Links Found ⚠️
 
-### Critical Issues (Need Fixing):
-1. **Hampton Roads PTAC** - https://www.hrchamber.com/ptac/
-   - **Status:** 404 Error
-   - **Location:** templates/partnerships.html line 73
-   - **Action Required:** Find correct PTAC link or remove
+### ✅ FIXED (Commit 57bde1f)
+1. **Hampton Roads PTAC** (templates/partnerships.html line 73)
+   - Old URL: https://www.hrchamber.com/ptac/ ❌ 404 Error
+   - New URL: https://virginiaapex.org ✅ Working
+   - Fix: Updated to Virginia APEX Accelerator (formerly Virginia PTAC)
+   - Note: PTAC was rebranded to APEX Accelerator, statewide service
 
-2. **Hampton Roads SBDC** - https://hamptonroadssbdc.org
-   - **Status:** Invalid URL
-   - **Location:** templates/partnerships.html line 148
-   - **Action Required:** Find correct SBDC link or update
+2. **Hampton Roads SBDC** (templates/partnerships.html line 148)
+   - Old URL: https://hamptonroadssbdc.org ❌ Invalid domain
+   - New URL: https://www.virginiasbdc.org ✅ Working
+   - Fix: Updated to Virginia SBDC Network (no separate Hampton Roads domain)
+   - Note: Virginia SBDC operates statewide with regional offices
+
+### ⚠️ NEEDS ATTENTION (GSA Links - may need template updates)
+3. **GSA eLibrary** (if used in templates)
+   - URL: https://www.gsaelibrary.gsa.gov ❌ Invalid URL
+   - Correct URL: Use https://buy.gsa.gov instead
+   
+4. **GSA eBuy** (if used in templates)
+   - URL: https://www.ebuy.gsa.gov ❌ Invalid URL
+   - Correct URL: Use https://buy.gsa.gov instead
+   
+5. **GSA Hallways** (if used in templates)
+   - URL: https://hallways.cap.gsa.gov ⚠️ Redirects to acquisitiongateway.gov
+   - Correct URL: Use https://acquisitiongateway.gov directly
+
+6. **GSA Advantage** (if used in templates)
+   - URL: https://www.gsaadvantage.gov ❌ Invalid URL
+   - Correct URL: Use https://buy.gsa.gov instead
 
 ---
 
