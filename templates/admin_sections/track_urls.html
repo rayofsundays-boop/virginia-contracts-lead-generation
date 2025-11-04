@@ -1,0 +1,332 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chart-line text-primary"></i> AI-Powered URL Tracking</h2>
+            <p class="text-muted">Track and analyze supply contract URLs from the Quick Wins page using OpenAI</p>
+        </div>
+        <div>
+            <a href="{{ url_for('quick_wins') }}" class="btn btn-info" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>View Quick Wins Page
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5><i class="fas fa-link"></i> Total URLs</h5>
+                    <h2 id="totalUrls">0</h2>
+                    <small>Supply contracts with URLs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5><i class="fas fa-check-circle"></i> Valid URLs</h5>
+                    <h2 id="validUrls">0</h2>
+                    <small>Recently verified</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Urgent</h5>
+                    <h2 id="urgentUrls">0</h2>
+                    <small>Quick win opportunities</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5><i class="fas fa-robot"></i> AI Analyzed</h5>
+                    <h2 id="analyzedUrls">0</h2>
+                    <small>Total analyzed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-play-circle me-2"></i>AI Analysis Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-robot me-2"></i>Analyze URLs with OpenAI</h6>
+                    <p class="text-muted small">Use AI to verify URL validity, assess urgency, and get recommendations</p>
+                    <div class="input-group mb-3">
+                        <input type="number" id="analyzeLimit" class="form-control" value="10" min="1" max="50">
+                        <button class="btn btn-primary" onclick="analyzeUrls()">
+                            <i class="fas fa-magic me-2"></i>Analyze URLs
+                        </button>
+                    </div>
+                    <small class="text-muted">Note: Limit to 10-20 to control API costs</small>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-database me-2"></i>Load Supply Contracts</h6>
+                    <p class="text-muted small">Fetch all supply contracts with URLs from the database</p>
+                    <button class="btn btn-info" onclick="loadSupplyContracts()">
+                        <i class="fas fa-download me-2"></i>Load Contracts
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadTrackingHistory()">
+                        <i class="fas fa-history me-2"></i>View History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>URL Tracking Results</h5>
+        </div>
+        <div class="card-body p-0">
+            <div id="loadingSpinner" class="text-center p-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Analyzing URLs with AI...</p>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="trackingTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Contract Title</th>
+                            <th>Agency</th>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>Urgency</th>
+                            <th>Accessibility</th>
+                            <th>Has Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackingTableBody">
+                        <tr>
+                            <td colspan="10" class="text-center text-muted p-4">
+                                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                <p>Click "Load Contracts" or "Analyze URLs" to see results</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="urlDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>URL Analysis Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentContracts = [];
+
+// Load supply contracts from database
+async function loadSupplyContracts() {
+    try {
+        const response = await fetch('/admin/track-supply-urls');
+        const data = await response.json();
+        
+        if (data.success) {
+            currentContracts = data.contracts;
+            updateStats(data);
+            displayContracts(data.contracts);
+            alert(`✅ Loaded ${data.total_contracts} supply contracts with URLs`);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Failed to load contracts');
+    }
+}
+
+// Analyze URLs with OpenAI
+async function analyzeUrls() {
+    const limit = document.getElementById('analyzeLimit').value;
+    
+    if (!confirm(`Analyze ${limit} supply contract URLs with OpenAI?\n\nThis will use OpenAI API credits.`)) {
+        return;
+    }
+    
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('trackingTableBody').innerHTML = '';
+    
+    try {
+        const response = await fetch('/admin/track-supply-urls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ limit: parseInt(limit) })
+        });
+        
+        const data = await response.json();
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.success) {
+            displayAnalysisResults(data.results);
+            alert(`✅ AI analyzed ${data.contracts_analyzed} URLs successfully!`);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        console.error('Error:', error);
+        alert('❌ AI analysis failed');
+    }
+}
+
+// Display contracts in table
+function displayContracts(contracts) {
+    const tbody = document.getElementById('trackingTableBody');
+    tbody.innerHTML = '';
+    
+    if (contracts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center p-4">No contracts found</td></tr>';
+        return;
+    }
+    
+    contracts.forEach(contract => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${contract.id}</td>
+            <td>${contract.title.substring(0, 50)}...</td>
+            <td>${contract.agency}</td>
+            <td><a href="${contract.url}" target="_blank" class="text-truncate d-inline-block" style="max-width: 150px;">${contract.url}</a></td>
+            <td><span class="badge bg-secondary">Not Analyzed</span></td>
+            <td>-</td>
+            <td>${contract.is_quick_win ? '<span class="badge bg-warning">Quick Win</span>' : '-'}</td>
+            <td>-</td>
+            <td>${contract.has_contact ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+            <td><button class="btn btn-sm btn-info" onclick="viewDetails(${contract.id})"><i class="fas fa-eye"></i></button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Display AI analysis results
+function displayAnalysisResults(results) {
+    const tbody = document.getElementById('trackingTableBody');
+    tbody.innerHTML = '';
+    
+    let validCount = 0;
+    let urgentCount = 0;
+    
+    results.forEach(result => {
+        if (result.url_status === 'valid') validCount++;
+        if (result.urgency_score >= 8) urgentCount++;
+        
+        const row = document.createElement('tr');
+        const urgencyClass = result.urgency_score >= 8 ? 'danger' : result.urgency_score >= 6 ? 'warning' : 'success';
+        const statusClass = result.url_status === 'valid' ? 'success' : result.url_status === 'suspicious' ? 'warning' : 'danger';
+        
+        row.innerHTML = `
+            <td>${result.contract_id}</td>
+            <td>${result.title.substring(0, 50)}...</td>
+            <td>-</td>
+            <td>-</td>
+            <td><span class="badge bg-${statusClass}">${result.url_status}</span></td>
+            <td><small>${result.url_type}</small></td>
+            <td><span class="badge bg-${urgencyClass}">${result.urgency_score}/10</span></td>
+            <td><span class="badge bg-info">${result.accessibility}</span></td>
+            <td>${result.has_contact_info ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewAnalysisDetails(${result.contract_id}, '${result.recommended_action}', '${result.tracking_notes}')">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Update stats
+    document.getElementById('analyzedUrls').textContent = results.length;
+    document.getElementById('validUrls').textContent = validCount;
+    document.getElementById('urgentUrls').textContent = urgentCount;
+}
+
+// Update stats
+function updateStats(data) {
+    document.getElementById('totalUrls').textContent = data.total_contracts;
+    const quickWins = data.contracts.filter(c => c.is_quick_win).length;
+    document.getElementById('urgentUrls').textContent = quickWins;
+}
+
+// View contract details
+function viewDetails(contractId) {
+    const contract = currentContracts.find(c => c.id === contractId);
+    if (!contract) {
+        alert('Contract not found');
+        return;
+    }
+    
+    document.getElementById('modalBody').innerHTML = `
+        <div class="row">
+            <div class="col-md-12">
+                <h6>Contract Information</h6>
+                <table class="table table-sm">
+                    <tr><th>ID:</th><td>${contract.id}</td></tr>
+                    <tr><th>Title:</th><td>${contract.title}</td></tr>
+                    <tr><th>Agency:</th><td>${contract.agency}</td></tr>
+                    <tr><th>Location:</th><td>${contract.location}</td></tr>
+                    <tr><th>Category:</th><td>${contract.category || 'N/A'}</td></tr>
+                    <tr><th>Value:</th><td>${contract.value || 'N/A'}</td></tr>
+                    <tr><th>Deadline:</th><td>${contract.deadline}</td></tr>
+                    <tr><th>URL:</th><td><a href="${contract.url}" target="_blank">${contract.url}</a></td></tr>
+                    <tr><th>Quick Win:</th><td>${contract.is_quick_win ? 'Yes' : 'No'}</td></tr>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('urlDetailsModal')).show();
+}
+
+// View AI analysis details
+function viewAnalysisDetails(contractId, action, notes) {
+    document.getElementById('modalBody').innerHTML = `
+        <div class="alert alert-info">
+            <h6><i class="fas fa-robot me-2"></i>AI Recommendation</h6>
+            <p>${action}</p>
+        </div>
+        <div class="alert alert-secondary">
+            <h6><i class="fas fa-sticky-note me-2"></i>Tracking Notes</h6>
+            <p>${notes}</p>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('urlDetailsModal')).show();
+}
+
+// Load tracking history
+async function loadTrackingHistory() {
+    alert('📊 Tracking history feature coming soon!\n\nWill show:\n- Historical URL analyses\n- Status changes over time\n- AI insights trends');
+}
+</script>
+
+<style>
+.badge {
+    font-size: 0.8rem;
+}
+</style>

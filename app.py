@@ -2317,6 +2317,22 @@ def init_postgres_db():
                       posted_date TEXT,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
+        # URL tracking table for AI-powered URL analysis
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS url_tracking
+                     (id SERIAL PRIMARY KEY,
+                      contract_id INTEGER NOT NULL,
+                      contract_type TEXT NOT NULL,
+                      url TEXT NOT NULL,
+                      url_status TEXT,
+                      url_type TEXT,
+                      urgency_score INTEGER,
+                      accessibility TEXT,
+                      has_contact_info BOOLEAN,
+                      recommended_action TEXT,
+                      tracking_notes TEXT,
+                      analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      UNIQUE(contract_id, contract_type))'''))
+        
         db.session.commit()
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
@@ -8990,6 +9006,199 @@ def manual_update():
         return jsonify({
             'success': False,
             'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/admin/track-supply-urls', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_track_supply_urls():
+    """Use AI to track and analyze URLs from supply contracts (Quick Wins page)"""
+    try:
+        if request.method == 'GET':
+            # Get all supply contracts with URLs
+            supply_contracts = db.session.execute(text('''
+                SELECT 
+                    id, title, agency, location, product_category, estimated_value,
+                    bid_deadline, website_url, contact_email, contact_phone, is_quick_win
+                FROM supply_contracts 
+                WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
+                ORDER BY 
+                    CASE WHEN is_quick_win THEN 0 ELSE 1 END,
+                    bid_deadline ASC
+                LIMIT 50
+            ''')).fetchall()
+            
+            contracts_data = []
+            for contract in supply_contracts:
+                contracts_data.append({
+                    'id': contract[0],
+                    'title': contract[1],
+                    'agency': contract[2],
+                    'location': contract[3],
+                    'category': contract[4],
+                    'value': contract[5],
+                    'deadline': str(contract[6]) if contract[6] else 'N/A',
+                    'url': contract[7],
+                    'has_contact': bool(contract[8] or contract[9]),
+                    'is_quick_win': contract[10]
+                })
+            
+            return jsonify({
+                'success': True,
+                'total_contracts': len(contracts_data),
+                'contracts': contracts_data
+            })
+        
+        # POST request - Analyze URLs with AI
+        if not OPENAI_AVAILABLE or not OPENAI_API_KEY:
+            return jsonify({
+                'success': False, 
+                'message': 'OpenAI API not configured. Please set OPENAI_API_KEY environment variable.'
+            }), 400
+        
+        data = request.get_json()
+        limit = int(data.get('limit', 10))  # Limit to avoid API costs
+        
+        # Get supply contracts with URLs
+        supply_contracts = db.session.execute(text('''
+            SELECT 
+                id, title, agency, location, product_category, estimated_value,
+                bid_deadline, website_url, description, is_quick_win
+            FROM supply_contracts 
+            WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
+            ORDER BY 
+                CASE WHEN is_quick_win THEN 0 ELSE 1 END,
+                bid_deadline ASC
+            LIMIT :limit
+        '''), {'limit': limit}).fetchall()
+        
+        if not supply_contracts:
+            return jsonify({'success': False, 'message': 'No supply contracts with URLs found'}), 404
+        
+        # Prepare data for AI analysis
+        contract_data = []
+        for contract in supply_contracts:
+            contract_data.append({
+                'id': contract[0],
+                'title': contract[1],
+                'agency': contract[2],
+                'location': contract[3],
+                'category': contract[4],
+                'value': contract[5],
+                'deadline': str(contract[6]) if contract[6] else 'N/A',
+                'url': contract[7],
+                'description': contract[8][:300] if contract[8] else '',  # Truncate for tokens
+                'is_quick_win': contract[9]
+            })
+        
+        # AI Prompt for URL tracking and analysis
+        prompt = f"""You are a procurement and supply contract analyst. Analyze these supply contract URLs and provide insights.
+
+For each contract, assess:
+1. URL validity (is it accessible, properly formatted?)
+2. URL type (direct bid page, agency portal, procurement system, PDF, etc.)
+3. Urgency level (based on deadline and quick_win flag)
+4. Contact availability risk (does the URL likely have contact info?)
+5. Recommended action for the user
+
+Supply Contract Data:
+{json.dumps(contract_data, indent=2)}
+
+Respond with a JSON array of objects with these fields:
+- contract_id: The contract ID
+- title: Contract title
+- url_status: "valid", "suspicious", "expired", or "redirect"
+- url_type: Type of URL (e.g., "procurement_portal", "pdf_document", "agency_website")
+- urgency_score: 1-10 (10 = extremely urgent, 1 = not urgent)
+- accessibility: "easy", "medium", "difficult" (how easy to find bid details)
+- has_contact_info: true/false (likely has contact information?)
+- recommended_action: Brief action recommendation for the contractor
+- tracking_notes: Any important notes about this URL/opportunity
+
+Only respond with the JSON array, no other text."""
+
+        # Call OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a procurement expert analyzing supply contract opportunities and URLs."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4,
+            max_tokens=3000
+        )
+        
+        # Parse AI response
+        ai_content = response['choices'][0]['message']['content']
+        
+        # Extract JSON from response (handle markdown code blocks)
+        if '```json' in ai_content:
+            ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+        elif '```' in ai_content:
+            ai_content = ai_content.split('```')[1].split('```')[0].strip()
+        
+        results = json.loads(ai_content)
+        
+        # Store tracking results in database (optional - create url_tracking table if needed)
+        for result in results:
+            try:
+                db.session.execute(text('''
+                    INSERT INTO url_tracking 
+                    (contract_id, contract_type, url, url_status, url_type, urgency_score, 
+                     accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at)
+                    VALUES 
+                    (:contract_id, 'supply', :url, :url_status, :url_type, :urgency_score,
+                     :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW())
+                    ON CONFLICT (contract_id, contract_type) 
+                    DO UPDATE SET
+                        url_status = EXCLUDED.url_status,
+                        url_type = EXCLUDED.url_type,
+                        urgency_score = EXCLUDED.urgency_score,
+                        accessibility = EXCLUDED.accessibility,
+                        has_contact_info = EXCLUDED.has_contact_info,
+                        recommended_action = EXCLUDED.recommended_action,
+                        tracking_notes = EXCLUDED.tracking_notes,
+                        analyzed_at = NOW()
+                '''), {
+                    'contract_id': result['contract_id'],
+                    'url': next((c['url'] for c in contract_data if c['id'] == result['contract_id']), ''),
+                    'url_status': result.get('url_status', 'unknown'),
+                    'url_type': result.get('url_type', 'unknown'),
+                    'urgency_score': result.get('urgency_score', 5),
+                    'accessibility': result.get('accessibility', 'medium'),
+                    'has_contact_info': result.get('has_contact_info', False),
+                    'recommended_action': result.get('recommended_action', ''),
+                    'tracking_notes': result.get('tracking_notes', '')
+                })
+            except Exception as e:
+                # If table doesn't exist, just skip storing (we still return results)
+                print(f"Note: Could not store tracking data (table may not exist): {e}")
+        
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'contracts_analyzed': len(results),
+            'message': f'AI analyzed {len(results)} supply contract URLs'
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse AI response: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to parse AI response: {str(e)}'
+        }), 500
+    except Exception as e:
+        print(f"Error in supply URL tracking: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': str(e)
         }), 500
 
 @app.route('/admin/cleanup-leads', methods=['POST'])
