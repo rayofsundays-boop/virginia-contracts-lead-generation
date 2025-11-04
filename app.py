@@ -2659,10 +2659,8 @@ def index():
     """Main homepage with contract samples - Optimized with caching"""
     # If user is already logged in, redirect to appropriate dashboard
     if 'user_id' in session:
-        if session.get('is_admin'):
-            return redirect(url_for('admin_enhanced'))
-        else:
-            return redirect(url_for('customer_dashboard'))
+        # All users (including admins) go to customer dashboard
+        return redirect(url_for('customer_dashboard'))
     
     # Check if we're being redirected (prevent infinite loop)
     init_attempted = request.args.get('init_attempted', '0')
@@ -2958,10 +2956,8 @@ def auth():
     """Unified authentication page (sign in or register)"""
     # If user is already logged in, redirect to appropriate dashboard
     if 'user_id' in session:
-        if session.get('is_admin'):
-            return redirect(url_for('admin_enhanced'))
-        else:
-            return redirect(url_for('customer_dashboard'))
+        # All users (including admins) go to customer dashboard
+        return redirect(url_for('customer_dashboard'))
     
     return render_template('auth.html')
 
@@ -3246,7 +3242,7 @@ def login():
         
         log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
-        return redirect(url_for('admin_enhanced'))
+        return redirect(url_for('customer_dashboard'))
     
     # Validate regular user
     result = db.session.execute(
@@ -3272,7 +3268,7 @@ def login():
         
         if session['is_admin']:
             flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
-            return redirect(url_for('admin_enhanced'))
+            return redirect(url_for('customer_dashboard'))
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
             return redirect(url_for('customer_dashboard'))
