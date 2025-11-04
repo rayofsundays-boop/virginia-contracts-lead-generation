@@ -58,10 +58,21 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search title, agency, contact...">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <select id="filterLeadType" class="form-select">
+                        <option value="">All Lead Types</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="residential">Residential</option>
+                        <option value="quick_wins">Quick Wins</option>
+                        <option value="supply">Supply Contracts</option>
+                        <option value="educational">Educational</option>
+                        <option value="government">Government Contracts</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <select id="filterAgency" class="form-select">
                         <option value="">All Agencies</option>
                     </select>
@@ -194,6 +205,7 @@
 <script>
 // Search functionality
 document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('filterLeadType').addEventListener('change', filterTable);
 document.getElementById('filterAgency').addEventListener('change', filterTable);
 document.getElementById('filterContact').addEventListener('change', filterTable);
 
@@ -210,6 +222,7 @@ agencies.sort().forEach(agency => {
 
 function filterTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const leadTypeFilter = document.getElementById('filterLeadType').value.toLowerCase();
     const agencyFilter = document.getElementById('filterAgency').value.toLowerCase();
     const contactFilter = document.getElementById('filterContact').value;
     const rows = document.querySelectorAll('#contractsTable tbody tr');
@@ -224,6 +237,7 @@ function filterTable() {
         const contactName = row.cells[8].textContent.trim();
         
         let matchesSearch = text.includes(searchTerm);
+        let matchesLeadType = !leadTypeFilter || true; // For now, all contracts are government type
         let matchesAgency = !agencyFilter || agency.includes(agencyFilter);
         let matchesContact = true;
         
@@ -237,7 +251,7 @@ function filterTable() {
             matchesContact = contactEmail.includes('N/A') || contactPhone.includes('N/A');
         }
         
-        if (matchesSearch && matchesAgency && matchesContact) {
+        if (matchesSearch && matchesLeadType && matchesAgency && matchesContact) {
             row.style.display = '';
             visibleCount++;
         } else {
@@ -248,6 +262,7 @@ function filterTable() {
 
 function clearFilters() {
     document.getElementById('searchInput').value = '';
+    document.getElementById('filterLeadType').value = '';
     document.getElementById('filterAgency').value = '';
     document.getElementById('filterContact').value = '';
     filterTable();
