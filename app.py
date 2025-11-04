@@ -7556,6 +7556,54 @@ def admin_update_payment_status():
         print(f"Error updating payment status: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-update-user', methods=['POST'])
+def admin_update_user():
+    """Admin function to update user account details"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'User ID required'})
+        
+        # Build the update query dynamically based on provided fields
+        update_fields = []
+        params = {'user_id': user_id}
+        
+        # Map form fields to database columns
+        field_mapping = {
+            'email': 'email',
+            'contact_name': 'contact_name',
+            'company_name': 'company_name',
+            'phone': 'phone',
+            'state': 'state',
+            'certifications': 'certifications',
+            'subscription_status': 'subscription_status'
+        }
+        
+        for form_field, db_field in field_mapping.items():
+            if form_field in data:
+                update_fields.append(f"{db_field} = :{form_field}")
+                params[form_field] = data[form_field]
+        
+        if not update_fields:
+            return jsonify({'success': False, 'error': 'No fields to update'})
+        
+        # Execute the update
+        query = f"UPDATE leads SET {', '.join(update_fields)} WHERE id = :user_id"
+        db.session.execute(text(query), params)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'User updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating user: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-upload-lead', methods=['POST'])
 def admin_upload_lead():
     """Admin function to manually upload a contract lead"""

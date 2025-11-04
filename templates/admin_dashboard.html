@@ -299,8 +299,8 @@
                                             title="Toggle Payment Status">
                                         <i class="fas fa-{{ 'times' if user[4] == 'active' else 'check' }}-circle"></i>
                                     </button>
-                                    <button class="btn btn-info" onclick="viewUserDetails({{ user[0] }})" title="View Details">
-                                        <i class="fas fa-eye"></i>
+                                    <button class="btn btn-info" onclick="editUser({{ user[0] }}, '{{ user[1] }}', '{{ user[2] or '' }}', '{{ user[3] or '' }}', '{{ user[6] or '' }}', '{{ user[7] or '' }}', '{{ user[8] or '' }}')" title="Edit User">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-danger" onclick="deleteUser({{ user[0] }}, '{{ user[1] }}')" title="Delete User">
                                         <i class="fas fa-trash"></i>
@@ -311,6 +311,80 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editUserModalLabel">
+                        <i class="fas fa-user-edit me-2"></i>Edit User Account
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editUserForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="editUserId" name="user_id">
+                        
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editContactName" class="form-label">Contact Name</label>
+                            <input type="text" class="form-control" id="editContactName" name="contact_name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editCompanyName" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="editCompanyName" name="company_name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editPhone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="editPhone" name="phone">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editState" class="form-label">State</label>
+                            <select class="form-control" id="editState" name="state">
+                                <option value="">Select State</option>
+                                <option value="Virginia">Virginia</option>
+                                <option value="Maryland">Maryland</option>
+                                <option value="DC">DC</option>
+                                <option value="North Carolina">North Carolina</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editCertifications" class="form-label">Certifications</label>
+                            <input type="text" class="form-control" id="editCertifications" name="certifications" 
+                                   placeholder="e.g., SBA 8(a), HUBZone, WOSB">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editSubscriptionStatus" class="form-label">Subscription Status</label>
+                            <select class="form-control" id="editSubscriptionStatus" name="subscription_status">
+                                <option value="inactive">Inactive</option>
+                                <option value="active">Active</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -916,10 +990,60 @@ function bulkDeleteLeads() {
     alert('🗑️ Bulk Delete Leads\n\nFeature coming soon! Will allow:\n- Select multiple contracts\n- Delete expired contracts\n- Archive old leads\n- Bulk status updates');
 }
 
-// View user details
-function viewUserDetails(userId) {
-    alert(`👤 User Details (ID: ${userId})\n\nFeature coming soon! Will show:\n- Full profile information\n- Activity history\n- Saved leads\n- Payment history\n- Login history`);
+// Edit user account
+function editUser(userId, email, contactName, companyName, phone, state, certifications) {
+    // Populate the modal with current values
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editContactName').value = contactName || '';
+    document.getElementById('editCompanyName').value = companyName || '';
+    document.getElementById('editPhone').value = phone || '';
+    document.getElementById('editState').value = state || '';
+    document.getElementById('editCertifications').value = certifications || '';
+    
+    // Get current subscription status from the table row
+    const userRow = document.querySelector(`tr .user-checkbox[data-user-id="${userId}"]`).closest('tr');
+    const statusBadge = userRow.querySelector('.badge');
+    const currentStatus = statusBadge ? statusBadge.textContent.trim().toLowerCase() : 'inactive';
+    document.getElementById('editSubscriptionStatus').value = currentStatus;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    modal.show();
 }
+
+// Handle edit user form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editUserForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(editForm);
+            const data = Object.fromEntries(formData.entries());
+            
+            fetch('/admin-update-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ User updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Failed to update user'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error updating user');
+            });
+        });
+    }
+});
 
 </script>
 
