@@ -2184,6 +2184,17 @@ def init_postgres_db():
                       saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(user_email, lead_type, lead_id))'''))
         
+        db.session.commit()
+        
+        # User onboarding preferences table
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_onboarding
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL UNIQUE,
+                      onboarding_completed BOOLEAN DEFAULT FALSE,
+                      onboarding_disabled BOOLEAN DEFAULT FALSE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+        
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS password_reset_tokens
                      (id SERIAL PRIMARY KEY,
                       email TEXT NOT NULL UNIQUE,
