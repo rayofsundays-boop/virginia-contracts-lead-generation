@@ -9264,27 +9264,31 @@ def search_site():
             })
         
         # Search Supply Contracts
-        supply_results = db.session.execute(text('''
-            SELECT title, agency_name, location, posted_date, description, contract_value
-            FROM supply_contracts
-            WHERE LOWER(title) LIKE :query 
-               OR LOWER(agency_name) LIKE :query
-               OR LOWER(description) LIKE :query
-            ORDER BY posted_date DESC
-            LIMIT 10
-        '''), {'query': f'%{query_lower}%'}).fetchall()
-        
-        for supply in supply_results:
-            results['supply_contracts'].append({
-                'title': supply[0],
-                'description': f"{supply[1]} - {supply[4][:150] if supply[4] else ''}...",
-                'url': '/supply-contracts',
-                'category': 'Supply Contracts',
-                'agency': supply[1],
-                'location': supply[2],
-                'value': supply[5],
-                'relevance': 90
-            })
+        try:
+            supply_results = db.session.execute(text('''
+                SELECT title, agency, location, posted_date, description, estimated_value
+                FROM supply_contracts
+                WHERE LOWER(title) LIKE :query 
+                   OR LOWER(agency) LIKE :query
+                   OR LOWER(description) LIKE :query
+                ORDER BY posted_date DESC
+                LIMIT 10
+            '''), {'query': f'%{query_lower}%'}).fetchall()
+            
+            for supply in supply_results:
+                results['supply_contracts'].append({
+                    'title': supply.title,
+                    'description': f"{supply.agency} - {supply.description[:150] if supply.description else ''}...",
+                    'url': '/quick-wins',
+                    'category': 'Supply Contracts',
+                    'agency': supply.agency,
+                    'location': supply.location,
+                    'value': supply.estimated_value,
+                    'relevance': 90
+                })
+        except Exception as supply_error:
+            print(f"Supply contracts search error: {supply_error}")
+            # Continue without supply results if table doesn't exist
         
         # Search Site Pages
         pages_db = [
@@ -9314,17 +9318,21 @@ def search_site():
         # Calculate total results
         total_results = sum(len(v) for v in results.values())
         
-        # Track search for suggestions algorithm
+        # Track search for suggestions algorithm (optional - table may not exist)
         if user_email:
-            db.session.execute(text('''
-                INSERT INTO search_history (user_email, query, results_count, created_at)
-                VALUES (:email, :query, :count, CURRENT_TIMESTAMP)
-            '''), {
-                'email': user_email,
-                'query': query,
-                'count': total_results
-            })
-            db.session.commit()
+            try:
+                db.session.execute(text('''
+                    INSERT INTO search_history (user_email, query, results_count, created_at)
+                    VALUES (:email, :query, :count, CURRENT_TIMESTAMP)
+                '''), {
+                    'email': user_email,
+                    'query': query,
+                    'count': total_results
+                })
+                db.session.commit()
+            except Exception as history_error:
+                print(f"Search history tracking error (non-critical): {history_error}")
+                db.session.rollback()
         
         return jsonify({
             'success': True,
