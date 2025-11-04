@@ -6543,29 +6543,33 @@ def customer_leads():
         supply_leads = []
         commercial_leads = []
         
-        # Get government cleaning contracts
+        # Get government cleaning contracts from federal_contracts table
         try:
             government_leads = db.session.execute(text('''
                 SELECT 
-                    contracts.id,
-                    contracts.title,
-                    contracts.agency,
-                    contracts.location,
-                    contracts.description,
-                    contracts.value as contract_value,
-                    contracts.deadline,
-                    contracts.naics_code,
-                    contracts.created_at,
-                    contracts.website_url,
+                    fc.id,
+                    fc.title,
+                    fc.agency,
+                    fc.location,
+                    fc.description,
+                    fc.value as contract_value,
+                    fc.response_deadline as deadline,
+                    fc.naics_code,
+                    fc.posted_date as created_at,
+                    fc.sam_gov_url as website_url,
                     'government' as lead_type,
                     'General Cleaning' as services_needed,
                     'Active' as status,
-                    contracts.description as requirements
-                FROM contracts 
-                ORDER BY contracts.created_at DESC
+                    fc.description as requirements
+                FROM federal_contracts fc
+                WHERE fc.title IS NOT NULL
+                ORDER BY COALESCE(fc.posted_date, fc.created_at) DESC
+                LIMIT 100
             ''')).fetchall()
+            print(f"✅ Found {len(government_leads)} government contracts")
         except Exception as e:
             print(f"Error fetching government contracts: {e}")
+            government_leads = []
         
         # Get supply/product procurement contracts
         try:
