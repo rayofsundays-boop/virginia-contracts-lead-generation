@@ -3457,10 +3457,40 @@ def customer_dashboard():
                 }
                 latest_opportunities.append(rec); res_reqs_list.append(rec)
 
+            # Website Leads - All registered users/companies
+            website_leads_rows = db.session.execute(text(
+                """
+                SELECT company_name, contact_name, email, phone, state, 
+                       certifications, experience_years, created_at, id
+                FROM leads
+                WHERE subscription_status != 'admin'
+                ORDER BY created_at DESC
+                LIMIT 50
+                """
+            )).fetchall()
+            
+            website_leads_list = []
+            for r in website_leads_rows:
+                rec = {
+                    'title': r.company_name if hasattr(r, 'company_name') else r[0] or 'Company',
+                    'agency': r.contact_name if hasattr(r, 'contact_name') else r[1] or 'Contact',
+                    'location': r.state if hasattr(r, 'state') else (r[4] or 'VA'),
+                    'value': (r.certifications if hasattr(r, 'certifications') else r[5]) or 'N/A',
+                    'posted_date': r.created_at if hasattr(r, 'created_at') else r[7],
+                    'lead_type': 'Website Lead',
+                    'id': r.id if hasattr(r, 'id') else r[8],
+                    'link': '#',
+                    'email': r.email if hasattr(r, 'email') else r[2],
+                    'phone': r.phone if hasattr(r, 'phone') else r[3],
+                    'experience': (r.experience_years if hasattr(r, 'experience_years') else r[6]) or 'N/A'
+                }
+                website_leads_list.append(rec)
+
             latest_opportunities.sort(key=lambda x: x['posted_date'] if x['posted_date'] else '', reverse=True)
             latest_opportunities = latest_opportunities[:15]
         except Exception as e:
             print(f"Error fetching latest opportunities: {e}")
+            website_leads_list = []
 
         # Saved stats
         saved_searches_count = 0
@@ -3490,6 +3520,7 @@ def customer_dashboard():
                                supply_leads=supply_opps_list,
                                commercial_leads_list=com_reqs_list,
                                residential_leads_list=res_reqs_list,
+                               website_leads=website_leads_list,
                                saved_searches_count=saved_searches_count,
                                saved_leads_count=saved_leads_count)
     except Exception as e:

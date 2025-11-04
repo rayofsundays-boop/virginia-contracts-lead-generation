@@ -287,6 +287,82 @@
                 </div>
             </div>
 
+            <!-- All Website Leads Table -->
+            {% if website_leads %}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-users me-2 text-info"></i>All Website Leads
+                        </h5>
+                        <span class="badge bg-info">{{ website_leads|length }} Total</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>State</th>
+                                    <th>Experience</th>
+                                    <th>Certifications</th>
+                                    <th>Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in website_leads %}
+                                <tr>
+                                    <td class="fw-bold">{{ lead.title }}</td>
+                                    <td>{{ lead.agency }}</td>
+                                    <td>
+                                        {% if lead.email %}
+                                        <a href="mailto:{{ lead.email }}" class="text-decoration-none">
+                                            <i class="fas fa-envelope me-1"></i>{{ lead.email }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lead.phone %}
+                                        <a href="tel:{{ lead.phone }}" class="text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>{{ lead.phone }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lead.location }}</td>
+                                    <td>{{ lead.experience }}</td>
+                                    <td>
+                                        {% if lead.value and lead.value != 'N/A' %}
+                                        <span class="badge bg-success">{{ lead.value[:30] }}{% if lead.value|length > 30 %}...{% endif %}</span>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {% if lead.posted_date %}
+                                                {{ lead.posted_date.strftime('%Y-%m-%d') if lead.posted_date.strftime else lead.posted_date }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Account Status -->
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-0 pt-4">
