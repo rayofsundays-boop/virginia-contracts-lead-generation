@@ -7299,12 +7299,40 @@ def admin_panel():
             unpaid_count = user_count - paid_count
             
             # Get all users with full details
-            users = db.session.execute(text('''
+            raw_users = db.session.execute(text('''
                 SELECT id, email, contact_name, company_name, subscription_status, 
                        created_at, phone, state, certifications
                 FROM leads 
                 ORDER BY created_at DESC
             ''')).fetchall()
+            
+            # Convert Row objects to tuples with datetime handling
+            users = []
+            for user in raw_users:
+                try:
+                    if hasattr(user, 'id'):
+                        # It's a Row object - convert to tuple
+                        created_at_str = user.created_at.strftime('%Y-%m-%d') if user.created_at and hasattr(user.created_at, 'strftime') else str(user.created_at) if user.created_at else 'N/A'
+                        users.append((
+                            user.id,
+                            user.email,
+                            user.contact_name,
+                            user.company_name,
+                            user.subscription_status,
+                            created_at_str,
+                            user.phone,
+                            user.state,
+                            user.certifications
+                        ))
+                    else:
+                        # Already a tuple, but check datetime
+                        user_list = list(user)
+                        if user_list[5] and hasattr(user_list[5], 'strftime'):
+                            user_list[5] = user_list[5].strftime('%Y-%m-%d')
+                        users.append(tuple(user_list))
+                except Exception as user_error:
+                    print(f"Error processing user: {user_error}")
+                    continue
         except Exception as e:
             print(f"Note: leads table not found: {e}")
         
