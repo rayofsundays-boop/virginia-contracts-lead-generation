@@ -7926,185 +7926,185 @@ def admin_enhanced():
         
         # Section-specific data
         if section == 'dashboard':
-        # Recent users
-        context['recent_users'] = db.session.execute(text('''
-            SELECT * FROM leads 
-            WHERE is_admin = FALSE
-            ORDER BY created_at DESC 
-            LIMIT 10
-        ''')).fetchall()
+            # Recent users
+            context['recent_users'] = db.session.execute(text('''
+                SELECT * FROM leads 
+                WHERE is_admin = FALSE
+                ORDER BY created_at DESC 
+                LIMIT 10
+            ''')).fetchall()
+            
+            # Growth data for chart (last 30 days)
+            growth_data = db.session.execute(text('''
+                SELECT DATE(created_at) as date, COUNT(*) as count
+                FROM leads
+                WHERE created_at > NOW() - INTERVAL '30 days'
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            ''')).fetchall()
+            
+            # Handle datetime objects properly
+            context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
+            context['growth_data'] = [row.count for row in growth_data]
+            
+        elif section == 'users':
+            search = request.args.get('search', '')
+            status = request.args.get('status', '')
+            sort = request.args.get('sort', 'recent')
+            per_page = 20
+            offset = (page - 1) * per_page
+            
+            # Build query
+            where_conditions = ["is_admin = FALSE"]
+            params = {}
+            
+            if search:
+                where_conditions.append("(email ILIKE :search OR company_name ILIKE :search)")
+                params['search'] = f'%{search}%'
+            
+            if status:
+                where_conditions.append("subscription_status = :status")
+                params['status'] = status
+            
+            where_clause = " AND ".join(where_conditions)
+            
+            # Sorting
+            if sort == 'recent':
+                order_by = 'created_at DESC'
+            elif sort == 'oldest':
+                order_by = 'created_at ASC'
+            else:  # email
+                order_by = 'email ASC'
+            
+            total_count = db.session.execute(text(f'''
+                SELECT COUNT(*) FROM leads WHERE {where_clause}
+            '''), params).scalar() or 0
+            
+            total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+            
+            params['limit'] = per_page
+            params['offset'] = offset
+            
+            context['users'] = db.session.execute(text(f'''
+                SELECT * FROM leads 
+                WHERE {where_clause}
+                ORDER BY {order_by}
+                LIMIT :limit OFFSET :offset
+            '''), params).fetchall()
+            
+            context['search'] = search
+            context['status'] = status
+            context['sort'] = sort
+            context['total_pages'] = total_pages
         
-        # Growth data for chart (last 30 days)
-        growth_data = db.session.execute(text('''
-            SELECT DATE(created_at) as date, COUNT(*) as count
-            FROM leads
-            WHERE created_at > NOW() - INTERVAL '30 days'
-            GROUP BY DATE(created_at)
-            ORDER BY date
-        ''')).fetchall()
+        elif section == 'manage-urls':
+            search_query = request.args.get('search', '')
+            filter_type = request.args.get('filter', '')
+            per_page = 20
+            offset = (page - 1) * per_page
+            
+            # Build query
+            where_conditions = ["1=1"]
+            params = {}
+            
+            if search_query:
+                where_conditions.append("(agency_name ILIKE :search OR description ILIKE :search OR award_id ILIKE :search)")
+                params['search'] = f'%{search_query}%'
+            
+            if filter_type == 'broken':
+                where_conditions.append("(sam_gov_url LIKE '%opportunity-detail%' OR sam_gov_url LIKE '%award-detail%')")
+            elif filter_type == 'recent':
+                where_conditions.append("created_at > NOW() - INTERVAL '7 days'")
+            
+            where_clause = " AND ".join(where_conditions)
+            
+            total_count = db.session.execute(text(f'''
+                SELECT COUNT(*) FROM federal_contracts WHERE {where_clause}
+            '''), params).scalar() or 0
+            
+            total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+            
+            params['limit'] = per_page
+            params['offset'] = offset
+            
+            context['contracts'] = db.session.execute(text(f'''
+                SELECT id, agency_name, description, naics_code, award_id, sam_gov_url, created_at
+                FROM federal_contracts 
+                WHERE {where_clause}
+                ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset
+            '''), params).fetchall()
+            
+            context['search_query'] = search_query
+            context['filter_type'] = filter_type
+            context['total_pages'] = total_pages
+            context['current_page'] = page
         
-        # Handle datetime objects properly
-        context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
-        context['growth_data'] = [row.count for row in growth_data]
+        elif section == 'edit-leads':
+            search_query = request.args.get('search', '')
+            status_filter = request.args.get('status_filter', '')
+            per_page = 20
+            offset = (page - 1) * per_page
+            
+            # Build query
+            where_conditions = ["is_admin = FALSE"]
+            params = {}
+            
+            if search_query:
+                where_conditions.append("(company_name ILIKE :search OR contact_name ILIKE :search OR email ILIKE :search OR phone ILIKE :search)")
+                params['search'] = f'%{search_query}%'
+            
+            if status_filter:
+                where_conditions.append("subscription_status = :status")
+                params['status'] = status_filter
+            
+            where_clause = " AND ".join(where_conditions)
+            
+            total_count = db.session.execute(text(f'''
+                SELECT COUNT(*) FROM leads WHERE {where_clause}
+            '''), params).scalar() or 0
+            
+            total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+            
+            params['limit'] = per_page
+            params['offset'] = offset
+            
+            context['leads'] = db.session.execute(text(f'''
+                SELECT id, company_name, contact_name, email, phone, subscription_status, created_at
+                FROM leads 
+                WHERE {where_clause}
+                ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset
+            '''), params).fetchall()
+            
+            context['search_query'] = search_query
+            context['status_filter'] = status_filter
+            context['total_pages'] = total_pages
+            context['current_page'] = page
         
-    elif section == 'users':
-        search = request.args.get('search', '')
-        status = request.args.get('status', '')
-        sort = request.args.get('sort', 'recent')
-        per_page = 20
-        offset = (page - 1) * per_page
-        
-        # Build query
-        where_conditions = ["is_admin = FALSE"]
-        params = {}
-        
-        if search:
-            where_conditions.append("(email ILIKE :search OR company_name ILIKE :search)")
-            params['search'] = f'%{search}%'
-        
-        if status:
-            where_conditions.append("subscription_status = :status")
-            params['status'] = status
-        
-        where_clause = " AND ".join(where_conditions)
-        
-        # Sorting
-        if sort == 'recent':
-            order_by = 'created_at DESC'
-        elif sort == 'oldest':
-            order_by = 'created_at ASC'
-        else:  # email
-            order_by = 'email ASC'
-        
-        total_count = db.session.execute(text(f'''
-            SELECT COUNT(*) FROM leads WHERE {where_clause}
-        '''), params).scalar() or 0
-        
-        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-        
-        params['limit'] = per_page
-        params['offset'] = offset
-        
-        context['users'] = db.session.execute(text(f'''
-            SELECT * FROM leads 
-            WHERE {where_clause}
-            ORDER BY {order_by}
-            LIMIT :limit OFFSET :offset
-        '''), params).fetchall()
-        
-        context['search'] = search
-        context['status'] = status
-        context['sort'] = sort
-        context['total_pages'] = total_pages
-    
-    elif section == 'manage-urls':
-        search_query = request.args.get('search', '')
-        filter_type = request.args.get('filter', '')
-        per_page = 20
-        offset = (page - 1) * per_page
-        
-        # Build query
-        where_conditions = ["1=1"]
-        params = {}
-        
-        if search_query:
-            where_conditions.append("(agency_name ILIKE :search OR description ILIKE :search OR award_id ILIKE :search)")
-            params['search'] = f'%{search_query}%'
-        
-        if filter_type == 'broken':
-            where_conditions.append("(sam_gov_url LIKE '%opportunity-detail%' OR sam_gov_url LIKE '%award-detail%')")
-        elif filter_type == 'recent':
-            where_conditions.append("created_at > NOW() - INTERVAL '7 days'")
-        
-        where_clause = " AND ".join(where_conditions)
-        
-        total_count = db.session.execute(text(f'''
-            SELECT COUNT(*) FROM federal_contracts WHERE {where_clause}
-        '''), params).scalar() or 0
-        
-        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-        
-        params['limit'] = per_page
-        params['offset'] = offset
-        
-        context['contracts'] = db.session.execute(text(f'''
-            SELECT id, agency_name, description, naics_code, award_id, sam_gov_url, created_at
-            FROM federal_contracts 
-            WHERE {where_clause}
-            ORDER BY created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''), params).fetchall()
-        
-        context['search_query'] = search_query
-        context['filter_type'] = filter_type
-        context['total_pages'] = total_pages
-        context['current_page'] = page
-    
-    elif section == 'edit-leads':
-        search_query = request.args.get('search', '')
-        status_filter = request.args.get('status_filter', '')
-        per_page = 20
-        offset = (page - 1) * per_page
-        
-        # Build query
-        where_conditions = ["is_admin = FALSE"]
-        params = {}
-        
-        if search_query:
-            where_conditions.append("(company_name ILIKE :search OR contact_name ILIKE :search OR email ILIKE :search OR phone ILIKE :search)")
-            params['search'] = f'%{search_query}%'
-        
-        if status_filter:
-            where_conditions.append("subscription_status = :status")
-            params['status'] = status_filter
-        
-        where_clause = " AND ".join(where_conditions)
-        
-        total_count = db.session.execute(text(f'''
-            SELECT COUNT(*) FROM leads WHERE {where_clause}
-        '''), params).scalar() or 0
-        
-        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-        
-        params['limit'] = per_page
-        params['offset'] = offset
-        
-        context['leads'] = db.session.execute(text(f'''
-            SELECT id, company_name, contact_name, email, phone, subscription_status, created_at
-            FROM leads 
-            WHERE {where_clause}
-            ORDER BY created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''), params).fetchall()
-        
-        context['search_query'] = search_query
-        context['status_filter'] = status_filter
-        context['total_pages'] = total_pages
-        context['current_page'] = page
-    
-    elif section == 'manage-admins':
-        # Check if current user is super admin
-        current_user = db.session.execute(text('''
-            SELECT admin_role FROM leads WHERE id = :id
-        '''), {'id': session['user_id']}).fetchone()
-        
-        context['is_super_admin'] = current_user and current_user.admin_role == 'super_admin'
-        context['current_admin_id'] = session['user_id']
-        
-        # Get all admin users
-        context['admin_users'] = db.session.execute(text('''
-            SELECT id, contact_name, email, is_admin, admin_role, created_at
-            FROM leads 
-            WHERE is_admin = TRUE
-            ORDER BY 
-                CASE 
-                    WHEN admin_role = 'super_admin' THEN 1
-                    WHEN admin_role = 'admin' THEN 2
-                    ELSE 3
-                END,
-                created_at DESC
-        ''')).fetchall()
-        
+        elif section == 'manage-admins':
+            # Check if current user is super admin
+            current_user = db.session.execute(text('''
+                SELECT admin_role FROM leads WHERE id = :id
+            '''), {'id': session['user_id']}).fetchone()
+            
+            context['is_super_admin'] = current_user and current_user.admin_role == 'super_admin'
+            context['current_admin_id'] = session['user_id']
+            
+            # Get all admin users
+            context['admin_users'] = db.session.execute(text('''
+                SELECT id, contact_name, email, is_admin, admin_role, created_at
+                FROM leads 
+                WHERE is_admin = TRUE
+                ORDER BY 
+                    CASE 
+                        WHEN admin_role = 'super_admin' THEN 1
+                        WHEN admin_role = 'admin' THEN 2
+                        ELSE 3
+                    END,
+                    created_at DESC
+            ''')).fetchall()
+            
         return render_template('admin_enhanced.html', **context)
     
     except Exception as e:
