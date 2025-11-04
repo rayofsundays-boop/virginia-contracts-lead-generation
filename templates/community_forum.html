@@ -88,7 +88,7 @@
                     <div class="card shadow-sm border-0 h-100 hover-lift">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
-                                <i class="fas fa-building me-2"></i>{{ req[1] }}
+                                <i class="fas fa-building me-2"></i>{{ req.business_name }}
                             </h5>
                             <div class="d-flex align-items-center gap-2">
                                 {% if session.get('is_admin') %}
@@ -100,37 +100,37 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <strong><i class="fas fa-briefcase me-2 text-primary"></i>Business Type:</strong>
-                                <span class="badge bg-info">{{ req[4] }}</span>
+                                <span class="badge bg-info">{{ req.business_type }}</span>
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-map-marker-alt me-2 text-danger"></i>
-                                <strong>Location:</strong> {{ req[3] }}, VA
+                                <strong>Location:</strong> {{ req.city }}, VA
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-ruler-combined me-2 text-success"></i>
-                                <strong>Size:</strong> {{ req[5] }} sq ft
+                                <strong>Size:</strong> {{ req.square_footage }} sq ft
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-alt me-2 text-warning"></i>
-                                <strong>Frequency:</strong> {{ req[6] }}
+                                <strong>Frequency:</strong> {{ req.frequency }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-broom me-2 text-info"></i>
-                                <strong>Services:</strong> {{ req[7] }}
+                                <strong>Services:</strong> {{ req.services_needed }}
                             </div>
-                            {% if req[8] %}
+                            {% if req.budget_range %}
                             <div class="mb-2">
                                 <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                <strong>Budget:</strong> {{ req[8] }}
+                                <strong>Budget:</strong> {{ req.budget_range }}
                             </div>
                             {% endif %}
                             <div class="mb-3">
-                                <span class="badge bg-{{ 'danger' if req[9] == 'urgent' else 'warning' if req[9] == 'high' else 'secondary' }}">
-                                    {{ req[9]|upper }} PRIORITY
+                                <span class="badge bg-{{ 'danger' if req.urgency == 'urgent' else 'warning' if req.urgency == 'high' else 'secondary' }}">
+                                    {{ req.urgency|upper }} PRIORITY
                                 </span>
                             </div>
                             <div class="text-muted small">
-                                <i class="fas fa-clock me-1"></i>Posted {{ req[10].strftime('%B %d, %Y') if req[10] else 'Recently' }}
+                                <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
                         <div class="card-footer bg-light d-flex gap-2">
@@ -143,8 +143,8 @@
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="commercial" data-id="{{ req[0] }}">Unapprove (Hide)</button></li>
-                                    <li><button class="dropdown-item btn-admin-reject" data-type="commercial" data-id="{{ req[0] }}">Reject</button></li>
+                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="commercial" data-id="{{ req.id }}">Unapprove (Hide)</button></li>
+                                    <li><button class="dropdown-item btn-admin-reject" data-type="commercial" data-id="{{ req.id }}">Reject</button></li>
                                 </ul>
                             </div>
                             {% endif %}
@@ -159,7 +159,7 @@
                     <div class="card shadow-sm border-0 h-100 hover-lift">
                         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
-                                <i class="fas fa-home me-2"></i>{{ req[3] }} Home
+                                <i class="fas fa-home me-2"></i>{{ req.city }} Home
                             </h5>
                             <div class="d-flex align-items-center gap-2">
                                 {% if session.get('is_admin') %}
@@ -171,37 +171,37 @@
                         <div class="card-body">
                             <div class="mb-2">
                                 <i class="fas fa-map-marker-alt me-2 text-danger"></i>
-                                <strong>Location:</strong> {{ req[2] }}, VA
+                                <strong>Location:</strong> {{ req.contact_name }}, VA
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-bed me-2 text-primary"></i>
-                                <strong>Bedrooms:</strong> {{ req[4] }} | 
+                                <strong>Bedrooms:</strong> {{ req.business_type }} | 
                                 <i class="fas fa-bath ms-2 me-2 text-info"></i>
-                                <strong>Bathrooms:</strong> {{ req[5] }}
+                                <strong>Bathrooms:</strong> {{ req.square_footage }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-ruler-combined me-2 text-success"></i>
-                                <strong>Size:</strong> {{ req[6] }} sq ft
+                                <strong>Size:</strong> {{ req.frequency }} sq ft
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-alt me-2 text-warning"></i>
-                                <strong>Frequency:</strong> {{ req[7] }}
+                                <strong>Frequency:</strong> {{ req.services_needed }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-broom me-2 text-info"></i>
-                                <strong>Services:</strong> {{ req[8] }}
+                                <strong>Services:</strong> {{ req.budget_range }}
                             </div>
-                            {% if req[9] %}
+                            {% if req.urgency %}
                             <div class="mb-3">
                                 <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                <strong>Estimated Value:</strong> ${{ req[9] }}/month
+                                <strong>Estimated Value:</strong> ${{ req.urgency }}/month
                                 <small class="text-warning fst-italic d-block ms-4">
                                     <i class="fas fa-exclamation-triangle me-1"></i>Not the true contract price
                                 </small>
                             </div>
                             {% endif %}
                             <div class="text-muted small">
-                                <i class="fas fa-clock me-1"></i>Posted {{ req[10].strftime('%B %d, %Y') if req[10] else 'Recently' }}
+                                <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
                         <div class="card-footer bg-light d-flex gap-2">
@@ -214,8 +214,8 @@
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="residential" data-id="{{ req[0] }}">Unapprove (Hide)</button></li>
-                                    <li><button class="dropdown-item btn-admin-reject" data-type="residential" data-id="{{ req[0] }}">Reject</button></li>
+                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="residential" data-id="{{ req.id }}">Unapprove (Hide)</button></li>
+                                    <li><button class="dropdown-item btn-admin-reject" data-type="residential" data-id="{{ req.id }}">Reject</button></li>
                                 </ul>
                             </div>
                             {% endif %}
@@ -282,7 +282,7 @@
                     <div class="card shadow-sm border-0 h-100 hover-lift">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
-                                <i class="fas fa-building me-2"></i>{{ req[1] }}
+                                <i class="fas fa-building me-2"></i>{{ req.business_name }}
                             </h5>
                             <div class="d-flex align-items-center gap-2">
                                 {% if session.get('is_admin') %}
@@ -294,37 +294,37 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <strong><i class="fas fa-briefcase me-2 text-primary"></i>Business Type:</strong>
-                                <span class="badge bg-info">{{ req[4] }}</span>
+                                <span class="badge bg-info">{{ req.business_type }}</span>
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-map-marker-alt me-2 text-danger"></i>
-                                <strong>Location:</strong> {{ req[3] }}, VA
+                                <strong>Location:</strong> {{ req.city }}, VA
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-ruler-combined me-2 text-success"></i>
-                                <strong>Size:</strong> {{ req[5] }} sq ft
+                                <strong>Size:</strong> {{ req.square_footage }} sq ft
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-alt me-2 text-warning"></i>
-                                <strong>Frequency:</strong> {{ req[6] }}
+                                <strong>Frequency:</strong> {{ req.frequency }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-broom me-2 text-info"></i>
-                                <strong>Services:</strong> {{ req[7] }}
+                                <strong>Services:</strong> {{ req.services_needed }}
                             </div>
-                            {% if req[8] %}
+                            {% if req.budget_range %}
                             <div class="mb-2">
                                 <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                <strong>Budget:</strong> {{ req[8] }}
+                                <strong>Budget:</strong> {{ req.budget_range }}
                             </div>
                             {% endif %}
                             <div class="mb-3">
-                                <span class="badge bg-{{ 'danger' if req[9] == 'urgent' else 'warning' if req[9] == 'high' else 'secondary' }}">
-                                    {{ req[9]|upper }} PRIORITY
+                                <span class="badge bg-{{ 'danger' if req.urgency == 'urgent' else 'warning' if req.urgency == 'high' else 'secondary' }}">
+                                    {{ req.urgency|upper }} PRIORITY
                                 </span>
                             </div>
                             <div class="text-muted small">
-                                <i class="fas fa-clock me-1"></i>Posted {{ req[10].strftime('%B %d, %Y') if req[10] else 'Recently' }}
+                                <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
                         <div class="card-footer bg-light d-flex gap-2">
@@ -337,8 +337,8 @@
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="commercial" data-id="{{ req[0] }}">Unapprove (Hide)</button></li>
-                                    <li><button class="dropdown-item btn-admin-reject" data-type="commercial" data-id="{{ req[0] }}">Reject</button></li>
+                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="commercial" data-id="{{ req.id }}">Unapprove (Hide)</button></li>
+                                    <li><button class="dropdown-item btn-admin-reject" data-type="commercial" data-id="{{ req.id }}">Reject</button></li>
                                 </ul>
                             </div>
                             {% endif %}
@@ -383,7 +383,7 @@
                     <div class="card shadow-sm border-0 h-100 hover-lift">
                         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
-                                <i class="fas fa-home me-2"></i>{{ req[3] }} Home
+                                <i class="fas fa-home me-2"></i>{{ req.city }} Home
                             </h5>
                             <div class="d-flex align-items-center gap-2">
                                 {% if session.get('is_admin') %}
@@ -395,37 +395,37 @@
                         <div class="card-body">
                             <div class="mb-2">
                                 <i class="fas fa-map-marker-alt me-2 text-danger"></i>
-                                <strong>Location:</strong> {{ req[2] }}, VA
+                                <strong>Location:</strong> {{ req.contact_name }}, VA
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-bed me-2 text-primary"></i>
-                                <strong>Bedrooms:</strong> {{ req[4] }} | 
+                                <strong>Bedrooms:</strong> {{ req.business_type }} | 
                                 <i class="fas fa-bath ms-2 me-2 text-info"></i>
-                                <strong>Bathrooms:</strong> {{ req[5] }}
+                                <strong>Bathrooms:</strong> {{ req.square_footage }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-ruler-combined me-2 text-success"></i>
-                                <strong>Size:</strong> {{ req[6] }} sq ft
+                                <strong>Size:</strong> {{ req.frequency }} sq ft
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-alt me-2 text-warning"></i>
-                                <strong>Frequency:</strong> {{ req[7] }}
+                                <strong>Frequency:</strong> {{ req.services_needed }}
                             </div>
                             <div class="mb-2">
                                 <i class="fas fa-broom me-2 text-info"></i>
-                                <strong>Services:</strong> {{ req[8] }}
+                                <strong>Services:</strong> {{ req.budget_range }}
                             </div>
-                            {% if req[9] %}
+                            {% if req.urgency %}
                             <div class="mb-3">
                                 <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                <strong>Estimated Value:</strong> ${{ req[9] }}/month
+                                <strong>Estimated Value:</strong> ${{ req.urgency }}/month
                                 <small class="text-warning fst-italic d-block ms-4">
                                     <i class="fas fa-exclamation-triangle me-1"></i>Not the true contract price
                                 </small>
                             </div>
                             {% endif %}
                             <div class="text-muted small">
-                                <i class="fas fa-clock me-1"></i>Posted {{ req[10].strftime('%B %d, %Y') if req[10] else 'Recently' }}
+                                <i class="fas fa-clock me-1"></i>Posted {{ req.created_at.strftime('%B %d, %Y') if req.created_at else 'Recently' }}
                             </div>
                         </div>
                         <div class="card-footer bg-light d-flex gap-2">
@@ -438,8 +438,8 @@
                                     Admin Actions
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="residential" data-id="{{ req[0] }}">Unapprove (Hide)</button></li>
-                                    <li><button class="dropdown-item btn-admin-reject" data-type="residential" data-id="{{ req[0] }}">Reject</button></li>
+                                    <li><button class="dropdown-item btn-admin-unapprove" data-type="residential" data-id="{{ req.id }}">Unapprove (Hide)</button></li>
+                                    <li><button class="dropdown-item btn-admin-reject" data-type="residential" data-id="{{ req.id }}">Reject</button></li>
                                 </ul>
                             </div>
                             {% endif %}
