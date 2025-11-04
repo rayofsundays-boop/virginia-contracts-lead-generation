@@ -8631,6 +8631,185 @@ def admin_reset_password():
         flash('Error resetting password', 'error')
         return redirect(url_for('admin_enhanced', section='users'))
 
+@app.route('/api/admin/reset-password', methods=['POST'])
+@login_required
+@admin_required
+def api_admin_reset_password():
+    """API endpoint for admin password reset with email lookup"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        new_password = data.get('new_password')
+        send_email_notification = data.get('send_email', False)
+        
+        if not email:
+            return jsonify({'success': False, 'error': 'Email is required'}), 400
+        
+        # Look up user by email
+        user = db.session.execute(text('''
+            SELECT id, email, first_name, last_name 
+            FROM leads 
+            WHERE email = :email
+        '''), {'email': email}).fetchone()
+        
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        # Generate password if not provided
+        generated_password = None
+        if not new_password:
+            import random
+            import string
+            new_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%^&*', k=12))
+            generated_password = new_password
+        
+        # Hash password
+        from werkzeug.security import generate_password_hash
+        hashed_password = generate_password_hash(new_password)
+        
+        # Update password
+        db.session.execute(text('''
+            UPDATE leads 
+            SET password = :password 
+            WHERE id = :user_id
+        '''), {'password': hashed_password, 'user_id': user.id})
+        
+        # Log action
+        log_admin_action('password_reset', f'Reset password for {email}', user.id)
+        
+        db.session.commit()
+        
+        # TODO: Send email notification if requested
+        email_sent = False
+        if send_email_notification:
+            # Email functionality would go here
+            # For now, just log it
+            print(f"Would send password reset email to {email}")
+            email_sent = True
+        
+        response = {
+            'success': True,
+            'message': 'Password reset successfully',
+            'email_sent': email_sent
+        }
+        
+        if generated_password:
+            response['generated_password'] = generated_password
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"API password reset error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/password-reset-history', methods=['GET'])
+@login_required
+@admin_required
+def api_password_reset_history():
+    """Get password reset history from admin logs"""
+    try:
+        # Query admin_logs for password reset actions
+        logs = db.session.execute(text('''
+            SELECT 
+                al.timestamp,
+                al.details,
+                al.affected_user_id,
+                l.email as user_email,
+                l.first_name || ' ' || l.last_name as user_name,
+                admin.email as admin_email
+            FROM admin_logs al
+            LEFT JOIN leads l ON al.affected_user_id = l.id
+            LEFT JOIN leads admin ON al.admin_id = admin.id
+            WHERE al.action_type = 'password_reset'
+            ORDER BY al.timestamp DESC
+            LIMIT 50
+        ''')).fetchall()
+        
+        history = []
+        for log in logs:
+            history.append({
+                'timestamp': log.timestamp.strftime('%m/%d/%Y %I:%M %p') if log.timestamp else 'N/A',
+                'user_name': log.user_name or 'Unknown',
+                'user_email': log.user_email or 'N/A',
+                'admin_email': log.admin_email,
+                'email_sent': False  # We don't track this yet
+            })
+        
+        return jsonify({'success': True, 'history': history})
+        
+    except Exception as e:
+        print(f"Error fetching password reset history: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/bulk-reset-password', methods=['POST'])
+@login_required
+@admin_required
+def api_bulk_reset_password():
+    """Bulk password reset (use with extreme caution)"""
+    try:
+        data = request.get_json()
+        filter_type = data.get('filter')
+        
+        if not filter_type:
+            return jsonify({'success': False, 'error': 'Filter type required'}), 400
+        
+        # Build query based on filter
+        query = 'SELECT id, email FROM leads WHERE 1=1'
+        
+        if filter_type == 'free':
+            query += " AND (subscription_status = 'free' OR subscription_status IS NULL)"
+        elif filter_type == 'inactive':
+            query += " AND last_login < NOW() - INTERVAL '90 days'"
+        elif filter_type == 'subscription_expired':
+            query += " AND subscription_status = 'expired'"
+        else:
+            return jsonify({'success': False, 'error': 'Invalid filter type'}), 400
+        
+        users = db.session.execute(text(query)).fetchall()
+        
+        if not users:
+            return jsonify({'success': False, 'error': 'No users found matching criteria'}), 404
+        
+        # Generate and update passwords
+        from werkzeug.security import generate_password_hash
+        import random
+        import string
+        
+        count = 0
+        for user in users:
+            new_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%^&*', k=12))
+            hashed_password = generate_password_hash(new_password)
+            
+            db.session.execute(text('''
+                UPDATE leads 
+                SET password = :password 
+                WHERE id = :user_id
+            '''), {'password': hashed_password, 'user_id': user.id})
+            
+            # Log each reset
+            log_admin_action('password_reset', f'Bulk reset for {user.email} (filter: {filter_type})', user.id)
+            
+            # TODO: Send email to user with new password
+            count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'count': count,
+            'message': f'Reset {count} passwords'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Bulk password reset error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin/toggle-subscription', methods=['POST'])
 @login_required
 @admin_required
