@@ -577,14 +577,22 @@ def safe_url_filter(url, default_system='sam.gov'):
     return 'https://sam.gov/content/opportunities'
 
 # Add to Jinja environment
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
+# Email Configuration - Supports Gmail, SendGrid, or custom SMTP
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'noreply@vacontracts.com')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME', 'noreply@vacontracts.com')
 
-mail = Mail(app)
+# Only initialize mail if credentials are provided
+if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
+    mail = Mail(app)
+    print("✅ Email configured successfully")
+else:
+    mail = None
+    print("⚠️  Email not configured - set MAIL_USERNAME and MAIL_PASSWORD environment variables")
 
 # ============================================================================
 # EMAIL NOTIFICATION FUNCTIONS
@@ -1849,6 +1857,10 @@ Prefer not to receive these updates? [Unsubscribe](https://your-app-url.render.c
 
 def send_password_reset_email(email, name, reset_link):
     """Send password reset email"""
+    if not mail:
+        print("⚠️  Email not configured - cannot send password reset email")
+        return False
+        
     try:
         subject = "🔐 Reset Your Virginia Contracts Password"
         
