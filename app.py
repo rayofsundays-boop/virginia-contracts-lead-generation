@@ -7907,13 +7907,13 @@ def admin_enhanced():
         stats_result = get_admin_stats_cached(cache_timestamp)
         
         stats = {
-            'paid_subscribers': stats_result[0] if stats_result else 0,
-            'free_users': stats_result[1] if stats_result else 0,
-            'new_users_30d': stats_result[2] if stats_result else 0,
-            'revenue_30d': stats_result[3] if stats_result else 0,
-            'page_views_24h': stats_result[4] if stats_result else 0,
-            'active_users_24h': stats_result[5] if stats_result else 0,
-            'total_users': (stats_result[0] if stats_result else 0) + (stats_result[1] if stats_result else 0),
+            'paid_subscribers': stats_result.paid_subscribers if stats_result else 0,
+            'free_users': stats_result.free_users if stats_result else 0,
+            'new_users_30d': stats_result.new_users_30d if stats_result else 0,
+            'revenue_30d': stats_result.revenue_30d if stats_result else 0,
+            'page_views_24h': stats_result.page_views_24h if stats_result else 0,
+            'active_users_24h': stats_result.active_users_24h if stats_result else 0,
+            'total_users': (stats_result.paid_subscribers if stats_result else 0) + (stats_result.free_users if stats_result else 0),
             'new_users_7d': db.session.execute(text('''
                 SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
             ''')).scalar() or 0
