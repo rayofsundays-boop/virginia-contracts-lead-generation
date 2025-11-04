@@ -4864,12 +4864,12 @@ def commercial_contracts():
         },
         {
             'name': 'Lincoln Property Company',
-            'location': 'HQ: 2501 Cedar Springs Road, Dallas, TX 75201 | 200+ offices nationwide',
+            'location': 'HQ: 8111 Douglas Avenue, Suite 600, Dallas, TX 75225 | 200+ offices nationwide',
             'state': 'TX',
             'city': 'Dallas',
             'properties': '200,000+ units managed',
-            'vendor_link': 'https://www.lpc.com/about-us/partnership-opportunities',
-            'description': 'Full-service real estate company founded 1965. Contact Procurement: 214-740-3300 | Email: procurement@lpccorp.com',
+            'vendor_link': 'https://lpc.com/about-us/contact/',
+            'description': 'Full-service real estate company founded 1965. Contact Main: 214-740-3300 | Use contact form for vendor inquiries',
             'property_types': 'Apartments, office buildings, retail centers, industrial',
             'regions': 'All 50 states, specializing in Texas, California, Southeast'
         },
