@@ -8638,22 +8638,30 @@ def api_admin_reset_password():
     """API endpoint for admin password reset with email lookup"""
     try:
         data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
         email = data.get('email')
         new_password = data.get('new_password')
         send_email_notification = data.get('send_email', False)
         
         if not email:
-            return jsonify({'success': False, 'error': 'Email is required'}), 400
+            return jsonify({'success': False, 'error': 'Email address is required'}), 400
         
         # Look up user by email
-        user = db.session.execute(text('''
-            SELECT id, email, first_name, last_name 
-            FROM leads 
-            WHERE email = :email
-        '''), {'email': email}).fetchone()
+        try:
+            user = db.session.execute(text('''
+                SELECT id, email, first_name, last_name 
+                FROM leads 
+                WHERE LOWER(email) = LOWER(:email)
+            '''), {'email': email}).fetchone()
+        except Exception as db_error:
+            print(f"Database error looking up user: {db_error}")
+            return jsonify({'success': False, 'error': f'Database error: {str(db_error)}'}), 500
         
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': f'No user found with email: {email}'}), 404
         
         # Generate password if not provided
         generated_password = None
