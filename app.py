@@ -8038,6 +8038,48 @@ def admin_enhanced():
         context['filter_type'] = filter_type
         context['total_pages'] = total_pages
         context['current_page'] = page
+    
+    elif section == 'edit-leads':
+        search_query = request.args.get('search', '')
+        status_filter = request.args.get('status_filter', '')
+        per_page = 20
+        offset = (page - 1) * per_page
+        
+        # Build query
+        where_conditions = ["is_admin = FALSE"]
+        params = {}
+        
+        if search_query:
+            where_conditions.append("(company_name ILIKE :search OR contact_name ILIKE :search OR email ILIKE :search OR phone ILIKE :search)")
+            params['search'] = f'%{search_query}%'
+        
+        if status_filter:
+            where_conditions.append("subscription_status = :status")
+            params['status'] = status_filter
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        total_count = db.session.execute(text(f'''
+            SELECT COUNT(*) FROM leads WHERE {where_clause}
+        '''), params).scalar() or 0
+        
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        context['leads'] = db.session.execute(text(f'''
+            SELECT id, company_name, contact_name, email, phone, subscription_status, created_at
+            FROM leads 
+            WHERE {where_clause}
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        '''), params).fetchall()
+        
+        context['search_query'] = search_query
+        context['status_filter'] = status_filter
+        context['total_pages'] = total_pages
+        context['current_page'] = page
         
     return render_template('admin_enhanced.html', **context)
 
@@ -8163,6 +8205,135 @@ def admin_regenerate_contract_url():
     except Exception as e:
         db.session.rollback()
         print(f"Error regenerating contract URL: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/get-lead/<int:lead_id>')
+@login_required
+@admin_required
+def admin_get_lead(lead_id):
+    """Get lead details for editing"""
+    try:
+        lead = db.session.execute(text('''
+            SELECT * FROM leads WHERE id = :id
+        '''), {'id': lead_id}).fetchone()
+        
+        if not lead:
+            return jsonify({'success': False, 'message': 'Lead not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'lead': {
+                'id': lead.id,
+                'company_name': lead.company_name,
+                'contact_name': lead.contact_name,
+                'email': lead.email,
+                'phone': lead.phone,
+                'state': lead.state,
+                'subscription_status': lead.subscription_status,
+                'experience_years': lead.experience_years,
+                'certifications': lead.certifications
+            }
+        })
+    except Exception as e:
+        print(f"Error getting lead: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/add-lead', methods=['POST'])
+@login_required
+@admin_required
+def admin_add_lead():
+    """Add a new customer lead"""
+    try:
+        data = request.get_json()
+        
+        db.session.execute(text('''
+            INSERT INTO leads (company_name, contact_name, email, phone, state, subscription_status)
+            VALUES (:company_name, :contact_name, :email, :phone, :state, :subscription_status)
+        '''), {
+            'company_name': data.get('company_name'),
+            'contact_name': data.get('contact_name'),
+            'email': data.get('email'),
+            'phone': data.get('phone'),
+            'state': data.get('state', 'VA'),
+            'subscription_status': data.get('subscription_status', 'unpaid')
+        })
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead added successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding lead: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/update-lead', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_lead():
+    """Update an existing customer lead"""
+    try:
+        data = request.get_json()
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'success': False, 'message': 'Missing lead_id'}), 400
+        
+        db.session.execute(text('''
+            UPDATE leads 
+            SET company_name = :company_name,
+                contact_name = :contact_name,
+                email = :email,
+                phone = :phone,
+                state = :state,
+                subscription_status = :subscription_status,
+                experience_years = :experience_years,
+                certifications = :certifications
+            WHERE id = :id
+        '''), {
+            'id': lead_id,
+            'company_name': data.get('company_name'),
+            'contact_name': data.get('contact_name'),
+            'email': data.get('email'),
+            'phone': data.get('phone'),
+            'state': data.get('state'),
+            'subscription_status': data.get('subscription_status'),
+            'experience_years': data.get('experience_years'),
+            'certifications': data.get('certifications')
+        })
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating lead: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/delete-lead', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_lead():
+    """Delete a customer lead"""
+    try:
+        data = request.get_json()
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'success': False, 'message': 'Missing lead_id'}), 400
+        
+        db.session.execute(text('''
+            DELETE FROM leads WHERE id = :id
+        '''), {'id': lead_id})
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting lead: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/manual-update', methods=['POST'])
