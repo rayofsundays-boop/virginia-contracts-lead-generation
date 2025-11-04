@@ -7925,6 +7925,10 @@ def admin_enhanced():
         cache_timestamp = int(datetime.now().timestamp() / 300)  # Round to 5-minute intervals
         stats_result = get_admin_stats_cached(cache_timestamp)
         
+        # Debug: Check what type stats_result is
+        print(f"DEBUG: stats_result type: {type(stats_result)}")
+        print(f"DEBUG: stats_result value: {stats_result}")
+        
         # Handle both Row objects and tuple fallbacks
         if stats_result and hasattr(stats_result, 'paid_subscribers'):
             # It's a Row object
@@ -7937,16 +7941,27 @@ def admin_enhanced():
                 'active_users_24h': stats_result.active_users_24h,
                 'total_users': stats_result.paid_subscribers + stats_result.free_users,
             }
-        else:
-            # It's a tuple or None
+        elif stats_result and isinstance(stats_result, (tuple, list)):
+            # It's a tuple or list
             stats = {
-                'paid_subscribers': stats_result[0] if stats_result else 0,
-                'free_users': stats_result[1] if stats_result else 0,
-                'new_users_30d': stats_result[2] if stats_result else 0,
-                'revenue_30d': stats_result[3] if stats_result else 0,
-                'page_views_24h': stats_result[4] if stats_result else 0,
-                'active_users_24h': stats_result[5] if stats_result else 0,
-                'total_users': (stats_result[0] if stats_result else 0) + (stats_result[1] if stats_result else 0),
+                'paid_subscribers': stats_result[0] if len(stats_result) > 0 else 0,
+                'free_users': stats_result[1] if len(stats_result) > 1 else 0,
+                'new_users_30d': stats_result[2] if len(stats_result) > 2 else 0,
+                'revenue_30d': stats_result[3] if len(stats_result) > 3 else 0,
+                'page_views_24h': stats_result[4] if len(stats_result) > 4 else 0,
+                'active_users_24h': stats_result[5] if len(stats_result) > 5 else 0,
+                'total_users': (stats_result[0] if len(stats_result) > 0 else 0) + (stats_result[1] if len(stats_result) > 1 else 0),
+            }
+        else:
+            # Fallback to zeros
+            stats = {
+                'paid_subscribers': 0,
+                'free_users': 0,
+                'new_users_30d': 0,
+                'revenue_30d': 0,
+                'page_views_24h': 0,
+                'active_users_24h': 0,
+                'total_users': 0,
             }
         
         stats['new_users_7d'] = db.session.execute(text('''
