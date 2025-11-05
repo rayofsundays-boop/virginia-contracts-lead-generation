@@ -16,6 +16,44 @@ All setup steps have been completed:
 
 ## Latest Features (Nov 4, 2025) ✅ COMPLETE
 
+### 📊 Database Cleanup & Data Transparency (Nov 4, 2025) - COMPLETE ✅
+**Systematic cleanup to ensure 100% real, verified contract data:**
+
+**Actions Completed:**
+1. ✅ **Database Backup**: Created `leads_backup_20251104_195528.db`
+2. ✅ **Removed Non-Cleaning Contracts**: Deleted 50 contracts with wrong NAICS codes
+3. ✅ **Added Data Source Tracking**: New `data_source` column in federal_contracts table
+4. ✅ **Fetched Real SAM.gov Contracts**: 3 cleaning contracts from SAM.gov API
+5. ✅ **URL Verification**: All contracts have valid SAM.gov URLs
+6. ✅ **Transparency Badges**: Data source labels displayed on all contracts
+
+**Current Database Status:**
+- **Total Contracts**: 3 real federal cleaning contracts
+- **All Verified**: 100% from SAM.gov API
+- **NAICS Codes**: 561720 (Janitorial Services)
+- **All URLs Valid**: ✅ SAM.gov format with notice IDs
+- **No Demo Data**: ✅ Zero fake/sample/test contracts
+
+**Documentation Created:**
+- `DATA_SOURCE_TRANSPARENCY.md` - Complete transparency guide
+- `systematic_cleanup_and_fetch.py` - Automated cleanup script
+
+### 🎬 Animated Dashboard Video (Nov 4, 2025) - LIVE ✅
+**11-second cinematic dashboard preview embedded on homepage:**
+
+**Features:**
+- Brand intro → Dashboard → Stats → Contracts → CTA sequence
+- Embedded via iframe at `/dashboard-video-preview`
+- Auto-loops continuously when embedded
+- Controls hidden in iframe for clean look
+- Purple gradient matching brand (#667eea, #764ba2)
+- Responsive 16:9 aspect ratio container
+
+**Files:**
+- `templates/dashboard_video_preview.html` - Video generator
+- `templates/home_cinematic.html` - Embedded on homepage
+- **Route**: `/dashboard-video-preview`
+
 ### 🤖 Automated URL Population System - LIVE & OPERATIONAL
 **Three-tier automation for ensuring all leads have valid URLs:**
 

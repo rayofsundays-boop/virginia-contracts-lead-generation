@@ -93,7 +93,14 @@
                     <div class="card-header bg-white border-bottom">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title mb-0 text-dark fw-bold">{{ contract.title or contract.description[:100] }}</h5>
-                            <span class="badge bg-primary">Federal</span>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-primary">Federal</span>
+                                {% if contract.data_source %}
+                                <span class="badge bg-success" title="Verified from {{ contract.data_source }}">
+                                    <i class="fas fa-check-circle"></i> {{ contract.data_source }}
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="mt-2">
                             <small class="text-muted">Notice ID:</small>
