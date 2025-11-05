@@ -20,11 +20,16 @@ class SAMgovFetcher:
         self.api_key = os.environ.get('SAM_GOV_API_KEY', '').strip()
         self.base_url = 'https://api.sam.gov/opportunities/v2/search'
         
-        # Cleaning-related NAICS codes
+        # Expanded cleaning-related NAICS codes for comprehensive coverage
         self.naics_codes = [
-            '561720',  # Janitorial Services
+            '561720',  # Janitorial Services (PRIMARY)
             '561730',  # Landscaping Services
             '561790',  # Other Services to Buildings and Dwellings
+            '562111',  # Solid Waste Collection (trash removal)
+            '561710',  # Exterminating and Pest Control Services
+            '561740',  # Carpet and Upholstery Cleaning Services
+            '238990',  # All Other Specialty Trade Contractors (facility maintenance)
+            '562910',  # Remediation Services (deep cleaning, mold removal)
         ]
     
     def fetch_with_throttle(self, urls, delay=2):
@@ -55,12 +60,12 @@ class SAMgovFetcher:
                 logger.error(f"Error fetching {url}: {e}")
         return responses
     
-    def fetch_va_cleaning_contracts(self, days_back=14):
+    def fetch_va_cleaning_contracts(self, days_back=90):
         """
         Fetch real cleaning contracts from Virginia
         
         Args:
-            days_back: How many days back to search (default 30)
+            days_back: How many days back to search (default 90 - expanded for more coverage)
         
         Returns:
             List of contract dictionaries ready for database insertion
