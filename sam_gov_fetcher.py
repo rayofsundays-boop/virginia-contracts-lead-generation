@@ -1,8 +1,3 @@
-"""
-SAM.gov API Integration for Real Federal Contract Data
-Fetches actual cleaning contracts from Virginia government agencies
-Automatically falls back to Data.gov if SAM.gov fails after 3 attempts
-"""
 import requests
 import os
 from datetime import datetime, timedelta
