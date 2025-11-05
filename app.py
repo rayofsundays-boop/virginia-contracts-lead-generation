@@ -4341,7 +4341,7 @@ def contracts():
                 SELECT COUNT(*) FROM contracts WHERE LOWER(location) LIKE LOWER(:loc)
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc) AND title IS NOT NULL
                 ORDER BY created_at DESC
@@ -4350,7 +4350,7 @@ def contracts():
         else:
             total = db.session.execute(text('SELECT COUNT(*) FROM contracts WHERE title IS NOT NULL')).scalar() or 0
             rows = db.session.execute(text('''
-                SELECT title, agency, location, value, deadline, description, naics_code, website_url, created_at
+                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE title IS NOT NULL
                 ORDER BY created_at DESC
