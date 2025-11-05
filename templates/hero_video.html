@@ -50,8 +50,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 0;
-            padding: clamp(2rem, 5vw, 4rem);
+            padding: clamp(3rem, 6vw, 5rem);
+            box-sizing: border-box;
         }
 
         /* Scene containers */
@@ -74,10 +74,11 @@
         /* Logo and Brand */
         .logo-scene {
             text-align: center;
+            padding: 0 2rem;
         }
 
         .main-logo {
-            font-size: clamp(3rem, 8vw, 6rem);
+            font-size: clamp(2.5rem, 7vw, 5rem);
             font-weight: 800;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #5C3AFF 100%);
             -webkit-background-clip: text;
@@ -85,13 +86,15 @@
             background-clip: text;
             margin-bottom: 1rem;
             animation: glow 2s ease-in-out infinite;
+            word-wrap: break-word;
         }
 
         .tagline {
-            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
             color: #ffffff;
             opacity: 0.9;
             font-weight: 300;
+            padding: 0 1rem;
         }
 
         /* Virginia Map Animation */
@@ -120,19 +123,23 @@
         }
 
         .map-text {
-            font-size: clamp(2rem, 5vw, 4rem);
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
             font-weight: 700;
             color: #ffffff;
             text-align: center;
+            padding: 0 1rem;
+            word-wrap: break-word;
         }
 
         /* City Logos Grid */
         .cities-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 2rem;
-            max-width: 800px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
+            max-width: 900px;
+            width: 100%;
             margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .city-card {
@@ -152,10 +159,11 @@
         .city-card:nth-child(5) { animation-delay: 0.5s; }
 
         .city-name {
-            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-size: clamp(0.9rem, 1.8vw, 1.3rem);
             color: #ffffff;
             font-weight: 600;
             margin-top: 0.5rem;
+            word-wrap: break-word;
         }
 
         .city-icon {
@@ -278,29 +286,33 @@
         /* CTA Section */
         .cta-scene {
             text-align: center;
+            padding: 0 2rem;
         }
 
         .cta-title {
-            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-size: clamp(2rem, 5vw, 4rem);
             font-weight: 800;
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 2rem;
+            word-wrap: break-word;
+            padding: 0 1rem;
         }
 
         .cta-button {
             background: linear-gradient(135deg, #667eea, #5C3AFF);
             color: white;
-            font-size: clamp(1.2rem, 2.5vw, 2rem);
-            padding: clamp(1rem, 2vw, 1.5rem) clamp(2rem, 4vw, 4rem);
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            padding: clamp(0.8rem, 1.5vw, 1.2rem) clamp(1.5rem, 3vw, 3rem);
             border: none;
             border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
             animation: pulse-button 2s ease-in-out infinite;
             box-shadow: 0 10px 40px rgba(92, 58, 255, 0.4);
+            white-space: nowrap;
         }
 
         /* Animations */
