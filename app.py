@@ -14318,6 +14318,79 @@ def submit_cleaning_request():
         flash(f'Error submitting request: {str(e)}', 'danger')
         return redirect(url_for('submit_cleaning_request'))
 
+
+@app.route('/property-manager-signup', methods=['GET'])
+def property_manager_signup():
+    """Property manager lead capture page"""
+    return render_template('property_manager_signup.html')
+
+
+@app.route('/api/property-manager-lead', methods=['POST'])
+def submit_property_manager_lead():
+    """API endpoint for property manager lead submissions"""
+    try:
+        data = request.get_json()
+        
+        # Extract data
+        company_name = data.get('company_name')
+        contact_name = data.get('contact_name')
+        contact_email = data.get('contact_email')
+        contact_phone = data.get('contact_phone')
+        property_address = data.get('property_address')
+        property_type = data.get('property_type')
+        services = data.get('services', '')
+        frequency = data.get('frequency')
+        budget = data.get('budget', '')
+        timeline = data.get('timeline')
+        
+        # Calculate estimated monthly value
+        monthly_value = budget if budget else 'Not specified'
+        
+        # Insert into commercial_opportunities table
+        db.session.execute(text('''
+            INSERT INTO commercial_opportunities
+            (business_name, business_type, location, contact_name, contact_email, 
+             contact_phone, services_needed, monthly_value, special_requirements, 
+             posted_date, status)
+            VALUES (:company_name, :property_type, :property_address, :contact_name, :contact_email,
+                    :contact_phone, :services, :monthly_value, :additional_info, CURRENT_TIMESTAMP, 'New Lead')
+        '''), {
+            'company_name': company_name,
+            'property_type': property_type,
+            'property_address': property_address,
+            'contact_name': contact_name,
+            'contact_email': contact_email,
+            'contact_phone': contact_phone,
+            'services': services,
+            'monthly_value': monthly_value,
+            'additional_info': f"Frequency: {frequency} | Timeline: {timeline} | {data.get('additional_info', '')}"
+        })
+        db.session.commit()
+        
+        # Send notification to admin
+        try:
+            print(f"📧 New Property Manager Lead: {company_name} - {property_type} in {property_address}")
+            print(f"   Contact: {contact_name} ({contact_email}, {contact_phone})")
+            print(f"   Services: {services}")
+            print(f"   Budget: {budget} | Frequency: {frequency} | Timeline: {timeline}")
+        except Exception as notify_error:
+            print(f"⚠️ Could not send notification: {notify_error}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Lead submitted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error submitting property manager lead: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/request-residential-cleaning', methods=['GET', 'POST'])
 def submit_residential_cleaning_request():
     """Homeowners can request residential cleaning services"""
