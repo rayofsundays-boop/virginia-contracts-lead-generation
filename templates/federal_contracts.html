@@ -300,27 +300,88 @@
 
 <script>
 function copyToClipboard(text, label) {
-    navigator.clipboard.writeText(text).then(() => {
-        // Show success message
-        const btn = event.target.closest('button');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i>';
-        btn.classList.add('btn-success');
-        btn.classList.remove('btn-outline-primary');
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-outline-primary');
-        }, 2000);
-        
-        // Optional: Show toast notification
-        if (typeof showToast === 'function') {
-            showToast(`${label} copied to clipboard!`, 'success');
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Show success message
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-primary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+            
+            // Optional: Show toast notification
+            if (typeof showToast === 'function') {
+                showToast(`${label} copied to clipboard!`, 'success');
+            }
+        }).catch(err => {
+            console.error('Clipboard API failed:', err);
+            fallbackCopy(text, label);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopy(text, label);
+    }
+}
+
+function fallbackCopy(text, label) {
+    // Create a temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-primary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+            
+            if (typeof showToast === 'function') {
+                showToast(`${label} copied!`, 'success');
+            }
+        } else {
+            showCopyModal(text, label);
         }
-    }).catch(err => {
-        alert('Failed to copy. Please copy manually: ' + text);
-    });
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        showCopyModal(text, label);
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}
+
+function showCopyModal(text, label) {
+    // Show a modal with the text to copy manually
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:2rem;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;max-width:500px;';
+    modal.innerHTML = `
+        <h5 style="margin-bottom:1rem;">Copy ${label}</h5>
+        <input type="text" value="${text}" readonly style="width:100%;padding:0.5rem;border:2px solid #667eea;border-radius:5px;font-size:1rem;margin-bottom:1rem;" onclick="this.select()">
+        <p style="color:#666;font-size:0.9rem;margin-bottom:1rem;">Click the text above to select it, then press Ctrl+C (Cmd+C on Mac) to copy</p>
+        <button onclick="this.parentElement.remove()" style="background:#667eea;color:white;border:none;padding:0.5rem 2rem;border-radius:5px;cursor:pointer;">Close</button>
+    `;
+    document.body.appendChild(modal);
+    
+    // Auto-select the text
+    modal.querySelector('input').select();
 }
 
 function toggleBookmark(btn, leadType, leadId, title) {
