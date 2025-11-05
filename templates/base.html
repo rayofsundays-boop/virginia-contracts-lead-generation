@@ -456,6 +456,8 @@
                                 <li><a class="dropdown-item" href="{{ url_for('customer_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('customer_leads') }}"><i class="fas fa-briefcase me-2"></i>My Leads</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('commercial_contracts') }}"><i class="fas fa-building me-2"></i>Commercial Leads</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('my_messages') }}"><i class="fas fa-envelope me-2"></i>My Messages</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('send_message_to_admin') }}"><i class="fas fa-paper-plane me-2"></i>Contact Admin</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('pricing_guide') }}"><i class="fas fa-tags me-2"></i>Pricing Guide</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('resource_toolbox') }}"><i class="fas fa-toolbox me-2"></i>Resource Toolbox</a></li>
@@ -474,6 +476,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li class="dropdown-header text-danger">Admin Controls</li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('admin_panel') }}"><i class="fas fa-shield-alt me-2"></i>Admin Panel</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_mailbox') }}"><i class="fas fa-inbox me-2 text-primary"></i>Customer Messages</a></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_populate_federal_contracts') }}">
                                         <i class="fas fa-sync-alt me-2 text-primary"></i>Update Federal Contracts
@@ -560,9 +563,17 @@
                 <div class="col-md-2">
                     <h5>Contact</h5>
                     <ul class="list-unstyled">
-                        <li class="text-white-50"><i class="fas fa-envelope"></i> support@vacontracts.com</li>
-                        <li class="text-white-50"><i class="fas fa-phone"></i> (757) 555-0100</li>
-                        <li class="text-white-50"><i class="fas fa-map-marker-alt"></i> Hampton, VA</li>
+                        <li class="text-white-50 mb-2">
+                            <i class="fas fa-envelope me-2"></i>
+                            <a href="mailto:support@vacontracts.com" class="text-white-50 text-decoration-none">support@vacontracts.com</a>
+                        </li>
+                        <li class="text-white-50 mb-2">
+                            <i class="fas fa-phone me-2"></i>
+                            <a href="tel:+17579457428" class="text-white-50 text-decoration-none">(757) 945-7428</a>
+                        </li>
+                        <li class="text-white-50">
+                            <i class="fas fa-map-marker-alt me-2"></i>Hampton, VA
+                        </li>
                     </ul>
                 </div>
             </div>

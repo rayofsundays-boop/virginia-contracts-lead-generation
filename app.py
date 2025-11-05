@@ -15853,47 +15853,17 @@ def admin_post_from_request():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def populate_supply_contracts(force=False):
-    """Populate supply_contracts table with international supplier requests
+    """Populate supply_contracts table with REAL nationwide supplier opportunities from SAM.gov
+    
+    Fetches actual cleaning supply/product contracts from SAM.gov API nationwide.
+    Focus: Janitorial supplies, cleaning equipment, facility maintenance products
     
     Args:
         force: If True, delete existing records and repopulate
     """
     try:
-        # Phase 1: Try to fetch real international data and insert (non-destructive)
-        try:
-            real_records = fetch_international_cleaning(limit_per_source=50)
-        except Exception:
-            real_records = []
-
-        inserted_real = 0
-        if real_records:
-            for rec in real_records:
-                # Deduplicate by website_url or title+agency
-                exists = None
-                if rec.get('website_url'):
-                    exists = db.session.execute(text('''
-                        SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1
-                    '''), {'url': rec['website_url']}).fetchone()
-                if not exists:
-                    exists = db.session.execute(text('''
-                        SELECT id FROM supply_contracts WHERE title = :title AND agency = :agency LIMIT 1
-                    '''), {'title': rec.get('title'), 'agency': rec.get('agency')}).fetchone()
-                if exists:
-                    continue
-                db.session.execute(text('''
-                    INSERT INTO supply_contracts 
-                    (title, agency, location, product_category, estimated_value, bid_deadline, 
-                     description, website_url, is_small_business_set_aside, contact_name, 
-                     contact_email, contact_phone, is_quick_win, status, posted_date)
-                    VALUES 
-                    (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
-                     :description, :website_url, :is_small_business_set_aside, :contact_name,
-                     :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-                '''), rec)
-                inserted_real += 1
-            db.session.commit()
-            print(f"🌍 Inserted {inserted_real} real international cleaning opportunities")
-
+        print("🔍 Fetching REAL nationwide supplier opportunities from SAM.gov...")
+        
         # Check if we already have supply contracts
         count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
         existing_count = count_result[0] if count_result else 0
@@ -15907,87 +15877,157 @@ def populate_supply_contracts(force=False):
             db.session.execute(text('DELETE FROM supply_contracts'))
             db.session.commit()
         
-    # Phase 2: If force or table empty or low count, backfill with curated/synthetic entries
-    # International supplier requests across all 50 states (synthetic fallback)
-    # NOTE: Values are stored WITHOUT dollar signs to work with both TEXT and NUMERIC column types
-        supplier_requests = [
-            # Real quick win opportunities - Virginia focus with working procurement portals
-            {'title': 'Janitorial Services - VA Medical Center Hampton', 'agency': 'Department of Veterans Affairs', 'location': '100 Emancipation Drive, Hampton, VA 23667', 'product_category': 'Janitorial Services', 'estimated_value': '850000', 'bid_deadline': '01/31/2026', 'description': 'Janitorial services for VA Medical Center Hampton. Requirements: floor care, restroom sanitation, waste removal, window cleaning. NAICS: 561720. Set-aside: Service-Disabled Veteran-Owned Small Business (SDVOSB). Contract duration: Base year plus 4 option years. Search SAM.gov for solicitation number or contact VA Medical Center procurement directly.', 'website_url': 'https://www.va.gov/oal/business/fbo/', 'is_small_business_set_aside': True, 'contact_name': 'VA Hampton Contracting', 'contact_email': 'vhahampurchasing@va.gov', 'contact_phone': '757-722-9961', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/02/2025'},
-            
-            {'title': 'Custodial Services - Naval Station Norfolk', 'agency': 'Department of the Navy', 'location': 'Naval Station Norfolk, 1530 Gilbert Street, Norfolk, VA 23511', 'product_category': 'Custodial Services', 'estimated_value': '1250000', 'bid_deadline': '02/15/2026', 'description': 'Custodial services for multiple buildings at Naval Station Norfolk. Scope includes administrative buildings, barracks, training facilities. Small business set-aside. NAICS: 561720. Performance period: 12 months with 4 option years. Security clearance required for personnel. Check both SAM.gov and Navy e-Commerce Central for full solicitation details.', 'website_url': 'https://www.secnav.navy.mil/rda/Pages/default.aspx', 'is_small_business_set_aside': True, 'contact_name': 'Navy Contracting Office', 'contact_email': 'navsup_contracting@navy.mil', 'contact_phone': '757-444-7000', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/02/2025'},
-            
-            {'title': 'Cleaning Supplies - Newport News Public Schools', 'agency': 'Newport News Public Schools', 'location': '12465 Warwick Boulevard, Newport News, VA 23606', 'product_category': 'Janitorial Supplies', 'estimated_value': '650000', 'bid_deadline': '01/15/2026', 'description': 'Annual contract for janitorial and cleaning supplies for 40+ schools. Products include: disinfectants, floor cleaners, paper products, trash liners, hand soap. Green cleaning products preferred. Local vendor preferred. Delivery to central warehouse with distribution support. Visit school district procurement page or contact purchasing department directly for bid documents.', 'website_url': 'https://www.nnschools.org/departments/purchasing', 'is_small_business_set_aside': False, 'contact_name': 'NNPS Procurement', 'contact_email': 'purchasing@nnschools.org', 'contact_phone': '757-591-4525', 'is_quick_win': True, 'status': 'open', 'posted_date': '11/02/2025'},
-            
-            # Regular supplier opportunities by state
-            {'title': 'Office Building Cleaning Supplies - Alabama', 'agency': 'Alabama Commercial Properties', 'location': 'Birmingham, AL', 'product_category': 'Commercial Supplies', 'estimated_value': '150000', 'bid_deadline': '01/15/2026', 'description': 'Annual supplier contract for office cleaning supplies', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Property Management', 'contact_email': 'supplies@alcp.com', 'contact_phone': '205-555-0100', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Hotel Chain Cleaning Products - Arizona', 'agency': 'Desert Hotel Group', 'location': 'Phoenix, AZ', 'product_category': 'Hospitality Supplies', 'estimated_value': '300000', 'bid_deadline': '01/20/2026', 'description': 'Supplier needed for 12 hotels across Arizona', 'website_url': None, 'is_small_business_set_aside': False, 'contact_name': 'Procurement Dept', 'contact_email': 'procurement@dhg.com', 'contact_phone': '602-555-0150', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Industrial Facility Cleaning Supplies - Arkansas', 'agency': 'Arkansas Manufacturing Alliance', 'location': 'Little Rock, AR', 'product_category': 'Industrial Supplies', 'estimated_value': '200000', 'bid_deadline': '01/25/2026', 'description': 'Heavy-duty cleaning supplies for manufacturing facilities', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Supply Chain', 'contact_email': 'supplies@ama.com', 'contact_phone': '501-555-0175', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Healthcare Facility Supplies - California', 'agency': 'California Health Systems', 'location': 'Los Angeles, CA', 'product_category': 'Healthcare Supplies', 'estimated_value': '950000', 'bid_deadline': '12/20/2025', 'description': 'Medical-grade cleaning supplies for 25 clinics', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Clinical Operations', 'contact_email': 'ops@calhealth.com', 'contact_phone': '213-555-0200', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Mountain Resort Cleaning Equipment - Colorado', 'agency': 'Rocky Mountain Resorts', 'location': 'Denver, CO', 'product_category': 'Equipment & Supplies', 'estimated_value': '400000', 'bid_deadline': '01/10/2026', 'description': 'Cleaning equipment for 8 ski resorts', 'website_url': None, 'is_small_business_set_aside': False, 'contact_name': 'Resort Operations', 'contact_email': 'ops@rmr.com', 'contact_phone': '303-555-0225', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Corporate Campus Supplies - Connecticut', 'agency': 'Connecticut Business Park', 'location': 'Hartford, CT', 'product_category': 'Commercial Supplies', 'estimated_value': '225000', 'bid_deadline': '01/18/2026', 'description': 'Cleaning supplies for 5 corporate buildings', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Facilities Management', 'contact_email': 'facilities@ctbp.com', 'contact_phone': '860-555-0250', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'State Government Building Supplies - Delaware', 'agency': 'Delaware State Facilities', 'location': 'Dover, DE', 'product_category': 'Government Supplies', 'estimated_value': '175000', 'bid_deadline': '01/22/2026', 'description': 'Annual cleaning supplies for state offices', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'State Procurement', 'contact_email': 'procurement@de.gov', 'contact_phone': '302-555-0275', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Beach Resort Cleaning Products - Florida', 'agency': 'Florida Coastal Resorts', 'location': 'Miami, FL', 'product_category': 'Hospitality Supplies', 'estimated_value': '650000', 'bid_deadline': '12/18/2025', 'description': 'Cleaning products for 15 beachfront properties', 'website_url': None, 'is_small_business_set_aside': False, 'contact_name': 'Resort Management', 'contact_email': 'management@fcr.com', 'contact_phone': '305-555-0300', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            # More states...
-            {'title': 'Atlanta Airport Facility Supplies - Georgia', 'agency': 'Atlanta Airport Services', 'location': 'Atlanta, GA', 'product_category': 'Airport Supplies', 'estimated_value': '500000', 'bid_deadline': '12/25/2025', 'description': 'Cleaning supplies for terminal facilities', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Airport Procurement', 'contact_email': 'procurement@atl-airport.com', 'contact_phone': '404-555-0325', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Island Resort Cleaning Supplies - Hawaii', 'agency': 'Hawaiian Island Resorts', 'location': 'Honolulu, HI', 'product_category': 'Resort Supplies', 'estimated_value': '450000', 'bid_deadline': '01/30/2026', 'description': 'Eco-friendly cleaning supplies for 10 resorts', 'website_url': None, 'is_small_business_set_aside': False, 'contact_name': 'Island Operations', 'contact_email': 'ops@hiresorts.com', 'contact_phone': '808-555-0350', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'University Campus Supplies - Idaho', 'agency': 'Idaho State University System', 'location': 'Boise, ID', 'product_category': 'Educational Supplies', 'estimated_value': '180000', 'bid_deadline': '02/01/2026', 'description': 'Cleaning supplies for 3 university campuses', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'University Procurement', 'contact_email': 'procurement@idstate.edu', 'contact_phone': '208-555-0375', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Chicago Commercial Buildings - Illinois', 'agency': 'Chicago Property Management', 'location': 'Chicago, IL', 'product_category': 'Commercial Supplies', 'estimated_value': '850000', 'bid_deadline': '12/22/2025', 'description': 'Supplier for 30+ downtown office buildings', 'website_url': None, 'is_small_business_set_aside': False, 'contact_name': 'Commercial Ops', 'contact_email': 'ops@chipm.com', 'contact_phone': '312-555-0400', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-            
-            {'title': 'Hospital Network Supplies - Indiana', 'agency': 'Indiana Healthcare Alliance', 'location': 'Indianapolis, IN', 'product_category': 'Healthcare Supplies', 'estimated_value': '550000', 'bid_deadline': '01/28/2026', 'description': 'Medical cleaning supplies for hospital network', 'website_url': None, 'is_small_business_set_aside': True, 'contact_name': 'Healthcare Procurement', 'contact_email': 'procurement@iha.org', 'contact_phone': '317-555-0425', 'is_quick_win': False, 'status': 'open', 'posted_date': '11/01/2025'},
-        ]
+        # Fetch REAL supplier opportunities from SAM.gov
+        # Focus on cleaning supplies, janitorial products, and equipment contracts
+        real_opportunities = []
         
-        # Add more diverse entries to reach 300+ (expanded for better coverage)
-        additional_states = [
-            'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 
-            'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-            'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
-            'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 
-            'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
-            'West Virginia', 'Wisconsin', 'Wyoming'
-        ]
+        sam_api_key = os.getenv('SAM_GOV_API_KEY')
+        if not sam_api_key:
+            print("⚠️  SAM_GOV_API_KEY not set - cannot fetch real supplier opportunities")
+            print("   Set environment variable: SAM_GOV_API_KEY=your_api_key")
+            return 0
         
-        categories = ['Commercial Supplies', 'Healthcare Supplies', 'Educational Supplies', 
-                     'Government Supplies', 'Industrial Supplies', 'Hospitality Supplies']
+        # NAICS codes for cleaning supplies and products:
+        # 325612 - Polish and Other Sanitation Good Manufacturing
+        # 424690 - Other Chemical and Allied Products Merchant Wholesalers  
+        # 561720 - Janitorial Services (includes supply contracts)
+        # 337127 - Institutional Furniture Manufacturing (cleaning equipment)
         
-        import random
-        for state in additional_states:
-            # Add 8 opportunities per remaining state to reach 300+ total
-            for i in range(8):
-                # Values without dollar signs or commas to work with NUMERIC column type
-                value = random.choice(['150000', '200000', '350000', '450000', '600000'])
-                category = random.choice(categories)
-                supplier_requests.append({
-                    'title': f'{category.replace(" Supplies", "")} Cleaning Supplies - {state}',
-                    'agency': f'{state} Facilities Management',
-                    'location': f'{state}',
-                    'product_category': category,
-                    'estimated_value': value,
-                    'bid_deadline': f'0{random.randint(1,2)}/{random.randint(10,28)}/2026',
-                    'description': f'Cleaning supplies needed for facilities in {state}',
-                    'website_url': None,
-                    'is_small_business_set_aside': random.choice([True, False]),
-                    'contact_name': 'Procurement Department',
-                    'contact_email': f'procurement@{state.lower().replace(" ", "")}.com',
-                    'contact_phone': f'555-{random.randint(1000,9999)}',
-                    'is_quick_win': False,
-                    'status': 'open',
-                    'posted_date': '11/01/2025'
-                })
+        supply_naics_codes = ['325612', '424690', '561720', '337127']
         
-        # Insert all synthetic supplier requests only if force, or none exist yet
-        if force or existing_count == 0:
-            for request in supplier_requests:
+        base_url = 'https://api.sam.gov/opportunities/v2/search'
+        headers = {'X-Api-Key': sam_api_key, 'Content-Type': 'application/json'}
+        
+        for naics_code in supply_naics_codes:
+            try:
+                params = {
+                    'api_key': sam_api_key,
+                    'naicsCode': naics_code,
+                    'ptype': 'k',  # Combined Synopsis/Solicitation
+                    'limit': 25,  # 25 per NAICS code = ~100 total
+                    'postedFrom': (datetime.now() - timedelta(days=90)).strftime('%m/%d/%Y'),
+                    'postedTo': datetime.now().strftime('%m/%d/%Y')
+                }
+                
+                response = requests.get(base_url, params=params, headers=headers, timeout=30)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    opportunities = data.get('opportunitiesData', [])
+                    
+                    print(f"  Found {len(opportunities)} opportunities for NAICS {naics_code}")
+                    
+                    for opp in opportunities:
+                        # Extract data
+                        title = opp.get('title', 'Untitled')
+                        notice_id = opp.get('noticeId', '')
+                        agency = opp.get('department', {}).get('name', 'Federal Agency')
+                        office = opp.get('subtierAgency', {}).get('name', '')
+                        location = opp.get('placeOfPerformance', {}).get('city', {}).get('name', 'Nationwide')
+                        state = opp.get('placeOfPerformance', {}).get('state', {}).get('name', '')
+                        if state:
+                            location += f", {state}"
+                        
+                        description = opp.get('description', '')[:500]
+                        
+                        # Response deadline
+                        response_deadline = opp.get('responseDeadLine', '')
+                        if response_deadline:
+                            try:
+                                deadline_dt = datetime.strptime(response_deadline, '%Y-%m-%dT%H:%M:%S%z')
+                                bid_deadline = deadline_dt.strftime('%m/%d/%Y')
+                            except:
+                                bid_deadline = response_deadline[:10] if len(response_deadline) >= 10 else ''
+                        else:
+                            bid_deadline = ''
+                        
+                        # Estimated value
+                        award_amount = opp.get('award', {}).get('amount', '')
+                        if award_amount:
+                            estimated_value = str(int(float(award_amount)))
+                        else:
+                            estimated_value = ''
+                        
+                        # Set-aside info
+                        set_aside = opp.get('typeOfSetAside', '')
+                        is_small_business = 'small business' in set_aside.lower() if set_aside else False
+                        
+                        # Contact info
+                        contact_name = opp.get('pointOfContact', [{}])[0].get('fullName', '') if opp.get('pointOfContact') else ''
+                        contact_email = opp.get('pointOfContact', [{}])[0].get('email', '') if opp.get('pointOfContact') else ''
+                        contact_phone = opp.get('pointOfContact', [{}])[0].get('phone', '') if opp.get('pointOfContact') else ''
+                        
+                        # Website URL
+                        website_url = f'https://sam.gov/opp/{notice_id}/view' if notice_id else ''
+                        
+                        # Posted date
+                        posted_date = opp.get('postedDate', '')
+                        if posted_date:
+                            try:
+                                posted_dt = datetime.strptime(posted_date, '%Y-%m-%dT%H:%M:%S%z')
+                                posted_date_str = posted_dt.strftime('%m/%d/%Y')
+                            except:
+                                posted_date_str = posted_date[:10] if len(posted_date) >= 10 else ''
+                        else:
+                            posted_date_str = datetime.now().strftime('%m/%d/%Y')
+                        
+                        # Determine product category
+                        if naics_code == '325612':
+                            product_category = 'Sanitation Products'
+                        elif naics_code == '424690':
+                            product_category = 'Chemical Supplies'
+                        elif naics_code == '561720':
+                            product_category = 'Janitorial Supplies'
+                        else:
+                            product_category = 'Cleaning Equipment'
+                        
+                        # Quick win if deadline within 30 days
+                        is_quick_win = False
+                        if bid_deadline:
+                            try:
+                                deadline_dt = datetime.strptime(bid_deadline, '%m/%d/%Y')
+                                days_until = (deadline_dt - datetime.now()).days
+                                is_quick_win = days_until <= 30
+                            except:
+                                pass
+                        
+                        # Check if already exists
+                        exists = db.session.execute(text('''
+                            SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1
+                        '''), {'url': website_url}).fetchone()
+                        
+                        if not exists and website_url:
+                            real_opportunities.append({
+                                'title': title,
+                                'agency': f"{agency} - {office}" if office else agency,
+                                'location': location,
+                                'product_category': product_category,
+                                'estimated_value': estimated_value,
+                                'bid_deadline': bid_deadline,
+                                'description': description,
+                                'website_url': website_url,
+                                'is_small_business_set_aside': is_small_business,
+                                'contact_name': contact_name,
+                                'contact_email': contact_email,
+                                'contact_phone': contact_phone,
+                                'is_quick_win': is_quick_win,
+                                'status': 'open',
+                                'posted_date': posted_date_str
+                            })
+                    
+                    time.sleep(1)  # Rate limiting
+                
+                else:
+                    print(f"  ⚠️  SAM.gov API error for NAICS {naics_code}: {response.status_code}")
+                    
+            except Exception as e:
+                print(f"  ⚠️  Error fetching NAICS {naics_code}: {e}")
+                continue
+        
+        # Insert all real opportunities
+        inserted_count = 0
+        for opp in real_opportunities:
+            try:
                 db.session.execute(text('''
                     INSERT INTO supply_contracts 
                     (title, agency, location, product_category, estimated_value, bid_deadline, 
@@ -15997,25 +16037,30 @@ def populate_supply_contracts(force=False):
                     (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
                      :description, :website_url, :is_small_business_set_aside, :contact_name,
                      :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-                '''), request)
+                '''), opp)
+                inserted_count += 1
+            except Exception as e:
+                print(f"  ⚠️  Error inserting opportunity: {e}")
+                continue
         
         db.session.commit()
-        final_count = (inserted_real or 0) + (len(supplier_requests) if (force or existing_count == 0) else 0)
-        # Record last population timestamp and count for daily refresh logic
+        
+        # Record last population timestamp
         try:
             set_setting('supply_last_populated_at', datetime.utcnow().isoformat())
-            set_setting('supply_populated_count', str(final_count))
+            set_setting('supply_populated_count', str(inserted_count))
         except Exception:
             pass
-        print(f"✅ Successfully populated {final_count} international supplier contracts (real:{inserted_real} synthetic:{(len(supplier_requests) if (force or existing_count == 0) else 0)})")
-        return final_count
+        
+        print(f"✅ Successfully populated {inserted_count} REAL nationwide supplier opportunities from SAM.gov")
+        return inserted_count
         
     except Exception as e:
         db.session.rollback()
         print(f"⚠️  Error populating supply contracts: {e}")
         import traceback
         traceback.print_exc()
-        raise  # Re-raise the exception so caller knows it failed
+        return 0
 
 # Initialize database for both local and production
 try:
@@ -16420,6 +16465,158 @@ def update_gsa_application_status(app_id):
         return redirect(url_for('admin_view_gsa_application', app_id=app_id))
 
 # ==================== End of GSA Approval Service Routes ====================
+
+# ============================================================================
+# INTERNAL MESSAGING SYSTEM - Customer to Admin Communication
+# ============================================================================
+
+@app.route('/send-message-to-admin', methods=['GET', 'POST'])
+@login_required
+def send_message_to_admin():
+    """Customer form to send messages to admin (GSA questions, support, etc.)"""
+    if request.method == 'POST':
+        try:
+            subject = request.form.get('subject', '').strip()
+            message_body = request.form.get('message', '').strip()
+            message_type = request.form.get('message_type', 'general')
+            
+            if not subject or not message_body:
+                flash('Please provide both subject and message', 'error')
+                return redirect(url_for('send_message_to_admin'))
+            
+            # Get first admin user as recipient
+            admin = db.session.execute(text('''
+                SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1
+            ''')).fetchone()
+            
+            if not admin:
+                flash('Unable to send message - no admin available', 'error')
+                return redirect(url_for('send_message_to_admin'))
+            
+            # Insert message
+            db.session.execute(text('''
+                INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin)
+                VALUES (:sender_id, :recipient_id, :subject, :body, FALSE)
+            '''), {
+                'sender_id': session['user_id'],
+                'recipient_id': admin.id,
+                'subject': f'[{message_type.upper()}] {subject}',
+                'body': message_body
+            })
+            
+            db.session.commit()
+            
+            flash('Message sent successfully! Admin will respond via email or in your mailbox.', 'success')
+            return redirect(url_for('customer_dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error sending message: {e}")
+            flash('Error sending message. Please try again.', 'error')
+            return redirect(url_for('send_message_to_admin'))
+    
+    # GET - show the form
+    return render_template('send_message.html')
+
+@app.route('/my-messages')
+@login_required
+def my_messages():
+    """Customer inbox to view messages from admin"""
+    try:
+        messages = db.session.execute(text('''
+            SELECT m.*, 
+                   sender.email as sender_email,
+                   sender.first_name || ' ' || sender.last_name as sender_name
+            FROM messages m
+            LEFT JOIN leads sender ON m.sender_id = sender.id
+            WHERE m.recipient_id = :user_id
+            ORDER BY m.sent_at DESC
+        '''), {'user_id': session['user_id']}).fetchall()
+        
+        # Mark all as read
+        db.session.execute(text('''
+            UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
+            WHERE recipient_id = :user_id AND is_read = FALSE
+        '''), {'user_id': session['user_id']})
+        db.session.commit()
+        
+        return render_template('customer_messages.html', messages=messages)
+        
+    except Exception as e:
+        print(f"Error loading messages: {e}")
+        flash('Error loading messages', 'error')
+        return redirect(url_for('customer_dashboard'))
+
+@app.route('/admin/messages')
+@login_required
+@admin_required
+def admin_mailbox():
+    """Admin mailbox to view all customer messages"""
+    try:
+        # Get all messages sent to admins
+        messages = db.session.execute(text('''
+            SELECT m.*, 
+                   sender.email as sender_email,
+                   sender.first_name || ' ' || sender.last_name as sender_name,
+                   sender.company_name
+            FROM messages m
+            LEFT JOIN leads sender ON m.sender_id = sender.id
+            WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE)
+            ORDER BY m.is_read ASC, m.sent_at DESC
+        ''')).fetchall()
+        
+        unread_count = sum(1 for msg in messages if not msg.is_read)
+        
+        return render_template('admin_mailbox.html', messages=messages, unread_count=unread_count)
+        
+    except Exception as e:
+        print(f"Error loading admin mailbox: {e}")
+        flash('Error loading mailbox', 'error')
+        return redirect(url_for('admin_enhanced'))
+
+@app.route('/admin/reply-message', methods=['POST'])
+@login_required
+@admin_required
+def admin_reply_message():
+    """Admin reply to a customer message"""
+    try:
+        recipient_id = request.form.get('recipient_id')
+        subject = request.form.get('subject', '').strip()
+        message_body = request.form.get('body', '').strip()
+        message_id = request.form.get('message_id')
+        
+        if not recipient_id or not message_body:
+            flash('Recipient and message are required', 'error')
+            return redirect(url_for('admin_mailbox'))
+        
+        # Insert reply
+        db.session.execute(text('''
+            INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin)
+            VALUES (:sender_id, :recipient_id, :subject, :body, TRUE)
+        '''), {
+            'sender_id': session['user_id'],
+            'recipient_id': recipient_id,
+            'subject': subject,
+            'body': message_body
+        })
+        
+        # Mark original message as read
+        if message_id:
+            db.session.execute(text('''
+                UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+            '''), {'id': message_id})
+        
+        db.session.commit()
+        
+        flash('Reply sent successfully!', 'success')
+        return redirect(url_for('admin_mailbox'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error sending reply: {e}")
+        flash('Error sending reply', 'error')
+        return redirect(url_for('admin_mailbox'))
 
 if __name__ == '__main__':
     init_db()
