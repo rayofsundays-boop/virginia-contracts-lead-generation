@@ -185,58 +185,6 @@
             </a>
         </div>
     </div>
-        <div class="col-md-2">
-            <a href="{{ url_for('commercial_contracts') }}" class="text-decoration-none">
-                <div class="card shadow-sm border-0 hover-lift h-100">
-                    <div class="card-body text-center">
-                        <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex p-3 mb-3">
-                            <i class="fas fa-building text-warning fa-2x"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 text-dark">{{ stats.commercial_leads or 0 }}</h3>
-                        <p class="text-muted mb-0 small">Commercial Leads</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-2">
-            <a href="{{ url_for('community_forum') }}" class="text-decoration-none">
-                <div class="card shadow-sm border-0 hover-lift h-100">
-                    <div class="card-body text-center">
-                        <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex p-3 mb-3">
-                            <i class="fas fa-home text-info fa-2x"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 text-dark">{{ stats.residential_leads or 0 }}</h3>
-                        <p class="text-muted mb-0 small">Residential Leads</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-2">
-            <a href="{{ url_for('quick_wins') }}" class="text-decoration-none">
-                <div class="card shadow-sm border-0 hover-lift h-100">
-                    <div class="card-body text-center">
-                        <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex p-3 mb-3">
-                            <i class="fas fa-bolt text-danger fa-2x"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 text-dark">{{ stats.quick_wins or 0 }}</h3>
-                        <p class="text-muted mb-0 small">Quick Wins</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-2">
-            <a href="{{ url_for('customer_leads') }}" class="text-decoration-none">
-                <div class="card shadow-sm border-0 hover-lift h-100">
-                    <div class="card-body text-center">
-                        <div class="rounded-circle bg-secondary bg-opacity-10 d-inline-flex p-3 mb-3">
-                            <i class="fas fa-list-alt text-secondary fa-2x"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1 text-dark">{{ stats.total_leads or 0 }}</h3>
-                        <p class="text-muted mb-0 small">Total Leads</p>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Main Content Row -->
     <div class="row g-4">
