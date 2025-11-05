@@ -1,0 +1,1416 @@
+{% extends "base.html" %}
+
+{% block title %}VA Contract Hub - The Future of Contract Opportunities{% endblock %}
+
+{% block content %}
+
+<!-- Particles Canvas Background -->
+<canvas id="particlesCanvas" class="particles-canvas"></canvas>
+
+<!-- Hero Section - Cinematic Intro -->
+<section class="hero-cinematic" id="hero">
+    <div class="hero-gradient-overlay"></div>
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
+    <div class="container hero-content">
+        <h1 class="hero-headline" data-aos="fade-up">
+            The Future of <span class="text-gradient">Contract Opportunities</span>
+        </h1>
+        <p class="hero-subtext" data-aos="fade-up" data-aos-delay="200">
+            AI-driven platform connecting Virginia businesses with high-value contracts
+        </p>
+        
+        <div class="hero-cta-buttons" data-aos="fade-up" data-aos-delay="400">
+            <a href="{{ url_for('register') }}" class="btn-cinematic btn-primary-glow">
+                <i class="fas fa-rocket me-2"></i>Start Free Trial
+            </a>
+            <a href="{{ url_for('auth') }}" class="btn-cinematic btn-dark-outline">
+                <i class="fas fa-user me-2"></i>Register / Sign In
+            </a>
+            <a href="{{ url_for('landing') }}" class="btn-cinematic btn-ai-glow">
+                <i class="fas fa-brain me-2"></i>AI Assessment
+            </a>
+        </div>
+        
+        <!-- Floating Geometric Shapes -->
+        <div class="geometric-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+    
+    <div class="scroll-indicator" data-aos="fade-up" data-aos-delay="800">
+        <i class="fas fa-chevron-down"></i>
+        <span>Scroll to explore</span>
+    </div>
+</section>
+
+<!-- Discover Opportunities Section -->
+<section class="discover-section" id="discover">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-aos="fade-right">
+                <div class="dashboard-mockup">
+                    <img src="{{ url_for('static', filename='images/dashboard-mockup.png') }}" alt="Dashboard Preview" class="img-fluid rounded-4 shadow-lg" onerror="this.src='https://placehold.co/800x600/1e293b/94a3b8?text=Dashboard+Preview'">
+                    <div class="mockup-glow"></div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <span class="section-label">Discover Opportunities</span>
+                <h2 class="section-title">Access Exclusive Contract Sources</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-landmark"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>30+ Local Government Sources</h4>
+                            <p>Direct connections to Virginia cities including Hampton, Suffolk, Virginia Beach, Newport News, and Williamsburg</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>24+ Commercial Property Partners</h4>
+                            <p>Top property management companies actively seeking cleaning contractors</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Real-Time Opportunity Updates</h4>
+                            <p>Get instant notifications when new contracts match your profile</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('commercial_contracts') }}" class="btn-cinematic btn-primary-solid mt-4">
+                    <i class="fas fa-search me-2"></i>Browse Contracts
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI-Powered Intelligence Section -->
+<section class="ai-intelligence-section" id="ai-intelligence">
+    <div class="gradient-divider"></div>
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 order-lg-2" data-aos="fade-left">
+                <div class="ai-illustration">
+                    <div class="ai-brain-container">
+                        <i class="fas fa-brain ai-brain-icon"></i>
+                        <div class="ai-pulse-ring"></div>
+                        <div class="ai-pulse-ring delay-1"></div>
+                        <div class="ai-pulse-ring delay-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 order-lg-1" data-aos="fade-right">
+                <span class="section-label">AI-Powered Intelligence</span>
+                <h2 class="section-title">Smart Matching Technology</h2>
+                <div class="ai-features-box">
+                    <p class="lead mb-4">
+                        Our AI analyzes your business profile to recommend contracts that fit your niche, expertise, and capacity.
+                    </p>
+                    <div class="ai-stats">
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-number">95%</div>
+                            <div class="ai-stat-label">Match Accuracy</div>
+                        </div>
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-number">3x</div>
+                            <div class="ai-stat-label">Faster Bidding</div>
+                        </div>
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-number">24/7</div>
+                            <div class="ai-stat-label">AI Assistant</div>
+                        </div>
+                    </div>
+                    <ul class="ai-capabilities">
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Automated contract screening</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Smart proposal generation</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Bid probability analysis</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Personalized recommendations</li>
+                    </ul>
+                </div>
+                <a href="{{ url_for('landing') }}" class="btn-cinematic btn-ai-glow mt-4">
+                    <i class="fas fa-magic me-2"></i>Try AI Assessment
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Contractors Choose Us Section -->
+<section class="features-grid-section" id="features">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-label">Why Contractors Choose Us</span>
+            <h2 class="section-title">Everything You Need to Win Contracts</h2>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="0">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-landmark"></i>
+                    </div>
+                    <h3 class="feature-card-title">Government Contracts</h3>
+                    <p class="feature-card-description">
+                        Access 30+ local government contracts from Virginia cities and agencies
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="100">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="feature-card-title">Commercial Leads</h3>
+                    <p class="feature-card-description">
+                        Connect with property managers from top commercial real estate companies
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="200">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-card-title">AI Matching</h3>
+                    <p class="feature-card-description">
+                        Smart profiling recommendations based on your business capabilities
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="300">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-card-title">Real-Time Alerts</h3>
+                    <p class="feature-card-description">
+                        Instant notifications when new opportunities match your profile
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="400">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-card-title">Community Forum</h3>
+                    <p class="feature-card-description">
+                        Discuss opportunities and share insights with other contractors
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="500">
+                <div class="feature-card">
+                    <div class="feature-card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-card-title">Analytics Dashboard</h3>
+                    <p class="feature-card-description">
+                        Track your bids, wins, and performance with comprehensive analytics
+                    </p>
+                    <div class="feature-card-glow"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats & CTA Section -->
+<section class="stats-cta-section" id="stats">
+    <div class="container text-center">
+        <div class="stats-counter-container" data-aos="fade-up">
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="stat-box">
+                        <div class="stat-number" data-count="500">0</div>
+                        <div class="stat-label">Active Contractors</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-box">
+                        <div class="stat-number" data-count="30">0</div>
+                        <div class="stat-label">Government Agencies</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-box">
+                        <div class="stat-number" data-count="1200">0</div>
+                        <div class="stat-label">Contracts Posted</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="cta-headline" data-aos="fade-up" data-aos-delay="200">
+                Ready to Win More Contracts?
+            </h2>
+            <p class="cta-subtext" data-aos="fade-up" data-aos-delay="300">
+                Join hundreds of contractors already growing their business with VA Contract Hub
+            </p>
+            <a href="{{ url_for('register') }}" class="btn-cinematic btn-cta-large" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-rocket me-2"></i>Start Free Trial Today
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Need Cleaning Services Section -->
+<section class="cleaning-services-section" id="cleaning-services">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-label">Need Cleaning Services?</span>
+            <h2 class="section-title">Submit Your Cleaning Request</h2>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6" data-aos="fade-right">
+                <div class="service-card residential-card">
+                    <div class="service-card-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h3 class="service-card-title">Residential Cleaning</h3>
+                    <p class="service-card-description">
+                        Get matched with professional cleaners for your home. Deep cleaning, regular maintenance, move-in/out services.
+                    </p>
+                    <ul class="service-features">
+                        <li><i class="fas fa-check me-2"></i>Licensed & Insured</li>
+                        <li><i class="fas fa-check me-2"></i>Background Checked</li>
+                        <li><i class="fas fa-check me-2"></i>Satisfaction Guaranteed</li>
+                    </ul>
+                    <a href="{{ url_for('submit_residential_cleaning_request') }}" class="btn-cinematic btn-service-residential">
+                        <i class="fas fa-home me-2"></i>Submit Residential Request
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6" data-aos="fade-left">
+                <div class="service-card commercial-card">
+                    <div class="service-card-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="service-card-title">Commercial Cleaning</h3>
+                    <p class="service-card-description">
+                        Professional cleaning services for offices, retail spaces, medical facilities, and industrial properties.
+                    </p>
+                    <ul class="service-features">
+                        <li><i class="fas fa-check me-2"></i>24/7 Availability</li>
+                        <li><i class="fas fa-check me-2"></i>Custom Schedules</li>
+                        <li><i class="fas fa-check me-2"></i>Commercial Grade Equipment</li>
+                    </ul>
+                    <a href="{{ url_for('submit_cleaning_request') }}" class="btn-cinematic btn-service-commercial">
+                        <i class="fas fa-building me-2"></i>Submit Commercial Request
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enhanced Footer -->
+<footer class="cinematic-footer">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-4">
+                <h4 class="footer-heading">VA Contract Hub</h4>
+                <p class="footer-description">
+                    AI-powered platform connecting Virginia contractors with government and commercial opportunities.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-lg-2 col-md-6">
+                <h5 class="footer-heading">Quick Links</h5>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('commercial_contracts') }}">Browse Leads</a></li>
+                    <li><a href="{{ url_for('customer_dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('pricing') }}">Subscribe</a></li>
+                    <li><a href="{{ url_for('partnerships') }}">Partners</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-2 col-md-6">
+                <h5 class="footer-heading">Resources</h5>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('resource_toolbox') }}">Toolbox</a></li>
+                    <li><a href="{{ url_for('pricing_guide') }}">Pricing Guide</a></li>
+                    <li><a href="{{ url_for('ai_assistant') }}">AI Assistant</a></li>
+                    <li><a href="{{ url_for('proposal_templates') }}">Templates</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-4">
+                <h5 class="footer-heading">Contact Us</h5>
+                <ul class="footer-contact">
+                    <li><i class="fas fa-envelope me-2"></i>support@vacontracthub.com</li>
+                    <li><i class="fas fa-phone me-2"></i>(757) 555-0100</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i>Virginia Beach, VA</li>
+                </ul>
+                <a href="{{ url_for('ai_assistant') }}" class="ai-chat-link">
+                    <i class="fas fa-robot me-2"></i>Chat with AI Assistant
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="copyright mb-0">
+                        &copy; 2025 VA Contract Hub. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="footer-legal-link">Privacy Policy</a>
+                    <a href="#" class="footer-legal-link">Terms of Service</a>
+                    {% if session.get('is_admin') %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="footer-legal-link text-danger">Admin Portal</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Styles -->
+<style>
+/* ==================== GLOBAL STYLES ==================== */
+:root {
+    --color-navy: #0f172a;
+    --color-violet: #7c3aed;
+    --color-purple: #9333ea;
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-700: #334155;
+    --color-neon-purple: #a855f7;
+    --color-neon-orange: #fb923c;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-hero: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #000000 100%);
+    --shadow-glow: 0 0 30px rgba(168, 85, 247, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow-x: hidden;
+}
+
+/* ==================== PARTICLES CANVAS ==================== */
+.particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ==================== HERO SECTION ==================== */
+.hero-cinematic {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-hero);
+    overflow: hidden;
+    padding: 8rem 0 4rem;
+}
+
+.hero-gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.15), transparent 70%);
+    z-index: 1;
+}
+
+.floating-particles .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(168, 85, 247, 0.6);
+    border-radius: 50%;
+    animation: float-particle 20s infinite;
+}
+
+.floating-particles .particle:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+.floating-particles .particle:nth-child(2) { top: 30%; left: 85%; animation-delay: 3s; }
+.floating-particles .particle:nth-child(3) { top: 60%; left: 25%; animation-delay: 6s; }
+.floating-particles .particle:nth-child(4) { top: 80%; left: 70%; animation-delay: 9s; }
+.floating-particles .particle:nth-child(5) { top: 50%; left: 50%; animation-delay: 12s; }
+
+@keyframes float-particle {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+    25% { transform: translate(100px, -100px) scale(1.5); opacity: 0.6; }
+    50% { transform: translate(-50px, 150px) scale(0.8); opacity: 0.4; }
+    75% { transform: translate(-150px, -50px) scale(1.2); opacity: 0.7; }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+}
+
+.hero-headline {
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 900;
+    color: var(--color-white);
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtext {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: var(--color-gray-200);
+    margin-bottom: 3rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==================== CINEMATIC BUTTONS ==================== */
+.btn-cinematic {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary-glow {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.4);
+}
+
+.btn-primary-glow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(168, 85, 247, 0.6);
+    color: white;
+}
+
+.btn-dark-outline {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.btn-dark-outline:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-3px);
+    color: white;
+}
+
+.btn-ai-glow {
+    background: linear-gradient(135deg, #fb923c 0%, #f59e0b 100%);
+    color: white;
+    box-shadow: 0 8px 30px rgba(251, 146, 60, 0.4);
+}
+
+.btn-ai-glow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(251, 146, 60, 0.6);
+    color: white;
+}
+
+.btn-primary-solid {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary-solid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+    color: white;
+}
+
+.btn-cta-large {
+    padding: 1.5rem 4rem;
+    font-size: 1.3rem;
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+}
+
+.btn-cta-large:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+    color: white;
+}
+
+/* ==================== GEOMETRIC SHAPES ==================== */
+.geometric-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.shape {
+    position: absolute;
+    opacity: 0.1;
+    animation: rotate-shape 20s infinite linear;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    border: 3px solid #a855f7;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    top: 10%;
+    right: 10%;
+}
+
+.shape-2 {
+    width: 200px;
+    height: 200px;
+    border: 3px solid #ec4899;
+    border-radius: 50%;
+    bottom: 15%;
+    left: 5%;
+    animation-delay: 5s;
+}
+
+.shape-3 {
+    width: 150px;
+    height: 150px;
+    border: 3px solid #fb923c;
+    transform: rotate(45deg);
+    top: 50%;
+    right: 15%;
+    animation-delay: 10s;
+}
+
+.shape-4 {
+    width: 250px;
+    height: 250px;
+    border: 3px solid #7c3aed;
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    bottom: 25%;
+    right: 40%;
+    animation-delay: 15s;
+}
+
+@keyframes rotate-shape {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    z-index: 10;
+    animation: bounce-indicator 2s infinite;
+}
+
+.scroll-indicator i {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.scroll-indicator span {
+    font-size: 0.9rem;
+}
+
+@keyframes bounce-indicator {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+/* ==================== DISCOVER SECTION ==================== */
+.discover-section {
+    padding: 8rem 0;
+    background: linear-gradient(180deg, #000000 0%, #0f172a 100%);
+    position: relative;
+}
+
+.section-label {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--color-neon-purple);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.section-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    color: var(--color-white);
+    margin-bottom: 2rem;
+}
+
+.dashboard-mockup {
+    position: relative;
+}
+
+.dashboard-mockup img {
+    border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+.mockup-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent 70%);
+    z-index: -1;
+    filter: blur(40px);
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.feature-content h4 {
+    color: var(--color-white);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.feature-content p {
+    color: var(--color-gray-200);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ==================== AI INTELLIGENCE SECTION ==================== */
+.ai-intelligence-section {
+    padding: 8rem 0;
+    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+    position: relative;
+}
+
+.gradient-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #a855f7, transparent);
+    margin-bottom: 4rem;
+}
+
+.ai-illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+}
+
+.ai-brain-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-brain-icon {
+    font-size: 8rem;
+    color: var(--color-neon-purple);
+    z-index: 2;
+    position: relative;
+    animation: pulse-brain 3s infinite;
+}
+
+@keyframes pulse-brain {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.ai-pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border: 3px solid rgba(168, 85, 247, 0.4);
+    border-radius: 50%;
+    animation: pulse-ring 3s infinite;
+}
+
+.ai-pulse-ring.delay-1 {
+    animation-delay: 1s;
+}
+
+.ai-pulse-ring.delay-2 {
+    animation-delay: 2s;
+}
+
+@keyframes pulse-ring {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+    }
+    100% {
+        width: 200%;
+        height: 200%;
+        opacity: 0;
+    }
+}
+
+.ai-features-box {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2.5rem;
+}
+
+.ai-features-box .lead {
+    color: var(--color-gray-200);
+    font-size: 1.2rem;
+    line-height: 1.7;
+}
+
+.ai-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.ai-stat-item {
+    flex: 1;
+    min-width: 120px;
+}
+
+.ai-stat-number {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--color-neon-purple);
+    margin-bottom: 0.5rem;
+}
+
+.ai-stat-label {
+    color: var(--color-gray-200);
+    font-size: 0.9rem;
+}
+
+.ai-capabilities {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ai-capabilities li {
+    color: var(--color-gray-200);
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+/* ==================== FEATURES GRID SECTION ==================== */
+.features-grid-section {
+    padding: 8rem 0;
+    background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+}
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 15px 40px rgba(168, 85, 247, 0.3);
+}
+
+.feature-card-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border-radius: 20px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-card-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.feature-card-title {
+    color: var(--color-white);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.feature-card-description {
+    color: var(--color-gray-200);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.feature-card-glow {
+    position: absolute;
+    bottom: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.2), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.feature-card:hover .feature-card-glow {
+    opacity: 1;
+}
+
+/* ==================== STATS CTA SECTION ==================== */
+.stats-cta-section {
+    padding: 8rem 0;
+    background: linear-gradient(180deg, #0f172a 0%, #000000 100%);
+    position: relative;
+}
+
+.stats-counter-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.stat-box {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+}
+
+.stat-number {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--color-neon-purple);
+    margin-bottom: 0.5rem;
+}
+
+.stat-number::after {
+    content: '+';
+    margin-left: 0.25rem;
+}
+
+.stat-label {
+    color: var(--color-gray-200);
+    font-size: 1.1rem;
+}
+
+.cta-headline {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    color: var(--color-white);
+    margin-bottom: 1rem;
+}
+
+.cta-subtext {
+    font-size: 1.3rem;
+    color: var(--color-gray-200);
+    margin-bottom: 2.5rem;
+}
+
+/* ==================== CLEANING SERVICES SECTION ==================== */
+.cleaning-services-section {
+    padding: 8rem 0;
+    background: linear-gradient(180deg, #000000 0%, #0f172a 100%);
+}
+
+.service-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.4s ease;
+    height: 100%;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 20px 50px rgba(168, 85, 247, 0.3);
+}
+
+.service-card-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.residential-card .service-card-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.commercial-card .service-card-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.service-card:hover .service-card-icon {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.service-card-title {
+    color: var(--color-white);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.service-card-description {
+    color: var(--color-gray-200);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.service-features {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.service-features li {
+    color: var(--color-gray-200);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.btn-service-residential {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.btn-service-residential:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+    color: white;
+}
+
+.btn-service-commercial {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.btn-service-commercial:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(59, 130, 246, 0.6);
+    color: white;
+}
+
+/* ==================== CINEMATIC FOOTER ==================== */
+.cinematic-footer {
+    background: linear-gradient(180deg, #0f172a 0%, #000000 100%);
+    padding: 5rem 0 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-heading {
+    color: var(--color-white);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.footer-description {
+    color: var(--color-gray-200);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-link {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-200);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-link:hover {
+    background: var(--gradient-primary);
+    border-color: var(--color-neon-purple);
+    color: white;
+    transform: translateY(-3px);
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-links a {
+    color: var(--color-gray-200);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--color-neon-purple);
+    padding-left: 0.5rem;
+}
+
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.footer-contact li {
+    color: var(--color-gray-200);
+    margin-bottom: 0.75rem;
+}
+
+.ai-chat-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.ai-chat-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+    color: white;
+}
+
+.footer-bottom {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copyright {
+    color: var(--color-gray-200);
+    font-size: 0.9rem;
+}
+
+.footer-legal-link {
+    color: var(--color-gray-200);
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-legal-link:hover {
+    color: var(--color-neon-purple);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .hero-cinematic {
+        padding: 6rem 0 3rem;
+    }
+    
+    .hero-cta-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .btn-cinematic {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .discover-section,
+    .ai-intelligence-section,
+    .features-grid-section,
+    .stats-cta-section,
+    .cleaning-services-section {
+        padding: 4rem 0;
+    }
+    
+    .ai-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+    }
+    
+    .btn-cta-large {
+        width: 100%;
+        padding: 1.25rem 2rem;
+        font-size: 1.1rem;
+    }
+}
+</style>
+
+<!-- AOS Animation Library -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<!-- Scripts -->
+<script>
+// Initialize AOS
+AOS.init({
+    duration: 1000,
+    once: true,
+    offset: 100
+});
+
+// Particles Canvas Animation
+const canvas = document.getElementById('particlesCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+const particleCount = 100;
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5 + 0.2;
+    }
+    
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+    }
+    
+    draw() {
+        ctx.fillStyle = `rgba(168, 85, 247, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Initialize particles
+for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+    });
+    
+    requestAnimationFrame(animateParticles);
+}
+
+animateParticles();
+
+// Resize canvas
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+// Animated Counter
+function animateCounter(element) {
+    const target = parseInt(element.dataset.count);
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    let current = 0;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            element.textContent = target;
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(current);
+        }
+    }, 16);
+}
+
+// Intersection Observer for counters
+const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.stat-number').forEach(counter => {
+    counterObserver.observe(counter);
+});
+
+// Smooth scroll for internal links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+
+{% endblock %}
