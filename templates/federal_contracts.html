@@ -82,6 +82,31 @@
 
 <!-- Federal Contracts Section -->
 <div class="container my-5">
+    <!-- Government Shutdown Notice -->
+    <div class="alert alert-danger border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); border-left: 5px solid #7f1d1d;">
+        <div class="text-center py-4">
+            <div class="mb-3">
+                <i class="fas fa-exclamation-triangle fa-3x text-white"></i>
+            </div>
+            <h3 class="text-white fw-bold mb-3">
+                <i class="fas fa-building-lock me-2"></i>Federal Government Data Temporarily Unavailable
+            </h3>
+            <p class="text-white fs-5 mb-3">
+                Due to current government operations status, federal contract data from SAM.gov is not available at this time.
+            </p>
+            <div class="bg-white bg-opacity-25 rounded p-3 d-inline-block">
+                <p class="text-white mb-2">
+                    <i class="fas fa-info-circle me-2"></i><strong>What you can do instead:</strong>
+                </p>
+                <div class="text-white text-start">
+                    <div class="mb-2"><i class="fas fa-check-circle me-2"></i> Browse our <a href="{{ url_for('contracts') }}" class="text-white text-decoration-underline fw-bold">Local & State Government Contracts</a> (160+ active opportunities)</div>
+                    <div class="mb-2"><i class="fas fa-check-circle me-2"></i> Explore <a href="{{ url_for('quick_wins') }}" class="text-white text-decoration-underline fw-bold">Quick Wins</a> for urgent opportunities</div>
+                    <div><i class="fas fa-check-circle me-2"></i> Check back soon for federal contract updates</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     {% if not is_admin and not is_paid_subscriber and clicks_remaining <= 0 %}
     <!-- Paywall Overlay -->
     <div class="alert alert-warning text-center p-4 mb-4">
