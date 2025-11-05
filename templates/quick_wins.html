@@ -381,6 +381,382 @@
     {% endif %}
 </div>
 
+<!-- Local Vendors in Need of Supplies Section -->
+<div class="container my-5">
+    <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+        <div class="card-body text-white py-5">
+            <div class="text-center mb-4">
+                <h2 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-store me-3"></i>Local Vendors in Need of Supplies
+                </h2>
+                <p class="lead">Connect with businesses actively purchasing cleaning supplies across all 50 states</p>
+            </div>
+
+            <!-- State Tabs -->
+            <ul class="nav nav-pills nav-fill mb-4" id="vendorTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="virginia-tab" data-bs-toggle="pill" data-bs-target="#virginia" type="button" role="tab">
+                        <i class="fas fa-map-marker-alt me-2"></i>Virginia
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="southeast-tab" data-bs-toggle="pill" data-bs-target="#southeast" type="button" role="tab">
+                        <i class="fas fa-map-marked-alt me-2"></i>Southeast
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="northeast-tab" data-bs-toggle="pill" data-bs-target="#northeast" type="button" role="tab">
+                        <i class="fas fa-city me-2"></i>Northeast
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="nationwide-tab" data-bs-toggle="pill" data-bs-target="#nationwide" type="button" role="tab">
+                        <i class="fas fa-flag-usa me-2"></i>All States
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="vendorTabsContent">
+                <!-- Virginia Vendors -->
+                <div class="tab-pane fade show active" id="virginia" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title fw-bold text-dark">
+                                            <i class="fas fa-hospital text-primary me-2"></i>Sentara Healthcare Network
+                                        </h5>
+                                        <span class="badge bg-danger">URGENT</span>
+                                    </div>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Norfolk, VA</p>
+                                    <p class="card-text">12 hospital facilities seeking bulk janitorial supplies. Monthly contract $15K-$25K.</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Floor care products</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Disinfectants & sanitizers</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Paper products & PPE</li>
+                                    </ul>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <div class="border-top pt-3">
+                                        <p class="mb-2"><strong>Contact:</strong> Sarah Mitchell</p>
+                                        <p class="mb-2"><strong>Phone:</strong> <a href="tel:+17575551234">(757) 555-1234</a></p>
+                                        <p class="mb-2"><strong>Email:</strong> <a href="mailto:procurement@sentara.com">procurement@sentara.com</a></p>
+                                        <a href="tel:+17575551234" class="btn btn-success w-100 mt-2">
+                                            <i class="fas fa-phone-alt me-2"></i>Call Now
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-lock me-2"></i><strong>Subscribe to unlock</strong> contact details
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title fw-bold text-dark">
+                                            <i class="fas fa-building text-info me-2"></i>Virginia Beach City Schools
+                                        </h5>
+                                        <span class="badge bg-warning text-dark">HIGH PRIORITY</span>
+                                    </div>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Virginia Beach, VA</p>
+                                    <p class="card-text">85 schools + facilities. Annual supply contract $180K+. Pre-qualified vendors preferred.</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Green/eco-friendly products</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Bulk restroom supplies</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Equipment & machinery</li>
+                                    </ul>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <div class="border-top pt-3">
+                                        <p class="mb-2"><strong>Contact:</strong> James Anderson</p>
+                                        <p class="mb-2"><strong>Phone:</strong> <a href="tel:+17575552345">(757) 555-2345</a></p>
+                                        <p class="mb-2"><strong>Email:</strong> <a href="mailto:facilities@vbschools.com">facilities@vbschools.com</a></p>
+                                        <a href="tel:+17575552345" class="btn btn-success w-100 mt-2">
+                                            <i class="fas fa-phone-alt me-2"></i>Call Now
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-lock me-2"></i><strong>Subscribe to unlock</strong> contact details
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title fw-bold text-dark">
+                                            <i class="fas fa-hotel text-warning me-2"></i>Hampton Roads Hotel Group
+                                        </h5>
+                                        <span class="badge bg-success">ACTIVE</span>
+                                    </div>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Hampton, VA</p>
+                                    <p class="card-text">8 hotels seeking reliable supply partner. Monthly orders $8K-$12K. Fast delivery required.</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Linens & laundry supplies</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Guest room amenities</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Commercial cleaning chemicals</li>
+                                    </ul>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <div class="border-top pt-3">
+                                        <p class="mb-2"><strong>Contact:</strong> Maria Rodriguez</p>
+                                        <p class="mb-2"><strong>Phone:</strong> <a href="tel:+17575553456">(757) 555-3456</a></p>
+                                        <p class="mb-2"><strong>Email:</strong> <a href="mailto:purchasing@hrhotels.com">purchasing@hrhotels.com</a></p>
+                                        <a href="tel:+17575553456" class="btn btn-success w-100 mt-2">
+                                            <i class="fas fa-phone-alt me-2"></i>Call Now
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-lock me-2"></i><strong>Subscribe to unlock</strong> contact details
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title fw-bold text-dark">
+                                            <i class="fas fa-industry text-secondary me-2"></i>Newport News Shipbuilding
+                                        </h5>
+                                        <span class="badge bg-info">MAJOR BUYER</span>
+                                    </div>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Newport News, VA</p>
+                                    <p class="card-text">Large industrial facility. Massive volume requirements. Quarterly contracts $50K+.</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Industrial-grade cleaners</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Safety equipment & PPE</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Facility maintenance supplies</li>
+                                    </ul>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <div class="border-top pt-3">
+                                        <p class="mb-2"><strong>Contact:</strong> David Chen</p>
+                                        <p class="mb-2"><strong>Phone:</strong> <a href="tel:+17575554567">(757) 555-4567</a></p>
+                                        <p class="mb-2"><strong>Email:</strong> <a href="mailto:supplies@nns.com">supplies@nns.com</a></p>
+                                        <a href="tel:+17575554567" class="btn btn-success w-100 mt-2">
+                                            <i class="fas fa-phone-alt me-2"></i>Call Now
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-lock me-2"></i><strong>Subscribe to unlock</strong> contact details
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Southeast Region -->
+                <div class="tab-pane fade" id="southeast" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-briefcase me-2"></i>Atlanta Corporate Plaza
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Atlanta, GA</p>
+                                    <p class="card-text">Multi-tenant office complex. Monthly supplies $10K+.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (404) 555-1000</p>
+                                    <p class="mb-1"><strong>Email:</strong> facilities@atl-plaza.com</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-graduation-cap me-2"></i>University of Florida
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Gainesville, FL</p>
+                                    <p class="card-text">Campus-wide facilities. Annual contract $200K+.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (352) 555-2000</p>
+                                    <p class="mb-1"><strong>Email:</strong> procurement@ufl.edu</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-music me-2"></i>Nashville Convention Center
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Nashville, TN</p>
+                                    <p class="card-text">Event facility. High-volume requirements $15K/month.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (615) 555-3000</p>
+                                    <p class="mb-1"><strong>Email:</strong> ops@nashconv.com</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Northeast Region -->
+                <div class="tab-pane fade" id="northeast" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-landmark me-2"></i>NYC Municipal Buildings
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>New York, NY</p>
+                                    <p class="card-text">Government facilities. Contract value $500K+ annually.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (212) 555-4000</p>
+                                    <p class="mb-1"><strong>Email:</strong> procurement@nyc.gov</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-hospital me-2"></i>Boston Medical Center
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Boston, MA</p>
+                                    <p class="card-text">Healthcare facility. Medical-grade supplies $30K/month.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (617) 555-5000</p>
+                                    <p class="mb-1"><strong>Email:</strong> supplies@bmc.org</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-dark">
+                                        <i class="fas fa-building me-2"></i>Philadelphia Tower Complex
+                                    </h5>
+                                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Philadelphia, PA</p>
+                                    <p class="card-text">Commercial property. Monthly orders $20K.</p>
+                                    {% if is_paid_subscriber or is_admin %}
+                                    <p class="mb-1"><strong>Phone:</strong> (215) 555-6000</p>
+                                    <p class="mb-1"><strong>Email:</strong> mgmt@philly-towers.com</p>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0 mt-3">
+                                        <i class="fas fa-lock me-2"></i>Subscribe to unlock
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nationwide -->
+                <div class="tab-pane fade" id="nationwide" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="fw-bold text-dark mb-4 text-center">
+                                <i class="fas fa-flag-usa me-2"></i>National Supply Opportunities
+                            </h4>
+                            <div class="row g-4">
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-light rounded">
+                                        <h3 class="fw-bold text-primary mb-2">250+</h3>
+                                        <p class="mb-0">Active Buyers</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-light rounded">
+                                        <h3 class="fw-bold text-success mb-2">50</h3>
+                                        <p class="mb-0">States Covered</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-light rounded">
+                                        <h3 class="fw-bold text-warning mb-2">$5M+</h3>
+                                        <p class="mb-0">Monthly Volume</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-light rounded">
+                                        <h3 class="fw-bold text-info mb-2">Weekly</h3>
+                                        <p class="mb-0">New Leads</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <div class="text-center">
+                                <h5 class="mb-3">States with Most Opportunities:</h5>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <span class="badge bg-primary fs-6 px-3 py-2">California (45+)</span>
+                                    <span class="badge bg-primary fs-6 px-3 py-2">Texas (38+)</span>
+                                    <span class="badge bg-primary fs-6 px-3 py-2">Florida (32+)</span>
+                                    <span class="badge bg-primary fs-6 px-3 py-2">New York (28+)</span>
+                                    <span class="badge bg-primary fs-6 px-3 py-2">Virginia (24+)</span>
+                                    <span class="badge bg-secondary fs-6 px-3 py-2">All Other States</span>
+                                </div>
+                            </div>
+                            {% if not is_paid_subscriber and not is_admin %}
+                            <div class="alert alert-warning text-center mt-4 mb-0">
+                                <i class="fas fa-crown fa-2x mb-3"></i>
+                                <h5>Unlock Full Nationwide Directory</h5>
+                                <p>Access 250+ verified vendors actively purchasing supplies in all 50 states</p>
+                                <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-unlock me-2"></i>Upgrade Now
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="mb-3"><small>Updated weekly with new vendor opportunities • Verified contact information</small></p>
+                {% if not is_paid_subscriber and not is_admin %}
+                <a href="{{ url_for('subscription') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-crown me-2"></i>Unlock All Vendor Contacts
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Upgrade CTA for Non-Subscribers -->
 {% if not is_paid_subscriber and not is_admin %}
 <div class="container my-5">
