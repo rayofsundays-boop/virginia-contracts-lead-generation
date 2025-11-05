@@ -2700,6 +2700,11 @@ def dashboard_video_preview():
     """Generate an animated video preview of the dashboard for homepage"""
     return render_template('dashboard_video_preview.html')
 
+@app.route('/hero-video')
+def hero_video():
+    """30-second professional marketing video for VA Contract Hub"""
+    return render_template('hero_video.html')
+
 @app.route('/test')
 def test():
     return "<h1>Flask Test Route Working!</h1><p>If you see this, Flask is running correctly.</p>"

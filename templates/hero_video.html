@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Contract Hub - Marketing Video</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .video-container {
+            width: 100%;
+            height: 100vh;
+            max-width: 100vw;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background with particles */
+        #particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: clamp(2rem, 5vw, 4rem);
+        }
+
+        /* Scene containers */
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        /* Logo and Brand */
+        .logo-scene {
+            text-align: center;
+        }
+
+        .main-logo {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #5C3AFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .tagline {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            color: #ffffff;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* Virginia Map Animation */
+        .map-scene {
+            position: relative;
+        }
+
+        .virginia-map {
+            width: clamp(300px, 60vw, 600px);
+            height: clamp(200px, 40vw, 400px);
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .map-glow {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border: 3px solid #5C3AFF;
+            border-radius: 20px;
+            position: relative;
+            animation: pulse-glow 2s ease-in-out infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .map-text {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        /* City Logos Grid */
+        .cities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .city-card {
+            background: rgba(92, 58, 255, 0.1);
+            border: 2px solid #5C3AFF;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .city-card:nth-child(1) { animation-delay: 0.1s; }
+        .city-card:nth-child(2) { animation-delay: 0.2s; }
+        .city-card:nth-child(3) { animation-delay: 0.3s; }
+        .city-card:nth-child(4) { animation-delay: 0.4s; }
+        .city-card:nth-child(5) { animation-delay: 0.5s; }
+
+        .city-name {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #ffffff;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .city-icon {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Stats Section */
+        .stats-scene {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #5C3AFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: #ffffff;
+            font-weight: 300;
+        }
+
+        /* AI Technology Section */
+        .ai-scene {
+            text-align: center;
+        }
+
+        .ai-visual {
+            width: clamp(250px, 50vw, 500px);
+            height: clamp(250px, 50vw, 500px);
+            position: relative;
+            margin: 0 auto 2rem;
+        }
+
+        .ai-circle {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #5C3AFF;
+            border-radius: 50%;
+            position: absolute;
+            animation: rotate 3s linear infinite;
+        }
+
+        .ai-circle:nth-child(2) {
+            animation-delay: 0.5s;
+            border-color: #764ba2;
+        }
+
+        .ai-circle:nth-child(3) {
+            animation-delay: 1s;
+            border-color: #667eea;
+        }
+
+        .ai-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(3rem, 6vw, 5rem);
+        }
+
+        /* Dashboard Preview */
+        .dashboard-preview {
+            background: rgba(15, 15, 35, 0.9);
+            border: 2px solid #5C3AFF;
+            border-radius: 20px;
+            padding: clamp(1.5rem, 3vw, 3rem);
+            max-width: 900px;
+            width: 90%;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(92, 58, 255, 0.3);
+        }
+
+        .dashboard-header {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .dashboard-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(92, 58, 255, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .metric-card:nth-child(1) { animation-delay: 0.2s; }
+        .metric-card:nth-child(2) { animation-delay: 0.4s; }
+        .metric-card:nth-child(3) { animation-delay: 0.6s; }
+
+        .metric-value {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: #5C3AFF;
+            font-weight: 700;
+        }
+
+        .metric-label {
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
+            color: #ffffff;
+            opacity: 0.8;
+            margin-top: 0.3rem;
+        }
+
+        /* CTA Section */
+        .cta-scene {
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #667eea, #5C3AFF);
+            color: white;
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            padding: clamp(1rem, 2vw, 1.5rem) clamp(2rem, 4vw, 4rem);
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            animation: pulse-button 2s ease-in-out infinite;
+            box-shadow: 0 10px 40px rgba(92, 58, 255, 0.4);
+        }
+
+        /* Text overlays */
+        .narration-text {
+            position: absolute;
+            bottom: clamp(3rem, 10vh, 6rem);
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            color: #ffffff;
+            text-align: center;
+            max-width: 90%;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 10, 0.7);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            line-height: 1.6;
+        }
+
+        /* Animations */
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px #5C3AFF); }
+            50% { filter: drop-shadow(0 0 40px #764ba2); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(92, 58, 255, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(118, 75, 162, 0.8); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-button {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(92, 58, 255, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 60px rgba(92, 58, 255, 0.6);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .cities-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .dashboard-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <canvas id="particles-canvas"></canvas>
+        
+        <div class="content">
+            <!-- Scene 1: Logo Intro (0-3 sec) -->
+            <div class="scene" id="scene1">
+                <div class="logo-scene">
+                    <div class="main-logo">VA CONTRACT HUB</div>
+                    <div class="tagline">The Future of Contract Opportunities</div>
+                </div>
+            </div>
+
+            <!-- Scene 2: Virginia Map (3-8 sec) -->
+            <div class="scene" id="scene2">
+                <div class="map-scene">
+                    <div class="virginia-map">
+                        <div class="map-glow">
+                            <div class="map-text">🗺️<br>VIRGINIA</div>
+                        </div>
+                    </div>
+                    <div class="cities-grid">
+                        <div class="city-card">
+                            <div class="city-icon">🏛️</div>
+                            <div class="city-name">Hampton</div>
+                        </div>
+                        <div class="city-card">
+                            <div class="city-icon">🏢</div>
+                            <div class="city-name">Suffolk</div>
+                        </div>
+                        <div class="city-card">
+                            <div class="city-icon">🌊</div>
+                            <div class="city-name">Virginia Beach</div>
+                        </div>
+                        <div class="city-card">
+                            <div class="city-icon">⚓</div>
+                            <div class="city-name">Newport News</div>
+                        </div>
+                        <div class="city-card">
+                            <div class="city-icon">🏰</div>
+                            <div class="city-name">Williamsburg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="narration-text">30+ Virginia cities and agencies seeking cleaning professionals</div>
+            </div>
+
+            <!-- Scene 3: Commercial Partners (8-14 sec) -->
+            <div class="scene" id="scene3">
+                <div class="stats-scene">
+                    <div class="stat-number">24+</div>
+                    <div class="stat-label">Commercial Property Managers</div>
+                </div>
+                <div class="narration-text">Actively searching for reliable contractors like you</div>
+            </div>
+
+            <!-- Scene 4: AI Technology (14-20 sec) -->
+            <div class="scene" id="scene4">
+                <div class="ai-scene">
+                    <div class="ai-visual">
+                        <div class="ai-circle"></div>
+                        <div class="ai-circle"></div>
+                        <div class="ai-circle"></div>
+                        <div class="ai-center">🤖</div>
+                    </div>
+                    <div class="stat-label">AI-Powered Contract Matching</div>
+                </div>
+                <div class="narration-text">Our AI analyzes every opportunity to match you with the best contracts — instantly</div>
+            </div>
+
+            <!-- Scene 5: Dashboard Preview (20-25 sec) -->
+            <div class="scene" id="scene5">
+                <div class="dashboard-preview">
+                    <div class="dashboard-header">📊 Real-Time Dashboard</div>
+                    <div class="dashboard-metrics">
+                        <div class="metric-card">
+                            <div class="metric-value">142</div>
+                            <div class="metric-label">Active Bids</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">98%</div>
+                            <div class="metric-label">Match Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">$2.4M</div>
+                            <div class="metric-label">Contract Value</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="narration-text">Real-time updates, performance analytics, and automated bid insights</div>
+            </div>
+
+            <!-- Scene 6: CTA (25-30 sec) -->
+            <div class="scene" id="scene6">
+                <div class="cta-scene">
+                    <div class="cta-title">Where Virginia's<br>Contractors Win</div>
+                    <button class="cta-button">Start Your Free Trial Today</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Particle background animation
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(92, 58, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.strokeStyle = `rgba(92, 58, 255, ${0.2 * (1 - distance / 100)})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Scene management
+        const scenes = document.querySelectorAll('.scene');
+        const timeline = [
+            { scene: 0, duration: 3000 },  // Logo intro
+            { scene: 1, duration: 5000 },  // Virginia map + cities
+            { scene: 2, duration: 6000 },  // Commercial partners
+            { scene: 3, duration: 6000 },  // AI technology
+            { scene: 4, duration: 5000 },  // Dashboard preview
+            { scene: 5, duration: 5000 }   // CTA
+        ];
+
+        let currentScene = 0;
+
+        function showScene(index) {
+            scenes.forEach((scene, i) => {
+                scene.classList.remove('active');
+                if (i === index) {
+                    scene.classList.add('active');
+                }
+            });
+        }
+
+        function playVideo() {
+            showScene(0);
+            currentScene = 0;
+
+            timeline.forEach((step, index) => {
+                setTimeout(() => {
+                    showScene(step.scene);
+                    currentScene = step.scene;
+                }, timeline.slice(0, index).reduce((sum, s) => sum + s.duration, 0));
+            });
+
+            // Loop the video
+            const totalDuration = timeline.reduce((sum, step) => sum + step.duration, 0);
+            setTimeout(() => {
+                playVideo();
+            }, totalDuration);
+        }
+
+        // Check if embedded in iframe
+        function isInIframe() {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        // Start the video
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                playVideo();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
