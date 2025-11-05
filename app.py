@@ -12723,6 +12723,130 @@ def admin_check_contracts():
         </html>
         """
 
+
+@app.route('/admin/auto-fetch-datagov')
+def admin_auto_fetch_datagov():
+    """Admin route to manually trigger Data.gov automated fetch"""
+    try:
+        from auto_fetch_daily import AutoFetcher
+        import io
+        import sys
+        
+        # Capture output
+        output = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = output
+        
+        try:
+            # Run the automated fetcher
+            fetcher = AutoFetcher()
+            days_back = int(request.args.get('days', 7))
+            saved = fetcher.fetch_and_save(days_back=days_back)
+            
+            # Get the output
+            sys.stdout = old_stdout
+            log_output = output.getvalue()
+            
+            # Get current counts
+            count_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
+            total_federal = count_result[0] if count_result else 0
+            
+            datagov_result = db.session.execute(text(
+                "SELECT COUNT(*) FROM federal_contracts WHERE data_source LIKE '%Data.gov%'"
+            )).fetchone()
+            datagov_count = datagov_result[0] if datagov_result else 0
+            
+            # Get recent contracts
+            recent_contracts = db.session.execute(text('''
+                SELECT title, agency, value, created_at
+                FROM federal_contracts 
+                WHERE data_source LIKE '%Data.gov%'
+                ORDER BY created_at DESC 
+                LIMIT 10
+            ''')).fetchall()
+            
+            recent_html = "<h3>Recent Data.gov Contracts:</h3><ul>"
+            for contract in recent_contracts:
+                recent_html += f"<li><strong>{contract[0][:80]}</strong><br>Agency: {contract[1]} | Value: {contract[2]}<br>Added: {contract[3]}</li>"
+            recent_html += "</ul>"
+            
+            return f"""
+            <html>
+            <head>
+                <title>Data.gov Auto-Fetch Results</title>
+                <style>
+                    body {{ font-family: Arial; padding: 40px; background: #f5f5f5; }}
+                    .container {{ max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                    h1 {{ color: #28a745; }}
+                    .stats {{ display: flex; justify-content: space-around; margin: 30px 0; }}
+                    .stat {{ text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px; }}
+                    .stat-number {{ font-size: 48px; color: #007bff; font-weight: bold; }}
+                    .stat-label {{ color: #666; margin-top: 10px; }}
+                    .log {{ background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; }}
+                    .btn {{ display: inline-block; margin: 10px 5px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+                    .btn-success {{ background: #28a745; }}
+                    .btn-primary {{ background: #007bff; }}
+                    ul {{ text-align: left; }}
+                    li {{ margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>✅ Data.gov Auto-Fetch Completed!</h1>
+                    <p>Fetched contracts from last {days_back} days</p>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-number">{saved}</div>
+                            <div class="stat-label">New Contracts Added</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">{total_federal}</div>
+                            <div class="stat-label">Total Federal</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">{datagov_count}</div>
+                            <div class="stat-label">From Data.gov</div>
+                        </div>
+                    </div>
+                    
+                    {recent_html}
+                    
+                    <h3>Fetch Log:</h3>
+                    <div class="log">{log_output}</div>
+                    
+                    <div style="margin-top: 30px;">
+                        <a href="/federal-contracts" class="btn btn-primary">View All Federal Contracts</a>
+                        <a href="/admin-enhanced" class="btn btn-success">Back to Admin</a>
+                        <a href="/admin/auto-fetch-datagov?days=14" class="btn">Fetch 14 Days</a>
+                        <a href="/admin/auto-fetch-datagov?days=30" class="btn">Fetch 30 Days</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+        finally:
+            sys.stdout = old_stdout
+        
+    except Exception as e:
+        import traceback
+        sys.stdout = old_stdout if 'old_stdout' in locals() else sys.stdout
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial; padding: 40px; background: #f5f5f5;">
+            <div style="max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
+                <h1 style="color: red;">❌ Auto-Fetch Error</h1>
+                <p>{str(e)}</p>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">{traceback.format_exc()}</pre>
+                <a href="/admin-enhanced" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Back to Admin</a>
+            </div>
+        </body>
+        </html>
+        """
+
+
 @app.route('/admin/fix-sam-urls')
 def admin_fix_sam_urls():
     """Admin route to fix SAM.gov URLs for all federal contracts"""

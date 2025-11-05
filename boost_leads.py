@@ -37,14 +37,16 @@ def boost_federal_leads():
     print(f"\n📊 Fetcher Configuration:")
     print(f"   • NAICS Codes: {len(fetcher.naics_codes)} categories")
     print(f"   • Lookback Window: 90 days")
-    print(f"   • Location: Virginia only")
-    print(f"   • Expected: 20-40 new contracts")
+    print(f"   • Target States: VA, MD, DC (DMV Region)")
+    print(f"   • Max Retries: 3 attempts before Data.gov fallback")
+    print(f"   • Expected: 60-120 new contracts")
     
     print("\n🔍 Fetching contracts from SAM.gov...")
-    print("   (This may take 2-3 minutes due to API rate limiting)")
+    print("   (May take 2-3 minutes due to API rate limiting)")
+    print("   (Will automatically switch to Data.gov if SAM.gov fails)")
     
     try:
-        # Fetch contracts
+        # Fetch contracts (will auto-fallback to Data.gov if needed)
         contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
         
         if not contracts:

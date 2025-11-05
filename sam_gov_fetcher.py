@@ -1,6 +1,7 @@
 """
 SAM.gov API Integration for Real Federal Contract Data
 Fetches actual cleaning contracts from Virginia government agencies
+Automatically falls back to Data.gov if SAM.gov fails after 3 attempts
 """
 import requests
 import os
@@ -14,11 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class SAMgovFetcher:
-    """Fetch real federal cleaning contracts from SAM.gov API"""
+    """Fetch real federal cleaning contracts from SAM.gov API with Data.gov fallback"""
     
     def __init__(self):
         self.api_key = os.environ.get('SAM_GOV_API_KEY', '').strip()
         self.base_url = 'https://api.sam.gov/opportunities/v2/search'
+        self.retry_attempts = 0
+        self.max_retries = 3
         
         # Expanded cleaning-related NAICS codes for comprehensive coverage
         self.naics_codes = [
@@ -66,6 +69,7 @@ class SAMgovFetcher:
     def fetch_va_cleaning_contracts(self, days_back=90):
         """
         Fetch real cleaning contracts from DMV region (DC, Maryland, Virginia)
+        Automatically falls back to Data.gov if SAM.gov fails after 3 attempts
         
         Args:
             days_back: How many days back to search (default 90 - expanded for more coverage)
@@ -75,28 +79,47 @@ class SAMgovFetcher:
         """
         if not self.api_key:
             logger.error("SAM_GOV_API_KEY not set. Get free key from https://open.gsa.gov/api/sam-gov-entity-api/")
-            return []
+            logger.info("🔄 Falling back to Data.gov...")
+            return self._fallback_to_datagov(days_back)
         
         all_contracts = []
         
-        # Search each state in DMV region
-        for state in self.target_states:
-            logger.info(f"🔍 Searching {state} contracts...")
+        try:
+            self.retry_attempts += 1
             
-            # Search for each NAICS code in this state
-            for idx, naics in enumerate(self.naics_codes):
-                logger.info(f"  NAICS {naics} in {state}...")
-                contracts = self._search_contracts(naics, days_back, state)
-                all_contracts.extend(contracts)
+            # Search each state in DMV region
+            for state in self.target_states:
+                logger.info(f"🔍 Searching {state} contracts...")
                 
-                # Stagger requests to minimize rate limiting
-                if idx < len(self.naics_codes) - 1 or state != self.target_states[-1]:
-                    sleep_s = 1.5 + random.random() * 1.5
-                    logger.info(f"  Sleeping {sleep_s:.1f}s to avoid rate limits...")
-                    time.sleep(sleep_s)
-        
-        logger.info(f"✅ Fetched {len(all_contracts)} real contracts from DMV region (VA/MD/DC)")
-        return all_contracts
+                # Search for each NAICS code in this state
+                for idx, naics in enumerate(self.naics_codes):
+                    logger.info(f"  NAICS {naics} in {state}...")
+                    contracts = self._search_contracts(naics, days_back, state)
+                    all_contracts.extend(contracts)
+                    
+                    # Stagger requests to minimize rate limiting
+                    if idx < len(self.naics_codes) - 1 or state != self.target_states[-1]:
+                        sleep_s = 1.5 + random.random() * 1.5
+                        logger.info(f"  Sleeping {sleep_s:.1f}s to avoid rate limits...")
+                        time.sleep(sleep_s)
+            
+            if all_contracts:
+                logger.info(f"✅ Fetched {len(all_contracts)} real contracts from DMV region (VA/MD/DC)")
+                self.retry_attempts = 0  # Reset on success
+                return all_contracts
+            else:
+                logger.warning(f"⚠️  No contracts found from SAM.gov (attempt {self.retry_attempts}/{self.max_retries})")
+                if self.retry_attempts >= self.max_retries:
+                    logger.info("🔄 Max retries reached. Falling back to Data.gov...")
+                    return self._fallback_to_datagov(days_back)
+                return []
+                
+        except Exception as e:
+            logger.error(f"❌ SAM.gov API error (attempt {self.retry_attempts}/{self.max_retries}): {e}")
+            if self.retry_attempts >= self.max_retries:
+                logger.info("🔄 Max retries reached. Falling back to Data.gov...")
+                return self._fallback_to_datagov(days_back)
+            return []
     
     def _search_contracts(self, naics_code, days_back, state='VA'):
         """Search SAM.gov for contracts with specific NAICS code with pagination"""
@@ -329,6 +352,49 @@ class SAMgovFetcher:
             description = description[:497] + "..."
         
         return description
+    
+    def _fallback_to_datagov(self, days_back=90):
+        """
+        Fallback to Data.gov (USAspending.gov) when SAM.gov fails
+        
+        Args:
+            days_back: How many days back to search
+            
+        Returns:
+            List of contract dictionaries from Data.gov
+        """
+        logger.info("=" * 60)
+        logger.info("🔄 FALLBACK ACTIVATED: Switching to Data.gov (USAspending.gov)")
+        logger.info("=" * 60)
+        
+        try:
+            # Import Data.gov fetcher
+            from datagov_bulk_fetcher import DataGovBulkFetcher
+            
+            fetcher = DataGovBulkFetcher()
+            logger.info(f"📦 Fetching DMV cleaning contracts from USAspending.gov...")
+            logger.info(f"   States: VA, MD, DC")
+            logger.info(f"   Lookback: {days_back} days")
+            logger.info(f"   NAICS codes: 561720 (Janitorial), 561730 (Landscaping), etc.")
+            
+            contracts = fetcher.fetch_usaspending_contracts(days_back=days_back)
+            
+            if contracts:
+                logger.info(f"✅ Data.gov fallback successful! Retrieved {len(contracts)} contracts")
+                logger.info("💡 Tip: SAM.gov may have rate limits. Data.gov is more reliable for bulk fetching.")
+                self.retry_attempts = 0  # Reset retry counter
+                return contracts
+            else:
+                logger.warning("⚠️  No contracts found from Data.gov either")
+                return []
+                
+        except ImportError as e:
+            logger.error(f"❌ Cannot import Data.gov fetcher: {e}")
+            logger.error("   Make sure datagov_bulk_fetcher.py exists in the same directory")
+            return []
+        except Exception as e:
+            logger.error(f"❌ Data.gov fallback failed: {e}")
+            return []
     
     def _default_deadline(self):
         """Return default deadline (30 days from now)"""

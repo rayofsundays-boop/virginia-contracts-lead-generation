@@ -321,41 +321,88 @@ class DataGovBulkFetcher:
     def _parse_usaspending_award(self, award):
         """Parse an award from USAspending.gov API into our contract format"""
         try:
-            # Extract relevant fields from API response
-            title = award.get('Description', 'Federal Contract')
-            if not title or title == 'None':
-                title = f"Contract from {award.get('Awarding Agency', 'Federal Agency')}"
+            # USAspending API returns results with specific field names
+            # Try multiple field name variations
+            title = (award.get('Description') or 
+                    award.get('description') or 
+                    award.get('Award Description') or
+                    award.get('generated_internal_id', 'Federal Contract'))
             
-            agency = award.get('Awarding Agency', 'Federal Agency')
-            department = award.get('Awarding Sub Agency', '')
+            # If title is still generic, use award info
+            if not title or title in ['Federal Contract', 'None', None]:
+                agency_name = (award.get('Awarding Agency') or 
+                              award.get('awarding_agency') or 
+                              award.get('Awarding Agency Name') or
+                              'Federal Agency')
+                title = f"Service Contract - {agency_name}"
+            
+            agency = (award.get('Awarding Agency') or 
+                     award.get('awarding_agency') or
+                     award.get('Awarding Agency Name') or
+                     'Federal Agency')
+            
+            department = (award.get('Awarding Sub Agency') or
+                         award.get('awarding_sub_agency') or
+                         award.get('Awarding Sub Agency Name') or
+                         '')
             
             # Location
-            city = award.get('Place of Performance City', '')
-            state = award.get('Place of Performance State', 'VA')
+            city = (award.get('Place of Performance City') or
+                   award.get('pop_city_name') or
+                   award.get('Place of Performance City Name') or
+                   '')
+            state = (award.get('Place of Performance State') or
+                    award.get('pop_state_code') or
+                    award.get('Place of Performance State Code') or
+                    'VA')
             location = f"{city}, {state}" if city else state
             
             # Value
-            value_amount = award.get('Award Amount', 0)
-            if isinstance(value_amount, (int, float)):
+            value_amount = (award.get('Award Amount') or
+                           award.get('total_obligation') or
+                           award.get('generated_pragmatic_obligation') or
+                           award.get('Award Amount') or
+                           0)
+            
+            if isinstance(value_amount, (int, float)) and value_amount > 0:
                 value = f"${value_amount:,.0f}"
             else:
-                value = str(value_amount)
+                value = "Contact agency for details"
             
             # Dates
-            deadline = award.get('Period of Performance Current End Date', '')
-            posted_date = award.get('Period of Performance Start Date', '')
+            deadline = (award.get('Period of Performance Current End Date') or
+                       award.get('period_of_performance_current_end_date') or
+                       award.get('current_end_date') or
+                       '')
+            posted_date = (award.get('Period of Performance Start Date') or
+                          award.get('period_of_performance_start_date') or
+                          award.get('start_date') or
+                          '')
             
             # Other fields
-            naics_code = str(award.get('NAICS Code', ''))
-            naics_desc = award.get('NAICS Description', '')
-            award_id = award.get('Award ID', f"USA-{int(datetime.now().timestamp())}")
-            award_type = award.get('Award Type', 'Unrestricted')
-            recipient = award.get('Recipient Name', '')
+            naics_code = str(award.get('NAICS Code') or
+                           award.get('naics_code') or
+                           award.get('naics') or
+                           '')
+            naics_desc = (award.get('NAICS Description') or
+                         award.get('naics_description') or
+                         '')
+            award_id = (award.get('Award ID') or
+                       award.get('generated_internal_id') or
+                       award.get('award_id') or
+                       f"USA-{int(datetime.now().timestamp())}")
+            award_type = (award.get('Award Type') or
+                         award.get('award_type') or
+                         award.get('Type of Set Aside') or
+                         'Unrestricted')
+            recipient = (award.get('Recipient Name') or
+                        award.get('recipient_name') or
+                        '')
             
             # Clean up award ID to make it URL-safe
             notice_id = str(award_id).replace(' ', '-').replace('/', '-')
             
-            # SAM.gov URL
+            # SAM.gov URL - use usaspending.gov since that's the data source
             sam_gov_url = f"https://www.usaspending.gov/award/{notice_id}"
             
             # Build description
@@ -365,22 +412,26 @@ class DataGovBulkFetcher:
                 description += f"Department: {department}\n"
             if recipient:
                 description += f"Recipient: {recipient}\n"
-            description += f"NAICS: {naics_code} - {naics_desc}\n"
+            if naics_code:
+                description += f"NAICS: {naics_code}"
+                if naics_desc:
+                    description += f" - {naics_desc}"
+                description += "\n"
             description += f"Location: {location}"
             
             return {
-                'title': title[:200],
-                'agency': agency[:200],
-                'department': department[:200],
-                'location': location[:100],
-                'value': value[:50],
-                'deadline': deadline[:50] if deadline else '',
-                'description': description[:1000],
-                'naics_code': naics_code[:20],
+                'title': str(title)[:200],
+                'agency': str(agency)[:200],
+                'department': str(department)[:200],
+                'location': str(location)[:100],
+                'value': str(value)[:50],
+                'deadline': str(deadline)[:50] if deadline else (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d'),
+                'description': str(description)[:1000],
+                'naics_code': str(naics_code)[:20] if naics_code else '561720',
                 'sam_gov_url': sam_gov_url,
-                'notice_id': notice_id[:100],
-                'set_aside': award_type[:100],
-                'posted_date': posted_date[:50] if posted_date else ''
+                'notice_id': str(notice_id)[:100],
+                'set_aside': str(award_type)[:100],
+                'posted_date': str(posted_date)[:50] if posted_date else datetime.now().strftime('%Y-%m-%d')
             }
         except Exception as e:
             logger.error(f"Error parsing award: {e}")
