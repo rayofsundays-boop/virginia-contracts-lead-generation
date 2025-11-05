@@ -201,6 +201,22 @@
                                 <i class="fas fa-search me-1"></i>Search SAM.gov
                             </a>
                             {% endif %}
+                            
+                            <!-- Historical Award Button (Annual Subscribers Only) -->
+                            {% if is_annual_subscriber %}
+                            <button class="btn btn-success btn-sm" 
+                                    onclick="showHistoricalAward({{ contract.id }})"
+                                    title="View historical award data">
+                                <i class="fas fa-history me-1"></i>Award History
+                            </button>
+                            {% elif is_paid_subscriber %}
+                            <button class="btn btn-outline-success btn-sm" 
+                                    onclick="upgradeToAnnual()"
+                                    title="Upgrade to annual for historical data">
+                                <i class="fas fa-lock me-1"></i>Award History
+                            </button>
+                            {% endif %}
+                            
                             <button class="btn btn-outline-warning btn-sm bookmark-btn" 
                                     data-lead-type="federal_contract" 
                                     data-lead-id="{{ contract.id }}"
@@ -467,6 +483,127 @@ function shareFederalContract(title, description, agency, value, deadline) {
         navigator.clipboard.writeText(shareText).then(() => {
             alert('Contract details copied to clipboard!');
         });
+    }
+}
+
+// Historical Award Modal Functions
+function showHistoricalAward(contractId) {
+    // Show loading modal
+    const modalHTML = `
+        <div class="modal fade" id="awardModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-history me-2"></i>Historical Award Data
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center" id="awardModalBody">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3">Loading historical award data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('awardModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('awardModal'));
+    modal.show();
+    
+    // Fetch award data
+    fetch(`/api/historical-award/${contractId}`)
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.getElementById('awardModalBody');
+            
+            if (data.success) {
+                const awardData = data.data;
+                modalBody.innerHTML = `
+                    <div class="text-start">
+                        <div class="alert alert-success mb-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Premium Feature</strong> - Historical award data available
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">${awardData.contract_title}</h6>
+                        
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <small class="text-muted d-block">Award Amount</small>
+                                        <h4 class="text-success mb-0">
+                                            <i class="fas fa-dollar-sign"></i>${awardData.award_amount || 'N/A'}
+                                        </h4>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <small class="text-muted d-block">Award Year</small>
+                                        <h4 class="text-primary mb-0">
+                                            <i class="fas fa-calendar"></i> FY ${awardData.award_year || 'N/A'}
+                                        </h4>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Awarded To</small>
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-building me-2 text-info"></i>${awardData.contractor_name || 'Not Available'}
+                                    </h5>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted d-block">Agency</small>
+                                    <p class="mb-0"><strong>${awardData.agency}</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>This historical data helps you understand typical award amounts and winning contractors for similar contracts.</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message}
+                    </div>
+                    ${data.upgrade_url ? `
+                        <a href="${data.upgrade_url}" class="btn btn-primary">
+                            <i class="fas fa-crown me-2"></i>Upgrade to Annual Plan
+                        </a>
+                    ` : ''}
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching award data:', error);
+            document.getElementById('awardModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    Error loading historical award data. Please try again.
+                </div>
+            `;
+        });
+}
+
+function upgradeToAnnual() {
+    if (confirm('Historical award data is an exclusive feature for annual subscribers. Would you like to upgrade to the annual plan and save 20%?')) {
+        window.location.href = '{{ url_for("subscription") }}';
     }
 }
 </script>

@@ -4712,11 +4712,14 @@ def federal_contracts():
     # Check access level
     is_admin = session.get('is_admin', False)
     is_paid_subscriber = False
+    is_annual_subscriber = False
     clicks_remaining = 3
+    user_email = session.get('email')
     
     # Admin gets unlimited access
     if is_admin:
         is_paid_subscriber = True
+        is_annual_subscriber = True  # Admin has full access
         clicks_remaining = 999  # Unlimited for admin
     elif 'user_id' in session:
         # Check if paid subscriber
@@ -4727,6 +4730,17 @@ def federal_contracts():
         
         if result and result[0] == 'paid':
             is_paid_subscriber = True
+            
+            # Check if annual subscriber for historical award access
+            if user_email:
+                sub_result = db.session.execute(text('''
+                    SELECT plan_type FROM subscriptions 
+                    WHERE email = :email AND status = 'active'
+                    ORDER BY created_at DESC LIMIT 1
+                '''), {'email': user_email}).fetchone()
+                
+                if sub_result and sub_result[0] == 'annual':
+                    is_annual_subscriber = True
     
     # Track clicks for non-subscribers (not admin)
     if not is_paid_subscriber and not is_admin:
@@ -4784,6 +4798,7 @@ def federal_contracts():
                                pagination=pagination,
                                is_admin=is_admin,
                                is_paid_subscriber=is_paid_subscriber,
+                               is_annual_subscriber=is_annual_subscriber,
                                clicks_remaining=clicks_remaining)
     except Exception as e:
         msg = f"<h1>Federal Contracts Page Error</h1><p>{str(e)}</p>"
@@ -15981,6 +15996,75 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     print("⚠️  App may not function correctly without database initialization")
+
+# ==================== Historical Award Data API Endpoint ====================
+@app.route('/api/historical-award/<int:contract_id>')
+def get_historical_award(contract_id):
+    """
+    API endpoint to return historical award data for annual subscribers only.
+    Returns JSON with award amount, year, and contractor name.
+    """
+    # Check if user is annual subscriber
+    is_annual_subscriber = False
+    is_admin = session.get('is_admin', False)
+    user_email = session.get('email')
+    
+    if is_admin:
+        is_annual_subscriber = True
+    elif user_email:
+        try:
+            result = db.session.execute(text('''
+                SELECT plan_type FROM subscriptions 
+                WHERE email = :email AND status = 'active'
+                ORDER BY created_at DESC LIMIT 1
+            '''), {'email': user_email}).fetchone()
+            
+            if result and result[0] == 'annual':
+                is_annual_subscriber = True
+        except Exception as e:
+            print(f"Error checking subscription: {e}")
+    
+    # Return error if not annual subscriber
+    if not is_annual_subscriber:
+        return jsonify({
+            'success': False,
+            'message': 'Historical award data is only available to annual subscribers',
+            'upgrade_url': url_for('subscription')
+        }), 403
+    
+    # Fetch historical award data
+    try:
+        result = db.session.execute(text('''
+            SELECT award_amount, award_year, contractor_name, title, agency
+            FROM federal_contracts
+            WHERE id = :contract_id
+        '''), {'contract_id': contract_id}).fetchone()
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'award_amount': result[0],
+                    'award_year': result[1],
+                    'contractor_name': result[2],
+                    'contract_title': result[3],
+                    'agency': result[4]
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Contract not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error fetching historical award: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error retrieving historical award data'
+        }), 500
+
+# ==================== End of Historical Award API ====================
 
 if __name__ == '__main__':
     init_db()
