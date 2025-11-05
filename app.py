@@ -2676,13 +2676,8 @@ def init_db():
 
 @app.route('/')
 def index():
-    """Cinematic homepage with modern design - redirects logged-in users to dashboard"""
-    # If user is already logged in, redirect to appropriate dashboard
-    if 'user_id' in session:
-        # All users (including admins) go to customer dashboard
-        return redirect(url_for('customer_dashboard'))
-    
-    # Render the new cinematic homepage for public visitors
+    """Cinematic homepage with modern design - accessible to all users"""
+    # Show the cinematic homepage to everyone (both logged-in and public visitors)
     return render_template('home_cinematic.html')
 
 @app.route('/home')
