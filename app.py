@@ -2695,6 +2695,11 @@ def dashboard_preview_generator():
     """Generate a dashboard preview mockup for screenshots/marketing"""
     return render_template('dashboard_preview_generator.html')
 
+@app.route('/dashboard-video-preview')
+def dashboard_video_preview():
+    """Generate an animated video preview of the dashboard for homepage"""
+    return render_template('dashboard_video_preview.html')
+
 @app.route('/test')
 def test():
     return "<h1>Flask Test Route Working!</h1><p>If you see this, Flask is running correctly.</p>"
