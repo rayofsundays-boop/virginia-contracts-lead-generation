@@ -5782,6 +5782,36 @@ def commercial_contracts():
         import traceback
         traceback.print_exc()
     
+    # Extract contact information from descriptions
+    import re
+    for pm in property_managers:
+        desc = pm.get('description', '')
+        
+        # Extract phone number
+        phone_match = re.search(r'(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})', desc)
+        pm['contact_phone'] = phone_match.group(1) if phone_match else None
+        
+        # Extract email
+        email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', desc)
+        pm['contact_email'] = email_match.group(1) if email_match else None
+        
+        # Extract contact department/name
+        if 'Vendor Services' in desc:
+            pm['contact_department'] = 'Vendor Services'
+        elif 'Vendor Relations' in desc:
+            pm['contact_department'] = 'Vendor Relations'
+        elif 'Procurement' in desc:
+            pm['contact_department'] = 'Procurement'
+        elif 'Supplier' in desc and 'Engagement' in desc:
+            pm['contact_department'] = 'Supplier Engagement'
+        elif 'Supplier' in desc and 'Diversity' in desc:
+            pm['contact_department'] = 'Supplier Diversity'
+        else:
+            pm['contact_department'] = 'Vendor Applications'
+        
+        # Extract company name for point of contact (use the name field)
+        pm['company_name'] = pm.get('name', '')
+    
     # Apply filters
     filtered_managers = property_managers
     
