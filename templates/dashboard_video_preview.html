@@ -17,14 +17,19 @@
             background: #000000;
             overflow: hidden;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .video-container {
-            width: 1920px;
-            height: 1080px;
+            width: 100%;
+            max-width: 100vw;
+            height: 100vh;
             margin: 0;
             position: relative;
-            transform-origin: top left;
+            transform-origin: center center;
         }
 
         .dashboard-video {
@@ -33,6 +38,7 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #000000 100%);
             position: relative;
             overflow: hidden;
+            transform: scale(0.95);
         }
 
         /* Animated Background Particles */
@@ -78,7 +84,7 @@
         }
 
         .brand-title {
-            font-size: 72px;
+            font-size: clamp(3rem, 5vw, 72px);
             font-weight: 900;
             background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             -webkit-background-clip: text;
@@ -88,7 +94,7 @@
         }
 
         .brand-subtitle {
-            font-size: 36px;
+            font-size: clamp(1.5rem, 2.5vw, 36px);
             color: rgba(255, 255, 255, 0.8);
         }
 
@@ -106,7 +112,7 @@
 
         /* Main Dashboard Content */
         .dashboard-content {
-            padding: 60px 80px;
+            padding: 3vh 4vw;
             opacity: 0;
             animation: slideIn 1s ease-out 4.5s forwards;
         }
@@ -132,7 +138,7 @@
         }
 
         .header-title {
-            font-size: 56px;
+            font-size: clamp(2rem, 4vw, 56px);
             font-weight: 900;
             color: white;
         }
@@ -498,10 +504,14 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
         }
 
-        /* Responsive scaling */
-        @media (max-width: 1920px) {
-            .video-container {
-                transform: scale(0.8);
+        /* Responsive - viewport based sizing */
+        @media (max-width: 1400px) {
+            .dashboard-content {
+                padding: 40px 40px;
+            }
+            
+            .stats-grid {
+                gap: 20px;
             }
         }
     </style>
