@@ -15050,8 +15050,9 @@ def procurement_lifecycle():
 # ============================================================================
 
 @app.route('/community-forum')
+@login_required
 def community_forum():
-    """Public community forum displaying approved cleaning requests, discussions, and admin posts"""
+    """Community forum displaying approved cleaning requests - requires authentication"""
     try:
         # Query params
         q = (request.args.get('q') or '').strip()
