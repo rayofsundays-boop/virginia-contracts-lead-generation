@@ -1,7 +1,7 @@
 import os
 import json
 import urllib.parse
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -16,6 +16,7 @@ from integrations.international_sources import fetch_international_cleaning
 import schedule
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps, lru_cache
 from lead_generator import LeadGenerator
 import paypalrestsdk
@@ -2648,6 +2649,26 @@ def init_db():
                      ON search_history(user_email)''')
         c.execute('''CREATE INDEX IF NOT EXISTS idx_search_history_created_at 
                      ON search_history(created_at DESC)''')
+        
+        # Create GSA approval applications table
+        c.execute('''CREATE TABLE IF NOT EXISTS gsa_applications
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      company_name TEXT NOT NULL,
+                      duns_number TEXT,
+                      tax_id TEXT NOT NULL,
+                      years_in_business INTEGER,
+                      company_address TEXT NOT NULL,
+                      contact_name TEXT NOT NULL,
+                      contact_title TEXT NOT NULL,
+                      contact_email TEXT NOT NULL,
+                      contact_phone TEXT NOT NULL,
+                      additional_info TEXT,
+                      documents_path TEXT,
+                      status TEXT DEFAULT 'pending',
+                      admin_notes TEXT,
+                      submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      reviewed_at TIMESTAMP,
+                      user_email TEXT)''')
         
         conn.commit()
         
@@ -16065,6 +16086,309 @@ def get_historical_award(contract_id):
         }), 500
 
 # ==================== End of Historical Award API ====================
+
+# ==================== GSA Approval Service Routes ====================
+
+# Configure upload settings
+UPLOAD_FOLDER = 'gsa_applications_uploads'
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Create upload folder if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/gsa-approval')
+def gsa_approval():
+    """GSA Schedule Approval Service page"""
+    return render_template('gsa_approval_service.html')
+
+@app.route('/submit-gsa-application', methods=['POST'])
+def submit_gsa_application():
+    """Handle GSA application submission with secure file uploads"""
+    try:
+        # Get form data
+        company_name = request.form.get('company_name')
+        duns_number = request.form.get('duns_number')
+        tax_id = request.form.get('tax_id')
+        years_in_business = request.form.get('years_in_business')
+        company_address = request.form.get('company_address')
+        contact_name = request.form.get('contact_name')
+        contact_title = request.form.get('contact_title')
+        contact_email = request.form.get('contact_email')
+        contact_phone = request.form.get('contact_phone')
+        additional_info = request.form.get('additional_info')
+        user_email = session.get('email', contact_email)
+        
+        # Create unique folder for this application
+        app_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        app_folder = os.path.join(UPLOAD_FOLDER, f"{secure_filename(company_name)}_{app_timestamp}")
+        os.makedirs(app_folder, exist_ok=True)
+        
+        # Handle file uploads
+        uploaded_files = []
+        file_fields = [
+            'sam_registration', 'financial_statements', 'tax_returns',
+            'past_performance', 'insurance_docs', 'price_list', 'additional_docs'
+        ]
+        
+        for field in file_fields:
+            files = request.files.getlist(field)
+            for file in files:
+                if file and file.filename and allowed_file(file.filename):
+                    # Check file size
+                    file.seek(0, os.SEEK_END)
+                    file_size = file.tell()
+                    file.seek(0)
+                    
+                    if file_size > MAX_FILE_SIZE:
+                        flash(f'File {file.filename} is too large (max 10MB)', 'error')
+                        continue
+                    
+                    # Save file with secure filename
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    unique_filename = f"{field}_{timestamp}_{filename}"
+                    filepath = os.path.join(app_folder, unique_filename)
+                    file.save(filepath)
+                    uploaded_files.append(unique_filename)
+        
+        # Save to database
+        conn = sqlite3.connect('leads.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO gsa_applications 
+                    (company_name, duns_number, tax_id, years_in_business, company_address,
+                     contact_name, contact_title, contact_email, contact_phone, additional_info,
+                     documents_path, status, user_email)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                 (company_name, duns_number, tax_id, years_in_business, company_address,
+                  contact_name, contact_title, contact_email, contact_phone, additional_info,
+                  app_folder, 'pending', user_email))
+        app_id = c.lastrowid
+        conn.commit()
+        conn.close()
+        
+        # Send confirmation email to applicant
+        try:
+            msg = Message(
+                subject="GSA Approval Application Received",
+                recipients=[contact_email],
+                html=f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2 style="color: #10b981;">GSA Approval Application Received</h2>
+                    <p>Dear {contact_name},</p>
+                    <p>Thank you for submitting your GSA Schedule approval application. We have received your information and documents.</p>
+                    
+                    <div style="background: #f3f4f6; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                        <h3 style="margin-top: 0;">Application Details:</h3>
+                        <p><strong>Company:</strong> {company_name}</p>
+                        <p><strong>Application ID:</strong> #{app_id}</p>
+                        <p><strong>Submitted:</strong> {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
+                        <p><strong>Documents Uploaded:</strong> {len(uploaded_files)} files</p>
+                        <p><strong>Service Fee:</strong> $8,000 (invoice to follow)</p>
+                    </div>
+                    
+                    <h3>What Happens Next?</h3>
+                    <ol>
+                        <li>Our team will review your application within 24 hours</li>
+                        <li>You'll receive a detailed assessment and timeline</li>
+                        <li>We'll send an invoice for the $8,000 service fee</li>
+                        <li>Once payment is received, we begin your GSA application preparation</li>
+                    </ol>
+                    
+                    <p><strong>Timeline:</strong> The GSA approval process typically takes 6-12 months from submission.</p>
+                    
+                    <p>If you have any questions, please contact us:</p>
+                    <ul>
+                        <li>Email: <a href="mailto:gsa-help@vacontracthub.com">gsa-help@vacontracthub.com</a></li>
+                        <li>Phone: (757) 555-0100</li>
+                    </ul>
+                    
+                    <p>Best regards,<br>
+                    <strong>VA Contract Hub GSA Approval Team</strong></p>
+                </body>
+                </html>
+                """
+            )
+            mail.send(msg)
+        except Exception as e:
+            print(f"Error sending confirmation email: {e}")
+        
+        # Send notification email to admin
+        try:
+            admin_msg = Message(
+                subject=f"New GSA Application: {company_name}",
+                recipients=[os.environ.get('ADMIN_EMAIL', 'admin@vacontracthub.com')],
+                html=f"""
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color: #3b82f6;">New GSA Approval Application</h2>
+                    <p><strong>Application ID:</strong> #{app_id}</p>
+                    <p><strong>Company:</strong> {company_name}</p>
+                    <p><strong>Contact:</strong> {contact_name} ({contact_email})</p>
+                    <p><strong>Phone:</strong> {contact_phone}</p>
+                    <p><strong>Years in Business:</strong> {years_in_business}</p>
+                    <p><strong>Documents Uploaded:</strong> {len(uploaded_files)}</p>
+                    <p><strong>Documents Location:</strong> {app_folder}</p>
+                    
+                    <p><a href="{url_for('admin_gsa_applications', _external=True)}" 
+                          style="background: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Review Application
+                    </a></p>
+                </body>
+                </html>
+                """
+            )
+            mail.send(admin_msg)
+        except Exception as e:
+            print(f"Error sending admin notification: {e}")
+        
+        flash('Application submitted successfully! You will receive a confirmation email shortly.', 'success')
+        return redirect(url_for('gsa_approval_confirmation', app_id=app_id))
+        
+    except Exception as e:
+        print(f"Error submitting GSA application: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error submitting application. Please try again or contact support.', 'error')
+        return redirect(url_for('gsa_approval'))
+
+@app.route('/gsa-approval/confirmation/<int:app_id>')
+def gsa_approval_confirmation(app_id):
+    """Confirmation page after GSA application submission"""
+    try:
+        conn = sqlite3.connect('leads.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM gsa_applications WHERE id = ?', (app_id,))
+        application = c.fetchone()
+        conn.close()
+        
+        if not application:
+            flash('Application not found', 'error')
+            return redirect(url_for('gsa_approval'))
+        
+        return render_template('gsa_approval_confirmation.html', application=application)
+    except Exception as e:
+        print(f"Error loading confirmation: {e}")
+        flash('Error loading confirmation page', 'error')
+        return redirect(url_for('gsa_approval'))
+
+@app.route('/admin/gsa-applications')
+def admin_gsa_applications():
+    """Admin page to view and manage GSA applications"""
+    if not session.get('is_admin'):
+        flash('Admin access required', 'error')
+        return redirect(url_for('admin_signin'))
+    
+    try:
+        conn = sqlite3.connect('leads.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''SELECT * FROM gsa_applications 
+                    ORDER BY submitted_at DESC''')
+        applications = c.fetchall()
+        conn.close()
+        
+        return render_template('admin_gsa_applications.html', applications=applications)
+    except Exception as e:
+        print(f"Error loading GSA applications: {e}")
+        flash('Error loading applications', 'error')
+        return redirect(url_for('admin'))
+
+@app.route('/admin/gsa-application/<int:app_id>')
+def admin_view_gsa_application(app_id):
+    """View individual GSA application with documents"""
+    if not session.get('is_admin'):
+        flash('Admin access required', 'error')
+        return redirect(url_for('admin_signin'))
+    
+    try:
+        conn = sqlite3.connect('leads.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM gsa_applications WHERE id = ?', (app_id,))
+        application = c.fetchone()
+        conn.close()
+        
+        if not application:
+            flash('Application not found', 'error')
+            return redirect(url_for('admin_gsa_applications'))
+        
+        # Get list of uploaded files
+        documents = []
+        if application['documents_path'] and os.path.exists(application['documents_path']):
+            documents = os.listdir(application['documents_path'])
+        
+        return render_template('admin_view_gsa_application.html', 
+                             application=application, 
+                             documents=documents)
+    except Exception as e:
+        print(f"Error loading application: {e}")
+        flash('Error loading application', 'error')
+        return redirect(url_for('admin_gsa_applications'))
+
+@app.route('/admin/gsa-application/<int:app_id>/download/<filename>')
+def download_gsa_document(app_id, filename):
+    """Securely download GSA application documents (admin only)"""
+    if not session.get('is_admin'):
+        abort(403)
+    
+    try:
+        conn = sqlite3.connect('leads.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT documents_path FROM gsa_applications WHERE id = ?', (app_id,))
+        application = c.fetchone()
+        conn.close()
+        
+        if not application or not application['documents_path']:
+            abort(404)
+        
+        # Security check: ensure filename is in the application folder
+        safe_filename = secure_filename(filename)
+        file_path = os.path.join(application['documents_path'], safe_filename)
+        
+        if not os.path.exists(file_path):
+            abort(404)
+        
+        return send_from_directory(application['documents_path'], safe_filename, as_attachment=True)
+    except Exception as e:
+        print(f"Error downloading document: {e}")
+        abort(500)
+
+@app.route('/admin/gsa-application/<int:app_id>/update-status', methods=['POST'])
+def update_gsa_application_status(app_id):
+    """Update GSA application status and add admin notes"""
+    if not session.get('is_admin'):
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        status = request.form.get('status')
+        admin_notes = request.form.get('admin_notes')
+        
+        conn = sqlite3.connect('leads.db')
+        c = conn.cursor()
+        c.execute('''UPDATE gsa_applications 
+                    SET status = ?, admin_notes = ?, reviewed_at = ?
+                    WHERE id = ?''',
+                 (status, admin_notes, datetime.now(), app_id))
+        conn.commit()
+        conn.close()
+        
+        flash('Application updated successfully', 'success')
+        return redirect(url_for('admin_view_gsa_application', app_id=app_id))
+    except Exception as e:
+        print(f"Error updating application: {e}")
+        flash('Error updating application', 'error')
+        return redirect(url_for('admin_view_gsa_application', app_id=app_id))
+
+# ==================== End of GSA Approval Service Routes ====================
 
 if __name__ == '__main__':
     init_db()

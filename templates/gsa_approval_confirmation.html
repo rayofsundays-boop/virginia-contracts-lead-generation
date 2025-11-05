@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Application Submitted - GSA Approval Service{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Card -->
+            <div class="card shadow-lg border-0 text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                    </div>
+                    
+                    <h1 class="display-4 text-success mb-3">Application Submitted!</h1>
+                    <p class="lead text-muted mb-4">
+                        Your GSA Schedule approval application has been received and is being reviewed.
+                    </p>
+
+                    <div class="alert alert-info text-start">
+                        <h5><i class="fas fa-info-circle me-2"></i>Application Details</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p class="mb-2"><strong>Application ID:</strong></p>
+                                <p class="text-primary fs-4 mb-3">#{{ application['id'] }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-2"><strong>Submitted:</strong></p>
+                                <p class="mb-3">{{ application['submitted_at'] }}</p>
+                            </div>
+                        </div>
+                        <p class="mb-2"><strong>Company:</strong></p>
+                        <p class="mb-3">{{ application['company_name'] }}</p>
+                        <p class="mb-2"><strong>Contact:</strong></p>
+                        <p class="mb-0">{{ application['contact_name'] }} ({{ application['contact_email'] }})</p>
+                    </div>
+
+                    <!-- Next Steps -->
+                    <div class="card bg-light mt-4">
+                        <div class="card-body text-start">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-list-ol me-2"></i>What Happens Next?
+                            </h5>
+                            <ol class="mb-0">
+                                <li class="mb-3">
+                                    <strong>Review (24 hours):</strong> Our GSA specialists will review your application and documents
+                                </li>
+                                <li class="mb-3">
+                                    <strong>Assessment Call:</strong> We'll schedule a consultation to discuss your specific needs
+                                </li>
+                                <li class="mb-3">
+                                    <strong>Invoice:</strong> You'll receive an invoice for the $8,000 service fee
+                                </li>
+                                <li class="mb-3">
+                                    <strong>Application Prep:</strong> Once payment is received, we begin preparing your GSA application
+                                </li>
+                                <li class="mb-0">
+                                    <strong>Submission & Follow-up:</strong> We submit to GSA and manage the approval process (6-12 months)
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Important Info -->
+                    <div class="alert alert-warning text-start mt-4">
+                        <h6><i class="fas fa-clock me-2"></i>Timeline Reminder</h6>
+                        <p class="mb-0">The GSA approval process typically takes <strong>6-12 months</strong> from submission. We'll keep you updated every step of the way.</p>
+                    </div>
+
+                    <!-- Email Confirmation -->
+                    <div class="alert alert-success text-start">
+                        <i class="fas fa-envelope me-2"></i>
+                        <strong>Check Your Email:</strong> A confirmation email has been sent to 
+                        <strong>{{ application['contact_email'] }}</strong> with your application details.
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-home me-2"></i>Return to Home
+                        </a>
+                        <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Browse Federal Contracts
+                        </a>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="text-muted">Questions About Your Application?</h6>
+                        <p class="mb-2">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <a href="mailto:gsa-help@vacontracthub.com">gsa-help@vacontracthub.com</a>
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-phone text-success me-2"></i>
+                            <a href="tel:1-757-555-0100">(757) 555-0100</a>
+                        </p>
+                        <p class="text-muted small mt-2">Mon-Fri, 9AM-6PM EST</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.btn {
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
