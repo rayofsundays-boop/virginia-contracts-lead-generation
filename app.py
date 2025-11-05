@@ -4816,7 +4816,7 @@ def federal_contracts():
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
 
-        base_sql += ' ORDER BY deadline ASC LIMIT :limit OFFSET :offset'
+        base_sql += ' ORDER BY COALESCE(posted_date, created_at) DESC, deadline ASC NULLS LAST LIMIT :limit OFFSET :offset'
         params.update({'limit': per_page, 'offset': offset})
         rows = db.session.execute(text(base_sql), params).fetchall()
 
