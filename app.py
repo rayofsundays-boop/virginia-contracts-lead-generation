@@ -580,6 +580,21 @@ def safe_url_filter(url, default_system='sam.gov'):
     
     url = url.strip()
     
+    # Block known fake/broken domains (AI-generated or invalid)
+    blocked_domains = [
+        'asg-procurement.com',
+        'example.com', 
+        'test.com',
+        'fake.com',
+        'placeholder.com',
+        'tempurl.com'
+    ]
+    
+    for blocked in blocked_domains:
+        if blocked in url.lower():
+            print(f"⚠️ Blocked fake domain: {url}")
+            return 'https://sam.gov/content/opportunities'
+    
     # Check if URL has a protocol, if not add https://
     if not url.startswith(('http://', 'https://', '//')):
         url = 'https://' + url
