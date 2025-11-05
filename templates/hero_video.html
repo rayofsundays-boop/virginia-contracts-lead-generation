@@ -19,17 +19,18 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         .video-container {
-            width: 100%;
+            width: 100vw;
             height: 100vh;
-            max-width: 100vw;
             position: relative;
             overflow: hidden;
         }
 
-        /* Animated background with particles */
+        /* Animated background with particles - Brighter */
         #particles-canvas {
             position: absolute;
             top: 0;
@@ -37,6 +38,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            filter: brightness(1.5);
         }
 
         .content {
@@ -48,6 +50,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 0;
             padding: clamp(2rem, 5vw, 4rem);
         }
 
@@ -106,7 +109,7 @@
         .map-glow {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #667eea20, #764ba220);
+            background: linear-gradient(135deg, #667eea40, #764ba240);
             border: 3px solid #5C3AFF;
             border-radius: 20px;
             position: relative;
@@ -300,23 +303,6 @@
             box-shadow: 0 10px 40px rgba(92, 58, 255, 0.4);
         }
 
-        /* Text overlays */
-        .narration-text {
-            position: absolute;
-            bottom: clamp(3rem, 10vh, 6rem);
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: clamp(1.2rem, 2.5vw, 2rem);
-            color: #ffffff;
-            text-align: center;
-            max-width: 90%;
-            padding: 1rem 2rem;
-            background: rgba(10, 10, 10, 0.7);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            line-height: 1.6;
-        }
-
         /* Animations */
         @keyframes glow {
             0%, 100% { filter: drop-shadow(0 0 20px #5C3AFF); }
@@ -423,7 +409,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="narration-text">30+ Virginia cities and agencies seeking cleaning professionals</div>
             </div>
 
             <!-- Scene 3: Commercial Partners (8-14 sec) -->
@@ -432,7 +417,6 @@
                     <div class="stat-number">24+</div>
                     <div class="stat-label">Commercial Property Managers</div>
                 </div>
-                <div class="narration-text">Actively searching for reliable contractors like you</div>
             </div>
 
             <!-- Scene 4: AI Technology (14-20 sec) -->
@@ -446,7 +430,6 @@
                     </div>
                     <div class="stat-label">AI-Powered Contract Matching</div>
                 </div>
-                <div class="narration-text">Our AI analyzes every opportunity to match you with the best contracts — instantly</div>
             </div>
 
             <!-- Scene 5: Dashboard Preview (20-25 sec) -->
@@ -468,7 +451,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="narration-text">Real-time updates, performance analytics, and automated bid insights</div>
             </div>
 
             <!-- Scene 6: CTA (25-30 sec) -->
