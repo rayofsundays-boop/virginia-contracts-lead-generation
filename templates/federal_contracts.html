@@ -182,17 +182,23 @@
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <div>
+                            {% if contract.sam_gov_url %}
                             <a href="{{ contract.sam_gov_url }}" target="_blank" class="btn btn-primary btn-sm" rel="noopener noreferrer">
-                                <i class="fas fa-search me-1"></i>Find on SAM.gov
+                                <i class="fas fa-external-link-alt me-1"></i>View on SAM.gov
                             </a>
+                            {% else %}
+                            <a href="https://sam.gov/search/?index=opp&page=1&pageSize=25&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL" target="_blank" class="btn btn-outline-primary btn-sm" rel="noopener noreferrer">
+                                <i class="fas fa-search me-1"></i>Search SAM.gov
+                            </a>
+                            {% endif %}
                             <button class="btn btn-outline-secondary btn-sm" 
                                     onclick="shareFederalContract('{{ contract.title | safe }}', '{{ contract.description[:100] | safe }}', '{{ contract.agency }}', '{{ contract.value }}', '{{ contract.deadline }}')">
                                 <i class="fas fa-share-alt"></i> Share
                             </button>
                         </div>
                         <div class="text-end">
-                            <small class="text-muted">Access:</small><br>
-                            <strong class="text-success">Included</strong>
+                            <small class="text-muted">SAM.gov</small><br>
+                            <strong class="text-primary">Federal Source</strong>
                         </div>
                     </div>
                     <div class="card-footer text-muted small bg-light">
