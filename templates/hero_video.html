@@ -155,19 +155,6 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.2) 100%);
         }
 
-        .city-badge:nth-child(1) { animation-delay: 0.1s; }
-        .city-badge:nth-child(2) { animation-delay: 0.15s; }
-        .city-badge:nth-child(3) { animation-delay: 0.2s; }
-        .city-badge:nth-child(4) { animation-delay: 0.25s; }
-        .city-badge:nth-child(5) { animation-delay: 0.3s; }
-        .city-badge:nth-child(6) { animation-delay: 0.35s; }
-        .city-badge:nth-child(7) { animation-delay: 0.4s; }
-        .city-badge:nth-child(8) { animation-delay: 0.45s; }
-        .city-badge:nth-child(9) { animation-delay: 0.5s; }
-        .city-badge:nth-child(10) { animation-delay: 0.55s; }
-        .city-badge:nth-child(11) { animation-delay: 0.6s; }
-        .city-badge:nth-child(12) { animation-delay: 0.65s; }
-
         .badge-icon {
             font-size: clamp(1.8rem, 3.5vw, 2.5rem);
             margin-bottom: 0.3rem;
@@ -180,6 +167,66 @@
             font-weight: 700;
             text-shadow: 0 1px 3px rgba(0,0,0,0.4);
             letter-spacing: 0.3px;
+        }
+
+        /* Coverage Disclosure - New Clean Text Format */
+        .coverage-disclosure {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .disclosure-title {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .disclosure-main {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .number-highlight {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffffff, #f0f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 900;
+            text-shadow: none;
+            filter: drop-shadow(0 4px 15px rgba(255,255,255,0.4));
+        }
+
+        .cities-list-text {
+            font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }
+
+        .coverage-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.5);
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
         }
 
         .coverage-text {
@@ -505,61 +552,21 @@
                 </div>
             </div>
 
-            <!-- Scene 2: Virginia Cities with Map Animation (3-8 sec) -->
+            <!-- Scene 2: Coverage Area Disclosure (3-8 sec) -->
             <div class="scene" id="scene2">
                 <div class="map-scene">
-                    <div class="scene-title">Serving Virginia & Beyond</div>
-                    <div class="cities-grid-modern">
-                        <div class="city-badge">
-                            <div class="badge-icon">🏛️</div>
-                            <div class="badge-name">Hampton</div>
+                    <div class="coverage-disclosure">
+                        <div class="disclosure-title">Coverage Area</div>
+                        <div class="disclosure-main">
+                            <span class="number-highlight">12</span> Major Virginia Markets
                         </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏢</div>
-                            <div class="badge-name">Suffolk</div>
+                        <div class="cities-list-text">
+                            Hampton • Suffolk • Virginia Beach • Newport News<br>
+                            Williamsburg • Richmond • Norfolk • Chesapeake<br>
+                            Arlington • Alexandria • Fairfax • Washington DC
                         </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🌊</div>
-                            <div class="badge-name">Virginia Beach</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">⚓</div>
-                            <div class="badge-name">Newport News</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏰</div>
-                            <div class="badge-name">Williamsburg</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏛️</div>
-                            <div class="badge-name">Richmond</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏢</div>
-                            <div class="badge-name">Norfolk</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🌉</div>
-                            <div class="badge-name">Chesapeake</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏙️</div>
-                            <div class="badge-name">Arlington</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏛️</div>
-                            <div class="badge-name">Alexandria</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏢</div>
-                            <div class="badge-name">Fairfax</div>
-                        </div>
-                        <div class="city-badge">
-                            <div class="badge-icon">🏛️</div>
-                            <div class="badge-name">Washington DC</div>
-                        </div>
+                        <div class="coverage-subtitle">Complete Statewide Coverage</div>
                     </div>
-                    <div class="coverage-text">12 Major Markets • Complete Coverage</div>
                 </div>
             </div>            <!-- Scene 3: Commercial Partners (8-14 sec) -->
             <div class="scene" id="scene3">
