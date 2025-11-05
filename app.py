@@ -2794,6 +2794,37 @@ def db_status():
     except Exception as e:
         return f"<h1>Error checking database status</h1><pre>{e}</pre>"
 
+@app.route('/test-contracts')
+def test_contracts():
+    """Quick diagnostic to see what contracts are being returned"""
+    try:
+        html = "<h1>Contract Data Test</h1>"
+        html += "<style>body{font-family:Arial;padding:20px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:8px;text-align:left;} th{background:#667eea;color:white;}</style>"
+        
+        # Get first 5 contracts
+        rows = db.session.execute(text('''
+            SELECT id, title, agency, department, location, value, deadline, 
+                   description, naics_code, sam_gov_url, notice_id
+            FROM federal_contracts 
+            LIMIT 5
+        ''')).fetchall()
+        
+        html += f"<p>Found {len(rows)} contracts (showing first 5):</p>"
+        
+        if rows:
+            html += "<table><tr><th>ID</th><th>Title</th><th>Agency</th><th>Department</th><th>Location</th><th>Deadline</th><th>Notice ID</th></tr>"
+            for row in rows:
+                html += f"<tr><td>{row.id}</td><td>{row.title or 'NULL'}</td><td>{row.agency or 'NULL'}</td><td>{row.department or 'NULL'}</td><td>{row.location or 'NULL'}</td><td>{row.deadline or 'NULL'}</td><td>{row.notice_id or 'NULL'}</td></tr>"
+            html += "</table>"
+        else:
+            html += "<p>No contracts found!</p>"
+        
+        html += "<hr><p><a href='/federal-contracts'>Go to Federal Contracts Page</a> | <a href='/db-status'>DB Status</a></p>"
+        return html
+    except Exception as e:
+        import traceback
+        return f"<h1>Error</h1><pre>{traceback.format_exc()}</pre>"
+
 @app.route('/run-updates')
 def run_updates():
     """Manually trigger data updates and show before/after counts.
