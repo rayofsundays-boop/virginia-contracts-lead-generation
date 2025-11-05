@@ -31,6 +31,9 @@ class SAMgovFetcher:
             '238990',  # All Other Specialty Trade Contractors (facility maintenance)
             '562910',  # Remediation Services (deep cleaning, mold removal)
         ]
+        
+        # DMV Region (DC, Maryland, Virginia) for maximum coverage
+        self.target_states = ['VA', 'MD', 'DC']
     
     def fetch_with_throttle(self, urls, delay=2):
         """
@@ -62,7 +65,7 @@ class SAMgovFetcher:
     
     def fetch_va_cleaning_contracts(self, days_back=90):
         """
-        Fetch real cleaning contracts from Virginia
+        Fetch real cleaning contracts from DMV region (DC, Maryland, Virginia)
         
         Args:
             days_back: How many days back to search (default 90 - expanded for more coverage)
@@ -76,25 +79,30 @@ class SAMgovFetcher:
         
         all_contracts = []
         
-        # Search for each NAICS code
-        for idx, naics in enumerate(self.naics_codes):
-            logger.info(f"Fetching contracts for NAICS {naics}...")
-            contracts = self._search_contracts(naics, days_back)
-            all_contracts.extend(contracts)
-            # Stagger requests to minimize rate limiting
-            if idx < len(self.naics_codes) - 1:
-                sleep_s = 1.5 + random.random() * 1.5
-                logger.info(f"Sleeping {sleep_s:.1f}s to avoid rate limits...")
-                time.sleep(sleep_s)
+        # Search each state in DMV region
+        for state in self.target_states:
+            logger.info(f"🔍 Searching {state} contracts...")
+            
+            # Search for each NAICS code in this state
+            for idx, naics in enumerate(self.naics_codes):
+                logger.info(f"  NAICS {naics} in {state}...")
+                contracts = self._search_contracts(naics, days_back, state)
+                all_contracts.extend(contracts)
+                
+                # Stagger requests to minimize rate limiting
+                if idx < len(self.naics_codes) - 1 or state != self.target_states[-1]:
+                    sleep_s = 1.5 + random.random() * 1.5
+                    logger.info(f"  Sleeping {sleep_s:.1f}s to avoid rate limits...")
+                    time.sleep(sleep_s)
         
-        logger.info(f"✅ Fetched {len(all_contracts)} real contracts from SAM.gov")
+        logger.info(f"✅ Fetched {len(all_contracts)} real contracts from DMV region (VA/MD/DC)")
         return all_contracts
     
-    def _search_contracts(self, naics_code, days_back):
+    def _search_contracts(self, naics_code, days_back, state='VA'):
         """Search SAM.gov for contracts with specific NAICS code with pagination"""
         headers = {
             'Accept': 'application/json',
-            'User-Agent': 'VA-Contracts-Fetcher/1.0 (+https://example.com)'
+            'User-Agent': 'DMV-Contracts-Fetcher/1.0 (+https://example.com)'
         }
 
         limit = 100
@@ -118,9 +126,9 @@ class SAMgovFetcher:
                     # Legacy/alternate param some integrations used; harmless if ignored
                     'ptype': 'o,s',
                     'ncode': naics_code,
-                    'placeOfPerformanceState': 'VA',  # Virginia only
+                    'placeOfPerformanceState': state,  # DMV region: VA, MD, or DC
                     # Try fully-qualified filter key as well (API accepts dotted keys)
-                    'placeOfPerformance.state': 'VA',
+                    'placeOfPerformance.state': state,
                     'limit': limit,
                     'offset': offset
                 }

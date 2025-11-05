@@ -12,9 +12,21 @@ import os
 class LeadGenerator:
     def __init__(self, db_path):
         self.db_path = db_path
+        # DMV Region Cities (Virginia, Maryland, DC, Richmond)
         self.virginia_cities = [
+            # Hampton Roads (Original)
             'Hampton', 'Suffolk', 'Virginia Beach', 'Newport News', 'Williamsburg',
-            'Norfolk', 'Chesapeake', 'Portsmouth', 'Virginia Beach', 'Hampton'
+            'Norfolk', 'Chesapeake', 'Portsmouth',
+            # Northern Virginia (DC Suburbs)
+            'Alexandria', 'Arlington', 'Fairfax', 'Falls Church', 'Manassas', 'Reston',
+            'Tysons', 'Vienna', 'McLean', 'Herndon', 'Leesburg', 'Sterling',
+            # Richmond Area
+            'Richmond', 'Henrico', 'Chesterfield', 'Glen Allen', 'Short Pump',
+            # Maryland (DC Suburbs)
+            'Bethesda', 'Silver Spring', 'Rockville', 'Gaithersburg', 'Frederick',
+            'College Park', 'Hyattsville', 'Bowie', 'Annapolis', 'Baltimore',
+            # DC
+            'Washington DC', 'District of Columbia'
         ]
         
         # Government agencies and departments
