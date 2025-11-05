@@ -209,18 +209,27 @@
                     <div class="card-footer bg-white">
                         {% if is_paid_subscriber or is_admin %}
                             <!-- Full Access for Subscribers -->
-                            {% if contract[7] and contract[7]|length > 0 %}
-                                <a href="{{ contract[7] }}" target="_blank" class="btn btn-success btn-sm w-100">
-                                    <i class="fas fa-external-link-alt"></i> View Opportunity
-                                </a>
-                            {% else %}
-                                <span class="btn btn-outline-warning btn-sm w-100" title="URL not available">
-                                    <i class="fas fa-exclamation-triangle"></i> No URL
-                                </span>
-                            {% endif %}
+                            <div class="d-flex gap-2">
+                                {% if contract[7] and contract[7]|length > 0 %}
+                                    <a href="{{ contract[7] }}" target="_blank" class="btn btn-success btn-sm flex-grow-1">
+                                        <i class="fas fa-external-link-alt"></i> View Opportunity
+                                    </a>
+                                {% else %}
+                                    <span class="btn btn-outline-warning btn-sm flex-grow-1" title="URL not available">
+                                        <i class="fas fa-exclamation-triangle"></i> No URL
+                                    </span>
+                                {% endif %}
+                                <button class="btn btn-outline-warning btn-sm bookmark-btn" 
+                                        data-lead-type="supply_contract" 
+                                        data-lead-id="{{ contract[0] }}"
+                                        onclick="toggleBookmark(this, 'supply_contract', {{ contract[0] }}, '{{ contract[1] | safe }}')"
+                                        title="Save to My Leads">
+                                    <i class="fas fa-bookmark"></i> Save
+                                </button>
+                            </div>
                         {% else %}
                             <!-- Paywall for Non-Subscribers -->
-                                                        <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-sm w-100">
+                            <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-sm w-100">
                                 Subscribe to View
                             </a>
                         {% endif %}
@@ -399,4 +408,76 @@
     background-color: #fff3cd;
 }
 </style>
+
+<script>
+function toggleBookmark(btn, leadType, leadId, title) {
+    // Check if user is logged in
+    fetch('/api/check-lead-access')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.is_logged_in) {
+                alert('Please sign in to save leads');
+                window.location.href = '/signin';
+                return;
+            }
+            
+            // Check if already bookmarked
+            const isBookmarked = btn.classList.contains('btn-warning');
+            
+            if (isBookmarked) {
+                // Remove bookmark
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> Save';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                showToast('Bookmark updated', 'info');
+            } else {
+                // Add bookmark
+                fetch('/api/save-lead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_type: leadType,
+                        lead_id: leadId,
+                        notes: `Saved from ${leadType} page`
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved!';
+                        btn.classList.remove('btn-outline-warning');
+                        btn.classList.add('btn-warning');
+                        showToast(`"${title}" saved to My Leads!`, 'success');
+                    } else {
+                        alert('Failed to save lead: ' + result.error);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error saving lead:', err);
+                    alert('Failed to save lead. Please try again.');
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Error checking login status:', err);
+            alert('Please sign in to save leads');
+        });
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+
 {% endblock %}

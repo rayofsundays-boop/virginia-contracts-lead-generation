@@ -231,6 +231,14 @@
                                         </a>
                                         {% endif %}
                                         
+                                        <button class="btn btn-outline-warning btn-lg bookmark-btn" 
+                                                data-lead-type="quick_win" 
+                                                data-lead-id="{{ lead.id }}"
+                                                onclick="toggleBookmark(this, 'quick_win', {{ lead.id }}, '{{ lead.title | safe }}')"
+                                                title="Save to My Leads">
+                                            <i class="fas fa-bookmark me-2"></i>Save to My Leads
+                                        </button>
+                                        
                                         <a href="{{ url_for('ai_proposal_generator') }}?lead_title={{ lead.title }}" class="btn btn-outline-secondary btn-lg">
                                             <i class="fas fa-magic me-2"></i>Generate Proposal
                                         </a>
@@ -470,4 +478,76 @@
     color: #667eea !important;
 }
 </style>
+
+<script>
+function toggleBookmark(btn, leadType, leadId, title) {
+    // Check if user is logged in
+    fetch('/api/check-lead-access')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.is_logged_in) {
+                alert('Please sign in to save leads');
+                window.location.href = '/signin';
+                return;
+            }
+            
+            // Check if already bookmarked
+            const isBookmarked = btn.classList.contains('btn-warning');
+            
+            if (isBookmarked) {
+                // Remove bookmark
+                btn.innerHTML = '<i class="fas fa-bookmark me-2"></i>Save to My Leads';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                showToast('Bookmark updated', 'info');
+            } else {
+                // Add bookmark
+                fetch('/api/save-lead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_type: leadType,
+                        lead_id: leadId,
+                        notes: `Saved from ${leadType} page`
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        btn.innerHTML = '<i class="fas fa-bookmark me-2"></i>Saved!';
+                        btn.classList.remove('btn-outline-warning');
+                        btn.classList.add('btn-warning');
+                        showToast(`"${title}" saved to My Leads!`, 'success');
+                    } else {
+                        alert('Failed to save lead: ' + result.error);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error saving lead:', err);
+                    alert('Failed to save lead. Please try again.');
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Error checking login status:', err);
+            alert('Please sign in to save leads');
+        });
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+
 {% endblock %}

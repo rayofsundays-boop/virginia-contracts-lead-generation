@@ -193,6 +193,13 @@
                                    rel="noopener noreferrer">
                                     <i class="fas fa-external-link-alt"></i> Apply Now
                                 </a>
+                                <button class="btn btn-outline-warning btn-sm bookmark-btn" 
+                                        data-lead-type="local_contract" 
+                                        data-lead-id="{{ contract[0] }}"
+                                        onclick="toggleBookmark(this, 'local_contract', {{ contract[0] }}, '{{ contract[1] | replace("'", "\\'") }}')"
+                                        title="Save to My Leads">
+                                    <i class="fas fa-bookmark"></i> Save
+                                </button>
                                 <button class="btn btn-outline-secondary btn-sm" 
                                         onclick="shareContract('{{ contract[1] | safe }}', '{{ contract[6][:100] | safe }}', '{{ contract[2] }}', '{{ contract[4] | currency }}', '{{ contract[5] }}')">
                                     <i class="fas fa-share-alt"></i> Share
@@ -333,6 +340,75 @@ function copyToClipboard(text, label) {
     }).catch(err => {
         alert('Failed to copy. Please copy manually: ' + text);
     });
+}
+
+function toggleBookmark(btn, leadType, leadId, title) {
+    // Check if user is logged in
+    fetch('/api/check-lead-access')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.is_logged_in) {
+                alert('Please sign in to save leads');
+                window.location.href = '/signin';
+                return;
+            }
+            
+            // Check if already bookmarked
+            const isBookmarked = btn.classList.contains('btn-warning');
+            
+            if (isBookmarked) {
+                // Remove bookmark
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> Save';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                showToast('Bookmark updated', 'info');
+            } else {
+                // Add bookmark
+                fetch('/api/save-lead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_type: leadType,
+                        lead_id: leadId,
+                        notes: `Saved from ${leadType} page`
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved!';
+                        btn.classList.remove('btn-outline-warning');
+                        btn.classList.add('btn-warning');
+                        showToast(`"${title}" saved to My Leads!`, 'success');
+                    } else {
+                        alert('Failed to save lead: ' + result.error);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error saving lead:', err);
+                    alert('Failed to save lead. Please try again.');
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Error checking login status:', err);
+            alert('Please sign in to save leads');
+        });
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
 
 function shareContract(title, description, agency, value, deadline) {

@@ -3854,36 +3854,101 @@ def saved_leads():
 def get_lead_details(lead_type, lead_id):
     """Helper to fetch lead details by type and ID"""
     try:
-        if lead_type == 'contract':
+        if lead_type == 'federal_contract':
             result = db.session.execute(text('''
-                SELECT title, agency, location, estimated_value, posted_date
+                SELECT id, title, agency, location, value, deadline, description, notice_id, sam_gov_url
+                FROM federal_contracts WHERE id = :id
+            '''), {'id': lead_id}).fetchone()
+            if result:
+                return {
+                    'type': 'Federal Contract',
+                    'title': result[1],
+                    'agency': result[2],
+                    'location': result[3],
+                    'value': result[4],
+                    'date': result[5],
+                    'description': result[6],
+                    'notice_id': result[7],
+                    'url': result[8],
+                    'lead_type': 'federal_contract',
+                    'lead_id': result[0]
+                }
+        elif lead_type == 'local_contract' or lead_type == 'contract':
+            result = db.session.execute(text('''
+                SELECT id, title, agency, location, value, deadline, description, website_url
                 FROM contracts WHERE id = :id
             '''), {'id': lead_id}).fetchone()
             if result:
                 return {
-                    'type': 'Government Contract',
-                    'title': result[0],
-                    'agency': result[1],
+                    'type': 'Local/State Contract',
+                    'title': result[1],
+                    'agency': result[2],
+                    'location': result[3],
+                    'value': result[4],
+                    'date': result[5],
+                    'description': result[6],
+                    'url': result[7],
+                    'lead_type': 'local_contract',
+                    'lead_id': result[0]
+                }
+        elif lead_type == 'commercial':
+            result = db.session.execute(text('''
+                SELECT id, business_name, location, monthly_value, business_type, description, status
+                FROM commercial_opportunities WHERE id = :id
+            '''), {'id': lead_id}).fetchone()
+            if result:
+                return {
+                    'type': 'Commercial Opportunity',
+                    'title': result[1],
+                    'agency': result[4],  # business_type as agency
                     'location': result[2],
-                    'value': result[3],
-                    'date': result[4]
+                    'value': f"${result[3]}/month" if result[3] else 'N/A',
+                    'date': None,
+                    'description': result[5],
+                    'status': result[6],
+                    'lead_type': 'commercial',
+                    'lead_id': result[0]
                 }
         elif lead_type == 'supply_contract':
             result = db.session.execute(text('''
-                SELECT title, agency, location, estimated_value, created_at
+                SELECT id, title, agency, location, estimated_value, created_at, description, website_url
                 FROM supply_contracts WHERE id = :id
             '''), {'id': lead_id}).fetchone()
             if result:
                 return {
                     'type': 'Supply Contract',
-                    'title': result[0],
-                    'agency': result[1],
+                    'title': result[1],
+                    'agency': result[2],
+                    'location': result[3],
+                    'value': result[4],
+                    'date': result[5],
+                    'description': result[6],
+                    'url': result[7],
+                    'lead_type': 'supply_contract',
+                    'lead_id': result[0]
+                }
+        elif lead_type == 'quick_win':
+            result = db.session.execute(text('''
+                SELECT id, title, location, estimated_value, deadline, description, phone, email, website_url
+                FROM quick_wins WHERE id = :id
+            '''), {'id': lead_id}).fetchone()
+            if result:
+                return {
+                    'type': 'Quick Win',
+                    'title': result[1],
+                    'agency': 'Quick Win Opportunity',
                     'location': result[2],
                     'value': result[3],
-                    'date': result[4]
+                    'date': result[4],
+                    'description': result[5],
+                    'phone': result[6],
+                    'email': result[7],
+                    'url': result[8],
+                    'lead_type': 'quick_win',
+                    'lead_id': result[0]
                 }
-    except:
-        pass
+    except Exception as e:
+        print(f"Error fetching lead details for {lead_type} #{lead_id}: {e}")
     return None
 
 @app.route('/change-password', methods=['POST'])

@@ -487,6 +487,13 @@
                                 onclick="requestContact('{{ opportunity.id }}', '{{ opportunity.business_name }}')">
                             <i class="fas fa-coins"></i> Get Contact Info
                         </button>
+                        <button class="btn btn-outline-warning btn-sm bookmark-btn" 
+                                data-lead-type="commercial" 
+                                data-lead-id="{{ opportunity.id }}"
+                                onclick="toggleBookmark(this, 'commercial', {{ opportunity.id }}, '{{ opportunity.business_name | safe }}')"
+                                title="Save to My Leads">
+                            <i class="fas fa-bookmark"></i> Save
+                        </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="shareCommercialOpportunity('{{ opportunity.business_name | safe }}', '{{ opportunity.description[:150] | safe }}...', '{{ opportunity.location }}', '${{ opportunity.monthly_value }}', '{{ opportunity.business_type }}')">
                             <i class="fas fa-share-alt"></i> Share
                         </button>
@@ -791,6 +798,62 @@ function showContactInfoModal(contactInfo, businessName, newCreditsBalance) {
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
     });
+}
+
+function toggleBookmark(btn, leadType, leadId, title) {
+    // Check if user is logged in
+    fetch('/api/check-lead-access')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.is_logged_in) {
+                alert('Please sign in to save leads');
+                window.location.href = '/signin';
+                return;
+            }
+            
+            // Check if already bookmarked
+            const isBookmarked = btn.classList.contains('btn-warning');
+            
+            if (isBookmarked) {
+                // Remove bookmark
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> Save';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                showToastCommercial('Bookmark updated', 'info');
+            } else {
+                // Add bookmark
+                fetch('/api/save-lead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_type: leadType,
+                        lead_id: leadId,
+                        notes: `Saved from ${leadType} page`
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved!';
+                        btn.classList.remove('btn-outline-warning');
+                        btn.classList.add('btn-warning');
+                        showToastCommercial(`"${title}" saved to My Leads!`, 'success');
+                    } else {
+                        alert('Failed to save lead: ' + result.error);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error saving lead:', err);
+                    alert('Failed to save lead. Please try again.');
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Error checking login status:', err);
+            alert('Please sign in to save leads');
+        });
 }
 
 function copyToClipboard(text) {
