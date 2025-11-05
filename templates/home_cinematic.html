@@ -59,7 +59,14 @@
         <div class="row align-items-center g-5">
             <div class="col-lg-6" data-aos="fade-right">
                 <div class="dashboard-mockup">
-                    <img src="{{ url_for('static', filename='images/dashboard-mockup.png') }}" alt="Dashboard Preview" class="img-fluid rounded-4 shadow-lg" onerror="this.src='https://placehold.co/800x600/1e293b/94a3b8?text=Dashboard+Preview'">
+                    <!-- Embedded Dashboard Video Preview -->
+                    <div class="video-embed-container">
+                        <iframe src="{{ url_for('dashboard_video_preview') }}" 
+                                frameborder="0" 
+                                scrolling="no"
+                                class="dashboard-video-frame"
+                                title="Dashboard Preview Video"></iframe>
+                    </div>
                     <div class="mockup-glow"></div>
                 </div>
             </div>
@@ -723,6 +730,27 @@ body {
 
 .dashboard-mockup img {
     border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+/* Video Embed Container */
+.video-embed-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+.dashboard-video-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 24px;
 }
 
 .mockup-glow {

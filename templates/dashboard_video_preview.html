@@ -474,6 +474,13 @@
             border-radius: 50px;
         }
 
+        /* Hide controls when embedded in iframe */
+        @media all and (display-mode: browser) {
+            body:not(.standalone) .controls {
+                display: none !important;
+            }
+        }
+
         .control-btn {
             padding: 15px 30px;
             font-size: 18px;
@@ -726,6 +733,22 @@
             document.querySelectorAll('.stat-number').forEach(animateCounter);
         }, 5500);
 
+        // Detect if in iframe and hide controls
+        function isInIframe() {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        if (isInIframe()) {
+            const controls = document.querySelector('.controls');
+            if (controls) {
+                controls.style.display = 'none';
+            }
+        }
+
         // Restart video
         function restartVideo() {
             location.reload();
@@ -738,9 +761,10 @@
 
         // Auto-restart for looping demo
         setTimeout(() => {
-            // Video completes at 11 seconds
-            // Optionally auto-restart
-            // restartVideo();
+            // Video completes at 11 seconds - auto-restart if embedded
+            if (isInIframe()) {
+                restartVideo();
+            }
         }, 11000);
     </script>
 </body>
