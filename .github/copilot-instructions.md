@@ -38,8 +38,42 @@ All setup steps have been completed:
 - `DATA_SOURCE_TRANSPARENCY.md` - Complete transparency guide
 - `systematic_cleanup_and_fetch.py` - Automated cleanup script
 
-### 🎬 Animated Dashboard Video (Nov 4, 2025) - LIVE ✅
-**11-second cinematic dashboard preview embedded on homepage:**
+### 🎬 Professional Hero Video (Nov 4, 2025) - LIVE ✅
+**30-second cinematic marketing video for homepage:**
+
+**Video Script Implementation:**
+- **Scene 1 (0-3s)**: VA Contract Hub logo with glow animation
+- **Scene 2 (3-8s)**: Glowing Virginia map with 5 featured cities (Hampton, Suffolk, Virginia Beach, Newport News, Williamsburg)
+- **Scene 3 (8-14s)**: "24+ Commercial Property Managers" statistic
+- **Scene 4 (14-20s)**: AI technology visualization with rotating circles
+- **Scene 5 (20-25s)**: Real-time dashboard preview with metrics
+- **Scene 6 (25-30s)**: CTA "Where Virginia's Contractors Win" + "Start Your Free Trial Today"
+
+**Technical Features:**
+- Animated particle background with neural network connections
+- Deep purple gradient (#5C3AFF) matching brand identity
+- Responsive viewport-based sizing (100vw/100vh)
+- Auto-looping 30-second sequence
+- Smooth 0.8s fade transitions between scenes
+- Professional narration text overlays on each scene
+- Mobile-responsive with clamp() typography
+- Floating particle effects synchronized with scene changes
+
+**Routes & Integration:**
+- **Video Route**: `/hero-video` (direct access)
+- **Embedded In**: `home_cinematic.html` (Discover Opportunities section)
+- **Replaces**: Previous `dashboard_video_preview` (now at `/dashboard-video-preview`)
+
+**Style & Tone:**
+- Confident, modern, professional corporate tech ad style
+- Female narrator voice (confident tone)
+- Soft futuristic background music (simulated visually)
+- Perfect for hero autoplay loop and marketing materials
+
+**Commit**: `d128b12` - Complete 30-second professional marketing video
+
+### 🎨 Responsive Dashboard Video (Nov 4, 2025) - FIXED ✅
+**Dashboard preview video viewport scaling fixes:**
 
 **Features:**
 - Brand intro → Dashboard → Stats → Contracts → CTA sequence
