@@ -1,0 +1,600 @@
+Alabama Facilities Management Department	Government	Facilities Management	Government	AL
+Alabama Department of Education	Government	Education	Government	AL
+Alabama University System	Education	Education	Education	AL
+Alabama Healthcare Network	Healthcare	Healthcare	Healthcare	AL
+Alabama Hospitality Group	Hospitality	Hospitality	Private	AL
+Alabama Commercial Properties	Commercial	Real Estate	Private	AL
+Alabama Airport Authority	Transportation	Airport	Government	AL
+Alabama Correctional Facilities	Government	Corrections	Government	AL
+Alabama Port Authority	Transportation	Port	Government	AL
+Alabama Senior Living & Care	Healthcare	Senior Care	Private	AL
+Alabama Retail Chain HQ	Retail	Retail	Private	AL
+Alabama Manufacturing Plant	Manufacturing	Manufacturing	Private	AL
+Alaska Facilities Management Department	Government	Facilities Management	Government	AK
+Alaska Department of Education	Government	Education	Government	AK
+Alaska University System	Education	Education	Education	AK
+Alaska Healthcare Network	Healthcare	Healthcare	Healthcare	AK
+Alaska Hospitality Group	Hospitality	Hospitality	Private	AK
+Alaska Commercial Properties	Commercial	Real Estate	Private	AK
+Alaska Airport Authority	Transportation	Airport	Government	AK
+Alaska Correctional Facilities	Government	Corrections	Government	AK
+Alaska Port Authority	Transportation	Port	Government	AK
+Alaska Senior Living & Care	Healthcare	Senior Care	Private	AK
+Alaska Retail Chain HQ	Retail	Retail	Private	AK
+Alaska Manufacturing Plant	Manufacturing	Manufacturing	Private	AK
+Arizona Facilities Management Department	Government	Facilities Management	Government	AZ
+Arizona Department of Education	Government	Education	Government	AZ
+Arizona University System	Education	Education	Education	AZ
+Arizona Healthcare Network	Healthcare	Healthcare	Healthcare	AZ
+Arizona Hospitality Group	Hospitality	Hospitality	Private	AZ
+Arizona Commercial Properties	Commercial	Real Estate	Private	AZ
+Arizona Airport Authority	Transportation	Airport	Government	AZ
+Arizona Correctional Facilities	Government	Corrections	Government	AZ
+Arizona Port Authority	Transportation	Port	Government	AZ
+Arizona Senior Living & Care	Healthcare	Senior Care	Private	AZ
+Arizona Retail Chain HQ	Retail	Retail	Private	AZ
+Arizona Manufacturing Plant	Manufacturing	Manufacturing	Private	AZ
+Arkansas Facilities Management Department	Government	Facilities Management	Government	AR
+Arkansas Department of Education	Government	Education	Government	AR
+Arkansas University System	Education	Education	Education	AR
+Arkansas Healthcare Network	Healthcare	Healthcare	Healthcare	AR
+Arkansas Hospitality Group	Hospitality	Hospitality	Private	AR
+Arkansas Commercial Properties	Commercial	Real Estate	Private	AR
+Arkansas Airport Authority	Transportation	Airport	Government	AR
+Arkansas Correctional Facilities	Government	Corrections	Government	AR
+Arkansas Port Authority	Transportation	Port	Government	AR
+Arkansas Senior Living & Care	Healthcare	Senior Care	Private	AR
+Arkansas Retail Chain HQ	Retail	Retail	Private	AR
+Arkansas Manufacturing Plant	Manufacturing	Manufacturing	Private	AR
+California Facilities Management Department	Government	Facilities Management	Government	CA
+California Department of Education	Government	Education	Government	CA
+California University System	Education	Education	Education	CA
+California Healthcare Network	Healthcare	Healthcare	Healthcare	CA
+California Hospitality Group	Hospitality	Hospitality	Private	CA
+California Commercial Properties	Commercial	Real Estate	Private	CA
+California Airport Authority	Transportation	Airport	Government	CA
+California Correctional Facilities	Government	Corrections	Government	CA
+California Port Authority	Transportation	Port	Government	CA
+California Senior Living & Care	Healthcare	Senior Care	Private	CA
+California Retail Chain HQ	Retail	Retail	Private	CA
+California Manufacturing Plant	Manufacturing	Manufacturing	Private	CA
+Colorado Facilities Management Department	Government	Facilities Management	Government	CO
+Colorado Department of Education	Government	Education	Government	CO
+Colorado University System	Education	Education	Education	CO
+Colorado Healthcare Network	Healthcare	Healthcare	Healthcare	CO
+Colorado Hospitality Group	Hospitality	Hospitality	Private	CO
+Colorado Commercial Properties	Commercial	Real Estate	Private	CO
+Colorado Airport Authority	Transportation	Airport	Government	CO
+Colorado Correctional Facilities	Government	Corrections	Government	CO
+Colorado Port Authority	Transportation	Port	Government	CO
+Colorado Senior Living & Care	Healthcare	Senior Care	Private	CO
+Colorado Retail Chain HQ	Retail	Retail	Private	CO
+Colorado Manufacturing Plant	Manufacturing	Manufacturing	Private	CO
+Connecticut Facilities Management Department	Government	Facilities Management	Government	CT
+Connecticut Department of Education	Government	Education	Government	CT
+Connecticut University System	Education	Education	Education	CT
+Connecticut Healthcare Network	Healthcare	Healthcare	Healthcare	CT
+Connecticut Hospitality Group	Hospitality	Hospitality	Private	CT
+Connecticut Commercial Properties	Commercial	Real Estate	Private	CT
+Connecticut Airport Authority	Transportation	Airport	Government	CT
+Connecticut Correctional Facilities	Government	Corrections	Government	CT
+Connecticut Port Authority	Transportation	Port	Government	CT
+Connecticut Senior Living & Care	Healthcare	Senior Care	Private	CT
+Connecticut Retail Chain HQ	Retail	Retail	Private	CT
+Connecticut Manufacturing Plant	Manufacturing	Manufacturing	Private	CT
+Delaware Facilities Management Department	Government	Facilities Management	Government	DE
+Delaware Department of Education	Government	Education	Government	DE
+Delaware University System	Education	Education	Education	DE
+Delaware Healthcare Network	Healthcare	Healthcare	Healthcare	DE
+Delaware Hospitality Group	Hospitality	Hospitality	Private	DE
+Delaware Commercial Properties	Commercial	Real Estate	Private	DE
+Delaware Airport Authority	Transportation	Airport	Government	DE
+Delaware Correctional Facilities	Government	Corrections	Government	DE
+Delaware Port Authority	Transportation	Port	Government	DE
+Delaware Senior Living & Care	Healthcare	Senior Care	Private	DE
+Delaware Retail Chain HQ	Retail	Retail	Private	DE
+Delaware Manufacturing Plant	Manufacturing	Manufacturing	Private	DE
+Florida Facilities Management Department	Government	Facilities Management	Government	FL
+Florida Department of Education	Government	Education	Government	FL
+Florida University System	Education	Education	Education	FL
+Florida Healthcare Network	Healthcare	Healthcare	Healthcare	FL
+Florida Hospitality Group	Hospitality	Hospitality	Private	FL
+Florida Commercial Properties	Commercial	Real Estate	Private	FL
+Florida Airport Authority	Transportation	Airport	Government	FL
+Florida Correctional Facilities	Government	Corrections	Government	FL
+Florida Port Authority	Transportation	Port	Government	FL
+Florida Senior Living & Care	Healthcare	Senior Care	Private	FL
+Florida Retail Chain HQ	Retail	Retail	Private	FL
+Florida Manufacturing Plant	Manufacturing	Manufacturing	Private	FL
+Georgia Facilities Management Department	Government	Facilities Management	Government	GA
+Georgia Department of Education	Government	Education	Government	GA
+Georgia University System	Education	Education	Education	GA
+Georgia Healthcare Network	Healthcare	Healthcare	Healthcare	GA
+Georgia Hospitality Group	Hospitality	Hospitality	Private	GA
+Georgia Commercial Properties	Commercial	Real Estate	Private	GA
+Georgia Airport Authority	Transportation	Airport	Government	GA
+Georgia Correctional Facilities	Government	Corrections	Government	GA
+Georgia Port Authority	Transportation	Port	Government	GA
+Georgia Senior Living & Care	Healthcare	Senior Care	Private	GA
+Georgia Retail Chain HQ	Retail	Retail	Private	GA
+Georgia Manufacturing Plant	Manufacturing	Manufacturing	Private	GA
+Hawaii Facilities Management Department	Government	Facilities Management	Government	HI
+Hawaii Department of Education	Government	Education	Government	HI
+Hawaii University System	Education	Education	Education	HI
+Hawaii Healthcare Network	Healthcare	Healthcare	Healthcare	HI
+Hawaii Hospitality Group	Hospitality	Hospitality	Private	HI
+Hawaii Commercial Properties	Commercial	Real Estate	Private	HI
+Hawaii Airport Authority	Transportation	Airport	Government	HI
+Hawaii Correctional Facilities	Government	Corrections	Government	HI
+Hawaii Port Authority	Transportation	Port	Government	HI
+Hawaii Senior Living & Care	Healthcare	Senior Care	Private	HI
+Hawaii Retail Chain HQ	Retail	Retail	Private	HI
+Hawaii Manufacturing Plant	Manufacturing	Manufacturing	Private	HI
+Idaho Facilities Management Department	Government	Facilities Management	Government	ID
+Idaho Department of Education	Government	Education	Government	ID
+Idaho University System	Education	Education	Education	ID
+Idaho Healthcare Network	Healthcare	Healthcare	Healthcare	ID
+Idaho Hospitality Group	Hospitality	Hospitality	Private	ID
+Idaho Commercial Properties	Commercial	Real Estate	Private	ID
+Idaho Airport Authority	Transportation	Airport	Government	ID
+Idaho Correctional Facilities	Government	Corrections	Government	ID
+Idaho Port Authority	Transportation	Port	Government	ID
+Idaho Senior Living & Care	Healthcare	Senior Care	Private	ID
+Idaho Retail Chain HQ	Retail	Retail	Private	ID
+Idaho Manufacturing Plant	Manufacturing	Manufacturing	Private	ID
+Illinois Facilities Management Department	Government	Facilities Management	Government	IL
+Illinois Department of Education	Government	Education	Government	IL
+Illinois University System	Education	Education	Education	IL
+Illinois Healthcare Network	Healthcare	Healthcare	Healthcare	IL
+Illinois Hospitality Group	Hospitality	Hospitality	Private	IL
+Illinois Commercial Properties	Commercial	Real Estate	Private	IL
+Illinois Airport Authority	Transportation	Airport	Government	IL
+Illinois Correctional Facilities	Government	Corrections	Government	IL
+Illinois Port Authority	Transportation	Port	Government	IL
+Illinois Senior Living & Care	Healthcare	Senior Care	Private	IL
+Illinois Retail Chain HQ	Retail	Retail	Private	IL
+Illinois Manufacturing Plant	Manufacturing	Manufacturing	Private	IL
+Indiana Facilities Management Department	Government	Facilities Management	Government	IN
+Indiana Department of Education	Government	Education	Government	IN
+Indiana University System	Education	Education	Education	IN
+Indiana Healthcare Network	Healthcare	Healthcare	Healthcare	IN
+Indiana Hospitality Group	Hospitality	Hospitality	Private	IN
+Indiana Commercial Properties	Commercial	Real Estate	Private	IN
+Indiana Airport Authority	Transportation	Airport	Government	IN
+Indiana Correctional Facilities	Government	Corrections	Government	IN
+Indiana Port Authority	Transportation	Port	Government	IN
+Indiana Senior Living & Care	Healthcare	Senior Care	Private	IN
+Indiana Retail Chain HQ	Retail	Retail	Private	IN
+Indiana Manufacturing Plant	Manufacturing	Manufacturing	Private	IN
+Iowa Facilities Management Department	Government	Facilities Management	Government	IA
+Iowa Department of Education	Government	Education	Government	IA
+Iowa University System	Education	Education	Education	IA
+Iowa Healthcare Network	Healthcare	Healthcare	Healthcare	IA
+Iowa Hospitality Group	Hospitality	Hospitality	Private	IA
+Iowa Commercial Properties	Commercial	Real Estate	Private	IA
+Iowa Airport Authority	Transportation	Airport	Government	IA
+Iowa Correctional Facilities	Government	Corrections	Government	IA
+Iowa Port Authority	Transportation	Port	Government	IA
+Iowa Senior Living & Care	Healthcare	Senior Care	Private	IA
+Iowa Retail Chain HQ	Retail	Retail	Private	IA
+Iowa Manufacturing Plant	Manufacturing	Manufacturing	Private	IA
+Kansas Facilities Management Department	Government	Facilities Management	Government	KS
+Kansas Department of Education	Government	Education	Government	KS
+Kansas University System	Education	Education	Education	KS
+Kansas Healthcare Network	Healthcare	Healthcare	Healthcare	KS
+Kansas Hospitality Group	Hospitality	Hospitality	Private	KS
+Kansas Commercial Properties	Commercial	Real Estate	Private	KS
+Kansas Airport Authority	Transportation	Airport	Government	KS
+Kansas Correctional Facilities	Government	Corrections	Government	KS
+Kansas Port Authority	Transportation	Port	Government	KS
+Kansas Senior Living & Care	Healthcare	Senior Care	Private	KS
+Kansas Retail Chain HQ	Retail	Retail	Private	KS
+Kansas Manufacturing Plant	Manufacturing	Manufacturing	Private	KS
+Kentucky Facilities Management Department	Government	Facilities Management	Government	KY
+Kentucky Department of Education	Government	Education	Government	KY
+Kentucky University System	Education	Education	Education	KY
+Kentucky Healthcare Network	Healthcare	Healthcare	Healthcare	KY
+Kentucky Hospitality Group	Hospitality	Hospitality	Private	KY
+Kentucky Commercial Properties	Commercial	Real Estate	Private	KY
+Kentucky Airport Authority	Transportation	Airport	Government	KY
+Kentucky Correctional Facilities	Government	Corrections	Government	KY
+Kentucky Port Authority	Transportation	Port	Government	KY
+Kentucky Senior Living & Care	Healthcare	Senior Care	Private	KY
+Kentucky Retail Chain HQ	Retail	Retail	Private	KY
+Kentucky Manufacturing Plant	Manufacturing	Manufacturing	Private	KY
+Louisiana Facilities Management Department	Government	Facilities Management	Government	LA
+Louisiana Department of Education	Government	Education	Government	LA
+Louisiana University System	Education	Education	Education	LA
+Louisiana Healthcare Network	Healthcare	Healthcare	Healthcare	LA
+Louisiana Hospitality Group	Hospitality	Hospitality	Private	LA
+Louisiana Commercial Properties	Commercial	Real Estate	Private	LA
+Louisiana Airport Authority	Transportation	Airport	Government	LA
+Louisiana Correctional Facilities	Government	Corrections	Government	LA
+Louisiana Port Authority	Transportation	Port	Government	LA
+Louisiana Senior Living & Care	Healthcare	Senior Care	Private	LA
+Louisiana Retail Chain HQ	Retail	Retail	Private	LA
+Louisiana Manufacturing Plant	Manufacturing	Manufacturing	Private	LA
+Maine Facilities Management Department	Government	Facilities Management	Government	ME
+Maine Department of Education	Government	Education	Government	ME
+Maine University System	Education	Education	Education	ME
+Maine Healthcare Network	Healthcare	Healthcare	Healthcare	ME
+Maine Hospitality Group	Hospitality	Hospitality	Private	ME
+Maine Commercial Properties	Commercial	Real Estate	Private	ME
+Maine Airport Authority	Transportation	Airport	Government	ME
+Maine Correctional Facilities	Government	Corrections	Government	ME
+Maine Port Authority	Transportation	Port	Government	ME
+Maine Senior Living & Care	Healthcare	Senior Care	Private	ME
+Maine Retail Chain HQ	Retail	Retail	Private	ME
+Maine Manufacturing Plant	Manufacturing	Manufacturing	Private	ME
+Maryland Facilities Management Department	Government	Facilities Management	Government	MD
+Maryland Department of Education	Government	Education	Government	MD
+Maryland University System	Education	Education	Education	MD
+Maryland Healthcare Network	Healthcare	Healthcare	Healthcare	MD
+Maryland Hospitality Group	Hospitality	Hospitality	Private	MD
+Maryland Commercial Properties	Commercial	Real Estate	Private	MD
+Maryland Airport Authority	Transportation	Airport	Government	MD
+Maryland Correctional Facilities	Government	Corrections	Government	MD
+Maryland Port Authority	Transportation	Port	Government	MD
+Maryland Senior Living & Care	Healthcare	Senior Care	Private	MD
+Maryland Retail Chain HQ	Retail	Retail	Private	MD
+Maryland Manufacturing Plant	Manufacturing	Manufacturing	Private	MD
+Massachusetts Facilities Management Department	Government	Facilities Management	Government	MA
+Massachusetts Department of Education	Government	Education	Government	MA
+Massachusetts University System	Education	Education	Education	MA
+Massachusetts Healthcare Network	Healthcare	Healthcare	Healthcare	MA
+Massachusetts Hospitality Group	Hospitality	Hospitality	Private	MA
+Massachusetts Commercial Properties	Commercial	Real Estate	Private	MA
+Massachusetts Airport Authority	Transportation	Airport	Government	MA
+Massachusetts Correctional Facilities	Government	Corrections	Government	MA
+Massachusetts Port Authority	Transportation	Port	Government	MA
+Massachusetts Senior Living & Care	Healthcare	Senior Care	Private	MA
+Massachusetts Retail Chain HQ	Retail	Retail	Private	MA
+Massachusetts Manufacturing Plant	Manufacturing	Manufacturing	Private	MA
+Michigan Facilities Management Department	Government	Facilities Management	Government	MI
+Michigan Department of Education	Government	Education	Government	MI
+Michigan University System	Education	Education	Education	MI
+Michigan Healthcare Network	Healthcare	Healthcare	Healthcare	MI
+Michigan Hospitality Group	Hospitality	Hospitality	Private	MI
+Michigan Commercial Properties	Commercial	Real Estate	Private	MI
+Michigan Airport Authority	Transportation	Airport	Government	MI
+Michigan Correctional Facilities	Government	Corrections	Government	MI
+Michigan Port Authority	Transportation	Port	Government	MI
+Michigan Senior Living & Care	Healthcare	Senior Care	Private	MI
+Michigan Retail Chain HQ	Retail	Retail	Private	MI
+Michigan Manufacturing Plant	Manufacturing	Manufacturing	Private	MI
+Minnesota Facilities Management Department	Government	Facilities Management	Government	MN
+Minnesota Department of Education	Government	Education	Government	MN
+Minnesota University System	Education	Education	Education	MN
+Minnesota Healthcare Network	Healthcare	Healthcare	Healthcare	MN
+Minnesota Hospitality Group	Hospitality	Hospitality	Private	MN
+Minnesota Commercial Properties	Commercial	Real Estate	Private	MN
+Minnesota Airport Authority	Transportation	Airport	Government	MN
+Minnesota Correctional Facilities	Government	Corrections	Government	MN
+Minnesota Port Authority	Transportation	Port	Government	MN
+Minnesota Senior Living & Care	Healthcare	Senior Care	Private	MN
+Minnesota Retail Chain HQ	Retail	Retail	Private	MN
+Minnesota Manufacturing Plant	Manufacturing	Manufacturing	Private	MN
+Mississippi Facilities Management Department	Government	Facilities Management	Government	MS
+Mississippi Department of Education	Government	Education	Government	MS
+Mississippi University System	Education	Education	Education	MS
+Mississippi Healthcare Network	Healthcare	Healthcare	Healthcare	MS
+Mississippi Hospitality Group	Hospitality	Hospitality	Private	MS
+Mississippi Commercial Properties	Commercial	Real Estate	Private	MS
+Mississippi Airport Authority	Transportation	Airport	Government	MS
+Mississippi Correctional Facilities	Government	Corrections	Government	MS
+Mississippi Port Authority	Transportation	Port	Government	MS
+Mississippi Senior Living & Care	Healthcare	Senior Care	Private	MS
+Mississippi Retail Chain HQ	Retail	Retail	Private	MS
+Mississippi Manufacturing Plant	Manufacturing	Manufacturing	Private	MS
+Missouri Facilities Management Department	Government	Facilities Management	Government	MO
+Missouri Department of Education	Government	Education	Government	MO
+Missouri University System	Education	Education	Education	MO
+Missouri Healthcare Network	Healthcare	Healthcare	Healthcare	MO
+Missouri Hospitality Group	Hospitality	Hospitality	Private	MO
+Missouri Commercial Properties	Commercial	Real Estate	Private	MO
+Missouri Airport Authority	Transportation	Airport	Government	MO
+Missouri Correctional Facilities	Government	Corrections	Government	MO
+Missouri Port Authority	Transportation	Port	Government	MO
+Missouri Senior Living & Care	Healthcare	Senior Care	Private	MO
+Missouri Retail Chain HQ	Retail	Retail	Private	MO
+Missouri Manufacturing Plant	Manufacturing	Manufacturing	Private	MO
+Montana Facilities Management Department	Government	Facilities Management	Government	MT
+Montana Department of Education	Government	Education	Government	MT
+Montana University System	Education	Education	Education	MT
+Montana Healthcare Network	Healthcare	Healthcare	Healthcare	MT
+Montana Hospitality Group	Hospitality	Hospitality	Private	MT
+Montana Commercial Properties	Commercial	Real Estate	Private	MT
+Montana Airport Authority	Transportation	Airport	Government	MT
+Montana Correctional Facilities	Government	Corrections	Government	MT
+Montana Port Authority	Transportation	Port	Government	MT
+Montana Senior Living & Care	Healthcare	Senior Care	Private	MT
+Montana Retail Chain HQ	Retail	Retail	Private	MT
+Montana Manufacturing Plant	Manufacturing	Manufacturing	Private	MT
+Nebraska Facilities Management Department	Government	Facilities Management	Government	NE
+Nebraska Department of Education	Government	Education	Government	NE
+Nebraska University System	Education	Education	Education	NE
+Nebraska Healthcare Network	Healthcare	Healthcare	Healthcare	NE
+Nebraska Hospitality Group	Hospitality	Hospitality	Private	NE
+Nebraska Commercial Properties	Commercial	Real Estate	Private	NE
+Nebraska Airport Authority	Transportation	Airport	Government	NE
+Nebraska Correctional Facilities	Government	Corrections	Government	NE
+Nebraska Port Authority	Transportation	Port	Government	NE
+Nebraska Senior Living & Care	Healthcare	Senior Care	Private	NE
+Nebraska Retail Chain HQ	Retail	Retail	Private	NE
+Nebraska Manufacturing Plant	Manufacturing	Manufacturing	Private	NE
+Nevada Facilities Management Department	Government	Facilities Management	Government	NV
+Nevada Department of Education	Government	Education	Government	NV
+Nevada University System	Education	Education	Education	NV
+Nevada Healthcare Network	Healthcare	Healthcare	Healthcare	NV
+Nevada Hospitality Group	Hospitality	Hospitality	Private	NV
+Nevada Commercial Properties	Commercial	Real Estate	Private	NV
+Nevada Airport Authority	Transportation	Airport	Government	NV
+Nevada Correctional Facilities	Government	Corrections	Government	NV
+Nevada Port Authority	Transportation	Port	Government	NV
+Nevada Senior Living & Care	Healthcare	Senior Care	Private	NV
+Nevada Retail Chain HQ	Retail	Retail	Private	NV
+Nevada Manufacturing Plant	Manufacturing	Manufacturing	Private	NV
+New Hampshire Facilities Management Department	Government	Facilities Management	Government	NH
+New Hampshire Department of Education	Government	Education	Government	NH
+New Hampshire University System	Education	Education	Education	NH
+New Hampshire Healthcare Network	Healthcare	Healthcare	Healthcare	NH
+New Hampshire Hospitality Group	Hospitality	Hospitality	Private	NH
+New Hampshire Commercial Properties	Commercial	Real Estate	Private	NH
+New Hampshire Airport Authority	Transportation	Airport	Government	NH
+New Hampshire Correctional Facilities	Government	Corrections	Government	NH
+New Hampshire Port Authority	Transportation	Port	Government	NH
+New Hampshire Senior Living & Care	Healthcare	Senior Care	Private	NH
+New Hampshire Retail Chain HQ	Retail	Retail	Private	NH
+New Hampshire Manufacturing Plant	Manufacturing	Manufacturing	Private	NH
+New Jersey Facilities Management Department	Government	Facilities Management	Government	NJ
+New Jersey Department of Education	Government	Education	Government	NJ
+New Jersey University System	Education	Education	Education	NJ
+New Jersey Healthcare Network	Healthcare	Healthcare	Healthcare	NJ
+New Jersey Hospitality Group	Hospitality	Hospitality	Private	NJ
+New Jersey Commercial Properties	Commercial	Real Estate	Private	NJ
+New Jersey Airport Authority	Transportation	Airport	Government	NJ
+New Jersey Correctional Facilities	Government	Corrections	Government	NJ
+New Jersey Port Authority	Transportation	Port	Government	NJ
+New Jersey Senior Living & Care	Healthcare	Senior Care	Private	NJ
+New Jersey Retail Chain HQ	Retail	Retail	Private	NJ
+New Jersey Manufacturing Plant	Manufacturing	Manufacturing	Private	NJ
+New Mexico Facilities Management Department	Government	Facilities Management	Government	NM
+New Mexico Department of Education	Government	Education	Government	NM
+New Mexico University System	Education	Education	Education	NM
+New Mexico Healthcare Network	Healthcare	Healthcare	Healthcare	NM
+New Mexico Hospitality Group	Hospitality	Hospitality	Private	NM
+New Mexico Commercial Properties	Commercial	Real Estate	Private	NM
+New Mexico Airport Authority	Transportation	Airport	Government	NM
+New Mexico Correctional Facilities	Government	Corrections	Government	NM
+New Mexico Port Authority	Transportation	Port	Government	NM
+New Mexico Senior Living & Care	Healthcare	Senior Care	Private	NM
+New Mexico Retail Chain HQ	Retail	Retail	Private	NM
+New Mexico Manufacturing Plant	Manufacturing	Manufacturing	Private	NM
+New York Facilities Management Department	Government	Facilities Management	Government	NY
+New York Department of Education	Government	Education	Government	NY
+New York University System	Education	Education	Education	NY
+New York Healthcare Network	Healthcare	Healthcare	Healthcare	NY
+New York Hospitality Group	Hospitality	Hospitality	Private	NY
+New York Commercial Properties	Commercial	Real Estate	Private	NY
+New York Airport Authority	Transportation	Airport	Government	NY
+New York Correctional Facilities	Government	Corrections	Government	NY
+New York Port Authority	Transportation	Port	Government	NY
+New York Senior Living & Care	Healthcare	Senior Care	Private	NY
+New York Retail Chain HQ	Retail	Retail	Private	NY
+New York Manufacturing Plant	Manufacturing	Manufacturing	Private	NY
+North Carolina Facilities Management Department	Government	Facilities Management	Government	NC
+North Carolina Department of Education	Government	Education	Government	NC
+North Carolina University System	Education	Education	Education	NC
+North Carolina Healthcare Network	Healthcare	Healthcare	Healthcare	NC
+North Carolina Hospitality Group	Hospitality	Hospitality	Private	NC
+North Carolina Commercial Properties	Commercial	Real Estate	Private	NC
+North Carolina Airport Authority	Transportation	Airport	Government	NC
+North Carolina Correctional Facilities	Government	Corrections	Government	NC
+North Carolina Port Authority	Transportation	Port	Government	NC
+North Carolina Senior Living & Care	Healthcare	Senior Care	Private	NC
+North Carolina Retail Chain HQ	Retail	Retail	Private	NC
+North Carolina Manufacturing Plant	Manufacturing	Manufacturing	Private	NC
+North Dakota Facilities Management Department	Government	Facilities Management	Government	ND
+North Dakota Department of Education	Government	Education	Government	ND
+North Dakota University System	Education	Education	Education	ND
+North Dakota Healthcare Network	Healthcare	Healthcare	Healthcare	ND
+North Dakota Hospitality Group	Hospitality	Hospitality	Private	ND
+North Dakota Commercial Properties	Commercial	Real Estate	Private	ND
+North Dakota Airport Authority	Transportation	Airport	Government	ND
+North Dakota Correctional Facilities	Government	Corrections	Government	ND
+North Dakota Port Authority	Transportation	Port	Government	ND
+North Dakota Senior Living & Care	Healthcare	Senior Care	Private	ND
+North Dakota Retail Chain HQ	Retail	Retail	Private	ND
+North Dakota Manufacturing Plant	Manufacturing	Manufacturing	Private	ND
+Ohio Facilities Management Department	Government	Facilities Management	Government	OH
+Ohio Department of Education	Government	Education	Government	OH
+Ohio University System	Education	Education	Education	OH
+Ohio Healthcare Network	Healthcare	Healthcare	Healthcare	OH
+Ohio Hospitality Group	Hospitality	Hospitality	Private	OH
+Ohio Commercial Properties	Commercial	Real Estate	Private	OH
+Ohio Airport Authority	Transportation	Airport	Government	OH
+Ohio Correctional Facilities	Government	Corrections	Government	OH
+Ohio Port Authority	Transportation	Port	Government	OH
+Ohio Senior Living & Care	Healthcare	Senior Care	Private	OH
+Ohio Retail Chain HQ	Retail	Retail	Private	OH
+Ohio Manufacturing Plant	Manufacturing	Manufacturing	Private	OH
+Oklahoma Facilities Management Department	Government	Facilities Management	Government	OK
+Oklahoma Department of Education	Government	Education	Government	OK
+Oklahoma University System	Education	Education	Education	OK
+Oklahoma Healthcare Network	Healthcare	Healthcare	Healthcare	OK
+Oklahoma Hospitality Group	Hospitality	Hospitality	Private	OK
+Oklahoma Commercial Properties	Commercial	Real Estate	Private	OK
+Oklahoma Airport Authority	Transportation	Airport	Government	OK
+Oklahoma Correctional Facilities	Government	Corrections	Government	OK
+Oklahoma Port Authority	Transportation	Port	Government	OK
+Oklahoma Senior Living & Care	Healthcare	Senior Care	Private	OK
+Oklahoma Retail Chain HQ	Retail	Retail	Private	OK
+Oklahoma Manufacturing Plant	Manufacturing	Manufacturing	Private	OK
+Oregon Facilities Management Department	Government	Facilities Management	Government	OR
+Oregon Department of Education	Government	Education	Government	OR
+Oregon University System	Education	Education	Education	OR
+Oregon Healthcare Network	Healthcare	Healthcare	Healthcare	OR
+Oregon Hospitality Group	Hospitality	Hospitality	Private	OR
+Oregon Commercial Properties	Commercial	Real Estate	Private	OR
+Oregon Airport Authority	Transportation	Airport	Government	OR
+Oregon Correctional Facilities	Government	Corrections	Government	OR
+Oregon Port Authority	Transportation	Port	Government	OR
+Oregon Senior Living & Care	Healthcare	Senior Care	Private	OR
+Oregon Retail Chain HQ	Retail	Retail	Private	OR
+Oregon Manufacturing Plant	Manufacturing	Manufacturing	Private	OR
+Pennsylvania Facilities Management Department	Government	Facilities Management	Government	PA
+Pennsylvania Department of Education	Government	Education	Government	PA
+Pennsylvania University System	Education	Education	Education	PA
+Pennsylvania Healthcare Network	Healthcare	Healthcare	Healthcare	PA
+Pennsylvania Hospitality Group	Hospitality	Hospitality	Private	PA
+Pennsylvania Commercial Properties	Commercial	Real Estate	Private	PA
+Pennsylvania Airport Authority	Transportation	Airport	Government	PA
+Pennsylvania Correctional Facilities	Government	Corrections	Government	PA
+Pennsylvania Port Authority	Transportation	Port	Government	PA
+Pennsylvania Senior Living & Care	Healthcare	Senior Care	Private	PA
+Pennsylvania Retail Chain HQ	Retail	Retail	Private	PA
+Pennsylvania Manufacturing Plant	Manufacturing	Manufacturing	Private	PA
+Rhode Island Facilities Management Department	Government	Facilities Management	Government	RI
+Rhode Island Department of Education	Government	Education	Government	RI
+Rhode Island University System	Education	Education	Education	RI
+Rhode Island Healthcare Network	Healthcare	Healthcare	Healthcare	RI
+Rhode Island Hospitality Group	Hospitality	Hospitality	Private	RI
+Rhode Island Commercial Properties	Commercial	Real Estate	Private	RI
+Rhode Island Airport Authority	Transportation	Airport	Government	RI
+Rhode Island Correctional Facilities	Government	Corrections	Government	RI
+Rhode Island Port Authority	Transportation	Port	Government	RI
+Rhode Island Senior Living & Care	Healthcare	Senior Care	Private	RI
+Rhode Island Retail Chain HQ	Retail	Retail	Private	RI
+Rhode Island Manufacturing Plant	Manufacturing	Manufacturing	Private	RI
+South Carolina Facilities Management Department	Government	Facilities Management	Government	SC
+South Carolina Department of Education	Government	Education	Government	SC
+South Carolina University System	Education	Education	Education	SC
+South Carolina Healthcare Network	Healthcare	Healthcare	Healthcare	SC
+South Carolina Hospitality Group	Hospitality	Hospitality	Private	SC
+South Carolina Commercial Properties	Commercial	Real Estate	Private	SC
+South Carolina Airport Authority	Transportation	Airport	Government	SC
+South Carolina Correctional Facilities	Government	Corrections	Government	SC
+South Carolina Port Authority	Transportation	Port	Government	SC
+South Carolina Senior Living & Care	Healthcare	Senior Care	Private	SC
+South Carolina Retail Chain HQ	Retail	Retail	Private	SC
+South Carolina Manufacturing Plant	Manufacturing	Manufacturing	Private	SC
+South Dakota Facilities Management Department	Government	Facilities Management	Government	SD
+South Dakota Department of Education	Government	Education	Government	SD
+South Dakota University System	Education	Education	Education	SD
+South Dakota Healthcare Network	Healthcare	Healthcare	Healthcare	SD
+South Dakota Hospitality Group	Hospitality	Hospitality	Private	SD
+South Dakota Commercial Properties	Commercial	Real Estate	Private	SD
+South Dakota Airport Authority	Transportation	Airport	Government	SD
+South Dakota Correctional Facilities	Government	Corrections	Government	SD
+South Dakota Port Authority	Transportation	Port	Government	SD
+South Dakota Senior Living & Care	Healthcare	Senior Care	Private	SD
+South Dakota Retail Chain HQ	Retail	Retail	Private	SD
+South Dakota Manufacturing Plant	Manufacturing	Manufacturing	Private	SD
+Tennessee Facilities Management Department	Government	Facilities Management	Government	TN
+Tennessee Department of Education	Government	Education	Government	TN
+Tennessee University System	Education	Education	Education	TN
+Tennessee Healthcare Network	Healthcare	Healthcare	Healthcare	TN
+Tennessee Hospitality Group	Hospitality	Hospitality	Private	TN
+Tennessee Commercial Properties	Commercial	Real Estate	Private	TN
+Tennessee Airport Authority	Transportation	Airport	Government	TN
+Tennessee Correctional Facilities	Government	Corrections	Government	TN
+Tennessee Port Authority	Transportation	Port	Government	TN
+Tennessee Senior Living & Care	Healthcare	Senior Care	Private	TN
+Tennessee Retail Chain HQ	Retail	Retail	Private	TN
+Tennessee Manufacturing Plant	Manufacturing	Manufacturing	Private	TN
+Texas Facilities Management Department	Government	Facilities Management	Government	TX
+Texas Department of Education	Government	Education	Government	TX
+Texas University System	Education	Education	Education	TX
+Texas Healthcare Network	Healthcare	Healthcare	Healthcare	TX
+Texas Hospitality Group	Hospitality	Hospitality	Private	TX
+Texas Commercial Properties	Commercial	Real Estate	Private	TX
+Texas Airport Authority	Transportation	Airport	Government	TX
+Texas Correctional Facilities	Government	Corrections	Government	TX
+Texas Port Authority	Transportation	Port	Government	TX
+Texas Senior Living & Care	Healthcare	Senior Care	Private	TX
+Texas Retail Chain HQ	Retail	Retail	Private	TX
+Texas Manufacturing Plant	Manufacturing	Manufacturing	Private	TX
+Utah Facilities Management Department	Government	Facilities Management	Government	UT
+Utah Department of Education	Government	Education	Government	UT
+Utah University System	Education	Education	Education	UT
+Utah Healthcare Network	Healthcare	Healthcare	Healthcare	UT
+Utah Hospitality Group	Hospitality	Hospitality	Private	UT
+Utah Commercial Properties	Commercial	Real Estate	Private	UT
+Utah Airport Authority	Transportation	Airport	Government	UT
+Utah Correctional Facilities	Government	Corrections	Government	UT
+Utah Port Authority	Transportation	Port	Government	UT
+Utah Senior Living & Care	Healthcare	Senior Care	Private	UT
+Utah Retail Chain HQ	Retail	Retail	Private	UT
+Utah Manufacturing Plant	Manufacturing	Manufacturing	Private	UT
+Vermont Facilities Management Department	Government	Facilities Management	Government	VT
+Vermont Department of Education	Government	Education	Government	VT
+Vermont University System	Education	Education	Education	VT
+Vermont Healthcare Network	Healthcare	Healthcare	Healthcare	VT
+Vermont Hospitality Group	Hospitality	Hospitality	Private	VT
+Vermont Commercial Properties	Commercial	Real Estate	Private	VT
+Vermont Airport Authority	Transportation	Airport	Government	VT
+Vermont Correctional Facilities	Government	Corrections	Government	VT
+Vermont Port Authority	Transportation	Port	Government	VT
+Vermont Senior Living & Care	Healthcare	Senior Care	Private	VT
+Vermont Retail Chain HQ	Retail	Retail	Private	VT
+Vermont Manufacturing Plant	Manufacturing	Manufacturing	Private	VT
+Virginia Facilities Management Department	Government	Facilities Management	Government	VA
+Virginia Department of Education	Government	Education	Government	VA
+Virginia University System	Education	Education	Education	VA
+Virginia Healthcare Network	Healthcare	Healthcare	Healthcare	VA
+Virginia Hospitality Group	Hospitality	Hospitality	Private	VA
+Virginia Commercial Properties	Commercial	Real Estate	Private	VA
+Virginia Airport Authority	Transportation	Airport	Government	VA
+Virginia Correctional Facilities	Government	Corrections	Government	VA
+Virginia Port Authority	Transportation	Port	Government	VA
+Virginia Senior Living & Care	Healthcare	Senior Care	Private	VA
+Virginia Retail Chain HQ	Retail	Retail	Private	VA
+Virginia Manufacturing Plant	Manufacturing	Manufacturing	Private	VA
+Washington Facilities Management Department	Government	Facilities Management	Government	WA
+Washington Department of Education	Government	Education	Government	WA
+Washington University System	Education	Education	Education	WA
+Washington Healthcare Network	Healthcare	Healthcare	Healthcare	WA
+Washington Hospitality Group	Hospitality	Hospitality	Private	WA
+Washington Commercial Properties	Commercial	Real Estate	Private	WA
+Washington Airport Authority	Transportation	Airport	Government	WA
+Washington Correctional Facilities	Government	Corrections	Government	WA
+Washington Port Authority	Transportation	Port	Government	WA
+Washington Senior Living & Care	Healthcare	Senior Care	Private	WA
+Washington Retail Chain HQ	Retail	Retail	Private	WA
+Washington Manufacturing Plant	Manufacturing	Manufacturing	Private	WA
+West Virginia Facilities Management Department	Government	Facilities Management	Government	WV
+West Virginia Department of Education	Government	Education	Government	WV
+West Virginia University System	Education	Education	Education	WV
+West Virginia Healthcare Network	Healthcare	Healthcare	Healthcare	WV
+West Virginia Hospitality Group	Hospitality	Hospitality	Private	WV
+West Virginia Commercial Properties	Commercial	Real Estate	Private	WV
+West Virginia Airport Authority	Transportation	Airport	Government	WV
+West Virginia Correctional Facilities	Government	Corrections	Government	WV
+West Virginia Port Authority	Transportation	Port	Government	WV
+West Virginia Senior Living & Care	Healthcare	Senior Care	Private	WV
+West Virginia Retail Chain HQ	Retail	Retail	Private	WV
+West Virginia Manufacturing Plant	Manufacturing	Manufacturing	Private	WV
+Wisconsin Facilities Management Department	Government	Facilities Management	Government	WI
+Wisconsin Department of Education	Government	Education	Government	WI
+Wisconsin University System	Education	Education	Education	WI
+Wisconsin Healthcare Network	Healthcare	Healthcare	Healthcare	WI
+Wisconsin Hospitality Group	Hospitality	Hospitality	Private	WI
+Wisconsin Commercial Properties	Commercial	Real Estate	Private	WI
+Wisconsin Airport Authority	Transportation	Airport	Government	WI
+Wisconsin Correctional Facilities	Government	Corrections	Government	WI
+Wisconsin Port Authority	Transportation	Port	Government	WI
+Wisconsin Senior Living & Care	Healthcare	Senior Care	Private	WI
+Wisconsin Retail Chain HQ	Retail	Retail	Private	WI
+Wisconsin Manufacturing Plant	Manufacturing	Manufacturing	Private	WI
+Wyoming Facilities Management Department	Government	Facilities Management	Government	WY
+Wyoming Department of Education	Government	Education	Government	WY
+Wyoming University System	Education	Education	Education	WY
+Wyoming Healthcare Network	Healthcare	Healthcare	Healthcare	WY
+Wyoming Hospitality Group	Hospitality	Hospitality	Private	WY
+Wyoming Commercial Properties	Commercial	Real Estate	Private	WY
+Wyoming Airport Authority	Transportation	Airport	Government	WY
+Wyoming Correctional Facilities	Government	Corrections	Government	WY
+Wyoming Port Authority	Transportation	Port	Government	WY
+Wyoming Senior Living & Care	Healthcare	Senior Care	Private	WY
+Wyoming Retail Chain HQ	Retail	Retail	Private	WY
+Wyoming Manufacturing Plant	Manufacturing	Manufacturing	Private	WY
