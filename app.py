@@ -11344,7 +11344,7 @@ def admin_populate_missing_urls():
         
         if 'federal' in lead_types:
             federal = db.session.execute(text(
-                "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                "SELECT id, title, agency, location, naics_code, description, notice_id "
                 "FROM federal_contracts "
                 "WHERE (sam_gov_url IS NULL OR sam_gov_url = '') "
                 "ORDER BY posted_date DESC "
@@ -11354,7 +11354,7 @@ def admin_populate_missing_urls():
                 leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
                     'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
-                    'solicitation': lead[6], 'type': 'federal'
+                    'solicitation': lead[6] or 'N/A', 'type': 'federal'
                 })
         
         if 'supply' in lead_types:
@@ -11536,7 +11536,7 @@ def auto_populate_missing_urls_background():
             
             # Federal contracts
             federal = db.session.execute(text(
-                "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                "SELECT id, title, agency, location, naics_code, description, notice_id "
                 "FROM federal_contracts "
                 "WHERE (sam_gov_url IS NULL OR sam_gov_url = '') "
                 "AND posted_date >= CURRENT_DATE - INTERVAL '30 days' "
@@ -11548,7 +11548,7 @@ def auto_populate_missing_urls_background():
                 leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
                     'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
-                    'solicitation': lead[6], 'type': 'federal'
+                    'solicitation': lead[6] or 'N/A', 'type': 'federal'
                 })
             
             # Supply contracts
@@ -11703,7 +11703,7 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
             # Fetch the new leads based on type
             if lead_type == 'federal':
                 leads = db.session.execute(text(
-                    "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                    "SELECT id, title, agency, location, naics_code, description, notice_id "
                     "FROM federal_contracts "
                     "WHERE id = ANY(:ids) AND (sam_gov_url IS NULL OR sam_gov_url = '')"
                 ), {'ids': lead_ids}).fetchall()
@@ -11713,7 +11713,7 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
                         'location': lead[3], 'naics': lead[4], 
                         'description': lead[5][:300] if lead[5] else '',
-                        'solicitation': lead[6], 'type': 'federal'
+                        'solicitation': lead[6] or 'N/A', 'type': 'federal'
                     })
             
             elif lead_type == 'supply':
