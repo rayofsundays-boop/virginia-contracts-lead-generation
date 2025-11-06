@@ -4540,6 +4540,11 @@ def contracts():
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
         return msg
 
+@app.route('/local-procurement')
+def local_procurement():
+    """Virginia local and state procurement portals guide"""
+    return render_template('local_procurement.html')
+
 @app.route('/educational-contracts')
 def educational_contracts():
     """College and university procurement opportunities"""
