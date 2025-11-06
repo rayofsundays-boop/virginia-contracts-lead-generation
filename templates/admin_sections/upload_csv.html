@@ -66,6 +66,42 @@
         </div>
     </div>
 
+    <!-- Remove Broken URLs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger border-danger">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="alert-heading mb-2">
+                            <i class="fas fa-link"></i> Remove Contracts with Broken URLs
+                        </h5>
+                        <p class="mb-0">
+                            Find and remove contracts with NULL, empty, or invalid URLs (like example.com). 
+                            <strong>Safe:</strong> Only removes contracts with broken/missing URLs.
+                        </p>
+                    </div>
+                    <div class="ms-3">
+                        <button id="checkBrokenBtn" class="btn btn-info btn-lg mb-2" onclick="checkBrokenUrls()">
+                            <i class="fas fa-search"></i> Check Broken URLs
+                        </button>
+                        <button id="removeBrokenBtn" class="btn btn-danger btn-lg" onclick="removeBrokenUrls()" style="display: none;">
+                            <i class="fas fa-trash"></i> Remove Broken URLs
+                        </button>
+                    </div>
+                </div>
+                <div id="brokenUrlsProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Processing...</small>
+                </div>
+                <div id="brokenUrlsList" class="mt-3" style="display: none;"></div>
+                <div id="brokenUrlsResults" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- CSV Upload Form -->
     <div class="row">
         <div class="col-lg-8">
@@ -451,6 +487,146 @@ async function clearFakeContracts() {
         `;
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-trash"></i> Clear Fake Contracts';
+    }
+}
+
+// Check for contracts with broken URLs
+async function checkBrokenUrls() {
+    const btn = document.getElementById('checkBrokenBtn');
+    const removeBtn = document.getElementById('removeBrokenBtn');
+    const progressDiv = document.getElementById('brokenUrlsProgress');
+    const listDiv = document.getElementById('brokenUrlsList');
+    const resultsDiv = document.getElementById('brokenUrlsResults');
+    
+    // Disable button and show progress
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    progressDiv.style.display = 'block';
+    listDiv.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-remove-broken-urls', {
+            method: 'GET'
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressDiv.style.display = 'none';
+        listDiv.style.display = 'block';
+        
+        if (result.success && result.count > 0) {
+            let contractsHtml = '<div class="alert alert-info"><h5><i class="fas fa-exclamation-triangle"></i> Found ' + result.count + ' Contracts with Broken URLs</h5><div class="table-responsive"><table class="table table-sm table-striped mt-3"><thead><tr><th>ID</th><th>Title</th><th>Agency</th><th>Location</th><th>URL</th></tr></thead><tbody>';
+            
+            result.contracts.forEach(contract => {
+                let urlDisplay = contract.url || '<span class="text-danger">NULL</span>';
+                contractsHtml += `<tr>
+                    <td>${contract.id}</td>
+                    <td>${contract.title}</td>
+                    <td>${contract.agency || 'N/A'}</td>
+                    <td>${contract.location || 'N/A'}</td>
+                    <td><small>${urlDisplay}</small></td>
+                </tr>`;
+            });
+            
+            contractsHtml += '</tbody></table></div></div>';
+            listDiv.innerHTML = contractsHtml;
+            
+            // Show remove button
+            removeBtn.style.display = 'inline-block';
+            
+        } else if (result.success && result.count === 0) {
+            listDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> All Clear!</h5>
+                    <p class="mb-0">No contracts with broken URLs found.</p>
+                </div>
+            `;
+            removeBtn.style.display = 'none';
+        }
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Check Broken URLs';
+        
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        listDiv.style.display = 'block';
+        listDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Check Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Check Broken URLs';
+    }
+}
+
+// Remove contracts with broken URLs
+async function removeBrokenUrls() {
+    if (!confirm('⚠️ This will delete ALL contracts with NULL, empty, or invalid URLs.\n\nAre you sure you want to continue?')) {
+        return;
+    }
+    
+    const btn = document.getElementById('removeBrokenBtn');
+    const checkBtn = document.getElementById('checkBrokenBtn');
+    const progressDiv = document.getElementById('brokenUrlsProgress');
+    const listDiv = document.getElementById('brokenUrlsList');
+    const resultsDiv = document.getElementById('brokenUrlsResults');
+    
+    // Disable buttons and show progress
+    btn.disabled = true;
+    checkBtn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+    progressDiv.style.display = 'block';
+    listDiv.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-remove-broken-urls', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        
+        if (result.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> Removal Successful!</h5>
+                    <p class="mb-0">Successfully deleted <strong>${result.deleted}</strong> contracts with broken URLs.</p>
+                    ${result.removed_ids ? '<hr><p class="small mb-0">Removed IDs: ' + result.removed_ids.join(', ') + '</p>' : ''}
+                </div>
+            `;
+            btn.style.display = 'none';
+            checkBtn.disabled = false;
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Removal Failed</h5>
+                    <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+                </div>
+            `;
+            btn.disabled = false;
+            checkBtn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Remove Broken URLs';
+        }
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Removal Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        btn.disabled = false;
+        checkBtn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Remove Broken URLs';
     }
 }
 </script>
