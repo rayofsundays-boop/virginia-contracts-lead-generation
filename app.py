@@ -14318,7 +14318,6 @@ def quick_wins():
         urgent_count = len([l for l in filtered_leads if l.get('urgency_level') == 'urgent'])
         quick_win_count = len([l for l in filtered_leads if l.get('urgency_level') == 'quick-win'])
 
-        
         return render_template('quick_wins.html',
                              leads=paginated_leads,
                              expiring_7days_count=expiring_7days_count,
@@ -14328,7 +14327,8 @@ def quick_wins():
                              page=page,
                              total_pages=total_pages,
                              is_paid_subscriber=is_paid,
-                             is_admin=is_admin)
+                             is_admin=is_admin,
+                             supply_contracts=supply_contracts_data)
     except Exception as e:
         print(f"Quick Wins error: {e}")
         import traceback
