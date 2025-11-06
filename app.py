@@ -5921,6 +5921,7 @@ def commercial_contracts():
             property_managers.append(lead_dict)
     except Exception as e:
         print(f"Error fetching approved commercial leads: {e}")
+        db.session.rollback()
         import traceback
         traceback.print_exc()
     
