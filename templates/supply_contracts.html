@@ -250,23 +250,38 @@
                     <div class="card-footer bg-white">
                         {% if is_paid_subscriber or is_admin %}
                             <!-- Full Access for Subscribers -->
-                            <div class="d-flex gap-2">
-                                {% if contract[7] and contract[7]|length > 0 %}
-                                    <a href="{{ contract[7] }}" target="_blank" class="btn btn-success btn-sm flex-grow-1">
-                                        <i class="fas fa-external-link-alt"></i> View Opportunity
-                                    </a>
-                                {% else %}
-                                    <span class="btn btn-outline-warning btn-sm flex-grow-1" title="URL not available">
-                                        <i class="fas fa-exclamation-triangle"></i> No URL
-                                    </span>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex gap-2">
+                                    {% if contract[7] and contract[7]|length > 0 %}
+                                        <a href="{{ contract[7] }}" target="_blank" class="btn btn-success btn-sm flex-grow-1">
+                                            <i class="fas fa-external-link-alt"></i> View Opportunity
+                                        </a>
+                                    {% else %}
+                                        <span class="btn btn-outline-secondary btn-sm flex-grow-1" title="Contact directly via phone or email">
+                                            <i class="fas fa-info-circle"></i> Contact Direct
+                                        </span>
+                                    {% endif %}
+                                    <button class="btn btn-outline-warning btn-sm bookmark-btn" 
+                                            data-lead-type="supply_contract" 
+                                            data-lead-id="{{ contract[0] }}"
+                                            onclick="toggleBookmark(this, 'supply_contract', {{ contract[0] }}, '{{ contract[1] | safe }}')"
+                                            title="Save to My Leads">
+                                        <i class="fas fa-bookmark"></i> Save
+                                    </button>
+                                </div>
+                                {% if not contract[7] or not contract[7]|length %}
+                                <!-- Show contact info when URL is not available -->
+                                <div class="alert alert-info mb-0 p-2">
+                                    <small>
+                                        {% if contract|length > 10 and contract[10] %}
+                                        <div><i class="fas fa-phone"></i> <strong>Phone:</strong> {{ contract[10] }}</div>
+                                        {% endif %}
+                                        {% if contract|length > 11 and contract[11] %}
+                                        <div><i class="fas fa-envelope"></i> <strong>Email:</strong> {{ contract[11] }}</div>
+                                        {% endif %}
+                                    </small>
+                                </div>
                                 {% endif %}
-                                <button class="btn btn-outline-warning btn-sm bookmark-btn" 
-                                        data-lead-type="supply_contract" 
-                                        data-lead-id="{{ contract[0] }}"
-                                        onclick="toggleBookmark(this, 'supply_contract', {{ contract[0] }}, '{{ contract[1] | safe }}')"
-                                        title="Save to My Leads">
-                                    <i class="fas fa-bookmark"></i> Save
-                                </button>
                             </div>
                         {% else %}
                             <!-- Paywall for Non-Subscribers -->

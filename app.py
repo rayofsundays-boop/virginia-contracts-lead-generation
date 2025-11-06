@@ -16411,7 +16411,7 @@ def populate_supply_contracts(force=False):
                 'contact_name': 'Global Procurement',
                 'contact_phone': '(312) 750-1234',
                 'contact_email': 'procurement@hyatt.com',
-                'website_url': 'https://www.hyatt.com/en-US/company/suppliers',
+                'website_url': None,  # Supplier portal URL unavailable - contact phone/email instead
                 'bid_deadline': (datetime.now() + timedelta(days=30)).strftime('%m/%d/%Y'),
                 'is_active': True,
                 'is_quick_win': True,
