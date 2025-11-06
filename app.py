@@ -8178,6 +8178,34 @@ def admin_import_600_buyers():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-clear-fake-contracts', methods=['POST'])
+def admin_clear_fake_contracts():
+    """Delete all sample/demo/fake contracts from the contracts table"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        # Delete all contracts from the local/state contracts table
+        # This table should be populated with real scraped data or left empty
+        result = db.session.execute(text('DELETE FROM contracts'))
+        deleted_count = result.rowcount
+        db.session.commit()
+        
+        print(f"🗑️  Deleted {deleted_count} contracts from contracts table")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} fake/demo contracts',
+            'deleted': deleted_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Clear contracts error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-delete-user', methods=['POST'])
 def admin_delete_user():
     """Admin function to delete a user account"""

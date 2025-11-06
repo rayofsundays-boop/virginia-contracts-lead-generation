@@ -36,6 +36,36 @@
         </div>
     </div>
 
+    <!-- Clear Fake Contracts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-warning">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="alert-heading mb-2">
+                            <i class="fas fa-trash-alt"></i> Clear Fake/Demo Contracts
+                        </h5>
+                        <p class="mb-0">
+                            Remove all sample contracts from the "Local/State Contracts" page (/contracts). 
+                            <strong>Warning:</strong> This will delete ALL records from the contracts table.
+                        </p>
+                    </div>
+                    <button id="clearFakeBtn" class="btn btn-warning btn-lg ms-3" onclick="clearFakeContracts()">
+                        <i class="fas fa-trash"></i> Clear Fake Contracts
+                    </button>
+                </div>
+                <div id="clearFakeProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Deleting fake contracts...</small>
+                </div>
+                <div id="clearFakeResults" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- CSV Upload Form -->
     <div class="row">
         <div class="col-lg-8">
@@ -359,5 +389,70 @@ async function import600Buyers() {
         btn.innerHTML = '<i class="fas fa-rocket"></i> Import 600 Buyers';
     }
 }
+
+// Clear fake/demo contracts
+async function clearFakeContracts() {
+    if (!confirm('⚠️ WARNING: This will delete ALL contracts from the Local/State Contracts page.\n\nAre you sure you want to continue?')) {
+        return;
+    }
+    
+    const btn = document.getElementById('clearFakeBtn');
+    const progressDiv = document.getElementById('clearFakeProgress');
+    const resultsDiv = document.getElementById('clearFakeResults');
+    
+    // Disable button and show progress
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    progressDiv.style.display = 'block';
+    resultsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-clear-fake-contracts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        
+        if (result.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> Cleanup Successful!</h5>
+                    <p class="mb-0">Successfully deleted <strong>${result.deleted}</strong> fake/demo contracts.</p>
+                    <hr>
+                    <p class="small mb-0">The /contracts page is now empty and ready for real leads.</p>
+                </div>
+            `;
+            btn.innerHTML = '<i class="fas fa-check"></i> Cleanup Complete';
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Cleanup Failed</h5>
+                    <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+                </div>
+            `;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Clear Fake Contracts';
+        }
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Cleanup Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Clear Fake Contracts';
+    }
+}
 </script>
+
 
