@@ -8525,16 +8525,24 @@ def admin_enhanced():
             SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
         ''')).scalar() or 0
         
-        # Get unread admin messages count
-        unread_admin_messages = db.session.execute(text('''
-            SELECT COUNT(*) FROM messages 
-            WHERE recipient_id = :user_id AND is_read = FALSE
-        '''), {'user_id': session['user_id']}).scalar() or 0
+        # Get unread admin messages count (with error handling)
+        try:
+            unread_admin_messages = db.session.execute(text('''
+                SELECT COUNT(*) FROM messages 
+                WHERE recipient_id = :user_id AND is_read = FALSE
+            '''), {'user_id': session['user_id']}).scalar() or 0
+        except Exception as e:
+            print(f"Warning: Could not fetch admin messages: {e}")
+            unread_admin_messages = 0
         
-        # Get pending proposals count
-        pending_proposals = db.session.execute(text('''
-            SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
-        ''')).scalar() or 0
+        # Get pending proposals count (with error handling)
+        try:
+            pending_proposals = db.session.execute(text('''
+                SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
+            ''')).scalar() or 0
+        except Exception as e:
+            print(f"Warning: Could not fetch pending proposals: {e}")
+            pending_proposals = 0
         
         context = {
             'section': section,
