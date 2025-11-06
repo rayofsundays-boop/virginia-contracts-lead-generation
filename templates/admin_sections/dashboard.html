@@ -7,71 +7,81 @@
 <!-- Quick Stats Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                <h3 class="mb-0">{{ stats.total_users }}</h3>
-                <p class="text-muted mb-0">Total Users</p>
-                <small class="text-success">
-                    <i class="fas fa-arrow-up"></i> {{ stats.new_users_30d }} this month
-                </small>
+        <a href="{{ url_for('admin_enhanced', section='users') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3 class="mb-0 text-dark">{{ stats.total_users }}</h3>
+                    <p class="text-muted mb-0">Total Users</p>
+                    <small class="text-success">
+                        <i class="fas fa-arrow-up"></i> {{ stats.new_users_30d }} this month
+                    </small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="fas fa-crown fa-3x text-warning mb-3"></i>
-                <h3 class="mb-0">{{ stats.paid_subscribers }}</h3>
-                <p class="text-muted mb-0">Paid Subscribers</p>
-                <small class="text-muted">
-                    {{ stats.free_users }} free users
-                </small>
+        <a href="{{ url_for('admin_enhanced', section='users') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <i class="fas fa-crown fa-3x text-warning mb-3"></i>
+                    <h3 class="mb-0 text-dark">{{ stats.paid_subscribers }}</h3>
+                    <p class="text-muted mb-0">Paid Subscribers</p>
+                    <small class="text-muted">
+                        {{ stats.free_users }} free users
+                    </small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="fas fa-dollar-sign fa-3x text-success mb-3"></i>
-                <h3 class="mb-0">${{ "{:,.2f}".format(stats.revenue_30d or 0) }}</h3>
-                <p class="text-muted mb-0">Revenue (30 days)</p>
-                <small class="text-muted">
-                    ${{ "{:,.2f}".format((stats.revenue_30d or 0) * 12) }} projected annual
-                </small>
+        <a href="{{ url_for('admin_enhanced', section='revenue') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-3x text-success mb-3"></i>
+                    <h3 class="mb-0 text-dark">${{ "{:,.2f}".format(stats.revenue_30d or 0) }}</h3>
+                    <p class="text-muted mb-0">Revenue (30 days)</p>
+                    <small class="text-muted">
+                        ${{ "{:,.2f}".format((stats.revenue_30d or 0) * 12) }} projected annual
+                    </small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="fas fa-eye fa-3x text-info mb-3"></i>
-                <h3 class="mb-0">{{ stats.page_views_24h }}</h3>
-                <p class="text-muted mb-0">Page Views (24h)</p>
-                <small class="text-muted">
-                    {{ stats.active_users_24h }} active users
-                </small>
+        <a href="{{ url_for('admin_enhanced', section='analytics') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <i class="fas fa-eye fa-3x text-info mb-3"></i>
+                    <h3 class="mb-0 text-dark">{{ stats.page_views_24h }}</h3>
+                    <p class="text-muted mb-0">Page Views (24h)</p>
+                    <small class="text-muted">
+                        {{ stats.active_users_24h }} active users
+                    </small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
 <!-- Second Row of Stats -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm border-0">
-            <div class="card-body text-center">
-                <i class="fas fa-box fa-3x text-purple mb-3" style="color: #667eea;"></i>
-                <h3 class="mb-0">{{ supply_contracts_count|default(0) }}</h3>
-                <p class="text-muted mb-0">Supply Contracts</p>
-                <small class="text-success">
-                    <i class="fas fa-check-circle"></i> Active buyers
-                </small>
+        <a href="{{ url_for('quick_wins') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer; transition: all 0.3s ease;">
+                <div class="card-body text-center">
+                    <i class="fas fa-box fa-3x text-purple mb-3" style="color: #667eea;"></i>
+                    <h3 class="mb-0 text-dark">{{ supply_contracts_count|default(0) }}</h3>
+                    <p class="text-muted mb-0">Supply Contracts</p>
+                    <small class="text-success">
+                        <i class="fas fa-check-circle"></i> Active buyers
+                    </small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
