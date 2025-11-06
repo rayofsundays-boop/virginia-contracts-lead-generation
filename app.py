@@ -8533,6 +8533,7 @@ def admin_enhanced():
             '''), {'user_id': session['user_id']}).scalar() or 0
         except Exception as e:
             print(f"Warning: Could not fetch admin messages: {e}")
+            db.session.rollback()
             unread_admin_messages = 0
         
         # Get pending proposals count (with error handling)
@@ -8542,6 +8543,7 @@ def admin_enhanced():
             ''')).scalar() or 0
         except Exception as e:
             print(f"Warning: Could not fetch pending proposals: {e}")
+            db.session.rollback()
             pending_proposals = 0
         
         context = {
