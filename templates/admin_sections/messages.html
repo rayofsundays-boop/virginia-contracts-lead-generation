@@ -1,0 +1,9 @@
+{% if section == 'messages' %}
+<div class="admin-section">
+    <h2><i class="fas fa-envelope me-2"></i>Customer Messages</h2>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Use the <a href="{{ url_for('admin_mailbox') }}">Admin Mailbox</a> to view and respond to customer messages.
+    </div>
+</div>
+{% endif %}
