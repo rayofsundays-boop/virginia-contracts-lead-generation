@@ -8557,6 +8557,13 @@ def admin_enhanced():
         
         # Section-specific data
         if section == 'dashboard':
+            # Get supply contracts count
+            supply_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM supply_contracts
+            ''')).scalar() or 0
+            context['supply_contracts_count'] = supply_count
+            print(f"📊 Total supply contracts in database: {supply_count}")
+            
             # Recent users
             context['recent_users'] = db.session.execute(text('''
                 SELECT * FROM leads 
