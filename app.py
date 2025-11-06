@@ -8577,6 +8577,27 @@ def admin_enhanced():
             # Handle datetime objects properly
             context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
             context['growth_data'] = [row.count for row in growth_data]
+        
+        elif section == 'all-leads':
+            # Pagination for all leads
+            per_page = 20
+            offset = (page - 1) * per_page
+            
+            total_count = db.session.execute(text('''
+                SELECT COUNT(*) FROM leads WHERE is_admin = FALSE
+            ''')).scalar() or 0
+            
+            total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+            
+            context['all_leads'] = db.session.execute(text('''
+                SELECT * FROM leads 
+                WHERE is_admin = FALSE
+                ORDER BY created_at DESC 
+                LIMIT :limit OFFSET :offset
+            '''), {'limit': per_page, 'offset': offset}).fetchall()
+            
+            context['total_pages'] = total_pages
+            context['current_page'] = page
             
         elif section == 'users':
             search = request.args.get('search', '')
