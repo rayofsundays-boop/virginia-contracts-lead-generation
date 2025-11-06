@@ -58,14 +58,19 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)
 app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=8)
 
 # Admin credentials (bypass paywall)
-# Read admin credentials from environment only. Do NOT ship a usable hardcoded default.
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
-
-# Admin login enabled only when both env vars are set. If missing, admin login will be disabled
-ADMIN_ENABLED = bool(ADMIN_USERNAME and ADMIN_PASSWORD)
-if not ADMIN_ENABLED:
-    print("⚠️ Admin credentials not set. Admin login is DISABLED. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables to enable admin access.")
+# REQUIRED: Must set ADMIN_USERNAME and ADMIN_PASSWORD environment variables
+# The app will fail to start if these are not configured (by design, for security)
+try:
+    ADMIN_USERNAME = os.environ['ADMIN_USERNAME']
+    ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
+    ADMIN_ENABLED = True
+    print("✅ Admin credentials loaded from environment variables")
+except KeyError as e:
+    print(f"⚠️ ADMIN CREDENTIALS NOT SET: Missing {e}. Admin login is DISABLED.")
+    print("   Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables to enable admin access.")
+    ADMIN_USERNAME = None
+    ADMIN_PASSWORD = None
+    ADMIN_ENABLED = False
 
 # OpenAI Configuration for AI Features
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
