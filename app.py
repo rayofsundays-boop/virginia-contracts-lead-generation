@@ -25,7 +25,20 @@ import string
 import random
 import re
 try:
-    import openai
+    # Optional OpenAI SDK: guard import so non-AI features work without the package
+    try:
+        import openai  # type: ignore
+        _OPENAI_SDK_AVAILABLE = True
+    except Exception:
+        openai = None  # type: ignore
+        _OPENAI_SDK_AVAILABLE = False
+
+    def is_openai_configured() -> bool:
+        """Return True if OpenAI SDK is importable and API key exists in env."""
+        try:
+            return bool(_OPENAI_SDK_AVAILABLE and os.getenv('OPENAI_API_KEY'))
+        except Exception:
+            return False
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
