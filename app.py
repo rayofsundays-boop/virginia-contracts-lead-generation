@@ -4595,6 +4595,74 @@ def local_procurement():
     """Virginia local and state procurement portals guide"""
     return render_template('local_procurement.html')
 
+# Convenience redirectors so any internal "View Active Bids" links resolve
+@app.route('/active-bids/<city_slug>')
+@app.route('/local-procurement/<city_slug>/active-bids')
+def active_bids_redirect(city_slug):
+    """Redirect to the official external procurement portal for a given city/county.
+
+    Accepts common slugs and falls back to eVA if unknown. This prevents 404s if
+    templates or external content link to internal helper paths.
+    """
+    try:
+        slug = (city_slug or '').strip().lower().replace(' ', '-').replace('_', '-')
+        mapping = {
+            # Hampton Roads
+            'virginia-beach': 'https://www.vbgov.com/government/departments/procurement/Pages/Current-Solicitations.aspx',
+            'norfolk': 'https://norfolk.ionwave.net/',
+            'hampton': 'https://hampton.gov/164/Current-Bids-RFPs',
+            'newport-news': 'https://www.nnva.gov/164/Current-Solicitations',
+            'chesapeake': 'https://www.cityofchesapeake.net/government/city-departments/departments/finance/purchasing-division.htm',
+            'suffolk': 'https://www.suffolkva.us/263/Purchasing',
+            'williamsburg': 'https://www.williamsburgva.gov/',
+            # Northern VA
+            'arlington': 'https://www.arlingtonva.us/Government/Programs/Procurement',
+            'alexandria': 'https://www.alexandriava.gov/Purchasing',
+            'fairfax': 'https://www.fairfaxcounty.gov/procurement/',
+            'loudoun': 'https://www.loudoun.gov/procurement',
+            'prince-william': 'https://www.pwcva.gov/department/finance/purchasing',
+            'manassas': 'https://www.manassascity.org/185/Purchasing',
+            'manassas-park': 'https://www.manassasparkva.gov/',
+            'falls-church': 'https://www.fallschurchva.gov/202/Purchasing',
+            # Richmond Metro
+            'richmond': 'https://www.rva.gov/procurement',
+            'henrico': 'https://henrico.us/finance/purchasing/',
+            'chesterfield': 'https://www.chesterfield.gov/1068/Procurement',
+            'hanover': 'https://www.hanovercounty.gov/183/Purchasing',
+            'petersburg': 'https://www.petersburgva.gov/181/Purchasing',
+            'colonial-heights': 'https://www.colonialheightsva.gov/',
+            # Central/Southwest/Valley
+            'charlottesville': 'https://www.charlottesville.gov/155/Purchasing',
+            'lynchburg': 'https://www.lynchburgva.gov/purchasing',
+            'danville': 'https://www.danville-va.gov/156/Purchasing',
+            'fredericksburg': 'https://www.fredericksburgva.gov/206/Purchasing',
+            'culpeper': 'https://www.culpeperva.gov/',
+            'roanoke': 'https://www.roanokeva.gov/190/Purchasing',
+            'blacksburg': 'https://www.blacksburg.gov/departments/finance/purchasing-department',
+            'bristol': 'https://www.bristolva.org/',
+            'radford': 'https://www.radfordva.gov/165/Purchasing',
+            'salem': 'https://www.salemva.gov/203/Purchasing',
+            'christiansburg': 'https://www.christiansburg.org/',
+            'winchester': 'https://www.winchesterva.gov/purchasing',
+            'harrisonburg': 'https://www.harrisonburgva.gov/purchasing',
+            'staunton': 'https://www.staunton.va.us/departments/finance/purchasing',
+            'waynesboro': 'https://www.waynesboro.va.us/',
+            'lexington': 'https://www.lexingtonva.gov/',
+            # K-12 subsets
+            'virginia-beach-schools': 'https://www.vbschools.com/departments/purchasing',
+            'norfolk-public-schools': 'https://www.nps.k12.va.us/departments/business_and_finance/',
+            'williamsburg-james-city-schools': 'https://wjccschools.org/departments/business-operations/',
+        }
+
+        target = mapping.get(slug)
+        if not target:
+            # Unknown slug: default to eVA (statewide portal)
+            target = 'https://eva.virginia.gov'
+        return redirect(target)
+    except Exception as e:
+        print(f"active_bids_redirect error for slug '{city_slug}': {e}")
+        return redirect('https://eva.virginia.gov')
+
 @app.route('/educational-contracts')
 def educational_contracts():
     """College and university procurement opportunities"""
