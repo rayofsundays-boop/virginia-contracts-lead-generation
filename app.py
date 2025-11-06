@@ -3131,30 +3131,30 @@ def signin():
         
     # Check for admin login first (superadmin) — only if admin creds are configured
     if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            # Set permanent session with extended timeout for admin
-            session.permanent = True
-            app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
-            
-            session['user_id'] = 1  # Set admin user_id
-            session['is_admin'] = True
-            session['username'] = 'Admin'
-            session['name'] = 'Administrator'
-            session['user_email'] = 'admin@vacontracts.com'
-            session['email'] = 'admin@vacontracts.com'
-            session['subscription_status'] = 'paid'  # Admin has full paid subscription access
-            session['credits_balance'] = 999999  # Admin has unlimited credits
-            
-            # Log admin login
-            log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
-            
-            flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
-            return redirect(url_for('contracts'))
+        # Set permanent session with extended timeout for admin
+        session.permanent = True
+        app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
         
-        # Get user from database (including is_admin flag and subscription status)
-        result = db.session.execute(
-            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
-            {'username': username}
-        ).fetchone()
+        session['user_id'] = 1  # Set admin user_id
+        session['is_admin'] = True
+        session['username'] = 'Admin'
+        session['name'] = 'Administrator'
+        session['user_email'] = 'admin@vacontracts.com'
+        session['email'] = 'admin@vacontracts.com'
+        session['subscription_status'] = 'paid'  # Admin has full paid subscription access
+        session['credits_balance'] = 999999  # Admin has unlimited credits
+        
+        # Log admin login
+        log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
+        
+        flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
+        return redirect(url_for('contracts'))
+    
+    # Get user from database (including is_admin flag and subscription status)
+    result = db.session.execute(
+        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+        {'username': username}
+    ).fetchone()
         
         if result and check_password_hash(result[3], password):
             # Login successful - set all session variables
