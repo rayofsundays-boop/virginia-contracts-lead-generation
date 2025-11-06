@@ -3155,19 +3155,19 @@ def signin():
         text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
         {'username': username}
     ).fetchone()
+    
+    if result and check_password_hash(result[3], password):
+        # Login successful - set all session variables
+        session['user_id'] = result[0]
+        session['username'] = result[1]
+        session['email'] = result[2]
+        session['user_email'] = result[2]  # Add user_email for template compatibility
+        session['name'] = result[4]
+        session['credits_balance'] = result[5]
+        session['is_admin'] = bool(result[6])  # Set admin status from database
         
-        if result and check_password_hash(result[3], password):
-            # Login successful - set all session variables
-            session['user_id'] = result[0]
-            session['username'] = result[1]
-            session['email'] = result[2]
-            session['user_email'] = result[2]  # Add user_email for template compatibility
-            session['name'] = result[4]
-            session['credits_balance'] = result[5]
-            session['is_admin'] = bool(result[6])  # Set admin status from database
-            
-            # Admin users get paid subscription status and unlimited credits
-            if session['is_admin']:
+        # Admin users get paid subscription status and unlimited credits
+        if session['is_admin']:
                 session['subscription_status'] = 'paid'  # Force paid status for all admins
                 session['credits_balance'] = 999999  # Unlimited credits for admins
             else:
