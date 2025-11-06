@@ -4517,9 +4517,9 @@ def contracts():
         is_paid_subscriber = False
         
         if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
+            result = db.session.execute(text(
+                "SELECT subscription_status FROM leads WHERE id = :user_id"
+            ), {'user_id': session['user_id']}).fetchone()
             
             if result and result[0] == 'paid':
                 is_paid_subscriber = True
@@ -4625,9 +4625,9 @@ def educational_contracts():
         is_paid_subscriber = False
         
         if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
+            result = db.session.execute(text(
+                "SELECT subscription_status FROM leads WHERE id = :user_id"
+            ), {'user_id': session['user_id']}).fetchone()
             if result and result[0] == 'paid':
                 is_paid_subscriber = True
         
@@ -4726,9 +4726,10 @@ def industry_days():
         is_paid_subscriber = False
         
         if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
+            result = db.session.execute(
+                text("SELECT subscription_status FROM leads WHERE id = :user_id"),
+                {'user_id': session['user_id']}
+            ).fetchone()
             if result and result[0] == 'paid':
                 is_paid_subscriber = True
         
@@ -6953,11 +6954,7 @@ def branding_materials():
     
     # Optional: Check subscription status if you want to enforce it
     # try:
-    #     result = db.session.execute(text('''
-    #         SELECT subscription_status FROM leads 
-    #         WHERE email = :email
-    #     '''), {'email': user_email}).fetchone()
-    #     
+    #     result = db.session.execute(text("SELECT status FROM subscriptions WHERE email = :email"), {"email": user_email}).fetchone()
     #     if result and result[0] == 'active':
     #         is_subscriber = True
     # except Exception as e:
@@ -8219,15 +8216,13 @@ def admin_remove_broken_urls():
     
     try:
         # Find contracts with NULL, empty, or placeholder URLs
-        broken_contracts = db.session.execute(text('''
-            SELECT id, title, agency, location, website_url 
-            FROM contracts 
-            WHERE website_url IS NULL 
-               OR website_url = '' 
-               OR website_url LIKE '%example.com%'
-               OR website_url NOT LIKE 'http%'
-            ORDER BY id
-        '')).fetchall()
+        broken_contracts = db.session.execute(text(
+            "SELECT id, title, agency, location, website_url "
+            "FROM contracts "
+            "WHERE website_url IS NULL OR website_url = '' "
+            " OR website_url LIKE '%example.com%' OR website_url NOT LIKE 'http%' "
+            "ORDER BY id"
+        )).fetchall()
         
         if request.method == 'GET':
             # Return list of broken contracts for review
@@ -8313,14 +8308,12 @@ def admin_all_contracts():
     """View all contracts with contact information in one table"""
     try:
         # Get all federal contracts with contact info
-        federal_contracts = db.session.execute(text('''
-            SELECT 
-                id, title, notice_id, agency, department, location, value, 
-                deadline, naics_code, set_aside, posted_date, 
-                contact_name, contact_email, contact_phone, contact_title, sam_gov_url
-            FROM federal_contracts
-            ORDER BY posted_date DESC, created_at DESC
-        ''')).fetchall()
+        federal_contracts = db.session.execute(text(
+            "SELECT id, title, notice_id, agency, department, location, value, "
+            " deadline, naics_code, set_aside, posted_date, "
+            " contact_name, contact_email, contact_phone, contact_title, sam_gov_url "
+            "FROM federal_contracts ORDER BY posted_date DESC, created_at DESC"
+        )).fetchall()
         
         # Convert to list of dicts for easier template access
         contracts_list = []
@@ -8357,10 +8350,10 @@ def admin_all_contracts():
 def log_activity(user_email, action_type, description, reference_id=None, reference_type=None):
     """Log user activity for tracking"""
     try:
-        db.session.execute(text('''
-            INSERT INTO user_activity (user_email, action_type, description, reference_id, reference_type)
-            VALUES (:email, :action, :desc, :ref_id, :ref_type)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO user_activity (user_email, action_type, description, reference_id, reference_type) "
+            "VALUES (:email, :action, :desc, :ref_id, :ref_type)"
+        ), {
             'email': user_email,
             'action': action_type,
             'desc': description,
@@ -8399,7 +8392,7 @@ def generate_proposal():
         
         # Generate proposal based on type
         proposal_templates = {
-            'technical': f'''
+            'technical': f"""
                 <h4>Technical Proposal</h4>
                 <p><strong>Submitted by:</strong> {company_name}</p>
                 <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
@@ -8436,8 +8429,8 @@ def generate_proposal():
                 
                 <p><strong>Contact:</strong> {contact_name}<br>
                 <strong>Company:</strong> {company_name}</p>
-            ''',
-            'pricing': f'''
+            """,
+            'pricing': f"""
                 <h4>Pricing Proposal</h4>
                 <p><strong>Submitted by:</strong> {company_name}</p>
                 <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
@@ -8462,8 +8455,8 @@ def generate_proposal():
                 
                 <p><strong>Contact:</strong> {contact_name}<br>
                 <strong>Company:</strong> {company_name}</p>
-            ''',
-            'combined': f'''
+            """,
+            'combined': f"""
                 <h4>Technical & Pricing Proposal</h4>
                 <p><strong>Submitted by:</strong> {company_name}</p>
                 <p><strong>Contract:</strong> {contract_title} {f"({contract_number})" if contract_number else ""}</p>
@@ -8509,8 +8502,8 @@ def generate_proposal():
                 <p><strong>Contact:</strong> {contact_name}<br>
                 <strong>Company:</strong> {company_name}<br>
                 <strong>Email:</strong> {user_email}</p>
-            ''',
-            'capability': f'''
+            """,
+            'capability': f"""
                 <h4>Capability Statement</h4>
                 <h5>{company_name}</h5>
                 <hr>
@@ -8555,7 +8548,7 @@ def generate_proposal():
                 <strong>Contact:</strong> {contact_name}<br>
                 <strong>Email:</strong> {user_email}<br>
                 <strong>Website:</strong> www.eliteecocareservices.com</p>
-            '''
+            """
         }
         
         proposal = proposal_templates.get(proposal_type, proposal_templates['technical'])
@@ -8616,13 +8609,10 @@ def get_activity():
     try:
         user_email = session.get('user_email')
         
-        activities = db.session.execute(text('''
-            SELECT action_type, description, created_at 
-            FROM user_activity 
-            WHERE user_email = :email 
-            ORDER BY created_at DESC 
-            LIMIT 50
-        '''), {'email': user_email}).fetchall()
+        activities = db.session.execute(text(
+            "SELECT action_type, description, created_at FROM user_activity "
+            "WHERE user_email = :email ORDER BY created_at DESC LIMIT 50"
+        ), {'email': user_email}).fetchall()
         
         activity_list = []
         for activity in activities:
@@ -8650,9 +8640,9 @@ def clear_activity():
     try:
         user_email = session.get('user_email')
         
-        db.session.execute(text('''
-            DELETE FROM user_activity WHERE user_email = :email
-        '''), {'email': user_email})
+        db.session.execute(text(
+            "DELETE FROM user_activity WHERE user_email = :email"
+        ), {'email': user_email})
         db.session.commit()
         
         return jsonify({'success': True})
@@ -8678,11 +8668,10 @@ def save_note():
         
         if note_id:
             # Update existing note
-            db.session.execute(text('''
-                UPDATE user_notes 
-                SET title = :title, content = :content, tags = :tags, updated_at = CURRENT_TIMESTAMP
-                WHERE id = :note_id AND user_email = :email
-            '''), {
+            db.session.execute(text(
+                "UPDATE user_notes SET title = :title, content = :content, tags = :tags, updated_at = CURRENT_TIMESTAMP "
+                "WHERE id = :note_id AND user_email = :email"
+            ), {
                 'note_id': note_id,
                 'title': title,
                 'content': content,
@@ -8691,10 +8680,9 @@ def save_note():
             })
         else:
             # Create new note
-            db.session.execute(text('''
-                INSERT INTO user_notes (user_email, title, content, tags)
-                VALUES (:email, :title, :content, :tags)
-            '''), {
+            db.session.execute(text(
+                "INSERT INTO user_notes (user_email, title, content, tags) VALUES (:email, :title, :content, :tags)"
+            ), {
                 'email': user_email,
                 'title': title,
                 'content': content,
@@ -8722,12 +8710,9 @@ def get_notes():
     try:
         user_email = session.get('user_email')
         
-        notes = db.session.execute(text('''
-            SELECT id, title, content, tags, created_at 
-            FROM user_notes 
-            WHERE user_email = :email 
-            ORDER BY created_at DESC
-        '''), {'email': user_email}).fetchall()
+        notes = db.session.execute(text(
+            "SELECT id, title, content, tags, created_at FROM user_notes WHERE user_email = :email ORDER BY created_at DESC"
+        ), {'email': user_email}).fetchall()
         
         notes_list = []
         for note in notes:
@@ -8759,10 +8744,9 @@ def delete_note():
         user_email = session.get('user_email')
         note_id = data.get('note_id')
         
-        db.session.execute(text('''
-            DELETE FROM user_notes 
-            WHERE id = :note_id AND user_email = :email
-        '''), {
+        db.session.execute(text(
+            "DELETE FROM user_notes WHERE id = :note_id AND user_email = :email"
+        ), {
             'note_id': note_id,
             'email': user_email
         })
@@ -8835,16 +8819,15 @@ def admin_enhanced():
                 'total_users': 0,
             }
         
-        stats['new_users_7d'] = db.session.execute(text('''
-            SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'
-        ''')).scalar() or 0
+        stats['new_users_7d'] = db.session.execute(text(
+            "SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'"
+        )).scalar() or 0
         
         # Get unread admin messages count (with error handling)
         try:
-            unread_admin_messages = db.session.execute(text('''
-                SELECT COUNT(*) FROM messages 
-                WHERE recipient_id = :user_id AND is_read = FALSE
-            '''), {'user_id': session['user_id']}).scalar() or 0
+            unread_admin_messages = db.session.execute(text(
+                "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = FALSE"
+            ), {'user_id': session['user_id']}).scalar() or 0
         except Exception as e:
             print(f"Warning: Could not fetch admin messages: {e}")
             db.session.rollback()
@@ -8852,9 +8835,9 @@ def admin_enhanced():
         
         # Get pending proposals count (with error handling)
         try:
-            pending_proposals = db.session.execute(text('''
-                SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'
-            ''')).scalar() or 0
+            pending_proposals = db.session.execute(text(
+                "SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'"
+            )).scalar() or 0
         except Exception as e:
             print(f"Warning: Could not fetch pending proposals: {e}")
             db.session.rollback()
@@ -8871,28 +8854,23 @@ def admin_enhanced():
         # Section-specific data
         if section == 'dashboard':
             # Get supply contracts count
-            supply_count = db.session.execute(text('''
-                SELECT COUNT(*) FROM supply_contracts
-            ''')).scalar() or 0
+            supply_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM supply_contracts"
+            )).scalar() or 0
             context['supply_contracts_count'] = supply_count
             print(f"📊 Total supply contracts in database: {supply_count}")
             
             # Recent users
-            context['recent_users'] = db.session.execute(text('''
-                SELECT * FROM leads 
-                WHERE is_admin = FALSE
-                ORDER BY created_at DESC 
-                LIMIT 10
-            ''')).fetchall()
+            context['recent_users'] = db.session.execute(text(
+                "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT 10"
+            )).fetchall()
             
             # Growth data for chart (last 30 days)
-            growth_data = db.session.execute(text('''
-                SELECT DATE(created_at) as date, COUNT(*) as count
-                FROM leads
-                WHERE created_at > NOW() - INTERVAL '30 days'
-                GROUP BY DATE(created_at)
-                ORDER BY date
-            ''')).fetchall()
+            growth_data = db.session.execute(text(
+                "SELECT DATE(created_at) as date, COUNT(*) as count FROM leads "
+                "WHERE created_at > NOW() - INTERVAL '30 days' "
+                "GROUP BY DATE(created_at) ORDER BY date"
+            )).fetchall()
             
             # Handle datetime objects properly
             context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
@@ -8903,18 +8881,15 @@ def admin_enhanced():
             per_page = 20
             offset = (page - 1) * per_page
             
-            total_count = db.session.execute(text('''
-                SELECT COUNT(*) FROM leads WHERE is_admin = FALSE
-            ''')).scalar() or 0
+            total_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM leads WHERE is_admin = FALSE"
+            )).scalar() or 0
             
             total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
             
-            context['all_leads'] = db.session.execute(text('''
-                SELECT * FROM leads 
-                WHERE is_admin = FALSE
-                ORDER BY created_at DESC 
-                LIMIT :limit OFFSET :offset
-            '''), {'limit': per_page, 'offset': offset}).fetchall()
+            context['all_leads'] = db.session.execute(text(
+                "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            ), {'limit': per_page, 'offset': offset}).fetchall()
             
             context['total_pages'] = total_pages
             context['current_page'] = page
@@ -8948,21 +8923,18 @@ def admin_enhanced():
             else:  # email
                 order_by = 'email ASC'
             
-            total_count = db.session.execute(text(f'''
-                SELECT COUNT(*) FROM leads WHERE {where_clause}
-            '''), params).scalar() or 0
+            total_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM leads WHERE " + where_clause
+            ), params).scalar() or 0
             
             total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
             
             params['limit'] = per_page
             params['offset'] = offset
             
-            context['users'] = db.session.execute(text(f'''
-                SELECT * FROM leads 
-                WHERE {where_clause}
-                ORDER BY {order_by}
-                LIMIT :limit OFFSET :offset
-            '''), params).fetchall()
+            context['users'] = db.session.execute(text(
+                "SELECT * FROM leads WHERE " + where_clause + " ORDER BY " + order_by + " LIMIT :limit OFFSET :offset"
+            ), params).fetchall()
             
             context['search'] = search
             context['status'] = status
@@ -8990,22 +8962,19 @@ def admin_enhanced():
             
             where_clause = " AND ".join(where_conditions)
             
-            total_count = db.session.execute(text(f'''
-                SELECT COUNT(*) FROM federal_contracts WHERE {where_clause}
-            '''), params).scalar() or 0
+            total_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM federal_contracts WHERE " + where_clause
+            ), params).scalar() or 0
             
             total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
             
             params['limit'] = per_page
             params['offset'] = offset
             
-            context['contracts'] = db.session.execute(text(f'''
-                SELECT id, agency_name, description, naics_code, award_id, sam_gov_url, created_at
-                FROM federal_contracts 
-                WHERE {where_clause}
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset
-            '''), params).fetchall()
+            context['contracts'] = db.session.execute(text(
+                "SELECT id, agency_name, description, naics_code, award_id, sam_gov_url, created_at "
+                "FROM federal_contracts WHERE " + where_clause + " ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            ), params).fetchall()
             
             context['search_query'] = search_query
             context['filter_type'] = filter_type
@@ -9032,22 +9001,19 @@ def admin_enhanced():
             
             where_clause = " AND ".join(where_conditions)
             
-            total_count = db.session.execute(text(f'''
-                SELECT COUNT(*) FROM leads WHERE {where_clause}
-            '''), params).scalar() or 0
+            total_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM leads WHERE " + where_clause
+            ), params).scalar() or 0
             
             total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
             
             params['limit'] = per_page
             params['offset'] = offset
             
-            context['leads'] = db.session.execute(text(f'''
-                SELECT id, company_name, contact_name, email, phone, subscription_status, created_at
-                FROM leads 
-                WHERE {where_clause}
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset
-            '''), params).fetchall()
+            context['leads'] = db.session.execute(text(
+                "SELECT id, company_name, contact_name, email, phone, subscription_status, created_at "
+                "FROM leads WHERE " + where_clause + " ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            ), params).fetchall()
             
             context['search_query'] = search_query
             context['status_filter'] = status_filter
@@ -9056,38 +9022,36 @@ def admin_enhanced():
         
         elif section == 'manage-admins':
             # Check if current user is super admin
-            current_user = db.session.execute(text('''
-                SELECT admin_role FROM leads WHERE id = :id
-            '''), {'id': session['user_id']}).fetchone()
+            current_user = db.session.execute(text(
+                "SELECT admin_role FROM leads WHERE id = :id"
+            ), {'id': session['user_id']}).fetchone()
             
             context['is_super_admin'] = current_user and current_user.admin_role == 'super_admin'
             context['current_admin_id'] = session['user_id']
             
             # Get all admin users
-            context['admin_users'] = db.session.execute(text('''
-                SELECT id, contact_name, email, is_admin, admin_role, created_at
-                FROM leads 
-                WHERE is_admin = TRUE
-                ORDER BY 
-                    CASE 
-                        WHEN admin_role = 'super_admin' THEN 1
-                        WHEN admin_role = 'admin' THEN 2
-                        ELSE 3
-                    END,
-                    created_at DESC
-            ''')).fetchall()
+            context['admin_users'] = db.session.execute(text(
+                "SELECT id, contact_name, email, is_admin, admin_role, created_at "
+                "FROM leads "
+                "WHERE is_admin = TRUE "
+                "ORDER BY CASE "
+                " WHEN admin_role = 'super_admin' THEN 1 "
+                " WHEN admin_role = 'admin' THEN 2 "
+                " ELSE 3 "
+                "END, created_at DESC"
+            )).fetchall()
         
         elif section == 'revenue':
             # Revenue statistics
-            revenue_stats_raw = db.session.execute(text('''
-                SELECT 
-                    COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as active_paid_users,
-                    COUNT(CASE WHEN subscription_status = 'free' THEN 1 END) as free_users,
-                    COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
-                    COUNT(*) as total_users
-                FROM leads 
-                WHERE is_admin = FALSE
-            ''')).fetchone()
+            revenue_stats_raw = db.session.execute(text(
+                "SELECT "
+                " COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as active_paid_users, "
+                " COUNT(CASE WHEN subscription_status = 'free' THEN 1 END) as free_users, "
+                " COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d, "
+                " COUNT(*) as total_users "
+                "FROM leads "
+                "WHERE is_admin = FALSE"
+            )).fetchone()
             
             # Calculate revenue metrics
             active_paid = revenue_stats_raw.active_paid_users if revenue_stats_raw else 0
@@ -9104,23 +9068,19 @@ def admin_enhanced():
             }
             
             # Recent transactions (paid subscribers)
-            context['recent_transactions'] = db.session.execute(text('''
-                SELECT id, email as user_email, company_name, subscription_status as subscription_type, created_at
-                FROM leads 
-                WHERE subscription_status = 'paid' AND is_admin = FALSE
-                ORDER BY created_at DESC
-                LIMIT 20
-            ''')).fetchall()
+            context['recent_transactions'] = db.session.execute(text(
+                "SELECT id, email as user_email, company_name, subscription_status as subscription_type, created_at "
+                "FROM leads WHERE subscription_status = 'paid' AND is_admin = FALSE "
+                "ORDER BY created_at DESC LIMIT 20"
+            )).fetchall()
             
             # Revenue chart data (last 30 days)
-            revenue_chart_raw = db.session.execute(text('''
-                SELECT DATE(created_at) as date, COUNT(*) * 97 as revenue
-                FROM leads
-                WHERE subscription_status = 'paid' 
-                AND created_at > NOW() - INTERVAL '30 days'
-                GROUP BY DATE(created_at)
-                ORDER BY date
-            ''')).fetchall()
+            revenue_chart_raw = db.session.execute(text(
+                "SELECT DATE(created_at) as date, COUNT(*) * 97 as revenue "
+                "FROM leads WHERE subscription_status = 'paid' "
+                "AND created_at > NOW() - INTERVAL '30 days' "
+                "GROUP BY DATE(created_at) ORDER BY date"
+            )).fetchall()
             
             context['revenue_chart_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in revenue_chart_raw]
             context['revenue_chart_data'] = [float(row.revenue) for row in revenue_chart_raw]
@@ -9171,11 +9131,9 @@ def admin_reset_password():
         hashed_password = generate_password_hash(new_password)
         
         # Update password
-        db.session.execute(text('''
-            UPDATE leads 
-            SET password = :password 
-            WHERE id = :user_id
-        '''), {'password': hashed_password, 'user_id': user_id})
+        db.session.execute(text(
+            "UPDATE leads SET password = :password WHERE id = :user_id"
+        ), {'password': hashed_password, 'user_id': user_id})
         
         # Log action with new logging function
         log_admin_action('password_reset', f'Reset password for user ID {user_id}', user_id)
@@ -9213,11 +9171,9 @@ def api_admin_reset_password():
         
         # Look up user by email
         try:
-            user = db.session.execute(text('''
-                SELECT id, email, first_name, last_name 
-                FROM leads 
-                WHERE LOWER(email) = LOWER(:email)
-            '''), {'email': email}).fetchone()
+            user = db.session.execute(text(
+                "SELECT id, email, first_name, last_name FROM leads WHERE LOWER(email) = LOWER(:email)"
+            ), {'email': email}).fetchone()
         except Exception as db_error:
             print(f"Database error looking up user: {db_error}")
             return jsonify({'success': False, 'error': f'Database error: {str(db_error)}'}), 500
@@ -9238,11 +9194,9 @@ def api_admin_reset_password():
         hashed_password = generate_password_hash(new_password)
         
         # Update password
-        db.session.execute(text('''
-            UPDATE leads 
-            SET password = :password 
-            WHERE id = :user_id
-        '''), {'password': hashed_password, 'user_id': user.id})
+        db.session.execute(text(
+            "UPDATE leads SET password = :password WHERE id = :user_id"
+        ), {'password': hashed_password, 'user_id': user.id})
         
         # Log action
         log_admin_action('password_reset', f'Reset password for {email}', user.id)
@@ -9352,21 +9306,18 @@ def api_password_reset_history():
     """Get password reset history from admin logs"""
     try:
         # Query admin_logs for password reset actions
-        logs = db.session.execute(text('''
-            SELECT 
-                al.timestamp,
-                al.details,
-                al.affected_user_id,
-                l.email as user_email,
-                l.first_name || ' ' || l.last_name as user_name,
-                admin.email as admin_email
-            FROM admin_logs al
-            LEFT JOIN leads l ON al.affected_user_id = l.id
-            LEFT JOIN leads admin ON al.admin_id = admin.id
-            WHERE al.action_type = 'password_reset'
-            ORDER BY al.timestamp DESC
-            LIMIT 50
-        ''')).fetchall()
+        logs = db.session.execute(text(
+            "SELECT "
+            " al.timestamp, al.details, al.affected_user_id, "
+            " l.email as user_email, l.first_name || ' ' || l.last_name as user_name, "
+            " admin.email as admin_email "
+            "FROM admin_logs al "
+            "LEFT JOIN leads l ON al.affected_user_id = l.id "
+            "LEFT JOIN leads admin ON al.admin_id = admin.id "
+            "WHERE al.action_type = 'password_reset' "
+            "ORDER BY al.timestamp DESC "
+            "LIMIT 50"
+        )).fetchall()
         
         history = []
         for log in logs:
@@ -9426,11 +9377,9 @@ def api_bulk_reset_password():
             new_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%^&*', k=12))
             hashed_password = generate_password_hash(new_password)
             
-            db.session.execute(text('''
-                UPDATE leads 
-                SET password = :password 
-                WHERE id = :user_id
-            '''), {'password': hashed_password, 'user_id': user.id})
+            db.session.execute(text(
+                "UPDATE leads SET password = :password WHERE id = :user_id"
+            ), {'password': hashed_password, 'user_id': user.id})
             
             # Log each reset
             log_admin_action('password_reset', f'Bulk reset for {user.email} (filter: {filter_type})', user.id)
@@ -9531,11 +9480,9 @@ def forgot_password():
             return jsonify({'success': False, 'error': 'Email is required'}), 400
         
         # Look up user
-        user = db.session.execute(text('''
-            SELECT id, email, first_name, last_name 
-            FROM leads 
-            WHERE LOWER(email) = LOWER(:email)
-        '''), {'email': email}).fetchone()
+        user = db.session.execute(text(
+            "SELECT id, email, first_name, last_name FROM leads WHERE LOWER(email) = LOWER(:email)"
+        ), {'email': email}).fetchone()
         
         if not user:
             # Don't reveal if email exists or not (security best practice)
@@ -9546,12 +9493,11 @@ def forgot_password():
         reset_token = secrets.token_urlsafe(32)
         
         # Store token in database with expiry
-        db.session.execute(text('''
-            UPDATE leads 
-            SET reset_token = :token,
-                reset_token_expires = NOW() + INTERVAL '1 hour'
-            WHERE id = :user_id
-        '''), {'token': reset_token, 'user_id': user.id})
+        db.session.execute(text(
+            "UPDATE leads SET reset_token = :token, "
+            "    reset_token_expires = NOW() + INTERVAL '1 hour' "
+            "WHERE id = :user_id"
+        ), {'token': reset_token, 'user_id': user.id})
         db.session.commit()
         
         # Send reset email to user
@@ -9647,12 +9593,9 @@ def reset_password_with_token(token):
     """Reset password using token from email"""
     if request.method == 'GET':
         # Verify token is valid
-        user = db.session.execute(text('''
-            SELECT id, email, first_name 
-            FROM leads 
-            WHERE reset_token = :token 
-            AND reset_token_expires > NOW()
-        '''), {'token': token}).fetchone()
+        user = db.session.execute(text(
+            "SELECT id, email, first_name FROM leads WHERE reset_token = :token AND reset_token_expires > NOW()"
+        ), {'token': token}).fetchone()
         
         if not user:
             flash('This password reset link is invalid or has expired.', 'error')
@@ -9678,12 +9621,9 @@ def reset_password_with_token(token):
             return redirect(url_for('reset_password_with_token', token=token))
         
         # Verify token again
-        user = db.session.execute(text('''
-            SELECT id, email 
-            FROM leads 
-            WHERE reset_token = :token 
-            AND reset_token_expires > NOW()
-        '''), {'token': token}).fetchone()
+        user = db.session.execute(text(
+            "SELECT id, email FROM leads WHERE reset_token = :token AND reset_token_expires > NOW()"
+        ), {'token': token}).fetchone()
         
         if not user:
             flash('This password reset link is invalid or has expired.', 'error')
@@ -9693,13 +9633,11 @@ def reset_password_with_token(token):
         from werkzeug.security import generate_password_hash
         hashed_password = generate_password_hash(new_password)
         
-        db.session.execute(text('''
-            UPDATE leads 
-            SET password = :password,
-                reset_token = NULL,
-                reset_token_expires = NULL
-            WHERE id = :user_id
-        '''), {'password': hashed_password, 'user_id': user.id})
+        db.session.execute(text(
+            "UPDATE leads SET password = :password, "
+            "    reset_token = NULL, reset_token_expires = NULL "
+            "WHERE id = :user_id"
+        ), {'password': hashed_password, 'user_id': user.id})
         db.session.commit()
         
         flash('✅ Your password has been reset successfully! Please log in.', 'success')
@@ -9794,11 +9732,9 @@ def admin_toggle_subscription():
         user_id = data.get('user_id')
         new_status = data.get('new_status')
         
-        db.session.execute(text('''
-            UPDATE leads 
-            SET subscription_status = :status 
-            WHERE id = :user_id
-        '''), {'status': new_status, 'user_id': user_id})
+        db.session.execute(text(
+            "UPDATE leads SET subscription_status = :status WHERE id = :user_id"
+        ), {'status': new_status, 'user_id': user_id})
         
         # Log action with new logging function
         log_admin_action('subscription_change', f'Changed subscription to {new_status}', user_id)
@@ -9824,11 +9760,9 @@ def admin_update_contract_url():
         if not contract_id or not new_url:
             return jsonify({'success': False, 'message': 'Missing contract_id or new_url'}), 400
         
-        db.session.execute(text('''
-            UPDATE federal_contracts 
-            SET sam_gov_url = :url 
-            WHERE id = :id
-        '''), {'url': new_url, 'id': contract_id})
+        db.session.execute(text(
+            "UPDATE federal_contracts SET sam_gov_url = :url WHERE id = :id"
+        ), {'url': new_url, 'id': contract_id})
         
         db.session.commit()
         
@@ -9855,11 +9789,9 @@ def admin_regenerate_contract_url():
         # Build new URL using keyword search
         new_url = _build_sam_search_url(naics_code=naics_code, city=None, state='VA')
         
-        db.session.execute(text('''
-            UPDATE federal_contracts 
-            SET sam_gov_url = :url 
-            WHERE id = :id
-        '''), {'url': new_url, 'id': contract_id})
+        db.session.execute(text(
+            "UPDATE federal_contracts SET sam_gov_url = :url WHERE id = :id"
+        ), {'url': new_url, 'id': contract_id})
         
         db.session.commit()
         
@@ -9876,9 +9808,9 @@ def admin_regenerate_contract_url():
 def admin_get_lead(lead_id):
     """Get lead details for editing"""
     try:
-        lead = db.session.execute(text('''
-            SELECT * FROM leads WHERE id = :id
-        '''), {'id': lead_id}).fetchone()
+        lead = db.session.execute(text(
+            "SELECT * FROM leads WHERE id = :id"
+        ), {'id': lead_id}).fetchone()
         
         if not lead:
             return jsonify({'success': False, 'message': 'Lead not found'}), 404
@@ -9909,10 +9841,10 @@ def admin_add_lead():
     try:
         data = request.get_json()
         
-        db.session.execute(text('''
-            INSERT INTO leads (company_name, contact_name, email, phone, state, subscription_status)
-            VALUES (:company_name, :contact_name, :email, :phone, :state, :subscription_status)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO leads (company_name, contact_name, email, phone, state, subscription_status) "
+            "VALUES (:company_name, :contact_name, :email, :phone, :state, :subscription_status)"
+        ), {
             'company_name': data.get('company_name'),
             'contact_name': data.get('contact_name'),
             'email': data.get('email'),
@@ -9942,18 +9874,18 @@ def admin_update_lead():
         if not lead_id:
             return jsonify({'success': False, 'message': 'Missing lead_id'}), 400
         
-        db.session.execute(text('''
-            UPDATE leads 
-            SET company_name = :company_name,
-                contact_name = :contact_name,
-                email = :email,
-                phone = :phone,
-                state = :state,
-                subscription_status = :subscription_status,
-                experience_years = :experience_years,
-                certifications = :certifications
-            WHERE id = :id
-        '''), {
+        db.session.execute(text(
+            "UPDATE leads "
+            "SET company_name = :company_name, "
+            "    contact_name = :contact_name, "
+            "    email = :email, "
+            "    phone = :phone, "
+            "    state = :state, "
+            "    subscription_status = :subscription_status, "
+            "    experience_years = :experience_years, "
+            "    certifications = :certifications "
+            "WHERE id = :id"
+        ), {
             'id': lead_id,
             'company_name': data.get('company_name'),
             'contact_name': data.get('contact_name'),
@@ -9986,9 +9918,9 @@ def admin_delete_lead():
         if not lead_id:
             return jsonify({'success': False, 'message': 'Missing lead_id'}), 400
         
-        db.session.execute(text('''
-            DELETE FROM leads WHERE id = :id
-        '''), {'id': lead_id})
+        db.session.execute(text(
+            "DELETE FROM leads WHERE id = :id"
+        ), {'id': lead_id})
         
         db.session.commit()
         
@@ -10006,9 +9938,9 @@ def admin_create_admin_user():
     """Create a new admin user - super admins only"""
     try:
         # Check if current user is super admin
-        current_user = db.session.execute(text('''
-            SELECT admin_role FROM leads WHERE id = :id
-        '''), {'id': session['user_id']}).fetchone()
+        current_user = db.session.execute(text(
+            "SELECT admin_role FROM leads WHERE id = :id"
+        ), {'id': session['user_id']}).fetchone()
         
         if not current_user or current_user.admin_role != 'super_admin':
             return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
@@ -10021,24 +9953,22 @@ def admin_create_admin_user():
         
         # Add admin_role column if it doesn't exist (migration)
         try:
-            db.session.execute(text('''
-                ALTER TABLE leads ADD COLUMN IF NOT EXISTS admin_role TEXT DEFAULT NULL
-            '''))
+            db.session.execute(text(
+                "ALTER TABLE leads ADD COLUMN IF NOT EXISTS admin_role TEXT DEFAULT NULL"
+            ))
             db.session.commit()
         except:
             db.session.rollback()
         
         # Create new admin user
-        db.session.execute(text('''
-            INSERT INTO leads (
-                company_name, contact_name, email, username, password_hash, 
-                phone, is_admin, admin_role, subscription_status
-            )
-            VALUES (
-                :company_name, :contact_name, :email, :username, :password_hash,
-                '', TRUE, :admin_role, 'paid'
-            )
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO leads (" 
+            " company_name, contact_name, email, username, password_hash, "
+            " phone, is_admin, admin_role, subscription_status) "
+            "VALUES ("
+            " :company_name, :contact_name, :email, :username, :password_hash,"
+            " '', TRUE, :admin_role, 'paid')"
+        ), {
             'company_name': data.get('company_name', 'Admin User'),
             'contact_name': data.get('contact_name'),
             'email': data.get('email'),
@@ -10063,9 +9993,9 @@ def admin_change_admin_role():
     """Change an admin user's role - super admins only"""
     try:
         # Check if current user is super admin
-        current_user = db.session.execute(text('''
-            SELECT admin_role FROM leads WHERE id = :id
-        '''), {'id': session['user_id']}).fetchone()
+        current_user = db.session.execute(text(
+            "SELECT admin_role FROM leads WHERE id = :id"
+        ), {'id': session['user_id']}).fetchone()
         
         if not current_user or current_user.admin_role != 'super_admin':
             return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
@@ -10084,11 +10014,9 @@ def admin_change_admin_role():
         if int(admin_id) == session['user_id']:
             return jsonify({'success': False, 'message': 'Cannot change your own role'}), 400
         
-        db.session.execute(text('''
-            UPDATE leads 
-            SET admin_role = :role 
-            WHERE id = :id AND is_admin = TRUE
-        '''), {'role': new_role, 'id': admin_id})
+        db.session.execute(text(
+            "UPDATE leads SET admin_role = :role WHERE id = :id AND is_admin = TRUE"
+        ), {'role': new_role, 'id': admin_id})
         
         db.session.commit()
         
@@ -10106,9 +10034,9 @@ def admin_revoke_admin_access():
     """Revoke admin access from a user - super admins only"""
     try:
         # Check if current user is super admin
-        current_user = db.session.execute(text('''
-            SELECT admin_role FROM leads WHERE id = :id
-        '''), {'id': session['user_id']}).fetchone()
+        current_user = db.session.execute(text(
+            "SELECT admin_role FROM leads WHERE id = :id"
+        ), {'id': session['user_id']}).fetchone()
         
         if not current_user or current_user.admin_role != 'super_admin':
             return jsonify({'success': False, 'message': 'Super Admin access required'}), 403
@@ -10123,11 +10051,11 @@ def admin_revoke_admin_access():
         if int(admin_id) == session['user_id']:
             return jsonify({'success': False, 'message': 'Cannot revoke your own access'}), 400
         
-        db.session.execute(text('''
-            UPDATE leads 
-            SET is_admin = FALSE, admin_role = NULL
-            WHERE id = :id
-        '''), {'id': admin_id})
+        db.session.execute(text(
+            "UPDATE leads "
+            "SET is_admin = FALSE, admin_role = NULL "
+            "WHERE id = :id"
+        ), {'id': admin_id})
         
         db.session.commit()
         
@@ -10160,11 +10088,11 @@ def admin_ai_verify_urls():
         contract_ids = contract_ids[:10]
         
         # Get contract data
-        contracts = db.session.execute(text('''
-            SELECT id, agency_name, description, naics_code, award_id, sam_gov_url
-            FROM federal_contracts
-            WHERE id = ANY(:ids)
-        '''), {'ids': contract_ids}).fetchall()
+        contracts = db.session.execute(text(
+            "SELECT id, agency_name, description, naics_code, award_id, sam_gov_url "
+            "FROM federal_contracts "
+            "WHERE id = ANY(:ids)"
+        ), {'ids': contract_ids}).fetchall()
         
         if not contracts:
             return jsonify({'success': False, 'message': 'No contracts found'}), 404
@@ -10291,17 +10219,15 @@ def admin_track_supply_urls():
     try:
         if request.method == 'GET':
             # Get all supply contracts with URLs
-            supply_contracts = db.session.execute(text('''
-                SELECT 
-                    id, title, agency, location, product_category, estimated_value,
-                    bid_deadline, website_url, contact_email, contact_phone, is_quick_win
-                FROM supply_contracts 
-                WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
-                ORDER BY 
-                    CASE WHEN is_quick_win THEN 0 ELSE 1 END,
-                    bid_deadline ASC
-                LIMIT 50
-            ''')).fetchall()
+            supply_contracts = db.session.execute(text(
+                "SELECT "
+                " id, title, agency, location, product_category, estimated_value, "
+                " bid_deadline, website_url, contact_email, contact_phone, is_quick_win "
+                "FROM supply_contracts "
+                "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+                "ORDER BY CASE WHEN is_quick_win THEN 0 ELSE 1 END, bid_deadline ASC "
+                "LIMIT 50"
+            )).fetchall()
             
             contracts_data = []
             for contract in supply_contracts:
@@ -10335,17 +10261,15 @@ def admin_track_supply_urls():
         limit = int(data.get('limit', 10))  # Limit to avoid API costs
         
         # Get supply contracts with URLs
-        supply_contracts = db.session.execute(text('''
-            SELECT 
-                id, title, agency, location, product_category, estimated_value,
-                bid_deadline, website_url, description, is_quick_win
-            FROM supply_contracts 
-            WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
-            ORDER BY 
-                CASE WHEN is_quick_win THEN 0 ELSE 1 END,
-                bid_deadline ASC
-            LIMIT :limit
-        '''), {'limit': limit}).fetchall()
+        supply_contracts = db.session.execute(text(
+            "SELECT "
+            " id, title, agency, location, product_category, estimated_value, "
+            " bid_deadline, website_url, description, is_quick_win "
+            "FROM supply_contracts "
+            "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+            "ORDER BY CASE WHEN is_quick_win THEN 0 ELSE 1 END, bid_deadline ASC "
+            "LIMIT :limit"
+        ), {'limit': limit}).fetchall()
         
         if not supply_contracts:
             return jsonify({'success': False, 'message': 'No supply contracts with URLs found'}), 404
@@ -10417,24 +10341,24 @@ Only respond with the JSON array, no other text."""
         # Store tracking results in database (optional - create url_tracking table if needed)
         for result in results:
             try:
-                db.session.execute(text('''
-                    INSERT INTO url_tracking 
-                    (contract_id, contract_type, url, url_status, url_type, urgency_score, 
-                     accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at)
-                    VALUES 
-                    (:contract_id, 'supply', :url, :url_status, :url_type, :urgency_score,
-                     :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW())
-                    ON CONFLICT (contract_id, contract_type) 
-                    DO UPDATE SET
-                        url_status = EXCLUDED.url_status,
-                        url_type = EXCLUDED.url_type,
-                        urgency_score = EXCLUDED.urgency_score,
-                        accessibility = EXCLUDED.accessibility,
-                        has_contact_info = EXCLUDED.has_contact_info,
-                        recommended_action = EXCLUDED.recommended_action,
-                        tracking_notes = EXCLUDED.tracking_notes,
-                        analyzed_at = NOW()
-                '''), {
+                db.session.execute(text(
+                    "INSERT INTO url_tracking "
+                    "(contract_id, contract_type, url, url_status, url_type, urgency_score, "
+                    " accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at) "
+                    "VALUES "
+                    "(:contract_id, 'supply', :url, :url_status, :url_type, :urgency_score, "
+                    " :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW()) "
+                    "ON CONFLICT (contract_id, contract_type) "
+                    "DO UPDATE SET "
+                    "    url_status = EXCLUDED.url_status, "
+                    "    url_type = EXCLUDED.url_type, "
+                    "    urgency_score = EXCLUDED.urgency_score, "
+                    "    accessibility = EXCLUDED.accessibility, "
+                    "    has_contact_info = EXCLUDED.has_contact_info, "
+                    "    recommended_action = EXCLUDED.recommended_action, "
+                    "    tracking_notes = EXCLUDED.tracking_notes, "
+                    "    analyzed_at = NOW()"
+                ), {
                     'contract_id': result['contract_id'],
                     'url': next((c['url'] for c in contract_data if c['id'] == result['contract_id']), ''),
                     'url_status': result.get('url_status', 'unknown'),
@@ -10488,12 +10412,12 @@ def admin_track_all_urls():
             
             # 1. Federal Contracts
             try:
-                federal = db.session.execute(text('''
-                    SELECT id, title, agency, location, value, deadline, sam_gov_url, 'federal' as type
-                    FROM federal_contracts 
-                    WHERE sam_gov_url IS NOT NULL AND sam_gov_url != ''
-                    LIMIT 100
-                ''')).fetchall()
+                federal = db.session.execute(text(
+                    "SELECT id, title, agency, location, value, deadline, sam_gov_url, 'federal' as type "
+                    "FROM federal_contracts "
+                    "WHERE sam_gov_url IS NOT NULL AND sam_gov_url != '' "
+                    "LIMIT 100"
+                )).fetchall()
                 for lead in federal:
                     all_leads.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2], 
@@ -10505,12 +10429,12 @@ def admin_track_all_urls():
             
             # 2. Supply Contracts
             try:
-                supply = db.session.execute(text('''
-                    SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, 'supply' as type
-                    FROM supply_contracts 
-                    WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
-                    LIMIT 100
-                ''')).fetchall()
+                supply = db.session.execute(text(
+                    "SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, 'supply' as type "
+                    "FROM supply_contracts "
+                    "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+                    "LIMIT 100"
+                )).fetchall()
                 for lead in supply:
                     all_leads.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
@@ -10522,12 +10446,12 @@ def admin_track_all_urls():
             
             # 3. Government Contracts (general)
             try:
-                gov = db.session.execute(text('''
-                    SELECT id, title, agency, location, value, deadline, website_url, 'government' as type
-                    FROM government_contracts 
-                    WHERE website_url IS NOT NULL AND website_url != ''
-                    LIMIT 100
-                ''')).fetchall()
+                gov = db.session.execute(text(
+                    "SELECT id, title, agency, location, value, deadline, website_url, 'government' as type "
+                    "FROM government_contracts "
+                    "WHERE website_url IS NOT NULL AND website_url != '' "
+                    "LIMIT 100"
+                )).fetchall()
                 for lead in gov:
                     all_leads.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
@@ -10539,12 +10463,12 @@ def admin_track_all_urls():
             
             # 4. Regular Contracts
             try:
-                contracts = db.session.execute(text('''
-                    SELECT id, title, agency, location, value, deadline, website_url, 'contract' as type
-                    FROM contracts 
-                    WHERE website_url IS NOT NULL AND website_url != ''
-                    LIMIT 100
-                ''')).fetchall()
+                contracts = db.session.execute(text(
+                    "SELECT id, title, agency, location, value, deadline, website_url, 'contract' as type "
+                    "FROM contracts "
+                    "WHERE website_url IS NOT NULL AND website_url != '' "
+                    "LIMIT 100"
+                )).fetchall()
                 for lead in contracts:
                     all_leads.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
@@ -10556,12 +10480,12 @@ def admin_track_all_urls():
             
             # 5. Commercial Opportunities
             try:
-                commercial = db.session.execute(text('''
-                    SELECT id, business_name, city, budget, created_at, website, 'commercial' as type
-                    FROM commercial_opportunities 
-                    WHERE website IS NOT NULL AND website != ''
-                    LIMIT 100
-                ''')).fetchall()
+                commercial = db.session.execute(text(
+                    "SELECT id, business_name, city, budget, created_at, website, 'commercial' as type "
+                    "FROM commercial_opportunities "
+                    "WHERE website IS NOT NULL AND website != '' "
+                    "LIMIT 100"
+                )).fetchall()
                 for lead in commercial:
                     all_leads.append({
                         'id': lead[0], 'title': lead[1], 'agency': 'Commercial',
@@ -10599,13 +10523,13 @@ def admin_track_all_urls():
         all_leads_data = []
         
         if 'federal' in lead_types:
-            federal = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, sam_gov_url, description
-                FROM federal_contracts 
-                WHERE sam_gov_url IS NOT NULL AND sam_gov_url != ''
-                ORDER BY posted_date DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            federal = db.session.execute(text(
+                "SELECT id, title, agency, location, value, deadline, sam_gov_url, description "
+                "FROM federal_contracts "
+                "WHERE sam_gov_url IS NOT NULL AND sam_gov_url != '' "
+                "ORDER BY posted_date DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in federal:
                 all_leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10615,13 +10539,13 @@ def admin_track_all_urls():
                 })
         
         if 'supply' in lead_types:
-            supply = db.session.execute(text('''
-                SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, description
-                FROM supply_contracts 
-                WHERE status = 'open' AND website_url IS NOT NULL AND website_url != ''
-                ORDER BY created_at DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            supply = db.session.execute(text(
+                "SELECT id, title, agency, location, estimated_value, bid_deadline, website_url, description "
+                "FROM supply_contracts "
+                "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+                "ORDER BY created_at DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in supply:
                 all_leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10631,13 +10555,13 @@ def admin_track_all_urls():
                 })
         
         if 'government' in lead_types:
-            gov = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, website_url, description
-                FROM government_contracts 
-                WHERE website_url IS NOT NULL AND website_url != ''
-                ORDER BY posted_date DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            gov = db.session.execute(text(
+                "SELECT id, title, agency, location, value, deadline, website_url, description "
+                "FROM government_contracts "
+                "WHERE website_url IS NOT NULL AND website_url != '' "
+                "ORDER BY posted_date DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in gov:
                 all_leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10705,24 +10629,24 @@ Only respond with the JSON array, no other text."""
         # Store tracking results
         for result in results:
             try:
-                db.session.execute(text('''
-                    INSERT INTO url_tracking 
-                    (contract_id, contract_type, url, url_status, url_type, urgency_score, 
-                     accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at)
-                    VALUES 
-                    (:contract_id, :contract_type, :url, :url_status, :url_type, :urgency_score,
-                     :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW())
-                    ON CONFLICT (contract_id, contract_type) 
-                    DO UPDATE SET
-                        url_status = EXCLUDED.url_status,
-                        url_type = EXCLUDED.url_type,
-                        urgency_score = EXCLUDED.urgency_score,
-                        accessibility = EXCLUDED.accessibility,
-                        has_contact_info = EXCLUDED.has_contact_info,
-                        recommended_action = EXCLUDED.recommended_action,
-                        tracking_notes = EXCLUDED.tracking_notes,
-                        analyzed_at = NOW()
-                '''), {
+                db.session.execute(text(
+                    "INSERT INTO url_tracking "
+                    "(contract_id, contract_type, url, url_status, url_type, urgency_score, "
+                    " accessibility, has_contact_info, recommended_action, tracking_notes, analyzed_at) "
+                    "VALUES "
+                    "(:contract_id, :contract_type, :url, :url_status, :url_type, :urgency_score, "
+                    " :accessibility, :has_contact_info, :recommended_action, :tracking_notes, NOW()) "
+                    "ON CONFLICT (contract_id, contract_type) "
+                    "DO UPDATE SET "
+                    "    url_status = EXCLUDED.url_status, "
+                    "    url_type = EXCLUDED.url_type, "
+                    "    urgency_score = EXCLUDED.urgency_score, "
+                    "    accessibility = EXCLUDED.accessibility, "
+                    "    has_contact_info = EXCLUDED.has_contact_info, "
+                    "    recommended_action = EXCLUDED.recommended_action, "
+                    "    tracking_notes = EXCLUDED.tracking_notes, "
+                    "    analyzed_at = NOW()"
+                ), {
                     'contract_id': result['lead_id'],
                     'contract_type': result['lead_type'],
                     'url': next((l['url'] for l in all_leads_data if l['id'] == result['lead_id']), ''),
@@ -10777,12 +10701,12 @@ def admin_populate_missing_urls():
             
             # 1. Federal Contracts without URLs
             try:
-                federal = db.session.execute(text('''
-                    SELECT id, title, agency, location, naics_code, description, 'federal' as type
-                    FROM federal_contracts 
-                    WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
-                    LIMIT 50
-                ''')).fetchall()
+                federal = db.session.execute(text(
+                    "SELECT id, title, agency, location, naics_code, description, 'federal' as type "
+                    "FROM federal_contracts "
+                    "WHERE (sam_gov_url IS NULL OR sam_gov_url = '') "
+                    "LIMIT 50"
+                )).fetchall()
                 for lead in federal:
                     leads_without_urls.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2], 
@@ -10794,12 +10718,12 @@ def admin_populate_missing_urls():
             
             # 2. Supply Contracts without URLs
             try:
-                supply = db.session.execute(text('''
-                    SELECT id, title, agency, location, product_category, description, 'supply' as type
-                    FROM supply_contracts 
-                    WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
-                    LIMIT 50
-                ''')).fetchall()
+                supply = db.session.execute(text(
+                    "SELECT id, title, agency, location, product_category, description, 'supply' as type "
+                    "FROM supply_contracts "
+                    "WHERE (website_url IS NULL OR website_url = '') AND status = 'open' "
+                    "LIMIT 50"
+                )).fetchall()
                 for lead in supply:
                     leads_without_urls.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
@@ -10811,12 +10735,12 @@ def admin_populate_missing_urls():
             
             # 3. Government Contracts without URLs
             try:
-                gov = db.session.execute(text('''
-                    SELECT id, title, agency, location, naics_code, description, 'government' as type
-                    FROM government_contracts 
-                    WHERE (website_url IS NULL OR website_url = '')
-                    LIMIT 50
-                ''')).fetchall()
+                gov = db.session.execute(text(
+                    "SELECT id, title, agency, location, naics_code, description, 'government' as type "
+                    "FROM government_contracts "
+                    "WHERE (website_url IS NULL OR website_url = '') "
+                    "LIMIT 50"
+                )).fetchall()
                 for lead in gov:
                     leads_without_urls.append({
                         'id': lead[0], 'title': lead[1], 'agency': lead[2],
@@ -10853,13 +10777,13 @@ def admin_populate_missing_urls():
         leads_data = []
         
         if 'federal' in lead_types:
-            federal = db.session.execute(text('''
-                SELECT id, title, agency, location, naics_code, description, solicitation_number
-                FROM federal_contracts 
-                WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
-                ORDER BY posted_date DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            federal = db.session.execute(text(
+                "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                "FROM federal_contracts "
+                "WHERE (sam_gov_url IS NULL OR sam_gov_url = '') "
+                "ORDER BY posted_date DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in federal:
                 leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10868,13 +10792,13 @@ def admin_populate_missing_urls():
                 })
         
         if 'supply' in lead_types:
-            supply = db.session.execute(text('''
-                SELECT id, title, agency, location, product_category, description
-                FROM supply_contracts 
-                WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
-                ORDER BY created_at DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            supply = db.session.execute(text(
+                "SELECT id, title, agency, location, product_category, description "
+                "FROM supply_contracts "
+                "WHERE (website_url IS NULL OR website_url = '') AND status = 'open' "
+                "ORDER BY created_at DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in supply:
                 leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10883,13 +10807,13 @@ def admin_populate_missing_urls():
                 })
         
         if 'government' in lead_types:
-            gov = db.session.execute(text('''
-                SELECT id, title, agency, location, naics_code, description
-                FROM government_contracts 
-                WHERE (website_url IS NULL OR website_url = '')
-                ORDER BY posted_date DESC
-                LIMIT :limit
-            '''), {'limit': limit}).fetchall()
+            gov = db.session.execute(text(
+                "SELECT id, title, agency, location, naics_code, description "
+                "FROM government_contracts "
+                "WHERE (website_url IS NULL OR website_url = '') "
+                "ORDER BY posted_date DESC "
+                "LIMIT :limit"
+            ), {'limit': limit}).fetchall()
             for lead in gov:
                 leads_data.append({
                     'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
@@ -10965,23 +10889,23 @@ Only respond with the JSON array, no other text."""
                     suggested_url = result['suggested_url']
                     
                     if lead_type == 'federal':
-                        db.session.execute(text('''
-                            UPDATE federal_contracts 
-                            SET sam_gov_url = :url
-                            WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE federal_contracts "
+                            "SET sam_gov_url = :url "
+                            "WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     elif lead_type == 'supply':
-                        db.session.execute(text('''
-                            UPDATE supply_contracts 
-                            SET website_url = :url
-                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE supply_contracts "
+                            "SET website_url = :url "
+                            "WHERE id = :id AND (website_url IS NULL OR website_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     elif lead_type == 'government':
-                        db.session.execute(text('''
-                            UPDATE government_contracts 
-                            SET website_url = :url
-                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE government_contracts "
+                            "SET website_url = :url "
+                            "WHERE id = :id AND (website_url IS NULL OR website_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     
                     updated_count += 1
                 except Exception as e:
@@ -11045,14 +10969,14 @@ def auto_populate_missing_urls_background():
             leads_data = []
             
             # Federal contracts
-            federal = db.session.execute(text('''
-                SELECT id, title, agency, location, naics_code, description, solicitation_number
-                FROM federal_contracts 
-                WHERE (sam_gov_url IS NULL OR sam_gov_url = '')
-                AND posted_date >= CURRENT_DATE - INTERVAL '30 days'
-                ORDER BY posted_date DESC
-                LIMIT 10
-            ''')).fetchall()
+            federal = db.session.execute(text(
+                "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                "FROM federal_contracts "
+                "WHERE (sam_gov_url IS NULL OR sam_gov_url = '') "
+                "AND posted_date >= CURRENT_DATE - INTERVAL '30 days' "
+                "ORDER BY posted_date DESC "
+                "LIMIT 10"
+            )).fetchall()
             
             for lead in federal:
                 leads_data.append({
@@ -11062,13 +10986,13 @@ def auto_populate_missing_urls_background():
                 })
             
             # Supply contracts
-            supply = db.session.execute(text('''
-                SELECT id, title, agency, location, product_category, description
-                FROM supply_contracts 
-                WHERE (website_url IS NULL OR website_url = '') AND status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 5
-            ''')).fetchall()
+            supply = db.session.execute(text(
+                "SELECT id, title, agency, location, product_category, description "
+                "FROM supply_contracts "
+                "WHERE (website_url IS NULL OR website_url = '') AND status = 'open' "
+                "ORDER BY created_at DESC "
+                "LIMIT 5"
+            )).fetchall()
             
             for lead in supply:
                 leads_data.append({
@@ -11078,14 +11002,14 @@ def auto_populate_missing_urls_background():
                 })
             
             # Government contracts
-            gov = db.session.execute(text('''
-                SELECT id, title, agency, location, naics_code, description
-                FROM government_contracts 
-                WHERE (website_url IS NULL OR website_url = '')
-                AND posted_date >= CURRENT_DATE - INTERVAL '30 days'
-                ORDER BY posted_date DESC
-                LIMIT 5
-            ''')).fetchall()
+            gov = db.session.execute(text(
+                "SELECT id, title, agency, location, naics_code, description "
+                "FROM government_contracts "
+                "WHERE (website_url IS NULL OR website_url = '') "
+                "AND posted_date >= CURRENT_DATE - INTERVAL '30 days' "
+                "ORDER BY posted_date DESC "
+                "LIMIT 5"
+            )).fetchall()
             
             for lead in gov:
                 leads_data.append({
@@ -11152,23 +11076,23 @@ Only respond with the JSON array, no other text."""
                     suggested_url = result['suggested_url']
                     
                     if lead_type == 'federal':
-                        db.session.execute(text('''
-                            UPDATE federal_contracts 
-                            SET sam_gov_url = :url
-                            WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE federal_contracts "
+                            "SET sam_gov_url = :url "
+                            "WHERE id = :id AND (sam_gov_url IS NULL OR sam_gov_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     elif lead_type == 'supply':
-                        db.session.execute(text('''
-                            UPDATE supply_contracts 
-                            SET website_url = :url
-                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE supply_contracts "
+                            "SET website_url = :url "
+                            "WHERE id = :id AND (website_url IS NULL OR website_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     elif lead_type == 'government':
-                        db.session.execute(text('''
-                            UPDATE government_contracts 
-                            SET website_url = :url
-                            WHERE id = :id AND (website_url IS NULL OR website_url = '')
-                        '''), {'url': suggested_url, 'id': lead_id})
+                        db.session.execute(text(
+                            "UPDATE government_contracts "
+                            "SET website_url = :url "
+                            "WHERE id = :id AND (website_url IS NULL OR website_url = '')"
+                        ), {'url': suggested_url, 'id': lead_id})
                     
                     updated_count += 1
                 except Exception as e:
@@ -11212,11 +11136,11 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
             
             # Fetch the new leads based on type
             if lead_type == 'federal':
-                leads = db.session.execute(text('''
-                    SELECT id, title, agency, location, naics_code, description, solicitation_number
-                    FROM federal_contracts 
-                    WHERE id = ANY(:ids) AND (sam_gov_url IS NULL OR sam_gov_url = '')
-                '''), {'ids': lead_ids}).fetchall()
+                leads = db.session.execute(text(
+                    "SELECT id, title, agency, location, naics_code, description, solicitation_number "
+                    "FROM federal_contracts "
+                    "WHERE id = ANY(:ids) AND (sam_gov_url IS NULL OR sam_gov_url = '')"
+                ), {'ids': lead_ids}).fetchall()
                 
                 for lead in leads:
                     leads_data.append({
@@ -11227,11 +11151,11 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
                     })
             
             elif lead_type == 'supply':
-                leads = db.session.execute(text('''
-                    SELECT id, title, agency, location, product_category, description
-                    FROM supply_contracts 
-                    WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')
-                '''), {'ids': lead_ids}).fetchall()
+                leads = db.session.execute(text(
+                    "SELECT id, title, agency, location, product_category, description "
+                    "FROM supply_contracts "
+                    "WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')"
+                ), {'ids': lead_ids}).fetchall()
                 
                 for lead in leads:
                     leads_data.append({
@@ -11242,11 +11166,11 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
                     })
             
             elif lead_type == 'government':
-                leads = db.session.execute(text('''
-                    SELECT id, title, agency, location, naics_code, description
-                    FROM government_contracts 
-                    WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')
-                '''), {'ids': lead_ids}).fetchall()
+                leads = db.session.execute(text(
+                    "SELECT id, title, agency, location, naics_code, description "
+                    "FROM government_contracts "
+                    "WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')"
+                ), {'ids': lead_ids}).fetchall()
                 
                 for lead in leads:
                     leads_data.append({
@@ -11329,26 +11253,26 @@ def notify_customers_about_new_urls(url_results):
                     continue
                 
                 # Find customers who have saved this lead
-                customers = db.session.execute(text('''
-                    SELECT DISTINCT l.id as user_id, l.email, l.contact_name
-                    FROM leads l
-                    INNER JOIN saved_leads sl ON sl.user_id = l.id
-                    WHERE sl.contract_id = :lead_id 
-                    AND sl.contract_type = :lead_type
-                    AND l.subscription_status = 'active'
-                '''), {'lead_id': lead_id, 'lead_type': lead_type}).fetchall()
+                customers = db.session.execute(text(
+                    "SELECT DISTINCT l.id as user_id, l.email, l.contact_name "
+                    "FROM leads l "
+                    "INNER JOIN saved_leads sl ON sl.user_id = l.id "
+                    "WHERE sl.contract_id = :lead_id "
+                    "AND sl.contract_type = :lead_type "
+                    "AND l.subscription_status = 'active'"
+                ), {'lead_id': lead_id, 'lead_type': lead_type}).fetchall()
                 
                 for customer in customers:
                     try:
                         # Send in-app notification
                         body_text = f"Good news! We've added a URL to one of your saved leads.\n\nLead ID: {lead_id}\nType: {lead_type.title()}\nURL: {url}\n\nYou can now access this opportunity directly. View your saved leads to see the full details.\n\nThis URL was automatically generated by our AI system to help you find opportunities faster."
                         
-                        db.session.execute(text('''
-                            INSERT INTO messages 
-                            (sender_id, recipient_id, subject, body, is_read, sent_at)
-                            VALUES 
-                            (1, :user_id, :subject, :body, FALSE, CURRENT_TIMESTAMP)
-                        '''), {
+                        db.session.execute(text(
+                            "INSERT INTO messages "
+                            "(sender_id, recipient_id, subject, body, is_read, sent_at) "
+                            "VALUES "
+                            "(1, :user_id, :subject, :body, FALSE, CURRENT_TIMESTAMP)"
+                        ), {
                             'user_id': customer[0],
                             'subject': '🔗 New URL Added to Your Saved Lead',
                             'body': body_text
@@ -11520,13 +11444,13 @@ def submit_landing_survey():
         
         # Store survey data in database for analytics
         conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO survey_responses (
-                biggest_challenge, annual_revenue, company_size, 
-                contract_experience, main_focus, pain_point_scenario,
-                submission_date, ip_address
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
+        conn.execute(
+            "INSERT INTO survey_responses ("
+            "    biggest_challenge, annual_revenue, company_size, "
+            "    contract_experience, main_focus, pain_point_scenario,"
+            "    submission_date, ip_address"
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
             survey_data.get('biggest_challenge', ''),
             survey_data.get('annual_revenue', ''),
             survey_data.get('company_size', ''),
@@ -11535,7 +11459,8 @@ def submit_landing_survey():
             survey_data.get('pain_point_scenario', ''),
             datetime.now().isoformat(),
             request.remote_addr
-        ))
+            )
+        )
         conn.commit()
         conn.close()
         
@@ -11582,14 +11507,14 @@ def register_from_survey():
         
         # Insert into database
         conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO leads (
-                company_name, contact_name, email, phone, state, 
-                experience_years, certifications, registration_date, 
-                lead_source, survey_responses, proposal_support,
-                free_leads_remaining
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
+        conn.execute(
+            "INSERT INTO leads ("
+            "    company_name, contact_name, email, phone, state, "
+            "    experience_years, certifications, registration_date, "
+            "    lead_source, survey_responses, proposal_support, "
+            "    free_leads_remaining"
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
             lead_data['company_name'],
             lead_data['contact_name'], 
             lead_data['email'],
@@ -11602,7 +11527,8 @@ def register_from_survey():
             lead_data['survey_responses'],
             lead_data['proposal_support'],
             3  # Start with 3 free leads
-        ))
+            )
+        )
         conn.commit()
         conn.close()
         
@@ -11673,10 +11599,10 @@ def check_and_update_lead_clicks(user_id, user_email, subscription_status):
         session.modified = True
         
         # Log the click in database for analytics
-        db.session.execute(text('''
-            INSERT INTO lead_clicks (user_id, user_email, clicked_at, ip_address)
-            VALUES (:user_id, :email, NOW(), :ip)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO lead_clicks (user_id, user_email, clicked_at, ip_address) "
+            "VALUES (:user_id, :email, NOW(), :ip)"
+        ), {
             'user_id': user_id,
             'email': user_email,
             'ip': request.remote_addr
@@ -11727,10 +11653,10 @@ def track_lead_click():
         
         # Log detailed lead view for analytics
         try:
-            db.session.execute(text('''
-                INSERT INTO lead_views (user_id, user_email, lead_type, lead_id, viewed_at, ip_address)
-                VALUES (:user_id, :email, :lead_type, :lead_id, NOW(), :ip)
-            '''), {
+            db.session.execute(text(
+                "INSERT INTO lead_views (user_id, user_email, lead_type, lead_id, viewed_at, ip_address) "
+                "VALUES (:user_id, :email, :lead_type, :lead_id, NOW(), :ip)"
+            ), {
                 'user_id': user_id,
                 'email': user_email,
                 'lead_type': lead_type,
@@ -11863,20 +11789,8 @@ def search_site():
                     'relevance': 100 if query_lower == city['name'].lower() else 80
                 })
         
-        # Search Commercial Property Managers
-        commercial_search = db.session.execute(text('''
-            SELECT name, location, city, state, properties, vendor_link, description
-            FROM (
-                VALUES 
-                    ('Greystar Real Estate Partners', 'Charleston', 'SC'),
-                    ('Lincoln Property Company', 'Dallas', 'TX'),
-                    ('CBRE', 'Los Angeles', 'CA')
-            ) AS companies(name, city, state)
-            WHERE LOWER(name) LIKE :query 
-               OR LOWER(city) LIKE :query 
-               OR LOWER(state) LIKE :query
-            LIMIT 20
-        '''), {'query': f'%{query_lower}%'})
+        # Search Commercial Property Managers (sample in-memory list; SQL block removed)
+        commercial_search = []
         
         # Actually search the property_managers data structure
         # Let's search through the actual property managers list
@@ -11909,15 +11823,15 @@ def search_site():
         
         # Search Supply Contracts
         try:
-            supply_results = db.session.execute(text('''
-                SELECT title, agency, location, posted_date, description, estimated_value
-                FROM supply_contracts
-                WHERE LOWER(title) LIKE :query 
-                   OR LOWER(agency) LIKE :query
-                   OR LOWER(description) LIKE :query
-                ORDER BY posted_date DESC
-                LIMIT 10
-            '''), {'query': f'%{query_lower}%'}).fetchall()
+            supply_results = db.session.execute(text(
+                "SELECT title, agency, location, posted_date, description, estimated_value "
+                "FROM supply_contracts "
+                "WHERE LOWER(title) LIKE :query "
+                "   OR LOWER(agency) LIKE :query "
+                "   OR LOWER(description) LIKE :query "
+                "ORDER BY posted_date DESC "
+                "LIMIT 10"
+            ), {'query': f'%{query_lower}%'}).fetchall()
             
             for supply in supply_results:
                 results['supply_contracts'].append({
@@ -11965,10 +11879,10 @@ def search_site():
         # Track search for suggestions algorithm (optional - table may not exist)
         if user_email:
             try:
-                db.session.execute(text('''
-                    INSERT INTO search_history (user_email, query, results_count, created_at)
-                    VALUES (:email, :query, :count, CURRENT_TIMESTAMP)
-                '''), {
+                db.session.execute(text(
+                    "INSERT INTO search_history (user_email, query, results_count, created_at) "
+                    "VALUES (:email, :query, :count, CURRENT_TIMESTAMP)"
+                ), {
                     'email': user_email,
                     'query': query,
                     'count': total_results
@@ -12020,37 +11934,37 @@ def get_search_suggestions():
         
         suggestions = []
         
-        # Algorithm 1: Based on recent search history
-        recent_searches = db.session.execute(text('''
-            SELECT query, COUNT(*) as frequency
-            FROM search_history
-            WHERE user_email = :email
-              AND created_at > NOW() - INTERVAL '30 days'
-            GROUP BY query
-            ORDER BY frequency DESC, created_at DESC
-            LIMIT 5
-        '''), {'email': user_email}).fetchall()
+                # Algorithm 1: Based on recent search history
+        recent_searches = db.session.execute(text(
+            "SELECT query, COUNT(*) as frequency "
+            "FROM search_history "
+            "WHERE user_email = :email "
+            "  AND created_at > NOW() - INTERVAL '30 days' "
+            "GROUP BY query "
+            "ORDER BY frequency DESC, created_at DESC "
+            "LIMIT 5"
+        ), {'email': user_email}).fetchall()
         
-        # Algorithm 2: Based on lead clicks (what they've viewed)
-        clicked_leads = db.session.execute(text('''
-            SELECT lead_type, lead_id, COUNT(*) as clicks
-            FROM lead_clicks
-            WHERE user_email = :email
-              AND created_at > NOW() - INTERVAL '30 days'
-            GROUP BY lead_type, lead_id
-            ORDER BY clicks DESC
-            LIMIT 10
-        '''), {'email': user_email}).fetchall()
+                # Algorithm 2: Based on lead clicks (what they've viewed)
+        clicked_leads = db.session.execute(text(
+            "SELECT lead_type, lead_id, COUNT(*) as clicks "
+            "FROM lead_clicks "
+            "WHERE user_email = :email "
+            "  AND created_at > NOW() - INTERVAL '30 days' "
+            "GROUP BY lead_type, lead_id "
+            "ORDER BY clicks DESC "
+            "LIMIT 10"
+        ), {'email': user_email}).fetchall()
         
         # Algorithm 3: Trending leads (what others are viewing)
-        trending_leads = db.session.execute(text('''
-            SELECT lead_type, COUNT(*) as views
-            FROM lead_views
-            WHERE created_at > NOW() - INTERVAL '7 days'
-            GROUP BY lead_type
-            ORDER BY views DESC
-            LIMIT 5
-        '''), {'email': user_email}).fetchall()
+        trending_leads = db.session.execute(text(
+            "SELECT lead_type, COUNT(*) as views "
+            "FROM lead_views "
+            "WHERE created_at > NOW() - INTERVAL '7 days' "
+            "GROUP BY lead_type "
+            "ORDER BY views DESC "
+            "LIMIT 5"
+        ), {'email': user_email}).fetchall()
         
         # Build suggestions based on search patterns
         search_patterns = {}
@@ -12359,19 +12273,20 @@ def process_subscription():
         
         # Store subscription data
         conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO subscriptions (
-                email, cardholder_name, total_amount, 
-                proposal_support, subscription_date, status
-            ) VALUES (?, ?, ?, ?, ?, ?)
-        ''', (
+        conn.execute(
+            "INSERT INTO subscriptions ("
+            "    email, cardholder_name, total_amount, "
+            "    proposal_support, subscription_date, status"
+            ") VALUES (?, ?, ?, ?, ?, ?)",
+            (
             'demo@example.com',  # In real app, get from session
             payment_data.get('cardholder_name'),
             payment_data.get('total_amount'),
             payment_data.get('proposal_support', False),
             datetime.now().isoformat(),
             'active'
-        ))
+            )
+        )
         conn.commit()
         conn.close()
         
@@ -12532,10 +12447,12 @@ def purchase_credits():
         c = conn.cursor()
         
         try:
-            c.execute('''UPDATE credits_purchases 
-                         SET payment_method = ?, payment_reference = ?
-                         WHERE user_email = ? AND transaction_id = ?''',
-                      (payment_method, payment_reference, user_email, transaction_id))
+            c.execute(
+                "UPDATE credits_purchases "
+                "SET payment_method = ?, payment_reference = ? "
+                "WHERE user_email = ? AND transaction_id = ?",
+                (payment_method, payment_reference, user_email, transaction_id)
+            )
             conn.commit()
         except Exception as e:
             print(f"Error updating purchase record: {e}")
@@ -12566,17 +12483,23 @@ def credits_usage_history():
         c = conn.cursor()
         
         # Get usage history
-        c.execute('''SELECT credits_used, action_type, opportunity_name, usage_date 
-                     FROM credits_usage 
-                     WHERE user_email = ? 
-                     ORDER BY usage_date DESC LIMIT 50''', (user_email,))
+        c.execute(
+            "SELECT credits_used, action_type, opportunity_name, usage_date "
+            "FROM credits_usage "
+            "WHERE user_email = ? "
+            "ORDER BY usage_date DESC LIMIT 50",
+            (user_email,)
+        )
         usage_history = c.fetchall()
         
         # Get purchase history
-        c.execute('''SELECT credits_purchased, amount_paid, purchase_type, purchase_date 
-                     FROM credits_purchases 
-                     WHERE user_email = ? 
-                     ORDER BY purchase_date DESC LIMIT 50''', (user_email,))
+        c.execute(
+            "SELECT credits_purchased, amount_paid, purchase_type, purchase_date "
+            "FROM credits_purchases "
+            "WHERE user_email = ? "
+            "ORDER BY purchase_date DESC LIMIT 50",
+            (user_email,)
+        )
         purchase_history = c.fetchall()
         
         conn.close()
@@ -12784,25 +12707,28 @@ def admin_fetch_international_quick_wins():
         for rec in records:
             exists = None
             if rec.get('website_url'):
-                exists = db.session.execute(text('''
-                    SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1
-                '''), {'url': rec['website_url']}).fetchone()
+                exists = db.session.execute(
+                    text("SELECT id FROM supply_contracts WHERE website_url = :url LIMIT 1"),
+                    {'url': rec['website_url']}
+                ).fetchone()
             if not exists:
-                exists = db.session.execute(text('''
-                    SELECT id FROM supply_contracts WHERE title = :title AND agency = :agency LIMIT 1
-                '''), {'title': rec.get('title'), 'agency': rec.get('agency')}).fetchone()
+                exists = db.session.execute(
+                    text("SELECT id FROM supply_contracts WHERE title = :title AND agency = :agency LIMIT 1"),
+                    {'title': rec.get('title'), 'agency': rec.get('agency')}
+                ).fetchone()
             if exists:
                 continue
-            db.session.execute(text('''
-                INSERT INTO supply_contracts 
-                (title, agency, location, product_category, estimated_value, bid_deadline, 
-                 description, website_url, is_small_business_set_aside, contact_name, 
-                 contact_email, contact_phone, is_quick_win, status, posted_date)
-                VALUES 
-                (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
-                 :description, :website_url, :is_small_business_set_aside, :contact_name,
-                 :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-            '''), rec)
+            insert_sql = (
+                "INSERT INTO supply_contracts "
+                "(title, agency, location, product_category, estimated_value, bid_deadline, "
+                " description, website_url, is_small_business_set_aside, contact_name, "
+                " contact_email, contact_phone, is_quick_win, status, posted_date) "
+                "VALUES "
+                "(:title, :agency, :location, :product_category, :estimated_value, :bid_deadline, "
+                " :description, :website_url, :is_small_business_set_aside, :contact_name, "
+                " :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)"
+            )
+            db.session.execute(text(insert_sql), rec)
             inserted += 1
         db.session.commit()
 
@@ -12897,16 +12823,17 @@ def admin_add_commercial_lead():
             urgency = request.form.get('urgency', 'normal')
             
             # Insert into commercial_lead_requests as approved
-            db.session.execute(text('''
-                INSERT INTO commercial_lead_requests
-                (business_name, contact_name, email, phone, address, city, state, zip_code,
-                 business_type, square_footage, frequency, services_needed, special_requirements,
-                 budget_range, start_date, urgency, status)
-                VALUES
-                (:business_name, :contact_name, :email, :phone, :address, :city, :state, :zip_code,
-                 :business_type, :square_footage, :frequency, :services_needed, :special_requirements,
-                 :budget_range, :start_date, :urgency, 'approved')
-            '''), {
+            insert_sql = (
+                "INSERT INTO commercial_lead_requests "
+                "(business_name, contact_name, email, phone, address, city, state, zip_code, "
+                " business_type, square_footage, frequency, services_needed, special_requirements, "
+                " budget_range, start_date, urgency, status) "
+                "VALUES "
+                "(:business_name, :contact_name, :email, :phone, :address, :city, :state, :zip_code, "
+                " :business_type, :square_footage, :frequency, :services_needed, :special_requirements, "
+                " :budget_range, :start_date, :urgency, 'approved')"
+            )
+            db.session.execute(text(insert_sql), {
                 'business_name': business_name,
                 'contact_name': contact_name,
                 'email': email,
@@ -12943,9 +12870,10 @@ def admin_add_commercial_lead():
     
     if request_id:
         try:
-            prefill_data = db.session.execute(text('''
-                SELECT * FROM commercial_lead_requests WHERE id = :id
-            '''), {'id': request_id}).fetchone()
+            prefill_data = db.session.execute(
+                text("SELECT * FROM commercial_lead_requests WHERE id = :id"),
+                {'id': request_id}
+            ).fetchone()
         except Exception as e:
             print(f"Error loading request data: {e}")
     
@@ -12963,27 +12891,27 @@ def admin_review_commercial_leads():
     
     try:
         # Get all pending commercial lead requests
-        pending_requests = db.session.execute(text('''
-            SELECT * FROM commercial_lead_requests
-            WHERE status = 'open'
-            ORDER BY created_at DESC
-        ''')).fetchall()
+        pending_requests = db.session.execute(text(
+            "SELECT * FROM commercial_lead_requests "
+            "WHERE status = 'open' "
+            "ORDER BY created_at DESC"
+        )).fetchall()
         
         # Get approved requests for reference
-        approved_requests = db.session.execute(text('''
-            SELECT * FROM commercial_lead_requests
-            WHERE status = 'approved'
-            ORDER BY updated_at DESC
-            LIMIT 20
-        ''')).fetchall()
+        approved_requests = db.session.execute(text(
+            "SELECT * FROM commercial_lead_requests "
+            "WHERE status = 'approved' "
+            "ORDER BY updated_at DESC "
+            "LIMIT 20"
+        )).fetchall()
         
         # Get denied requests for reference
-        denied_requests = db.session.execute(text('''
-            SELECT * FROM commercial_lead_requests
-            WHERE status = 'denied'
-            ORDER BY updated_at DESC
-            LIMIT 20
-        ''')).fetchall()
+        denied_requests = db.session.execute(text(
+            "SELECT * FROM commercial_lead_requests "
+            "WHERE status = 'denied' "
+            "ORDER BY updated_at DESC "
+            "LIMIT 20"
+        )).fetchall()
         
         return render_template('admin_review_commercial_leads.html',
                              pending_requests=pending_requests,
@@ -13008,9 +12936,10 @@ def admin_approve_commercial_lead(request_id):
     
     try:
         # Get the request data
-        lead_request = db.session.execute(text('''
-            SELECT * FROM commercial_lead_requests WHERE id = :id
-        '''), {'id': request_id}).fetchone()
+        lead_request = db.session.execute(
+            text("SELECT * FROM commercial_lead_requests WHERE id = :id"),
+            {'id': request_id}
+        ).fetchone()
         
         if not lead_request:
             return jsonify({'success': False, 'error': 'Request not found'}), 404
@@ -13019,27 +12948,28 @@ def admin_approve_commercial_lead(request_id):
         edit_data = request.get_json() if request.is_json else {}
         
         # Update the request with any edits and approve
-        db.session.execute(text('''
-            UPDATE commercial_lead_requests
-            SET business_name = COALESCE(:business_name, business_name),
-                contact_name = COALESCE(:contact_name, contact_name),
-                email = COALESCE(:email, email),
-                phone = COALESCE(:phone, phone),
-                address = COALESCE(:address, address),
-                city = COALESCE(:city, city),
-                state = COALESCE(:state, state),
-                zip_code = COALESCE(:zip_code, zip_code),
-                business_type = COALESCE(:business_type, business_type),
-                square_footage = COALESCE(:square_footage, square_footage),
-                frequency = COALESCE(:frequency, frequency),
-                services_needed = COALESCE(:services_needed, services_needed),
-                special_requirements = COALESCE(:special_requirements, special_requirements),
-                budget_range = COALESCE(:budget_range, budget_range),
-                urgency = COALESCE(:urgency, urgency),
-                status = 'approved',
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = :id
-        '''), {
+        approve_update_sql = (
+            "UPDATE commercial_lead_requests "
+            "SET business_name = COALESCE(:business_name, business_name), "
+            "    contact_name = COALESCE(:contact_name, contact_name), "
+            "    email = COALESCE(:email, email), "
+            "    phone = COALESCE(:phone, phone), "
+            "    address = COALESCE(:address, address), "
+            "    city = COALESCE(:city, city), "
+            "    state = COALESCE(:state, state), "
+            "    zip_code = COALESCE(:zip_code, zip_code), "
+            "    business_type = COALESCE(:business_type, business_type), "
+            "    square_footage = COALESCE(:square_footage, square_footage), "
+            "    frequency = COALESCE(:frequency, frequency), "
+            "    services_needed = COALESCE(:services_needed, services_needed), "
+            "    special_requirements = COALESCE(:special_requirements, special_requirements), "
+            "    budget_range = COALESCE(:budget_range, budget_range), "
+            "    urgency = COALESCE(:urgency, urgency), "
+            "    status = 'approved', "
+            "    updated_at = CURRENT_TIMESTAMP "
+            "WHERE id = :id"
+        )
+        db.session.execute(text(approve_update_sql), {
             'id': request_id,
             'business_name': edit_data.get('business_name'),
             'contact_name': edit_data.get('contact_name'),
@@ -13085,13 +13015,14 @@ def admin_deny_commercial_lead(request_id):
         denial_reason = data.get('reason', 'Not specified')
         
         # Update status to denied
-        db.session.execute(text('''
-            UPDATE commercial_lead_requests
-            SET status = 'denied',
-                special_requirements = CONCAT(COALESCE(special_requirements, ''), '\n\nDenial Reason: ', :reason),
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = :id
-        '''), {
+        update_sql = (
+            "UPDATE commercial_lead_requests "
+            "SET status = 'denied', "
+            "    special_requirements = CONCAT(COALESCE(special_requirements, ''), '\n\nDenial Reason: ', :reason), "
+            "    updated_at = CURRENT_TIMESTAMP "
+            "WHERE id = :id"
+        )
+        db.session.execute(text(update_sql), {
             'id': request_id,
             'reason': denial_reason
         })
@@ -13166,12 +13097,12 @@ def admin_populate_federal_contracts():
         current_count = count_result[0] if count_result else 0
         
         # Get sample contracts to show
-        sample_contracts = db.session.execute(text('''
-            SELECT title, agency, value, notice_id 
-            FROM federal_contracts 
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')).fetchall()
+        sample_contracts = db.session.execute(text(
+            "SELECT title, agency, value, notice_id "
+            "FROM federal_contracts "
+            "ORDER BY created_at DESC "
+            "LIMIT 5"
+        )).fetchall()
         
         sample_html = ""
         if sample_contracts:
@@ -13234,11 +13165,11 @@ def admin_check_contracts():
         total = count_result[0] if count_result else 0
         
         # Get sample contracts
-        sample_contracts = db.session.execute(text('''
-            SELECT title, agency, location, value, notice_id 
-            FROM federal_contracts 
-            LIMIT 10
-        ''')).fetchall()
+        sample_contracts = db.session.execute(text(
+            "SELECT title, agency, location, value, notice_id "
+            "FROM federal_contracts "
+            "LIMIT 10"
+        )).fetchall()
         
         html = f"""
         <html>
@@ -13341,13 +13272,13 @@ def admin_auto_fetch_datagov():
             datagov_count = datagov_result[0] if datagov_result else 0
             
             # Get recent contracts
-            recent_contracts = db.session.execute(text('''
-                SELECT title, agency, value, created_at
-                FROM federal_contracts 
-                WHERE data_source LIKE '%Data.gov%'
-                ORDER BY created_at DESC 
-                LIMIT 10
-            ''')).fetchall()
+            recent_contracts = db.session.execute(text(
+                "SELECT title, agency, value, created_at "
+                "FROM federal_contracts "
+                "WHERE data_source LIKE '%Data.gov%' "
+                "ORDER BY created_at DESC "
+                "LIMIT 10"
+            )).fetchall()
             
             recent_html = "<h3>Recent Data.gov Contracts:</h3><ul>"
             for contract in recent_contracts:
@@ -13440,9 +13371,9 @@ def admin_fix_sam_urls():
         print("="*70)
         
         # Get all contracts
-        contracts = db.session.execute(text('''
-            SELECT id, naics_code FROM federal_contracts
-        ''')).fetchall()
+        contracts = db.session.execute(text(
+            "SELECT id, naics_code FROM federal_contracts"
+        )).fetchall()
         
         print(f"Found {len(contracts)} contracts to update")
         
@@ -13455,11 +13386,12 @@ def admin_fix_sam_urls():
             sam_url = _build_sam_search_url(naics_code=naics_code, city=None, state='VA')
             
             # Update the contract
-            db.session.execute(text('''
-                UPDATE federal_contracts 
-                SET sam_gov_url = :url 
-                WHERE id = :id
-            '''), {'url': sam_url, 'id': contract_id})
+            update_sql = (
+                "UPDATE federal_contracts "
+                "SET sam_gov_url = :url "
+                "WHERE id = :id"
+            )
+            db.session.execute(text(update_sql), {'url': sam_url, 'id': contract_id})
             
             updated += 1
         
@@ -13533,22 +13465,22 @@ def admin_enhance_contacts():
     try:
         # Add new columns if they don't exist
         try:
-            db.session.execute(text('''
-                ALTER TABLE federal_contracts 
-                ADD COLUMN IF NOT EXISTS contact_name TEXT
-            '''))
-            db.session.execute(text('''
-                ALTER TABLE federal_contracts 
-                ADD COLUMN IF NOT EXISTS contact_email TEXT
-            '''))
-            db.session.execute(text('''
-                ALTER TABLE federal_contracts 
-                ADD COLUMN IF NOT EXISTS contact_phone TEXT
-            '''))
-            db.session.execute(text('''
-                ALTER TABLE federal_contracts 
-                ADD COLUMN IF NOT EXISTS contact_title TEXT
-            '''))
+            db.session.execute(text(
+                "ALTER TABLE federal_contracts "
+                "ADD COLUMN IF NOT EXISTS contact_name TEXT"
+            ))
+            db.session.execute(text(
+                "ALTER TABLE federal_contracts "
+                "ADD COLUMN IF NOT EXISTS contact_email TEXT"
+            ))
+            db.session.execute(text(
+                "ALTER TABLE federal_contracts "
+                "ADD COLUMN IF NOT EXISTS contact_phone TEXT"
+            ))
+            db.session.execute(text(
+                "ALTER TABLE federal_contracts "
+                "ADD COLUMN IF NOT EXISTS contact_title TEXT"
+            ))
             db.session.commit()
             print("✅ Added contact columns to federal_contracts table")
         except Exception as e:
@@ -13598,15 +13530,16 @@ def admin_enhance_contacts():
         # Update contracts with contact information
         updated_count = 0
         for agency_name, contact_info in agency_contacts.items():
-            result = db.session.execute(text('''
-                UPDATE federal_contracts 
-                SET contact_name = :contact_name,
-                    contact_title = :contact_title,
-                    contact_email = :contact_email,
-                    contact_phone = :contact_phone
-                WHERE agency LIKE :agency_pattern
-                AND (contact_name IS NULL OR contact_name = '')
-            '''), {
+            update_sql = (
+                "UPDATE federal_contracts "
+                "SET contact_name = :contact_name, "
+                "    contact_title = :contact_title, "
+                "    contact_email = :contact_email, "
+                "    contact_phone = :contact_phone "
+                "WHERE agency LIKE :agency_pattern "
+                "AND (contact_name IS NULL OR contact_name = '')"
+            )
+            result = db.session.execute(text(update_sql), {
                 'contact_name': contact_info['contact_name'],
                 'contact_title': contact_info['contact_title'],
                 'contact_email': contact_info['contact_email'],
@@ -13618,10 +13551,10 @@ def admin_enhance_contacts():
         db.session.commit()
         
         # Get total contracts with contact info
-        total_with_contacts = db.session.execute(text('''
-            SELECT COUNT(*) FROM federal_contracts 
-            WHERE contact_name IS NOT NULL AND contact_name != ''
-        ''')).scalar()
+        total_with_contacts = db.session.execute(text(
+            "SELECT COUNT(*) FROM federal_contracts "
+            "WHERE contact_name IS NOT NULL AND contact_name != ''"
+        )).scalar()
         
         return f"""
         <html>
@@ -13750,16 +13683,17 @@ def admin_test_insert():
         }
         
         print("🧪 Attempting to insert test record...")
-        db.session.execute(text('''
-            INSERT INTO supply_contracts 
-            (title, agency, location, product_category, estimated_value, bid_deadline, 
-             description, website_url, is_small_business_set_aside, contact_name, 
-             contact_email, contact_phone, is_quick_win, status, posted_date)
-            VALUES 
-            (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
-             :description, :website_url, :is_small_business_set_aside, :contact_name,
-             :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-        '''), test_record)
+        insert_sql = (
+            "INSERT INTO supply_contracts "
+            "(title, agency, location, product_category, estimated_value, bid_deadline, "
+            " description, website_url, is_small_business_set_aside, contact_name, "
+            " contact_email, contact_phone, is_quick_win, status, posted_date) "
+            "VALUES "
+            "(:title, :agency, :location, :product_category, :estimated_value, :bid_deadline, "
+            " :description, :website_url, :is_small_business_set_aside, :contact_name, "
+            " :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)"
+        )
+        db.session.execute(text(insert_sql), test_record)
         
         db.session.commit()
         print("✅ Test record inserted successfully")
@@ -13919,33 +13853,33 @@ def get_contracts_api():
         contracts = []
         
         if source == 'federal':
-            result = db.session.execute(text('''
-                SELECT title, agency, deadline, notice_id as id
-                FROM federal_contracts 
-                WHERE posted_date >= DATE('now', '-30 days')
-                ORDER BY posted_date DESC 
-                LIMIT 50
-            '''))
+            result = db.session.execute(text(
+                "SELECT title, agency, deadline, notice_id as id "
+                "FROM federal_contracts "
+                "WHERE posted_date >= DATE('now', '-30 days') "
+                "ORDER BY posted_date DESC "
+                "LIMIT 50"
+            ))
             contracts = [{'title': r[0], 'agency': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
             
         elif source == 'local':
-            result = db.session.execute(text('''
-                SELECT title, location, deadline, id
-                FROM contracts 
-                WHERE posted_date >= DATE('now', '-30 days')
-                ORDER BY posted_date DESC 
-                LIMIT 50
-            '''))
+            result = db.session.execute(text(
+                "SELECT title, location, deadline, id "
+                "FROM contracts "
+                "WHERE posted_date >= DATE('now', '-30 days') "
+                "ORDER BY posted_date DESC "
+                "LIMIT 50"
+            ))
             contracts = [{'title': r[0], 'location': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
             
         elif source == 'commercial':
-            result = db.session.execute(text('''
-                SELECT business_name as title, city as location, start_date as deadline, id
-                FROM commercial_lead_requests 
-                WHERE status = 'open' AND created_at >= DATE('now', '-30 days')
-                ORDER BY created_at DESC 
-                LIMIT 50
-            '''))
+            result = db.session.execute(text(
+                "SELECT business_name as title, city as location, start_date as deadline, id "
+                "FROM commercial_lead_requests "
+                "WHERE status = 'open' AND created_at >= DATE('now', '-30 days') "
+                "ORDER BY created_at DESC "
+                "LIMIT 50"
+            ))
             contracts = [{'title': r[0], 'location': r[1], 'deadline': r[2], 'id': r[3]} for r in result]
         
         return jsonify({'success': True, 'contracts': contracts})
@@ -14010,9 +13944,10 @@ def quick_wins():
         else:
             # Check if regular user is paid subscriber
             if 'user_id' in session:
-                result = db.session.execute(text('''
-                    SELECT subscription_status FROM leads WHERE id = :user_id
-                '''), {'user_id': session['user_id']}).fetchone()
+                result = db.session.execute(
+                    text("SELECT subscription_status FROM leads WHERE id = :user_id"),
+                    {'user_id': session['user_id']}
+                ).fetchone()
                 if result and result[0] == 'paid':
                     is_paid = True
             
@@ -14030,17 +13965,18 @@ def quick_wins():
         # Get ALL supply contracts (national - show state on each lead)
         supply_contracts_data = []
         try:
-            supply_contracts_data = db.session.execute(text('''
-                SELECT 
-                    id, title, agency, location, product_category, estimated_value,
-                    bid_deadline, description, website_url, is_small_business_set_aside,
-                    contact_name, contact_email, contact_phone, is_quick_win
-                FROM supply_contracts 
-                WHERE status = 'open'
-                ORDER BY 
-                    CASE WHEN is_quick_win THEN 0 ELSE 1 END,
-                    bid_deadline ASC
-            ''')).fetchall()
+            supply_sql = (
+                "SELECT "
+                "id, title, agency, location, product_category, estimated_value, "
+                "bid_deadline, description, website_url, is_small_business_set_aside, "
+                "contact_name, contact_email, contact_phone, is_quick_win "
+                "FROM supply_contracts "
+                "WHERE status = 'open' "
+                "ORDER BY "
+                "    CASE WHEN is_quick_win THEN 0 ELSE 1 END, "
+                "    bid_deadline ASC"
+            )
+            supply_contracts_data = db.session.execute(text(supply_sql)).fetchall()
             print(f"📦 Found {len(supply_contracts_data)} supply contracts (national)")
         except Exception as e:
             print(f"❌ Supply contracts error: {e}")
@@ -14050,20 +13986,21 @@ def quick_wins():
         # Get urgent commercial requests (national)
         urgent_commercial = []
         try:
-            urgent_commercial = db.session.execute(text('''
-                SELECT 
-                    id, business_name, city, business_type, services_needed,
-                    budget_range, urgency, created_at, contact_person, email, phone
-                FROM commercial_lead_requests 
-                WHERE urgency IN ('emergency', 'urgent') AND status = 'open'
-                ORDER BY 
-                    CASE urgency 
-                        WHEN 'emergency' THEN 1
-                        WHEN 'urgent' THEN 2
-                        ELSE 3
-                    END,
-                    created_at DESC
-            ''')).fetchall()
+            urgent_comm_sql = (
+                "SELECT "
+                "id, business_name, city, business_type, services_needed, "
+                "budget_range, urgency, created_at, contact_person, email, phone "
+                "FROM commercial_lead_requests "
+                "WHERE urgency IN ('emergency', 'urgent') AND status = 'open' "
+                "ORDER BY "
+                "    CASE urgency "
+                "        WHEN 'emergency' THEN 1 "
+                "        WHEN 'urgent' THEN 2 "
+                "        ELSE 3 "
+                "    END, "
+                "    created_at DESC"
+            )
+            urgent_commercial = db.session.execute(text(urgent_comm_sql)).fetchall()
             print(f"🚨 Found {len(urgent_commercial)} urgent commercial requests (national)")
         except Exception as e:
             print(f"❌ Commercial requests error: {e}")
@@ -14071,17 +14008,18 @@ def quick_wins():
         # Get regular contracts with upcoming deadlines (as fallback quick wins) - national
         urgent_contracts = []
         try:
-            urgent_contracts = db.session.execute(text('''
-                SELECT 
-                    id, title, agency, location, value, deadline, 
-                    description, naics_code, set_aside, posted_date, solicitation_number, website_url
-                FROM contracts 
-                WHERE deadline IS NOT NULL 
-                AND deadline != ''
-                AND deadline != 'Rolling'
-                ORDER BY deadline ASC
-                LIMIT 20
-            ''')).fetchall()
+            urgent_contracts_sql = (
+                "SELECT "
+                "id, title, agency, location, value, deadline, "
+                "description, naics_code, set_aside, posted_date, solicitation_number, website_url "
+                "FROM contracts "
+                "WHERE deadline IS NOT NULL "
+                "AND deadline != '' "
+                "AND deadline != 'Rolling' "
+                "ORDER BY deadline ASC "
+                "LIMIT 20"
+            )
+            urgent_contracts = db.session.execute(text(urgent_contracts_sql)).fetchall()
             print(f"📋 Found {len(urgent_contracts)} government contracts with deadlines (national)")
         except Exception as e:
             print(f"❌ Regular contracts error: {e}")
@@ -14338,9 +14276,10 @@ def property_management_companies():
         is_admin = session.get('is_admin', False)
         is_paid = False
         if not is_admin and 'user_id' in session:
-            result = db.session.execute(text('''
-                SELECT subscription_status FROM leads WHERE id = :user_id
-            '''), {'user_id': session['user_id']}).fetchone()
+            result = db.session.execute(
+                text("SELECT subscription_status FROM leads WHERE id = :user_id"),
+                {'user_id': session['user_id']}
+            ).fetchone()
             if result and result[0] == 'paid':
                 is_paid = True
         
@@ -14367,28 +14306,29 @@ def property_management_companies():
         where_clause = " AND ".join(where_conditions)
         
         # Get property management companies
-        companies = db.session.execute(text(f'''
-            SELECT 
-                id, business_name, location, square_footage, monthly_value,
-                frequency, services_needed, contact_name, contact_phone, 
-                contact_email, website_url, description, size
-            FROM commercial_opportunities 
-            WHERE {where_clause}
-            ORDER BY business_name ASC
-        '''), params).fetchall()
+        companies_sql = (
+            "SELECT "
+            "id, business_name, location, square_footage, monthly_value, "
+            "frequency, services_needed, contact_name, contact_phone, "
+            "contact_email, website_url, description, size "
+            "FROM commercial_opportunities "
+            f"WHERE {where_clause} "
+            "ORDER BY business_name ASC"
+        )
+        companies = db.session.execute(text(companies_sql), params).fetchall()
         
         # Get filter options
-        locations = db.session.execute(text('''
-            SELECT DISTINCT location FROM commercial_opportunities 
-            WHERE business_type = 'Property Management Company'
-            ORDER BY location
-        ''')).fetchall()
+        locations = db.session.execute(text(
+            "SELECT DISTINCT location FROM commercial_opportunities "
+            "WHERE business_type = 'Property Management Company' "
+            "ORDER BY location"
+        )).fetchall()
         
-        sizes = db.session.execute(text('''
-            SELECT DISTINCT size FROM commercial_opportunities 
-            WHERE business_type = 'Property Management Company' AND size IS NOT NULL
-            ORDER BY size
-        ''')).fetchall()
+        sizes = db.session.execute(text(
+            "SELECT DISTINCT size FROM commercial_opportunities "
+            "WHERE business_type = 'Property Management Company' AND size IS NOT NULL "
+            "ORDER BY size"
+        )).fetchall()
         
         # Format companies data
         companies_data = []
@@ -14443,9 +14383,9 @@ def bulk_products():
     is_admin = session.get('is_admin', False)
     is_paid = False
     if not is_admin and 'user_id' in session:
-        result = db.session.execute(text('''
-            SELECT subscription_status FROM leads WHERE id = :user_id
-        '''), {'user_id': session['user_id']}).fetchone()
+        result = db.session.execute(text(
+            "SELECT subscription_status FROM leads WHERE id = :user_id"
+        ), {'user_id': session['user_id']}).fetchone()
         if result and result[0] == 'paid':
             is_paid = True
     
@@ -14481,28 +14421,28 @@ def bulk_products():
     )).scalar() or 0
     
     # Get requests
-    total_count = db.session.execute(text(f'''
-        SELECT COUNT(*) FROM bulk_product_requests WHERE {where_clause}
-    '''), params).scalar() or 0
+    total_count_sql = f"SELECT COUNT(*) FROM bulk_product_requests WHERE {where_clause}"
+    total_count = db.session.execute(text(total_count_sql), params).scalar() or 0
     
     total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
     
     params['limit'] = per_page
     params['offset'] = offset
     
-    requests_data = db.session.execute(text(f'''
-        SELECT * FROM bulk_product_requests 
-        WHERE {where_clause}
-        ORDER BY 
-            CASE urgency 
-                WHEN 'immediate' THEN 1
-                WHEN 'this_week' THEN 2
-                WHEN 'this_month' THEN 3
-                ELSE 4
-            END,
-            created_at DESC
-        LIMIT :limit OFFSET :offset
-    '''), params).fetchall()
+    requests_sql = (
+        "SELECT * FROM bulk_product_requests "
+        f"WHERE {where_clause} "
+        "ORDER BY "
+        "    CASE urgency "
+        "        WHEN 'immediate' THEN 1 "
+        "        WHEN 'this_week' THEN 2 "
+        "        WHEN 'this_month' THEN 3 "
+        "        ELSE 4 "
+        "    END, "
+        "    created_at DESC "
+        "LIMIT :limit OFFSET :offset"
+    )
+    requests_data = db.session.execute(text(requests_sql), params).fetchall()
     
     return render_template('bulk_products.html',
                          requests=requests_data,
@@ -14521,13 +14461,13 @@ def submit_bulk_quote():
     try:
         data = request.get_json()
         
-        db.session.execute(text('''
-            INSERT INTO bulk_product_quotes
-            (request_id, user_id, price_per_unit, total_amount, delivery_timeline,
-             brands, details, created_at)
-            VALUES (:request_id, :user_id, :price_per_unit, :total_amount, :delivery_timeline,
-                    :brands, :details, CURRENT_TIMESTAMP)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO bulk_product_quotes "
+            "(request_id, user_id, price_per_unit, total_amount, delivery_timeline, "
+            "brands, details, created_at) "
+            "VALUES (:request_id, :user_id, :price_per_unit, :total_amount, :delivery_timeline, "
+            ":brands, :details, CURRENT_TIMESTAMP)"
+        ), {
             'request_id': data.get('request_id'),
             'user_id': session['user_id'],
             'price_per_unit': data.get('price_per_unit'),
@@ -14570,15 +14510,15 @@ def submit_bulk_request():
         additional_notes = request.form.get('additional_notes', '')
         
         # Insert into database
-        db.session.execute(text('''
-            INSERT INTO bulk_purchase_requests
-            (user_id, company_name, contact_name, email, phone, product_category, 
-             product_description, quantity, budget, delivery_location, needed_by, 
-             urgency, additional_notes, status, created_at)
-            VALUES (:user_id, :company_name, :contact_name, :email, :phone, :product_category,
-                    :product_description, :quantity, :budget, :delivery_location, :needed_by,
-                    :urgency, :additional_notes, 'open', CURRENT_TIMESTAMP)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO bulk_purchase_requests "
+            "(user_id, company_name, contact_name, email, phone, product_category, "
+            "product_description, quantity, budget, delivery_location, needed_by, "
+            "urgency, additional_notes, status, created_at) "
+            "VALUES (:user_id, :company_name, :contact_name, :email, :phone, :product_category, "
+            ":product_description, :quantity, :budget, :delivery_location, :needed_by, "
+            ":urgency, :additional_notes, 'open', CURRENT_TIMESTAMP)"
+        ), {
             'user_id': session.get('user_id'),
             'company_name': company_name,
             'contact_name': contact_name,
@@ -14617,51 +14557,50 @@ def mailbox():
     is_admin = session.get('is_admin', False)
     
     # Get unread count
-    unread_count = db.session.execute(text('''
-        SELECT COUNT(*) FROM messages 
-        WHERE recipient_id = :user_id AND is_read = FALSE
-    '''), {'user_id': user_id}).scalar() or 0
+    unread_count = db.session.execute(text(
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = FALSE"
+    ), {'user_id': user_id}).scalar() or 0
     
     # Get messages based on folder
     if folder == 'inbox':
-        query = '''
-            SELECT m.*, 
-                   sender.email as sender_email,
-                   recipient.email as recipient_email
-            FROM messages m
-            JOIN leads sender ON m.sender_id = sender.id
-            JOIN leads recipient ON m.recipient_id = recipient.id
-            WHERE m.recipient_id = :user_id
-            ORDER BY m.created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''
-        count_query = 'SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id'
+        query = (
+            "SELECT m.*, "
+            "sender.email as sender_email, "
+            "recipient.email as recipient_email "
+            "FROM messages m "
+            "JOIN leads sender ON m.sender_id = sender.id "
+            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "WHERE m.recipient_id = :user_id "
+            "ORDER BY m.created_at DESC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        count_query = "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id"
     elif folder == 'sent':
-        query = '''
-            SELECT m.*, 
-                   sender.email as sender_email,
-                   recipient.email as recipient_email
-            FROM messages m
-            JOIN leads sender ON m.sender_id = sender.id
-            JOIN leads recipient ON m.recipient_id = recipient.id
-            WHERE m.sender_id = :user_id
-            ORDER BY m.created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''
-        count_query = 'SELECT COUNT(*) FROM messages WHERE sender_id = :user_id'
+        query = (
+            "SELECT m.*, "
+            "sender.email as sender_email, "
+            "recipient.email as recipient_email "
+            "FROM messages m "
+            "JOIN leads sender ON m.sender_id = sender.id "
+            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "WHERE m.sender_id = :user_id "
+            "ORDER BY m.created_at DESC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        count_query = "SELECT COUNT(*) FROM messages WHERE sender_id = :user_id"
     elif folder == 'admin' and is_admin:
-        query = '''
-            SELECT m.*, 
-                   sender.email as sender_email,
-                   recipient.email as recipient_email
-            FROM messages m
-            JOIN leads sender ON m.sender_id = sender.id
-            JOIN leads recipient ON m.recipient_id = recipient.id
-            WHERE m.is_admin_message = TRUE
-            ORDER BY m.created_at DESC
-            LIMIT :limit OFFSET :offset
-        '''
-        count_query = 'SELECT COUNT(*) FROM messages WHERE is_admin_message = TRUE'
+        query = (
+            "SELECT m.*, "
+            "sender.email as sender_email, "
+            "recipient.email as recipient_email "
+            "FROM messages m "
+            "JOIN leads sender ON m.sender_id = sender.id "
+            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "WHERE m.is_admin_message = TRUE "
+            "ORDER BY m.created_at DESC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = TRUE"
     else:
         return redirect(url_for('mailbox'))
     
@@ -14677,11 +14616,9 @@ def mailbox():
     # Get all users for admin compose
     all_users = []
     if is_admin:
-        all_users = db.session.execute(text('''
-            SELECT id, email, company_name FROM leads 
-            WHERE is_admin = FALSE 
-            ORDER BY email
-        ''')).fetchall()
+        all_users = db.session.execute(text(
+            "SELECT id, email, company_name FROM leads WHERE is_admin = FALSE ORDER BY email"
+        )).fetchall()
     
     return render_template('mailbox.html',
                          messages=messages,
@@ -14698,16 +14635,16 @@ def view_message(message_id):
     user_id = session['user_id']
     
     # Get message
-    message = db.session.execute(text('''
-        SELECT m.*, 
-               sender.email as sender_email,
-               recipient.email as recipient_email
-        FROM messages m
-        JOIN leads sender ON m.sender_id = sender.id
-        JOIN leads recipient ON m.recipient_id = recipient.id
-        WHERE m.id = :message_id 
-        AND (m.sender_id = :user_id OR m.recipient_id = :user_id)
-    '''), {'message_id': message_id, 'user_id': user_id}).fetchone()
+    message = db.session.execute(text(
+        "SELECT m.*, "
+        "sender.email as sender_email, "
+        "recipient.email as recipient_email "
+        "FROM messages m "
+        "JOIN leads sender ON m.sender_id = sender.id "
+        "JOIN leads recipient ON m.recipient_id = recipient.id "
+        "WHERE m.id = :message_id "
+        "AND (m.sender_id = :user_id OR m.recipient_id = :user_id)"
+    ), {'message_id': message_id, 'user_id': user_id}).fetchone()
     
     if not message:
         flash('Message not found', 'error')
@@ -14715,11 +14652,11 @@ def view_message(message_id):
     
     # Mark as read if recipient
     if message.recipient_id == user_id and not message.is_read:
-        db.session.execute(text('''
-            UPDATE messages 
-            SET is_read = TRUE, read_at = CURRENT_TIMESTAMP 
-            WHERE id = :message_id
-        '''), {'message_id': message_id})
+        db.session.execute(text(
+            "UPDATE messages "
+            "SET is_read = TRUE, read_at = CURRENT_TIMESTAMP "
+            "WHERE id = :message_id"
+        ), {'message_id': message_id})
         db.session.commit()
     
     is_sender = message.sender_id == user_id
@@ -14745,22 +14682,21 @@ def send_message():
         # Admin broadcast messages
         if is_admin and message_type in ['broadcast', 'paid_only']:
             if message_type == 'broadcast':
-                recipients = db.session.execute(text('''
-                    SELECT id FROM leads WHERE is_admin = FALSE
-                ''')).fetchall()
+                recipients = db.session.execute(
+                    text("SELECT id FROM leads WHERE is_admin = FALSE")
+                ).fetchall()
             else:  # paid_only
-                recipients = db.session.execute(text('''
-                    SELECT id FROM leads 
-                    WHERE is_admin = FALSE AND subscription_status = 'paid'
-                ''')).fetchall()
+                recipients = db.session.execute(
+                    text("SELECT id FROM leads WHERE is_admin = FALSE AND subscription_status = 'paid'")
+                ).fetchall()
             
             # Send to all recipients
             for recipient in recipients:
-                db.session.execute(text('''
-                    INSERT INTO messages 
-                    (sender_id, recipient_id, subject, body, is_admin_message, parent_message_id)
-                    VALUES (:sender_id, :recipient_id, :subject, :body, TRUE, :parent_message_id)
-                '''), {
+                db.session.execute(text(
+                    "INSERT INTO messages "
+                    "(sender_id, recipient_id, subject, body, is_admin_message, parent_message_id) "
+                    "VALUES (:sender_id, :recipient_id, :subject, :body, TRUE, :parent_message_id)"
+                ), {
                     'sender_id': user_id,
                     'recipient_id': recipient[0],
                     'subject': subject,
@@ -14774,20 +14710,20 @@ def send_message():
             # Individual message
             if recipient_id == 'admin':
                 # Send to first admin user
-                admin_user = db.session.execute(text('''
-                    SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1
-                ''')).fetchone()
+                admin_user = db.session.execute(
+                    text("SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1")
+                ).fetchone()
                 recipient_id = admin_user[0] if admin_user else None
             
             if not recipient_id:
                 flash('Invalid recipient', 'error')
                 return redirect(url_for('mailbox'))
             
-            db.session.execute(text('''
-                INSERT INTO messages 
-                (sender_id, recipient_id, subject, body, is_admin_message, parent_message_id)
-                VALUES (:sender_id, :recipient_id, :subject, :body, :is_admin_message, :parent_message_id)
-            '''), {
+            db.session.execute(text(
+                "INSERT INTO messages "
+                "(sender_id, recipient_id, subject, body, is_admin_message, parent_message_id) "
+                "VALUES (:sender_id, :recipient_id, :subject, :body, :is_admin_message, :parent_message_id)"
+            ), {
                 'sender_id': user_id,
                 'recipient_id': recipient_id,
                 'subject': subject,
@@ -14812,9 +14748,10 @@ def send_message():
 def survey():
     """Post-registration survey"""
     # Check if user already completed survey
-    existing = db.session.execute(text('''
-        SELECT id FROM user_surveys WHERE user_id = :user_id
-    '''), {'user_id': session['user_id']}).fetchone()
+    existing = db.session.execute(
+        text("SELECT id FROM user_surveys WHERE user_id = :user_id"),
+        {'user_id': session['user_id']}
+    ).fetchone()
     
     if existing:
         flash('You have already completed the survey. Thank you!', 'info')
@@ -14836,13 +14773,13 @@ def submit_survey():
         suggestions = request.form.get('suggestions', '')
         
         # Insert survey
-        db.session.execute(text('''
-            INSERT INTO user_surveys 
-            (user_id, how_found_us, service_type, interested_features, 
-             company_size, annual_revenue_range, suggestions)
-            VALUES (:user_id, :how_found_us, :service_type, :interested_features,
-                    :company_size, :annual_revenue_range, :suggestions)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO user_surveys "
+            "(user_id, how_found_us, service_type, interested_features, "
+            "company_size, annual_revenue_range, suggestions) "
+            "VALUES (:user_id, :how_found_us, :service_type, :interested_features, "
+            ":company_size, :annual_revenue_range, :suggestions)"
+        ), {
             'user_id': session['user_id'],
             'how_found_us': how_found_us,
             'service_type': service_type,
@@ -14909,15 +14846,15 @@ def consultation_request():
         data = request.get_json()
         
         # Store consultation request in database
-        db.session.execute(text('''
-            INSERT INTO consultation_requests 
-            (user_id, full_name, company_name, email, phone, solicitation_number,
-             contract_type, proposal_length, deadline, add_branding, add_marketing,
-             add_full_service, description, contact_method, service_level, created_at)
-            VALUES (:user_id, :full_name, :company_name, :email, :phone, :solicitation_number,
-                    :contract_type, :proposal_length, :deadline, :add_branding, :add_marketing,
-                    :add_full_service, :description, :contact_method, :service_level, CURRENT_TIMESTAMP)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO consultation_requests "
+            "(user_id, full_name, company_name, email, phone, solicitation_number, "
+            "contract_type, proposal_length, deadline, add_branding, add_marketing, "
+            "add_full_service, description, contact_method, service_level, created_at) "
+            "VALUES (:user_id, :full_name, :company_name, :email, :phone, :solicitation_number, "
+            ":contract_type, :proposal_length, :deadline, :add_branding, :add_marketing, "
+            ":add_full_service, :description, :contact_method, :service_level, CURRENT_TIMESTAMP)"
+        ), {
             'user_id': session['user_id'],
             'full_name': data.get('fullName'),
             'company_name': data.get('companyName'),
@@ -14956,11 +14893,11 @@ def notify_launch():
             return jsonify({'success': False, 'message': 'Email required'}), 400
         
         # Store email for notification
-        db.session.execute(text('''
-            INSERT INTO launch_notifications (email, created_at)
-            VALUES (:email, CURRENT_TIMESTAMP)
-            ON CONFLICT (email) DO NOTHING
-        '''), {'email': email})
+        db.session.execute(text(
+            "INSERT INTO launch_notifications (email, created_at) "
+            "VALUES (:email, CURRENT_TIMESTAMP) "
+            "ON CONFLICT (email) DO NOTHING"
+        ), {'email': email})
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'You will be notified on launch day'})
@@ -15001,15 +14938,15 @@ def submit_cleaning_request():
         }
         
         # Insert into database with pending_review status
-        db.session.execute(text('''
-            INSERT INTO commercial_lead_requests 
-            (business_name, contact_name, email, phone, address, city, zip_code, 
-             business_type, square_footage, frequency, services_needed, 
-             special_requirements, budget_range, start_date, urgency, status)
-            VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :zip_code,
-                    :business_type, :square_footage, :frequency, :services_needed,
-                    :special_requirements, :budget_range, :start_date, :urgency, 'pending_review')
-        '''), data)
+        db.session.execute(text(
+            "INSERT INTO commercial_lead_requests "
+            "(business_name, contact_name, email, phone, address, city, zip_code, "
+            "business_type, square_footage, frequency, services_needed, "
+            "special_requirements, budget_range, start_date, urgency, status) "
+            "VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :zip_code, "
+            ":business_type, :square_footage, :frequency, :services_needed, "
+            ":special_requirements, :budget_range, :start_date, :urgency, 'pending_review')"
+        ), data)
         db.session.commit()
         
         # Send confirmation email to requester
@@ -15055,14 +14992,14 @@ def submit_property_manager_lead():
         monthly_value = budget if budget else 'Not specified'
         
         # Insert into commercial_opportunities table
-        db.session.execute(text('''
-            INSERT INTO commercial_opportunities
-            (business_name, business_type, location, contact_name, contact_email, 
-             contact_phone, services_needed, monthly_value, special_requirements, 
-             posted_date, status)
-            VALUES (:company_name, :property_type, :property_address, :contact_name, :contact_email,
-                    :contact_phone, :services, :monthly_value, :additional_info, CURRENT_TIMESTAMP, 'New Lead')
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO commercial_opportunities "
+            "(business_name, business_type, location, contact_name, contact_email, "
+            "contact_phone, services_needed, monthly_value, special_requirements, "
+            "posted_date, status) "
+            "VALUES (:company_name, :property_type, :property_address, :contact_name, :contact_email, "
+            ":contact_phone, :services, :monthly_value, :additional_info, CURRENT_TIMESTAMP, 'New Lead')"
+        ), {
             'company_name': company_name,
             'property_type': property_type,
             'property_address': property_address,
@@ -15129,17 +15066,17 @@ def submit_residential_cleaning_request():
         }
         
         # Insert into residential_leads table with pending_review status
-        db.session.execute(text('''
-            INSERT INTO residential_leads 
-            (homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, 
-             square_footage, contact_email, contact_phone, estimated_value, 
-             cleaning_frequency, services_needed, special_requirements, status, 
-             source, lead_quality, created_at)
-            VALUES 
-            (:homeowner_name, :address, :city, :zip_code, :property_type, :bedrooms, :bathrooms,
-             :square_footage, :email, :phone, :estimated_value, :frequency, :services_needed,
-             :special_requirements, 'pending_review', 'website_form', 'hot', CURRENT_TIMESTAMP)
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO residential_leads "
+            "(homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, "
+            "square_footage, contact_email, contact_phone, estimated_value, "
+            "cleaning_frequency, services_needed, special_requirements, status, "
+            "source, lead_quality, created_at) "
+            "VALUES "
+            "(:homeowner_name, :address, :city, :zip_code, :property_type, :bedrooms, :bathrooms, "
+            ":square_footage, :email, :phone, :estimated_value, :frequency, :services_needed, "
+            ":special_requirements, 'pending_review', 'website_form', 'hot', CURRENT_TIMESTAMP)"
+        ), {
             'homeowner_name': data['homeowner_name'],
             'address': data['address'],
             'city': data['city'],
@@ -15223,11 +15160,13 @@ def lead_marketplace():
         # Get open commercial lead requests (with fallback if table doesn't exist)
         requests = []
         try:
-            requests = db.session.execute(text('''
-                SELECT * FROM commercial_lead_requests 
-                WHERE status = 'open' 
-                ORDER BY created_at DESC
-            ''')).fetchall()
+            requests = db.session.execute(
+                text(
+                    "SELECT * FROM commercial_lead_requests "
+                    "WHERE status = 'open' "
+                    "ORDER BY created_at DESC"
+                )
+            ).fetchall()
         except Exception as e:
             print(f"Error fetching commercial_lead_requests: {e}")
             # Table might not exist yet - continue without these leads
@@ -15235,13 +15174,16 @@ def lead_marketplace():
         # Get user's bids (with fallback)
         my_bids = []
         try:
-            my_bids = db.session.execute(text('''
-                SELECT b.*, clr.business_name, clr.city 
-                FROM bids b
-                JOIN commercial_lead_requests clr ON b.request_id = clr.id
-                WHERE b.user_email = :email
-                ORDER BY b.submitted_at DESC
-            '''), {'email': user_email}).fetchall()
+            my_bids = db.session.execute(
+                text(
+                    "SELECT b.*, clr.business_name, clr.city "
+                    "FROM bids b "
+                    "JOIN commercial_lead_requests clr ON b.request_id = clr.id "
+                    "WHERE b.user_email = :email "
+                    "ORDER BY b.submitted_at DESC"
+                ),
+                {'email': user_email}
+            ).fetchall()
         except Exception as e:
             print(f"Error fetching bids: {e}")
             # Table might not exist yet - continue without bids
@@ -15249,12 +15191,14 @@ def lead_marketplace():
         # Get residential leads
         residential = []
         try:
-            residential = db.session.execute(text('''
-                SELECT * FROM residential_leads 
-                WHERE status = 'new'
-                ORDER BY estimated_value DESC
-                LIMIT 50
-            ''')).fetchall()
+            residential = db.session.execute(
+                text(
+                    "SELECT * FROM residential_leads "
+                    "WHERE status = 'new' "
+                    "ORDER BY estimated_value DESC "
+                    "LIMIT 50"
+                )
+            ).fetchall()
         except Exception as e:
             print(f"Error fetching residential_leads: {e}")
             # Continue without residential leads
@@ -15284,13 +15228,13 @@ def submit_bid(request_id):
         ).fetchone()
         
         # Insert bid
-        db.session.execute(text('''
-            INSERT INTO bids 
-            (request_id, user_email, company_name, bid_amount, proposal_text, 
-             estimated_start_date, contact_phone, status)
-            VALUES (:request_id, :user_email, :company_name, :bid_amount, :proposal_text,
-                    :start_date, :phone, 'pending')
-        '''), {
+        db.session.execute(text(
+            "INSERT INTO bids "
+            "(request_id, user_email, company_name, bid_amount, proposal_text, "
+            "estimated_start_date, contact_phone, status) "
+            "VALUES (:request_id, :user_email, :company_name, :bid_amount, :proposal_text, "
+            ":start_date, :phone, 'pending')"
+        ), {
             'request_id': request_id,
             'user_email': user_email,
             'company_name': user[0],
@@ -15301,12 +15245,12 @@ def submit_bid(request_id):
         })
         
         # Update bid count
-        db.session.execute(text('''
-            UPDATE commercial_lead_requests 
-            SET bid_count = bid_count + 1,
-                status = CASE WHEN bid_count = 0 THEN 'bidding' ELSE status END
-            WHERE id = :request_id
-        '''), {'request_id': request_id})
+        db.session.execute(text(
+            "UPDATE commercial_lead_requests "
+            "SET bid_count = bid_count + 1, "
+            "    status = CASE WHEN bid_count = 0 THEN 'bidding' ELSE status END "
+            "WHERE id = :request_id"
+        ), {'request_id': request_id})
         
         db.session.commit()
         
@@ -15323,12 +15267,12 @@ def submit_bid(request_id):
 def mark_request_complete(request_id):
     """Mark a lead request as complete (admin only or request owner)"""
     try:
-        db.session.execute(text('''
-            UPDATE commercial_lead_requests 
-            SET status = 'completed',
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = :request_id
-        '''), {'request_id': request_id})
+        db.session.execute(text(
+            "UPDATE commercial_lead_requests "
+            "SET status = 'completed', "
+            "    updated_at = CURRENT_TIMESTAMP "
+            "WHERE id = :request_id"
+        ), {'request_id': request_id})
         
         db.session.commit()
         flash('Lead request marked as complete!', 'success')
@@ -15565,12 +15509,15 @@ def initialize_va_data():
         inserted_count = 0
         for inst in va_institutions + school_districts + other_govt:
             try:
-                db.session.execute(text('''
-                    INSERT INTO contracts 
-                    (title, agency, location, value, deadline, description, naics_code, website_url)
-                    VALUES 
-                    (:title, :agency, :location, :value, :deadline, :description, :naics_code, :website_url)
-                '''), inst)
+                db.session.execute(
+                    text(
+                        "INSERT INTO contracts "
+                        "(title, agency, location, value, deadline, description, naics_code, website_url) "
+                        "VALUES "
+                        "(:title, :agency, :location, :value, :deadline, :description, :naics_code, :website_url)"
+                    ),
+                    inst
+                )
                 inserted_count += 1
             except Exception as e:
                 print(f"Error inserting {inst['title']}: {e}")
@@ -15578,14 +15525,17 @@ def initialize_va_data():
         # Insert private sector into commercial_opportunities
         for opp in private_sector:
             try:
-                db.session.execute(text('''
-                    INSERT INTO commercial_opportunities 
-                    (business_name, business_type, location, square_footage, monthly_value, 
-                     frequency, services_needed, description, size, contact_type)
-                    VALUES 
-                    (:business_name, :business_type, :location, :square_footage, :monthly_value,
-                     :frequency, :services_needed, :description, :size, :contact_type)
-                '''), opp)
+                db.session.execute(
+                    text(
+                        "INSERT INTO commercial_opportunities "
+                        "(business_name, business_type, location, square_footage, monthly_value, "
+                        "frequency, services_needed, description, size, contact_type) "
+                        "VALUES "
+                        "(:business_name, :business_type, :location, :square_footage, :monthly_value, "
+                        ":frequency, :services_needed, :description, :size, :contact_type)"
+                    ),
+                    opp
+                )
                 inserted_count += 1
             except Exception as e:
                 print(f"Error inserting {opp.get('business_name', 'Unknown')}: {e}")
@@ -15632,19 +15582,20 @@ def scrape_procurement():
             for contract in federal_contracts:
                 try:
                     # Check if exists
-                    existing = db.session.execute(text('''
-                        SELECT id FROM federal_contracts WHERE notice_id = :notice_id
-                    '''), {'notice_id': contract.get('notice_id', '')}).fetchone()
+                    existing = db.session.execute(
+                        text("SELECT id FROM federal_contracts WHERE notice_id = :notice_id"),
+                        {'notice_id': contract.get('notice_id', '')}
+                    ).fetchone()
                     
                     if not existing:
-                        db.session.execute(text('''
-                            INSERT INTO federal_contracts 
-                            (title, agency, location, description, value, deadline, 
-                             naics_code, posted_date, notice_id, sam_gov_url)
-                            VALUES 
-                            (:title, :agency, :location, :description, :value, :deadline,
-                             :naics_code, :posted_date, :notice_id, :sam_gov_url)
-                        '''), {
+                        db.session.execute(text(
+                            "INSERT INTO federal_contracts "
+                            "(title, agency, location, description, value, deadline, "
+                            "naics_code, posted_date, notice_id, sam_gov_url) "
+                            "VALUES "
+                            "(:title, :agency, :location, :description, :value, :deadline, "
+                            ":naics_code, :posted_date, :notice_id, :sam_gov_url)"
+                        ), {
                             'title': contract['title'],
                             'agency': contract['agency'],
                             'location': contract['location'],
@@ -15670,23 +15621,22 @@ def scrape_procurement():
             for contract in local_contracts:
                 try:
                     # Check if exists
-                    existing = db.session.execute(text('''
-                        SELECT id FROM contracts 
-                        WHERE title = :title AND agency = :agency
-                    '''), {
+                    existing = db.session.execute(text(
+                        "SELECT id FROM contracts WHERE title = :title AND agency = :agency"
+                    ), {
                         'title': contract['title'],
                         'agency': contract['agency']
                     }).fetchone()
                     
                     if not existing:
-                        db.session.execute(text('''
-                            INSERT INTO contracts 
-                            (title, agency, location, description, value, deadline, 
-                             naics_code, created_at, website_url, category)
-                            VALUES 
-                            (:title, :agency, :location, :description, :value, :deadline,
-                             :naics_code, CURRENT_TIMESTAMP, :website_url, :category)
-                        '''), {
+                        db.session.execute(text(
+                            "INSERT INTO contracts "
+                            "(title, agency, location, description, value, deadline, "
+                            "naics_code, created_at, website_url, category) "
+                            "VALUES "
+                            "(:title, :agency, :location, :description, :value, :deadline, "
+                            ":naics_code, CURRENT_TIMESTAMP, :website_url, :category)"
+                        ), {
                             'title': contract['title'],
                             'agency': contract['agency'],
                             'location': contract['location'],
@@ -15738,22 +15688,28 @@ def city_procurement(city_name):
     try:
         is_admin = session.get('is_admin', False)
         # Get all contracts for this city
-        contracts = db.session.execute(text('''
-            SELECT id, title, agency, location, description, value, deadline, 
-                   naics_code, created_at, website_url, category
-            FROM contracts 
-            WHERE location LIKE :city
-            ORDER BY created_at DESC
-        '''), {'city': f'%{city}%'}).fetchall()
+        contracts = db.session.execute(
+            text(
+                "SELECT id, title, agency, location, description, value, deadline, "
+                "naics_code, created_at, website_url, category "
+                "FROM contracts "
+                "WHERE location LIKE :city "
+                "ORDER BY created_at DESC"
+            ),
+            {'city': f'%{city}%'}
+        ).fetchall()
         
         # Get commercial opportunities
-        commercial = db.session.execute(text('''
-            SELECT id, business_name, business_type, location, description, 
-                   monthly_value, services_needed, website_url
-            FROM commercial_opportunities 
-            WHERE location LIKE :city
-            ORDER BY id DESC
-        '''), {'city': f'%{city}%'}).fetchall()
+        commercial = db.session.execute(
+            text(
+                "SELECT id, business_name, business_type, location, description, "
+                "monthly_value, services_needed, website_url "
+                "FROM commercial_opportunities "
+                "WHERE location LIKE :city "
+                "ORDER BY id DESC"
+            ),
+            {'city': f'%{city}%'}
+        ).fetchall()
         
         # City information
         city_info = {
@@ -15856,26 +15812,28 @@ def community_forum():
             disc_where_sql = ' AND '.join(disc_where)
             
             # Count discussions
-            disc_count = db.session.execute(text(f'''
-                SELECT COUNT(1) FROM forum_posts WHERE {disc_where_sql}
-            '''), disc_params).scalar()
+            disc_count_sql = f"SELECT COUNT(1) FROM forum_posts WHERE {disc_where_sql}"
+            disc_count = db.session.execute(text(disc_count_sql), disc_params).scalar()
             
             disc_pages = max(1, (disc_count + per_page - 1) // per_page)
             page_disc = min(page_disc, disc_pages)
             disc_offset = (page_disc - 1) * per_page
             
             # Get discussions with comment counts
-            forum_posts = db.session.execute(text(f'''
-                SELECT 
-                    fp.id, fp.title, fp.content, fp.post_type, fp.user_email, 
-                    fp.user_name, fp.is_admin_post, fp.views, fp.created_at,
-                    (SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) as comment_count,
-                    (SELECT COUNT(*) FROM forum_post_likes WHERE post_id = fp.id) as like_count
-                FROM forum_posts fp
-                WHERE {disc_where_sql}
-                ORDER BY fp.created_at DESC
-                LIMIT :disc_limit OFFSET :disc_offset
-            '''), {**disc_params, 'disc_limit': per_page, 'disc_offset': disc_offset}).fetchall()
+            forum_posts_sql = (
+                "SELECT "
+                "fp.id, fp.title, fp.content, fp.post_type, fp.user_email, "
+                "fp.user_name, fp.is_admin_post, fp.views, fp.created_at, "
+                "(SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) as comment_count, "
+                "(SELECT COUNT(*) FROM forum_post_likes WHERE post_id = fp.id) as like_count "
+                "FROM forum_posts fp "
+                f"WHERE {disc_where_sql} "
+                "ORDER BY fp.created_at DESC "
+                "LIMIT :disc_limit OFFSET :disc_offset"
+            )
+            forum_posts = db.session.execute(
+                text(forum_posts_sql), {**disc_params, 'disc_limit': per_page, 'disc_offset': disc_offset}
+            ).fetchall()
         except Exception as forum_error:
             print(f"Forum posts query failed (table may not exist): {forum_error}")
             # Continue without forum posts
@@ -15910,18 +15868,16 @@ def community_forum():
 
         # Counts for pagination (with error handling for missing tables)
         try:
-            comm_count = db.session.execute(text(f'''
-                SELECT COUNT(1) FROM commercial_lead_requests WHERE {comm_where_sql}
-            '''), comm_params).scalar()
+            comm_count_sql = f"SELECT COUNT(1) FROM commercial_lead_requests WHERE {comm_where_sql}"
+            comm_count = db.session.execute(text(comm_count_sql), comm_params).scalar()
         except Exception as e:
             print(f"Error counting commercial lead requests: {e}")
             db.session.rollback()
             comm_count = 0
         
         try:
-            res_count = db.session.execute(text(f'''
-                SELECT COUNT(1) FROM residential_leads WHERE {res_where_sql}
-            '''), res_params).scalar()
+            res_count_sql = f"SELECT COUNT(1) FROM residential_leads WHERE {res_where_sql}"
+            res_count = db.session.execute(text(res_count_sql), res_params).scalar()
         except Exception as e:
             print(f"Error counting residential leads: {e}")
             db.session.rollback()
@@ -15945,15 +15901,18 @@ def community_forum():
 
         if req_type in ('all', 'commercial'):
             try:
-                commercial_requests = db.session.execute(text(f'''
-                    SELECT id, business_name, contact_name, city, business_type, 
-                           square_footage, frequency, services_needed, budget_range, 
-                           urgency, created_at
-                    FROM commercial_lead_requests 
-                    WHERE {comm_where_sql}
-                    ORDER BY created_at DESC
-                    LIMIT :comm_limit OFFSET :comm_offset
-                '''), {**comm_params, 'comm_limit': per_page, 'comm_offset': comm_offset}).fetchall()
+                commercial_sql = (
+                    "SELECT id, business_name, contact_name, city, business_type, "
+                    "square_footage, frequency, services_needed, budget_range, "
+                    "urgency, created_at "
+                    "FROM commercial_lead_requests "
+                    f"WHERE {comm_where_sql} "
+                    "ORDER BY created_at DESC "
+                    "LIMIT :comm_limit OFFSET :comm_offset"
+                )
+                commercial_requests = db.session.execute(
+                    text(commercial_sql), {**comm_params, 'comm_limit': per_page, 'comm_offset': comm_offset}
+                ).fetchall()
             except Exception as e:
                 print(f"Error fetching commercial lead requests: {e}")
                 db.session.rollback()
@@ -15961,15 +15920,18 @@ def community_forum():
 
         if req_type in ('all', 'residential'):
             try:
-                residential_requests = db.session.execute(text(f'''
-                    SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
-                           square_footage, cleaning_frequency, services_needed, 
-                           estimated_value, created_at
-                    FROM residential_leads 
-                WHERE {res_where_sql}
-                ORDER BY created_at DESC
-                LIMIT :res_limit OFFSET :res_offset
-            '''), {**res_params, 'res_limit': per_page, 'res_offset': res_offset}).fetchall()
+                residential_sql = (
+                    "SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms, "
+                    "square_footage, cleaning_frequency, services_needed, "
+                    "estimated_value, created_at "
+                    "FROM residential_leads "
+                    f"WHERE {res_where_sql} "
+                    "ORDER BY created_at DESC "
+                    "LIMIT :res_limit OFFSET :res_offset"
+                )
+                residential_requests = db.session.execute(
+                    text(residential_sql), {**res_params, 'res_limit': per_page, 'res_offset': res_offset}
+                ).fetchall()
             except Exception as e:
                 print(f"Error fetching residential leads: {e}")
                 db.session.rollback()
@@ -15980,18 +15942,18 @@ def community_forum():
         res_cities = []
         
         try:
-            comm_cities_rows = db.session.execute(text('''
-                SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''
-            ''')).fetchall()
+            comm_cities_rows = db.session.execute(
+                text("SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''")
+            ).fetchall()
             comm_cities = [r.city for r in comm_cities_rows]
         except Exception as e:
             print(f"Error fetching commercial cities: {e}")
             db.session.rollback()
         
         try:
-            res_cities_rows = db.session.execute(text('''
-                SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''
-            ''')).fetchall()
+            res_cities_rows = db.session.execute(
+                text("SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''")
+            ).fetchall()
             res_cities = [r.city for r in res_cities_rows]
         except Exception as e:
             print(f"Error fetching residential cities: {e}")
@@ -16049,30 +16011,28 @@ def admin_approve_request():
         
         # Update status to approved
         if request_type == 'commercial':
-            db.session.execute(text('''
-                UPDATE commercial_lead_requests 
-                SET status = 'approved' 
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE commercial_lead_requests SET status = 'approved' WHERE id = :id"),
+                {'id': request_id}
+            )
             
             # Get request details for notification
-            req = db.session.execute(text('''
-                SELECT business_name, contact_name, email FROM commercial_lead_requests 
-                WHERE id = :id
-            '''), {'id': request_id}).fetchone()
+            req = db.session.execute(
+                text("SELECT business_name, contact_name, email FROM commercial_lead_requests WHERE id = :id"),
+                {'id': request_id}
+            ).fetchone()
             
         else:  # residential
-            db.session.execute(text('''
-                UPDATE residential_leads 
-                SET status = 'approved' 
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE residential_leads SET status = 'approved' WHERE id = :id"),
+                {'id': request_id}
+            )
             
             # Get request details for notification
-            req = db.session.execute(text('''
-                SELECT homeowner_name, contact_email FROM residential_leads 
-                WHERE id = :id
-            '''), {'id': request_id}).fetchone()
+            req = db.session.execute(
+                text("SELECT homeowner_name, contact_email FROM residential_leads WHERE id = :id"),
+                {'id': request_id}
+            ).fetchone()
         
         db.session.commit()
         
@@ -16158,17 +16118,15 @@ def admin_reject_request():
         
         # Update status to rejected
         if request_type == 'commercial':
-            db.session.execute(text('''
-                UPDATE commercial_lead_requests 
-                SET status = 'rejected' 
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE commercial_lead_requests SET status = 'rejected' WHERE id = :id"),
+                {'id': request_id}
+            )
         else:  # residential
-            db.session.execute(text('''
-                UPDATE residential_leads 
-                SET status = 'rejected' 
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE residential_leads SET status = 'rejected' WHERE id = :id"),
+                {'id': request_id}
+            )
         
         db.session.commit()
         
@@ -16198,18 +16156,16 @@ def admin_unapprove_request():
 
         if request_type == 'commercial':
             # revert to open so it's visible in pipelines but not on forum
-            db.session.execute(text('''
-                UPDATE commercial_lead_requests
-                SET status = 'open', updated_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE commercial_lead_requests SET status = 'open', updated_at = CURRENT_TIMESTAMP WHERE id = :id"),
+                {'id': request_id}
+            )
         else:
             # residential defaults to 'new'
-            db.session.execute(text('''
-                UPDATE residential_leads
-                SET status = 'new', updated_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-            '''), {'id': request_id})
+            db.session.execute(
+                text("UPDATE residential_leads SET status = 'new', updated_at = CURRENT_TIMESTAMP WHERE id = :id"),
+                {'id': request_id}
+            )
 
         db.session.commit()
         return jsonify({'success': True, 'message': 'Request unapproved and removed from forum'})
@@ -16233,18 +16189,20 @@ def create_forum_post():
             return jsonify({'success': False, 'error': 'Title and content are required'}), 400
         
         # Insert post
-        result = db.session.execute(text('''
-            INSERT INTO forum_posts 
-            (title, content, post_type, user_email, user_name, is_admin_post, status)
-            VALUES (:title, :content, :post_type, :user_email, :user_name, :is_admin, 'active')
-        '''), {
-            'title': title,
-            'content': content,
-            'post_type': 'discussion',
-            'user_email': user_email,
-            'user_name': user_name,
-            'is_admin': is_admin
-        })
+        result = db.session.execute(
+            text(
+                "INSERT INTO forum_posts (title, content, post_type, user_email, user_name, is_admin_post, status) "
+                "VALUES (:title, :content, :post_type, :user_email, :user_name, :is_admin, 'active')"
+            ),
+            {
+                'title': title,
+                'content': content,
+                'post_type': 'discussion',
+                'user_email': user_email,
+                'user_name': user_name,
+                'is_admin': is_admin
+            }
+        )
         db.session.commit()
         
         return jsonify({
@@ -16274,18 +16232,20 @@ def create_forum_comment():
             return jsonify({'success': False, 'error': 'Post ID and content are required'}), 400
         
         # Insert comment
-        db.session.execute(text('''
-            INSERT INTO forum_comments 
-            (post_id, content, user_email, user_name, is_admin, parent_comment_id)
-            VALUES (:post_id, :content, :user_email, :user_name, :is_admin, :parent_id)
-        '''), {
-            'post_id': post_id,
-            'content': content,
-            'user_email': user_email,
-            'user_name': user_name,
-            'is_admin': is_admin,
-            'parent_id': parent_comment_id
-        })
+        db.session.execute(
+            text(
+                "INSERT INTO forum_comments (post_id, content, user_email, user_name, is_admin, parent_comment_id) "
+                "VALUES (:post_id, :content, :user_email, :user_name, :is_admin, :parent_id)"
+            ),
+            {
+                'post_id': post_id,
+                'content': content,
+                'user_email': user_email,
+                'user_name': user_name,
+                'is_admin': is_admin,
+                'parent_id': parent_comment_id
+            }
+        )
         db.session.commit()
         
         return jsonify({
@@ -16315,12 +16275,15 @@ def admin_post_from_request():
         
         # Fetch request details
         if request_type == 'commercial':
-            req = db.session.execute(text('''
-                SELECT business_name, city, business_type, square_footage, 
-                       frequency, services_needed, budget_range, urgency
-                FROM commercial_lead_requests
-                WHERE id = :id AND status = 'approved'
-            '''), {'id': request_id}).fetchone()
+            req = db.session.execute(
+                text(
+                    "SELECT business_name, city, business_type, square_footage, "
+                    "frequency, services_needed, budget_range, urgency "
+                    "FROM commercial_lead_requests "
+                    "WHERE id = :id AND status = 'approved'"
+                ),
+                {'id': request_id}
+            ).fetchone()
             
             if not req:
                 return jsonify({'success': False, 'error': 'Request not found or not approved'}), 404
@@ -16342,12 +16305,15 @@ def admin_post_from_request():
 💼 View full details and contact information at: {url_for('customer_leads', _external=True)}"""
             
         else:  # residential
-            req = db.session.execute(text('''
-                SELECT homeowner_name, city, property_type, bedrooms, bathrooms,
-                       square_footage, cleaning_frequency, services_needed, estimated_value
-                FROM residential_leads
-                WHERE id = :id AND status = 'approved'
-            '''), {'id': request_id}).fetchone()
+            req = db.session.execute(
+                text(
+                    "SELECT homeowner_name, city, property_type, bedrooms, bathrooms, "
+                    "square_footage, cleaning_frequency, services_needed, estimated_value "
+                    "FROM residential_leads "
+                    "WHERE id = :id AND status = 'approved'"
+                ),
+                {'id': request_id}
+            ).fetchone()
             
             if not req:
                 return jsonify({'success': False, 'error': 'Request not found or not approved'}), 404
@@ -16367,18 +16333,19 @@ def admin_post_from_request():
 💼 View full details and contact information at: {url_for('customer_leads', _external=True)}"""
         
         # Create forum post
-        db.session.execute(text('''
-            INSERT INTO forum_posts 
-            (title, content, post_type, user_email, user_name, is_admin_post, 
-             related_lead_id, related_lead_type, status)
-            VALUES (:title, :content, 'opportunity', 'admin@vacontracts.com', 'Admin Team', 
-                    1, :lead_id, :lead_type, 'active')
-        '''), {
-            'title': title,
-            'content': content,
-            'lead_id': str(request_id),
-            'lead_type': request_type
-        })
+        db.session.execute(
+            text(
+                "INSERT INTO forum_posts (title, content, post_type, user_email, user_name, is_admin_post, "
+                "related_lead_id, related_lead_type, status) "
+                "VALUES (:title, :content, 'opportunity', 'admin@vacontracts.com', 'Admin Team', 1, :lead_id, :lead_type, 'active')"
+            ),
+            {
+                'title': title,
+                'content': content,
+                'lead_id': str(request_id),
+                'lead_type': request_type
+            }
+        )
         db.session.commit()
         
         return jsonify({
@@ -16742,16 +16709,12 @@ def populate_supply_contracts(force=False):
                 if 'is_small_business_set_aside' not in opp:
                     opp['is_small_business_set_aside'] = False
                 
-                db.session.execute(text('''
-                    INSERT INTO supply_contracts 
-                    (title, agency, location, product_category, estimated_value, bid_deadline, 
-                     description, website_url, contact_name, 
-                     contact_email, contact_phone, is_quick_win, status, posted_date)
-                    VALUES 
-                    (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline,
-                     :description, :website_url, :contact_name,
-                     :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)
-                '''), opp)
+                insert_query = (
+                    "INSERT INTO supply_contracts (title, agency, location, product_category, estimated_value, bid_deadline, "
+                    "description, website_url, contact_name, contact_email, contact_phone, is_quick_win, status, posted_date) "
+                    "VALUES (:title, :agency, :location, :product_category, :estimated_value, :bid_deadline, :description, :website_url, :contact_name, :contact_email, :contact_phone, :is_quick_win, :status, :posted_date)"
+                )
+                db.session.execute(text(insert_query), opp)
                 inserted_count += 1
                 print(f"    ✅ {opp['agency']} - ${opp['estimated_value']}")
             except Exception as e:
@@ -16826,11 +16789,11 @@ def get_historical_award(contract_id):
         is_annual_subscriber = True
     elif user_email:
         try:
-            result = db.session.execute(text('''
-                SELECT plan_type FROM subscriptions 
-                WHERE email = :email AND status = 'active'
-                ORDER BY created_at DESC LIMIT 1
-            '''), {'email': user_email}).fetchone()
+            select_query = (
+                "SELECT plan_type FROM subscriptions WHERE email = :email AND status = 'active' "
+                "ORDER BY created_at DESC LIMIT 1"
+            )
+            result = db.session.execute(text(select_query), {'email': user_email}).fetchone()
             
             if result and result[0] == 'annual':
                 is_annual_subscriber = True
@@ -16847,11 +16810,11 @@ def get_historical_award(contract_id):
     
     # Fetch historical award data
     try:
-        result = db.session.execute(text('''
-            SELECT award_amount, award_year, contractor_name, title, agency
-            FROM federal_contracts
-            WHERE id = :contract_id
-        '''), {'contract_id': contract_id}).fetchone()
+        select_query = (
+            "SELECT award_amount, award_year, contractor_name, title, agency "
+            "FROM federal_contracts WHERE id = :contract_id"
+        )
+        result = db.session.execute(text(select_query), {'contract_id': contract_id}).fetchone()
         
         if result:
             return jsonify({
@@ -16952,14 +16915,19 @@ def submit_gsa_application():
         # Save to database
         conn = sqlite3.connect('leads.db')
         c = conn.cursor()
-        c.execute('''INSERT INTO gsa_applications 
-                    (company_name, duns_number, tax_id, years_in_business, company_address,
-                     contact_name, contact_title, contact_email, contact_phone, additional_info,
-                     documents_path, status, user_email)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (company_name, duns_number, tax_id, years_in_business, company_address,
-                  contact_name, contact_title, contact_email, contact_phone, additional_info,
-                  app_folder, 'pending', user_email))
+        insert_query = (
+            "INSERT INTO gsa_applications (company_name, duns_number, tax_id, years_in_business, company_address, "
+            "contact_name, contact_title, contact_email, contact_phone, additional_info, documents_path, status, user_email) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        c.execute(
+            insert_query,
+            (
+                company_name, duns_number, tax_id, years_in_business, company_address,
+                contact_name, contact_title, contact_email, contact_phone, additional_info,
+                app_folder, 'pending', user_email
+            )
+        )
         app_id = c.lastrowid
         conn.commit()
         conn.close()
@@ -17082,8 +17050,8 @@ def admin_gsa_applications():
         conn = sqlite3.connect('leads.db')
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute('''SELECT * FROM gsa_applications 
-                    ORDER BY submitted_at DESC''')
+        select_query = "SELECT * FROM gsa_applications ORDER BY submitted_at DESC"
+        c.execute(select_query)
         applications = c.fetchall()
         conn.close()
         
@@ -17166,10 +17134,8 @@ def update_gsa_application_status(app_id):
         
         conn = sqlite3.connect('leads.db')
         c = conn.cursor()
-        c.execute('''UPDATE gsa_applications 
-                    SET status = ?, admin_notes = ?, reviewed_at = ?
-                    WHERE id = ?''',
-                 (status, admin_notes, datetime.now(), app_id))
+        update_query = "UPDATE gsa_applications SET status = ?, admin_notes = ?, reviewed_at = ? WHERE id = ?"
+        c.execute(update_query, (status, admin_notes, datetime.now(), app_id))
         conn.commit()
         conn.close()
         
@@ -17201,24 +17167,25 @@ def send_message_to_admin():
                 return redirect(url_for('send_message_to_admin'))
             
             # Get first admin user as recipient
-            admin = db.session.execute(text('''
-                SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1
-            ''')).fetchone()
+            admin = db.session.execute(
+                text("SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1")
+            ).fetchone()
             
             if not admin:
                 flash('Unable to send message - no admin available', 'error')
                 return redirect(url_for('send_message_to_admin'))
             
             # Insert message
-            db.session.execute(text('''
-                INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin)
-                VALUES (:sender_id, :recipient_id, :subject, :body, FALSE)
-            '''), {
-                'sender_id': session['user_id'],
-                'recipient_id': admin.id,
-                'subject': f'[{message_type.upper()}] {subject}',
-                'body': message_body
-            })
+            db.session.execute(
+                text("INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin) "
+                     "VALUES (:sender_id, :recipient_id, :subject, :body, FALSE)"),
+                {
+                    'sender_id': session['user_id'],
+                    'recipient_id': admin.id,
+                    'subject': f'[{message_type.upper()}] {subject}',
+                    'body': message_body
+                }
+            )
             
             db.session.commit()
             
@@ -17239,21 +17206,22 @@ def send_message_to_admin():
 def my_messages():
     """Customer inbox to view messages from admin"""
     try:
-        messages = db.session.execute(text('''
-            SELECT m.*, 
-                   sender.email as sender_email,
-                   sender.first_name || ' ' || sender.last_name as sender_name
-            FROM messages m
-            LEFT JOIN leads sender ON m.sender_id = sender.id
-            WHERE m.recipient_id = :user_id
-            ORDER BY m.sent_at DESC
-        '''), {'user_id': session['user_id']}).fetchall()
+        messages = db.session.execute(
+            text("SELECT m.*, sender.email as sender_email, "
+                 "sender.first_name || ' ' || sender.last_name as sender_name "
+                 "FROM messages m "
+                 "LEFT JOIN leads sender ON m.sender_id = sender.id "
+                 "WHERE m.recipient_id = :user_id "
+                 "ORDER BY m.sent_at DESC"),
+            {'user_id': session['user_id']}
+        ).fetchall()
         
         # Mark all as read
-        db.session.execute(text('''
-            UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
-            WHERE recipient_id = :user_id AND is_read = FALSE
-        '''), {'user_id': session['user_id']})
+        db.session.execute(
+            text("UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP "
+                 "WHERE recipient_id = :user_id AND is_read = FALSE"),
+            {'user_id': session['user_id']}
+        )
         db.session.commit()
         
         return render_template('customer_messages.html', messages=messages)
@@ -17270,16 +17238,14 @@ def admin_mailbox():
     """Admin mailbox to view all customer messages"""
     try:
         # Get all messages sent to admins
-        messages = db.session.execute(text('''
-            SELECT m.*, 
-                   sender.email as sender_email,
-                   sender.first_name || ' ' || sender.last_name as sender_name,
-                   sender.company_name
-            FROM messages m
-            LEFT JOIN leads sender ON m.sender_id = sender.id
-            WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE)
-            ORDER BY m.is_read ASC, m.sent_at DESC
-        ''')).fetchall()
+        messages = db.session.execute(
+            text("SELECT m.*, sender.email as sender_email, "
+                 "sender.first_name || ' ' || sender.last_name as sender_name, "
+                 "sender.company_name FROM messages m "
+                 "LEFT JOIN leads sender ON m.sender_id = sender.id "
+                 "WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) "
+                 "ORDER BY m.is_read ASC, m.sent_at DESC")
+        ).fetchall()
         
         unread_count = sum(1 for msg in messages if not msg.is_read)
         
@@ -17306,22 +17272,23 @@ def admin_reply_message():
             return redirect(url_for('admin_mailbox'))
         
         # Insert reply
-        db.session.execute(text('''
-            INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin)
-            VALUES (:sender_id, :recipient_id, :subject, :body, TRUE)
-        '''), {
-            'sender_id': session['user_id'],
-            'recipient_id': recipient_id,
-            'subject': subject,
-            'body': message_body
-        })
+        db.session.execute(
+            text("INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin) "
+                 "VALUES (:sender_id, :recipient_id, :subject, :body, TRUE)"),
+            {
+                'sender_id': session['user_id'],
+                'recipient_id': recipient_id,
+                'subject': subject,
+                'body': message_body
+            }
+        )
         
         # Mark original message as read
         if message_id:
-            db.session.execute(text('''
-                UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-            '''), {'id': message_id})
+            db.session.execute(
+                text("UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP WHERE id = :id"),
+                {'id': message_id}
+            )
         
         db.session.commit()
         
