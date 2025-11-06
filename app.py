@@ -4478,21 +4478,59 @@ def contracts():
         # Count total with optional filter - using LOCAL contracts table
         if location_filter:
             total = db.session.execute(text('''
-                SELECT COUNT(*) FROM contracts WHERE LOWER(location) LIKE LOWER(:loc)
+                SELECT COUNT(*) FROM contracts 
+                WHERE LOWER(location) LIKE LOWER(:loc)
+                  AND title IS NOT NULL
+                  AND (
+                        CASE 
+                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
+                          ELSE NULL
+                        END
+                      ) >= CURRENT_DATE
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
-                WHERE LOWER(location) LIKE LOWER(:loc) AND title IS NOT NULL
+                WHERE LOWER(location) LIKE LOWER(:loc) 
+                  AND title IS NOT NULL
+                  AND (
+                        CASE 
+                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
+                          ELSE NULL
+                        END
+                      ) >= CURRENT_DATE
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
-            '''), { 'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset }).fetchall()
+            '''), {'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset}).fetchall()
         else:
-            total = db.session.execute(text('SELECT COUNT(*) FROM contracts WHERE title IS NOT NULL')).scalar() or 0
+            total = db.session.execute(text('''
+                SELECT COUNT(*) FROM contracts 
+                WHERE title IS NOT NULL
+                  AND (
+                        CASE 
+                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
+                          ELSE NULL
+                        END
+                      ) >= CURRENT_DATE
+            ''')).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE title IS NOT NULL
+                  AND (
+                        CASE 
+                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
+                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
+                          ELSE NULL
+                        END
+                      ) >= CURRENT_DATE
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'limit': per_page, 'offset': offset}).fetchall()
@@ -4543,6 +4581,10 @@ def contracts():
                                pagination=pagination,
                                is_paid_subscriber=is_paid_subscriber,
                                is_admin=is_admin)
+    except Exception as e:
+        print(f"contracts page error: {e}")
+        flash('Error loading contracts', 'danger')
+        return redirect(url_for('customer_leads'))
     except Exception as e:
         msg = f"<h1>Contracts Page Error</h1><p>{str(e)}</p>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
@@ -4826,6 +4868,11 @@ def federal_contracts():
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
+        # Only show open bids (deadline today or later), safely handling text/date/timestamp
+        base_sql += " AND (CASE WHEN deadline IS NULL OR deadline::text = '' THEN NULL " \
+                    "WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date " \
+                    "WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date " \
+                    "ELSE NULL END) >= CURRENT_DATE"
         # Count total
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
@@ -6618,6 +6665,14 @@ def customer_leads():
                     fc.description as requirements
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
+                                    AND (
+                                                CASE 
+                                                    WHEN fc.deadline IS NULL OR fc.deadline::text = '' THEN NULL
+                                                    WHEN fc.deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (fc.deadline::text)::date
+                                                    WHEN fc.deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(fc.deadline::text from 1 for 10)::date
+                                                    ELSE NULL
+                                                END
+                                            ) >= CURRENT_DATE
                 ORDER BY COALESCE(fc.posted_date, fc.created_at) DESC
                 LIMIT 100
             ''')).fetchall()
@@ -6645,7 +6700,15 @@ def customer_leads():
                     'Active' as status,
                     supply_contracts.requirements
                 FROM supply_contracts 
-                ORDER BY supply_contracts.posted_date DESC
+                                WHERE (
+                                                CASE 
+                                                    WHEN supply_contracts.bid_deadline IS NULL OR supply_contracts.bid_deadline::text = '' THEN NULL
+                                                    WHEN supply_contracts.bid_deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (supply_contracts.bid_deadline::text)::date
+                                                    WHEN supply_contracts.bid_deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(supply_contracts.bid_deadline::text from 1 for 10)::date
+                                                    ELSE NULL
+                                                END
+                                            ) >= CURRENT_DATE
+                                ORDER BY supply_contracts.posted_date DESC
             ''')).fetchall()
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
