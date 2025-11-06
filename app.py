@@ -10875,11 +10875,18 @@ def admin_link_doctor_scan():
     """
     try:
         import re
+        import traceback
         from bs4 import BeautifulSoup
         import requests
         from urllib.parse import urljoin, urlparse
 
+        print("=" * 80)
+        print("🔍 Link Doctor Scan Started")
+        print("=" * 80)
+
         data = request.get_json(silent=True) or {}
+        print(f"📥 Request data: {data}")
+        
         lead_types = data.get('lead_types', ['federal'])
         limit = int(data.get('limit', 25))
         mode = data.get('mode', ['database'])
@@ -10887,6 +10894,13 @@ def admin_link_doctor_scan():
         max_depth = int(crawl_opts.get('depth', 2))
         max_pages = int(crawl_opts.get('pages', 30))
         start_urls = crawl_opts.get('start_urls') or ['/']
+
+        print(f"📊 Parameters:")
+        print(f"  - Lead types: {lead_types}")
+        print(f"  - Limit: {limit}")
+        print(f"  - Mode: {mode}")
+        print(f"  - Max depth: {max_depth}")
+        print(f"  - Max pages: {max_pages}")
 
         results = []
 
@@ -10898,55 +10912,77 @@ def admin_link_doctor_scan():
                 else:
                     url_to_check = url
 
+                print(f"  🔗 Checking: {url_to_check[:80]}...")
+
                 # Quick HEAD, follow redirects; fallback to GET if method not allowed
                 try:
                     r = requests.head(url_to_check, allow_redirects=True, timeout=8)
                     status = r.status_code
                     final_url = r.url
-                except requests.exceptions.RequestException:
+                except requests.exceptions.RequestException as re_exc:
+                    print(f"    ⚠️  HEAD failed, trying GET: {str(re_exc)[:100]}")
                     r = requests.get(url_to_check, allow_redirects=True, timeout=10, stream=True)
                     status = r.status_code
                     final_url = r.url
 
+                result_status = 'ok' if 200 <= status < 300 else ('redirect' if 300 <= status < 400 else 'broken')
+                print(f"    ✅ Status: {result_status} ({status})")
+                
                 if 200 <= status < 300:
                     return {'status': 'ok', 'http_status': status, 'final_url': final_url}
                 if 300 <= status < 400:
                     return {'status': 'redirect', 'http_status': status, 'final_url': final_url}
                 return {'status': 'broken', 'http_status': status, 'final_url': final_url}
             except requests.exceptions.Timeout:
+                print(f"    ⏱️  Timeout")
                 return {'status': 'timeout', 'http_status': None, 'final_url': None}
             except Exception as e:
+                print(f"    ❌ Error: {str(e)[:100]}")
                 return {'status': 'error', 'http_status': None, 'final_url': None, 'reason': str(e)}
 
         # Database URL checks
         if 'database' in mode or mode == []:
+            print("\n📂 DATABASE MODE - Starting...")
+            
             # Federal contracts
             if 'federal' in lead_types:
-                rows = db.session.execute(text(
-                "SELECT id, title, agency, sam_gov_url FROM federal_contracts "
-                "WHERE sam_gov_url IS NOT NULL AND sam_gov_url != '' "
-                "ORDER BY posted_date DESC NULLS LAST LIMIT :limit"
-            ), {'limit': limit}).fetchall()
-            for r in rows:
-                chk = check_url(r.sam_gov_url)
-                results.append({
-                    'id': r.id, 'type': 'federal', 'title': r.title, 'agency': r.agency,
-                    'url': r.sam_gov_url, 'source': 'database:federal_contracts', **chk
-                })
+                print(f"  🔍 Checking federal contracts (limit={limit})...")
+                try:
+                    rows = db.session.execute(text(
+                        "SELECT id, title, agency, sam_gov_url FROM federal_contracts "
+                        "WHERE sam_gov_url IS NOT NULL AND sam_gov_url != '' "
+                        "ORDER BY posted_date DESC NULLS LAST LIMIT :limit"
+                    ), {'limit': limit}).fetchall()
+                    print(f"    Found {len(rows)} federal contracts with URLs")
+                    for r in rows:
+                        chk = check_url(r.sam_gov_url)
+                        results.append({
+                            'id': r.id, 'type': 'federal', 'title': r.title, 'agency': r.agency,
+                            'url': r.sam_gov_url, 'source': 'database:federal_contracts', **chk
+                        })
+                except Exception as e:
+                    print(f"    ❌ Federal contracts error: {e}")
+                    traceback.print_exc()
 
             # Supply contracts
             if 'supply' in lead_types:
-                rows = db.session.execute(text(
-                "SELECT id, title, agency, website_url FROM supply_contracts "
-                "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
-                "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
-            ), {'limit': limit}).fetchall()
-            for r in rows:
-                chk = check_url(r.website_url)
-                results.append({
-                    'id': r.id, 'type': 'supply', 'title': r.title, 'agency': r.agency,
-                    'url': r.website_url, 'source': 'database:supply_contracts', **chk
-                })
+                print(f"  🔍 Checking supply contracts (limit={limit})...")
+                try:
+                    rows = db.session.execute(text(
+                        "SELECT id, title, agency, website_url FROM supply_contracts "
+                        "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+                        "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+                    ), {'limit': limit}).fetchall()
+                    print(f"    Found {len(rows)} supply contracts with URLs")
+                    for r in rows:
+                        chk = check_url(r.website_url)
+                        results.append({
+                            'id': r.id, 'type': 'supply', 'title': r.title, 'agency': r.agency,
+                            'url': r.website_url, 'source': 'database:supply_contracts', **chk
+                        })
+                except Exception as e:
+                    print(f"    ❌ Supply contracts error: {e}")
+                    traceback.print_exc()
 
             # Government contracts (if table exists)
             if 'government' in lead_types:
@@ -10967,26 +11003,34 @@ def admin_link_doctor_scan():
 
             # Regular contracts
             if 'contract' in lead_types:
-                rows = db.session.execute(text(
-                "SELECT id, title, agency, website_url FROM contracts "
-                "WHERE website_url IS NOT NULL AND website_url != '' "
-                "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
-            ), {'limit': limit}).fetchall()
-            for r in rows:
-                chk = check_url(r.website_url)
-                results.append({
-                    'id': r.id, 'type': 'contract', 'title': r.title, 'agency': r.agency,
-                    'url': r.website_url, 'source': 'database:contracts', **chk
-                })
+                print(f"  🔍 Checking local/state contracts (limit={limit})...")
+                try:
+                    rows = db.session.execute(text(
+                        "SELECT id, title, agency, website_url FROM contracts "
+                        "WHERE website_url IS NOT NULL AND website_url != '' "
+                        "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+                    ), {'limit': limit}).fetchall()
+                    print(f"    Found {len(rows)} local/state contracts with URLs")
+                    for r in rows:
+                        chk = check_url(r.website_url)
+                        results.append({
+                            'id': r.id, 'type': 'contract', 'title': r.title, 'agency': r.agency,
+                            'url': r.website_url, 'source': 'database:contracts', **chk
+                        })
+                except Exception as e:
+                    print(f"    ❌ Local/state contracts error: {e}")
+                    traceback.print_exc()
 
             # Commercial opportunities (if a website column exists)
             if 'commercial' in lead_types:
+                print(f"  🔍 Checking commercial opportunities (limit={limit})...")
                 try:
                     rows = db.session.execute(text(
-                    "SELECT id, business_name as title, location as agency, website as website_url FROM commercial_opportunities "
-                    "WHERE website IS NOT NULL AND website != '' "
-                    "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+                        "SELECT id, business_name as title, location as agency, website as website_url FROM commercial_opportunities "
+                        "WHERE website IS NOT NULL AND website != '' "
+                        "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
                     ), {'limit': limit}).fetchall()
+                    print(f"    Found {len(rows)} commercial opportunities with URLs")
                     for r in rows:
                         chk = check_url(r.website_url)
                         results.append({
@@ -10994,72 +11038,92 @@ def admin_link_doctor_scan():
                             'url': r.website_url, 'source': 'database:commercial_opportunities', **chk
                         })
                 except Exception as e:
-                    print(f"Link Doctor: commercial_opportunities scan error: {e}")
+                    print(f"    ℹ️  Commercial opportunities not available: {e}")
 
         # Template static external links scan
         if 'templates' in mode:
+            print("\n📄 TEMPLATES MODE - Starting...")
             try:
                 templates_root = os.path.join(os.path.dirname(__file__), 'templates')
-                collected = []
-                for root, _, files in os.walk(templates_root):
-                    for fname in files:
-                        if not fname.endswith('.html'):
+                print(f"  Templates root: {templates_root}")
+                
+                if not os.path.exists(templates_root):
+                    print(f"    ⚠️  Templates directory not found!")
+                else:
+                    collected = []
+                    file_count = 0
+                    for root, _, files in os.walk(templates_root):
+                        for fname in files:
+                            if not fname.endswith('.html'):
+                                continue
+                            file_count += 1
+                            fpath = os.path.join(root, fname)
+                            try:
+                                with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
+                                    html = f.read()
+                                # Only extract absolute http(s) to avoid unresolved Jinja url_for
+                                soup = BeautifulSoup(html, 'lxml')
+                                def add_url(u, kind):
+                                    if not u:
+                                        return
+                                    if isinstance(u, str) and u.strip().startswith(('http://', 'https://')):
+                                        collected.append((u.strip(), fpath, kind))
+                                for a in soup.find_all('a'):
+                                    add_url(a.get('href'), 'a')
+                                for l in soup.find_all('link'):
+                                    add_url(l.get('href'), 'link')
+                                for s in soup.find_all('script'):
+                                    add_url(s.get('src'), 'script')
+                                for img in soup.find_all('img'):
+                                    add_url(img.get('src'), 'img')
+                            except Exception as ee:
+                                print(f"    ⚠️  Template scan error {fname}: {ee}")
+                    
+                    print(f"  Scanned {file_count} HTML templates, found {len(collected)} external links")
+                    
+                    # Deduplicate
+                    seen = set()
+                    for url, source_file, kind in collected:
+                        if url in seen:
                             continue
-                        fpath = os.path.join(root, fname)
-                        try:
-                            with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                                html = f.read()
-                            # Only extract absolute http(s) to avoid unresolved Jinja url_for
-                            soup = BeautifulSoup(html, 'lxml')
-                            def add_url(u, kind):
-                                if not u:
-                                    return
-                                if isinstance(u, str) and u.strip().startswith(('http://', 'https://')):
-                                    collected.append((u.strip(), fpath, kind))
-                            for a in soup.find_all('a'):
-                                add_url(a.get('href'), 'a')
-                            for l in soup.find_all('link'):
-                                add_url(l.get('href'), 'link')
-                            for s in soup.find_all('script'):
-                                add_url(s.get('src'), 'script')
-                            for img in soup.find_all('img'):
-                                add_url(img.get('src'), 'img')
-                        except Exception as ee:
-                            print(f"Template scan error {fpath}: {ee}")
-                # Deduplicate
-                seen = set()
-                for url, source_file, kind in collected:
-                    if url in seen:
-                        continue
-                    seen.add(url)
-                    chk = check_url(url)
-                    results.append({
-                        'id': 0, 'type': 'website', 'title': f'{kind} link in template', 'agency': '-',
-                        'url': url, 'source': source_file.replace(templates_root + os.sep, 'templates/'), **chk
-                    })
-                    if len(seen) >= max(1, limit):
-                        break
+                        seen.add(url)
+                        chk = check_url(url)
+                        results.append({
+                            'id': 0, 'type': 'website', 'title': f'{kind} link in template', 'agency': '-',
+                            'url': url, 'source': source_file.replace(templates_root + os.sep, 'templates/'), **chk
+                        })
+                        if len(seen) >= max(1, limit):
+                            break
             except Exception as e:
-                print(f"Template link scan failed: {e}")
+                print(f"  ❌ Template link scan failed: {e}")
+                traceback.print_exc()
 
         # Public site crawl (shallow)
         if 'crawl' in mode:
+            print("\n🌐 CRAWL MODE - Starting...")
             try:
                 base = request.host_url.rstrip('/')
+                print(f"  Base URL: {base}")
                 same_host = urlparse(base).netloc
+                print(f"  Same host: {same_host}")
                 q = []
                 visited_pages = set()
                 # seed
                 for s in start_urls:
                     full = s if s.startswith(('http://', 'https://')) else urljoin(base + '/', s)
                     q.append((full, 0))
+                    print(f"  Seed URL: {full}")
+                
+                crawled_count = 0
                 while q and len(visited_pages) < max_pages:
                     url, depth = q.pop(0)
                     if url in visited_pages or depth > max_depth:
                         continue
                     visited_pages.add(url)
+                    crawled_count += 1
                     # fetch page
                     try:
+                        print(f"  🕷️  Crawling [{crawled_count}/{max_pages}] depth={depth}: {url[:80]}")
                         resp = requests.get(url, timeout=8, allow_redirects=True)
                         page_status = resp.status_code
                         # Record page itself
@@ -11100,17 +11164,25 @@ def admin_link_doctor_scan():
                                         q.append((absu, depth + 1))
                         # throttle omitted (short crawl)
                     except Exception as ce:
+                        print(f"    ❌ Crawl error for {url}: {ce}")
                         results.append({
                             'id': 0, 'type': 'website', 'title': 'page', 'agency': '-', 'url': url,
                             'source': 'crawl', 'status': 'error', 'http_status': None, 'final_url': None,
                             'reason': str(ce)
                         })
+                print(f"  ✅ Crawled {crawled_count} pages")
             except Exception as e:
-                print(f"Crawl failed: {e}")
+                print(f"  ❌ Crawl failed: {e}")
+                traceback.print_exc()
 
+        print(f"\n✅ Link Doctor Scan Complete - {len(results)} results")
+        print("=" * 80)
         return jsonify({'success': True, 'results': results, 'count': len(results)})
     except Exception as e:
-        print(f"Error in Link Doctor scan: {e}")
+        print(f"\n❌ FATAL ERROR in Link Doctor scan:")
+        print(f"Error: {e}")
+        traceback.print_exc()
+        print("=" * 80)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/link-doctor/repair', methods=['POST'])
