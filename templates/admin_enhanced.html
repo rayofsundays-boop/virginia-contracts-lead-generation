@@ -163,6 +163,9 @@
                     <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                         System Tools
                     </div>
+                    <a class="nav-link {% if section == 'all-contracts' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='all-contracts') }}">
+                        <i class="fas fa-file-contract"></i>All Contracts
+                    </a>
                     <a class="nav-link {% if section == 'upload-csv' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='upload-csv') }}">
                         <i class="fas fa-file-upload"></i>Upload CSV
                     </a>
@@ -260,6 +263,9 @@
             
             {% elif section == 'upload-csv' %}
             {% include 'admin_sections/upload_csv.html' %}
+            
+            {% elif section == 'all-contracts' %}
+            {% include 'admin_sections/all_contracts.html' %}
             
             {% endif %}
         </div>

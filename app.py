@@ -9196,6 +9196,20 @@ def admin_enhanced():
                 "END, created_at DESC"
             )).fetchall()
         
+        elif section == 'all-contracts':
+            # Fetch all contracts for admin editing
+            context['federal_contracts'] = db.session.execute(text(
+                "SELECT * FROM federal_contracts ORDER BY posted_date DESC NULLS LAST LIMIT 50"
+            )).fetchall()
+            
+            context['supply_contracts'] = db.session.execute(text(
+                "SELECT * FROM supply_contracts ORDER BY created_at DESC LIMIT 50"
+            )).fetchall()
+            
+            context['contracts'] = db.session.execute(text(
+                "SELECT * FROM contracts ORDER BY created_at DESC LIMIT 50"
+            )).fetchall()
+        
         elif section == 'revenue':
             # Revenue statistics
             revenue_stats_raw = db.session.execute(text(
@@ -11253,6 +11267,222 @@ def admin_link_doctor_repair():
         return jsonify({'success': True, 'repaired': repaired, 'cleared': cleared})
     except Exception as e:
         print(f"Error in Link Doctor repair: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Contract CRUD API Routes
+@app.route('/admin/contract/federal/<int:contract_id>', methods=['GET'])
+@login_required
+@admin_required
+def get_federal_contract(contract_id):
+    """Get a single federal contract for editing"""
+    try:
+        contract = db.session.execute(text(
+            "SELECT id, title, agency, department, location, naics_code, notice_id, "
+            "deadline, sam_gov_url, description, set_aside, posted_date "
+            "FROM federal_contracts WHERE id = :id"
+        ), {'id': contract_id}).fetchone()
+        
+        if not contract:
+            return jsonify({'success': False, 'message': 'Contract not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'contract': {
+                'id': contract.id,
+                'title': contract.title,
+                'agency': contract.agency,
+                'department': contract.department,
+                'location': contract.location,
+                'naics_code': contract.naics_code,
+                'notice_id': contract.notice_id,
+                'deadline': contract.deadline.strftime('%Y-%m-%d') if contract.deadline else None,
+                'sam_gov_url': contract.sam_gov_url,
+                'description': contract.description,
+                'set_aside': contract.set_aside,
+                'posted_date': contract.posted_date.strftime('%Y-%m-%d') if contract.posted_date else None
+            }
+        })
+    except Exception as e:
+        print(f"Error getting federal contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/federal/<int:contract_id>', methods=['PUT'])
+@login_required
+@admin_required
+def update_federal_contract(contract_id):
+    """Update a federal contract"""
+    try:
+        data = request.get_json()
+        db.session.execute(text(
+            "UPDATE federal_contracts SET "
+            "title = :title, agency = :agency, department = :department, "
+            "location = :location, naics_code = :naics_code, notice_id = :notice_id, "
+            "deadline = :deadline, sam_gov_url = :url, description = :description, "
+            "set_aside = :set_aside, posted_date = :posted "
+            "WHERE id = :id"
+        ), {
+            'id': contract_id,
+            'title': data.get('title'),
+            'agency': data.get('agency'),
+            'department': data.get('department'),
+            'location': data.get('location'),
+            'naics_code': data.get('naics_code'),
+            'notice_id': data.get('notice_id'),
+            'deadline': data.get('deadline') or None,
+            'url': data.get('sam_gov_url'),
+            'description': data.get('description'),
+            'set_aside': data.get('set_aside'),
+            'posted': data.get('posted_date') or None
+        })
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Contract updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating federal contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/supply/<int:contract_id>', methods=['GET'])
+@login_required
+@admin_required
+def get_supply_contract(contract_id):
+    """Get a single supply contract for editing"""
+    try:
+        contract = db.session.execute(text(
+            "SELECT id, title, agency, location, product_category, status, "
+            "website_url, description "
+            "FROM supply_contracts WHERE id = :id"
+        ), {'id': contract_id}).fetchone()
+        
+        if not contract:
+            return jsonify({'success': False, 'message': 'Contract not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'contract': {
+                'id': contract.id,
+                'title': contract.title,
+                'agency': contract.agency,
+                'location': contract.location,
+                'product_category': contract.product_category,
+                'status': contract.status,
+                'website_url': contract.website_url,
+                'description': contract.description
+            }
+        })
+    except Exception as e:
+        print(f"Error getting supply contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/supply/<int:contract_id>', methods=['PUT'])
+@login_required
+@admin_required
+def update_supply_contract(contract_id):
+    """Update a supply contract"""
+    try:
+        data = request.get_json()
+        db.session.execute(text(
+            "UPDATE supply_contracts SET "
+            "title = :title, agency = :agency, location = :location, "
+            "product_category = :category, status = :status, website_url = :url, "
+            "description = :description "
+            "WHERE id = :id"
+        ), {
+            'id': contract_id,
+            'title': data.get('title'),
+            'agency': data.get('agency'),
+            'location': data.get('location'),
+            'category': data.get('product_category'),
+            'status': data.get('status'),
+            'url': data.get('website_url'),
+            'description': data.get('description')
+        })
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Contract updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating supply contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/local/<int:contract_id>', methods=['GET'])
+@login_required
+@admin_required
+def get_local_contract(contract_id):
+    """Get a single local contract for editing"""
+    try:
+        contract = db.session.execute(text(
+            "SELECT id, title, agency, city, state, deadline, website_url, description "
+            "FROM contracts WHERE id = :id"
+        ), {'id': contract_id}).fetchone()
+        
+        if not contract:
+            return jsonify({'success': False, 'message': 'Contract not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'contract': {
+                'id': contract.id,
+                'title': contract.title,
+                'agency': contract.agency,
+                'city': contract.city,
+                'state': contract.state,
+                'deadline': contract.deadline.strftime('%Y-%m-%d') if contract.deadline else None,
+                'website_url': contract.website_url,
+                'description': contract.description
+            }
+        })
+    except Exception as e:
+        print(f"Error getting local contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/local/<int:contract_id>', methods=['PUT'])
+@login_required
+@admin_required
+def update_local_contract(contract_id):
+    """Update a local contract"""
+    try:
+        data = request.get_json()
+        db.session.execute(text(
+            "UPDATE contracts SET "
+            "title = :title, agency = :agency, city = :city, state = :state, "
+            "deadline = :deadline, website_url = :url, description = :description "
+            "WHERE id = :id"
+        ), {
+            'id': contract_id,
+            'title': data.get('title'),
+            'agency': data.get('agency'),
+            'city': data.get('city'),
+            'state': data.get('state'),
+            'deadline': data.get('deadline') or None,
+            'url': data.get('website_url'),
+            'description': data.get('description')
+        })
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Contract updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating local contract: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/contract/<contract_type>/<int:contract_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_contract(contract_type, contract_id):
+    """Delete a contract"""
+    try:
+        if contract_type == 'federal':
+            db.session.execute(text("DELETE FROM federal_contracts WHERE id = :id"), {'id': contract_id})
+        elif contract_type == 'supply':
+            db.session.execute(text("DELETE FROM supply_contracts WHERE id = :id"), {'id': contract_id})
+        elif contract_type == 'local':
+            db.session.execute(text("DELETE FROM contracts WHERE id = :id"), {'id': contract_id})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid contract type'}), 400
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Contract deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting contract: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/populate-missing-urls', methods=['GET', 'POST'])
