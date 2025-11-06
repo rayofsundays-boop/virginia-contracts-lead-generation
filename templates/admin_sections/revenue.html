@@ -1,9 +1,272 @@
 {% if section == 'revenue' %}
 <div class="admin-section">
     <h2><i class="fas fa-dollar-sign me-2"></i>Revenue Management</h2>
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        Revenue tracking module coming soon. Integrate with Stripe for detailed analytics.
+    
+    <!-- Revenue Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-money-bill-wave me-2"></i>Total Revenue</h5>
+                    <h2 class="mb-0">${{ revenue_stats.total_revenue|default(0)|round(2) }}</h2>
+                    <small>All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-calendar-month me-2"></i>This Month</h5>
+                    <h2 class="mb-0">${{ revenue_stats.revenue_this_month|default(0)|round(2) }}</h2>
+                    <small>{{ revenue_stats.monthly_subscriptions|default(0) }} subscriptions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>MRR</h5>
+                    <h2 class="mb-0">${{ revenue_stats.mrr|default(0)|round(2) }}</h2>
+                    <small>Monthly Recurring Revenue</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-user-check me-2"></i>Active Paid</h5>
+                    <h2 class="mb-0">{{ revenue_stats.active_paid_users|default(0) }}</h2>
+                    <small>subscribers</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Revenue Trends (Last 30 Days)</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="revenueChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Recent Transactions</h5>
+            <div>
+                <button class="btn btn-sm btn-success" onclick="exportTransactions()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_transactions %}
+                            {% for txn in recent_transactions %}
+                            <tr>
+                                <td>{{ txn.created_at.strftime('%m/%d/%Y %I:%M %p') if txn.created_at else 'N/A' }}</td>
+                                <td>
+                                    <strong>{{ txn.user_email }}</strong><br>
+                                    <small class="text-muted">{{ txn.company_name or 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ txn.subscription_type or 'Premium' }}
+                                    </span>
+                                </td>
+                                <td><strong>${{ 97.00 }}</strong></td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Paid
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin_view_user', user_id=txn.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    No transactions yet
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Analytics -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Revenue by Source</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueSourceChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Subscription Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Active Paid</span>
+                            <strong>{{ revenue_stats.active_paid_users|default(0) }}</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" style="width: {{ (revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100 }}%">
+                                {{ ((revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Free Users</span>
+                            <strong>{{ revenue_stats.free_users|default(0) }}</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-info" style="width: {{ (revenue_stats.free_users|default(0) / (revenue_stats.total_users|default(1))) * 100 }}%">
+                                {{ ((revenue_stats.free_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Conversion Rate</span>
+                            <strong>{{ ((revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Churn & Growth Metrics -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Growth Metrics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="border-start border-success border-4 ps-3">
+                        <h6 class="text-muted mb-1">New Subscribers (30 days)</h6>
+                        <h3 class="mb-0 text-success">+{{ revenue_stats.new_users_30d|default(0) }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="border-start border-primary border-4 ps-3">
+                        <h6 class="text-muted mb-1">Average Revenue Per User</h6>
+                        <h3 class="mb-0 text-primary">${{ (revenue_stats.total_revenue|default(0) / revenue_stats.active_paid_users|default(1))|round(2) }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="border-start border-info border-4 ps-3">
+                        <h6 class="text-muted mb-1">Lifetime Value</h6>
+                        <h3 class="mb-0 text-info">${{ (97 * 12)|round(2) }}</h3>
+                        <small class="text-muted">Est. annual</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+// Revenue Trends Chart
+const revenueCtx = document.getElementById('revenueChart');
+if (revenueCtx) {
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: {{ revenue_chart_labels|tojson if revenue_chart_labels else '[]'|safe }},
+            datasets: [{
+                label: 'Daily Revenue',
+                data: {{ revenue_chart_data|tojson if revenue_chart_data else '[]'|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Revenue Source Pie Chart
+const sourceCtx = document.getElementById('revenueSourceChart');
+if (sourceCtx) {
+    new Chart(sourceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Monthly Subscriptions', 'Annual Subscriptions', 'One-time Purchases'],
+            datasets: [{
+                data: [{{ revenue_stats.active_paid_users|default(0) * 97 }}, 0, 0],
+                backgroundColor: [
+                    'rgb(54, 162, 235)',
+                    'rgb(75, 192, 192)',
+                    'rgb(255, 205, 86)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function exportTransactions() {
+    window.location.href = '/admin/export-transactions';
+}
+</script>
 {% endif %}

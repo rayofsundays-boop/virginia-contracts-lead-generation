@@ -8756,6 +8756,54 @@ def admin_enhanced():
                     END,
                     created_at DESC
             ''')).fetchall()
+        
+        elif section == 'revenue':
+            # Revenue statistics
+            revenue_stats_raw = db.session.execute(text('''
+                SELECT 
+                    COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as active_paid_users,
+                    COUNT(CASE WHEN subscription_status = 'free' THEN 1 END) as free_users,
+                    COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
+                    COUNT(*) as total_users
+                FROM leads 
+                WHERE is_admin = FALSE
+            ''')).fetchone()
+            
+            # Calculate revenue metrics
+            active_paid = revenue_stats_raw.active_paid_users if revenue_stats_raw else 0
+            subscription_price = 97.00  # Monthly subscription price
+            
+            context['revenue_stats'] = {
+                'active_paid_users': active_paid,
+                'free_users': revenue_stats_raw.free_users if revenue_stats_raw else 0,
+                'new_users_30d': revenue_stats_raw.new_users_30d if revenue_stats_raw else 0,
+                'total_users': revenue_stats_raw.total_users if revenue_stats_raw else 0,
+                'total_revenue': active_paid * subscription_price,
+                'revenue_this_month': active_paid * subscription_price,
+                'mrr': active_paid * subscription_price,
+            }
+            
+            # Recent transactions (paid subscribers)
+            context['recent_transactions'] = db.session.execute(text('''
+                SELECT id, email as user_email, company_name, subscription_status as subscription_type, created_at
+                FROM leads 
+                WHERE subscription_status = 'paid' AND is_admin = FALSE
+                ORDER BY created_at DESC
+                LIMIT 20
+            ''')).fetchall()
+            
+            # Revenue chart data (last 30 days)
+            revenue_chart_raw = db.session.execute(text('''
+                SELECT DATE(created_at) as date, COUNT(*) * 97 as revenue
+                FROM leads
+                WHERE subscription_status = 'paid' 
+                AND created_at > NOW() - INTERVAL '30 days'
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            ''')).fetchall()
+            
+            context['revenue_chart_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in revenue_chart_raw]
+            context['revenue_chart_data'] = [float(row.revenue) for row in revenue_chart_raw]
             
         return render_template('admin_enhanced.html', **context)
     
