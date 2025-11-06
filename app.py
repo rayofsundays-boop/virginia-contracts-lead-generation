@@ -58,8 +58,14 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)
 app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=8)
 
 # Admin credentials (bypass paywall)
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'VAContracts2024!')
+# Read admin credentials from environment only. Do NOT ship a usable hardcoded default.
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+
+# Admin login enabled only when both env vars are set. If missing, admin login will be disabled
+ADMIN_ENABLED = bool(ADMIN_USERNAME and ADMIN_PASSWORD)
+if not ADMIN_ENABLED:
+    print("⚠️ Admin credentials not set. Admin login is DISABLED. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables to enable admin access.")
 
 # OpenAI Configuration for AI Features
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
@@ -3121,8 +3127,8 @@ def signin():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Check for admin login first (hardcoded superadmin)
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+    # Check for admin login first (superadmin) — only if admin creds are configured
+    if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             # Set permanent session with extended timeout for admin
             session.permanent = True
             app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
@@ -3188,8 +3194,8 @@ def login():
         flash('Username and password are required.', 'error')
         return redirect(url_for('auth'))
     
-    # Check for admin login first (hardcoded superadmin)
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+    # Check for admin login first (superadmin) — only if admin creds are configured
+    if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         session.permanent = True
         app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
         
@@ -7482,9 +7488,12 @@ def admin_login():
     password = request.form.get('admin_password')
     redirect_to = request.form.get('redirect_to', '/admin-panel')
     
-    # Check admin password (you should change this!)
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
-    
+    # Admin login is only available when ADMIN_USERNAME and ADMIN_PASSWORD are configured
+    if not ADMIN_ENABLED:
+        flash('Admin login is currently disabled. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables to enable it.', 'error')
+        return redirect('/')
+
+    # Validate provided password against configured ADMIN_PASSWORD
     if password == ADMIN_PASSWORD:
         session['is_admin'] = True
         session['user_id'] = 0  # Admin user ID
