@@ -1,0 +1,287 @@
+<div class="p-3">
+  <h3><i class="fas fa-stethoscope text-primary me-2"></i>Link Doctor</h3>
+  <p class="text-muted">Scan and repair broken links across your lead sources, templates, and public pages.</p>
+
+  <div class="mb-3">
+    <button class="btn btn-outline-secondary" onclick="window.open('/admin/fix-sam-urls','_blank')">
+      <i class="fas fa-tools me-2"></i>Fix All SAM.gov URLs
+    </button>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="fas fa-search me-2"></i>Scan Options</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Lead Types (database)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ldFederal" checked>
+            <label class="form-check-label" for="ldFederal">Federal (SAM.gov)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ldSupply" checked>
+            <label class="form-check-label" for="ldSupply">Supply</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ldGovernment">
+            <label class="form-check-label" for="ldGovernment">Government</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ldContract">
+            <label class="form-check-label" for="ldContract">Contracts</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ldCommercial">
+            <label class="form-check-label" for="ldCommercial">Commercial</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Limit per type</label>
+          <input id="ldLimit" type="number" class="form-control" value="25" min="1" max="200">
+          <small class="text-muted">How many records per type</small>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Scan modes</label>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="ld-mode-database" checked>
+              <label class="form-check-label" for="ld-mode-database">Database</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="ld-mode-templates">
+              <label class="form-check-label" for="ld-mode-templates">Templates</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="ld-mode-crawl">
+              <label class="form-check-label" for="ld-mode-crawl">Crawl site</label>
+            </div>
+          </div>
+          <div class="mt-3" id="ld-crawl-opts" style="display:none;">
+            <div class="row g-3">
+              <div class="col-4">
+                <label class="form-label">Depth</label>
+                <input type="number" id="ld-crawl-depth" class="form-control" value="2" min="0" max="5">
+              </div>
+              <div class="col-4">
+                <label class="form-label">Max pages</label>
+                <input type="number" id="ld-crawl-pages" class="form-control" value="30" min="1" max="500">
+              </div>
+              <div class="col-4">
+                <label class="form-label">Start paths (comma)</label>
+                <input type="text" id="ld-crawl-starts" class="form-control" placeholder="/, /contracts">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 text-end">
+          <button class="btn btn-primary" id="ld-scan">Scan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-link me-2"></i>Scan Results</h5>
+      <span id="ldCount" class="badge bg-light text-dark">0 results</span>
+    </div>
+    <div class="card-body p-0">
+      <div id="ldSpinner" class="text-center p-5" style="display:none;">
+        <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+        <p class="mt-3"><strong>Checking URLs...</strong></p>
+        <p class="text-muted">We follow redirects and use a short timeout to keep it fast</p>
+      </div>
+      <div class="p-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" onclick="repairSelected()"><i class="fas fa-wrench me-1"></i>Repair Selected</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="clearSelected()"><i class="fas fa-eraser me-1"></i>Clear Selected</button>
+      </div>
+      <div class="table-responsive" style="max-height:600px;overflow-y:auto;">
+        <table class="table table-hover table-sm mb-0" id="ldTable">
+          <thead class="table-dark sticky-top">
+            <tr>
+              <th><input type="checkbox" id="ldSelectAll" onclick="toggleAll(this)"></th>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Title</th>
+              <th>URL</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>HTTP</th>
+              <th>Final URL</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ldBody">
+            <tr>
+              <td colspan="10" class="text-center text-muted p-5">
+                <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
+                Choose options and click "Scan" to begin.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    let ldResults = [];
+    const modeDatabase = document.getElementById('ld-mode-database');
+    const modeTemplates = document.getElementById('ld-mode-templates');
+    const modeCrawl = document.getElementById('ld-mode-crawl');
+    const crawlOpts = document.getElementById('ld-crawl-opts');
+    modeCrawl.addEventListener('change', ()=>{
+      crawlOpts.style.display = modeCrawl.checked ? '' : 'none';
+    });
+
+    function getSelectedTypes(){
+      const t = [];
+      if (document.getElementById('ldFederal').checked) t.push('federal');
+      if (document.getElementById('ldSupply').checked) t.push('supply');
+      if (document.getElementById('ldGovernment').checked) t.push('government');
+      if (document.getElementById('ldContract').checked) t.push('contract');
+      if (document.getElementById('ldCommercial').checked) t.push('commercial');
+      return t;
+    }
+
+    function selectedModes(){
+      const m = [];
+      if(modeDatabase.checked) m.push('database');
+      if(modeTemplates.checked) m.push('templates');
+      if(modeCrawl.checked) m.push('crawl');
+      return m.length ? m : ['database'];
+    }
+
+    function typeBadge(type){
+      const map = { federal: 'success', supply: 'info', government: 'warning', contract: 'secondary', commercial: 'dark', website: 'primary' };
+      const cls = map[type] || 'secondary';
+      return '<span class="badge bg-' + cls + '">' + type + '</span>';
+    }
+
+    function statusBadge(s){
+      const map = { ok: 'success', redirect: 'info', broken: 'danger', timeout: 'warning', error: 'secondary' };
+      const cls = map[s] || 'secondary';
+      return '<span class="badge bg-' + cls + '">' + (s || '-') + '</span>';
+    }
+
+    async function runScan(){
+      const types = getSelectedTypes();
+      const limit = parseInt(document.getElementById('ldLimit').value || '25');
+      const modes = selectedModes();
+      const crawl = {
+        depth: parseInt(document.getElementById('ld-crawl-depth')?.value || '2', 10),
+        pages: parseInt(document.getElementById('ld-crawl-pages')?.value || '30', 10),
+        start_urls: (document.getElementById('ld-crawl-starts')?.value || '/').split(',').map(s=>s.trim()).filter(Boolean)
+      };
+      if (modes.includes('database') && types.length === 0) { alert('Select at least one lead type.'); return; }
+
+      document.getElementById('ldSpinner').style.display = 'block';
+      document.getElementById('ldBody').innerHTML = '';
+      try {
+        const res = await fetch('/admin/link-doctor/scan', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_types: types, limit, mode: modes, crawl })
+        });
+        const data = await res.json();
+        document.getElementById('ldSpinner').style.display = 'none';
+        if (!data.success) { alert('Scan failed: ' + data.message); return; }
+        ldResults = data.results || [];
+        renderResults(ldResults);
+        document.getElementById('ldCount').textContent = (ldResults.length) + ' results';
+      } catch (e) {
+        document.getElementById('ldSpinner').style.display = 'none';
+        console.error(e); alert('Scan failed.');
+      }
+    }
+
+    function renderResults(list){
+      const tbody = document.getElementById('ldBody');
+      tbody.innerHTML = '';
+      if (!list.length){
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center p-4">No results.</td></tr>';
+        return;
+      }
+      list.forEach(r => {
+        const tr = document.createElement('tr');
+        const finalUrl = r.final_url || '-';
+        const http = (r.http_status === null || r.http_status === undefined) ? '-' : r.http_status;
+        tr.innerHTML = ''+
+          '<td><input type="checkbox" class="ld-row-select" data-id="'+ (r.id||0) +'" data-type="'+ (r.type||'') +'"></td>'+
+          '<td>'+(r.id||0)+'</td>'+
+          '<td>'+ typeBadge(r.type) +'</td>'+
+          '<td class="text-truncate" style="max-width:240px" title="'+ (r.title||'') +'">'+ (r.title||'-') +'</td>'+
+          '<td class="text-truncate" style="max-width:280px"><a href="'+ (r.url||'#') +'" target="_blank" rel="noopener" title="'+ (r.url||'') +'">'+ (r.url||'-') +'</a></td>'+
+          '<td class="text-truncate" style="max-width:240px" title="'+ (r.source||'') +'">'+ (r.source||'-') +'</td>'+
+          '<td>'+ statusBadge(r.status) +'</td>'+
+          '<td>'+ http +'</td>'+
+          '<td class="text-truncate" style="max-width:280px" title="'+ finalUrl +'">'+ finalUrl +'</td>'+
+          '<td>'+
+            (r.type==='federal' ? '<button class="btn btn-sm btn-outline-primary" onclick="repairOne('+ (r.id||0) +', \''+ (r.type||'') +'\')">Repair</button>' : '')+
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.toggleAll = function(cb){
+      document.querySelectorAll('.ld-row-select').forEach(el => el.checked = cb.checked);
+    }
+
+    function getSelectedRows(){
+      const rows = [];
+      document.querySelectorAll('.ld-row-select:checked').forEach(el => {
+        rows.push({ id: parseInt(el.dataset.id, 10), type: el.dataset.type });
+      });
+      return rows;
+    }
+
+    window.repairSelected = async function(){
+      const rows = getSelectedRows();
+      if (!rows.length){ alert('Select at least one row.'); return; }
+      if (!confirm('Attempt auto-repair for '+rows.length+' item(s)?\n\nFederal: set to canonical notice URL if possible; Others: try https upgrade.')) return;
+      try {
+        const res = await fetch('/admin/link-doctor/repair', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: rows, action: 'repair' })
+        });
+        const data = await res.json();
+        if (!data.success) { alert('Repair failed: ' + (data.message||'Unknown')); return; }
+        alert('Repaired '+(data.repaired||0)+' item(s).');
+        runScan();
+      } catch(e){ console.error(e); alert('Repair failed.'); }
+    }
+
+    window.clearSelected = async function(){
+      const rows = getSelectedRows();
+      if (!rows.length){ alert('Select at least one row.'); return; }
+      if (!confirm('Clear URL field for '+rows.length+' item(s)?\n\nThis will set the URL to NULL.')) return;
+      try {
+        const res = await fetch('/admin/link-doctor/repair', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: rows, action: 'clear' })
+        });
+        const data = await res.json();
+        if (!data.success) { alert('Clear failed: ' + (data.message||'Unknown')); return; }
+        alert('Cleared '+(data.cleared||0)+' item(s).');
+        runScan();
+      } catch(e){ console.error(e); alert('Clear failed.'); }
+    }
+
+    window.repairOne = async function(id, type){
+      try {
+        const res = await fetch('/admin/link-doctor/repair', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: [{ id: parseInt(id,10), type }], action: 'repair' })
+        });
+        const data = await res.json();
+        if (!data.success) { alert('Repair failed: ' + (data.message||'Unknown')); return; }
+        runScan();
+      } catch(e){ console.error(e); alert('Repair failed.'); }
+    }
+
+    document.getElementById('ld-scan').addEventListener('click', runScan);
+  })();
+</script>

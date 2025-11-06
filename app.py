@@ -10831,6 +10831,417 @@ Only respond with the JSON array, no other text."""
             'message': str(e)
         }), 500
 
+@app.route('/admin/link-doctor/scan', methods=['POST'])
+@login_required
+@admin_required
+def admin_link_doctor_scan():
+    """Fast HTTP-based link checker for multiple lead types (no AI),
+    with optional template scan and shallow site crawl for public pages.
+    
+    Request JSON shape:
+    {
+        lead_types: ['federal','supply','government','contract','commercial'],
+        limit: 25,
+        mode: ['database','templates','crawl'],
+        crawl: { depth: 2, pages: 30, start_urls: ["/"] }
+    }
+    """
+    try:
+        import re
+        from bs4 import BeautifulSoup
+        import requests
+        from urllib.parse import urljoin, urlparse
+
+        data = request.get_json(silent=True) or {}
+        lead_types = data.get('lead_types', ['federal'])
+        limit = int(data.get('limit', 25))
+        mode = data.get('mode', ['database'])
+        crawl_opts = data.get('crawl', {}) or {}
+        max_depth = int(crawl_opts.get('depth', 2))
+        max_pages = int(crawl_opts.get('pages', 30))
+        start_urls = crawl_opts.get('start_urls') or ['/']
+
+        results = []
+
+        def check_url(url: str):
+            try:
+                # Basic normalization
+                if url and not url.startswith(('http://', 'https://')):
+                    url_to_check = 'https://' + url
+                else:
+                    url_to_check = url
+
+                # Quick HEAD, follow redirects; fallback to GET if method not allowed
+                try:
+                    r = requests.head(url_to_check, allow_redirects=True, timeout=8)
+                    status = r.status_code
+                    final_url = r.url
+                except requests.exceptions.RequestException:
+                    r = requests.get(url_to_check, allow_redirects=True, timeout=10, stream=True)
+                    status = r.status_code
+                    final_url = r.url
+
+                if 200 <= status < 300:
+                    return {'status': 'ok', 'http_status': status, 'final_url': final_url}
+                if 300 <= status < 400:
+                    return {'status': 'redirect', 'http_status': status, 'final_url': final_url}
+                return {'status': 'broken', 'http_status': status, 'final_url': final_url}
+            except requests.exceptions.Timeout:
+                return {'status': 'timeout', 'http_status': None, 'final_url': None}
+            except Exception as e:
+                return {'status': 'error', 'http_status': None, 'final_url': None, 'reason': str(e)}
+
+        # Database URL checks
+        if 'database' in mode or mode == []:
+            # Federal contracts
+            if 'federal' in lead_types:
+                rows = db.session.execute(text(
+                "SELECT id, title, agency, sam_gov_url FROM federal_contracts "
+                "WHERE sam_gov_url IS NOT NULL AND sam_gov_url != '' "
+                "ORDER BY posted_date DESC NULLS LAST LIMIT :limit"
+            ), {'limit': limit}).fetchall()
+            for r in rows:
+                chk = check_url(r.sam_gov_url)
+                results.append({
+                    'id': r.id, 'type': 'federal', 'title': r.title, 'agency': r.agency,
+                    'url': r.sam_gov_url, 'source': 'database:federal_contracts', **chk
+                })
+
+            # Supply contracts
+            if 'supply' in lead_types:
+                rows = db.session.execute(text(
+                "SELECT id, title, agency, website_url FROM supply_contracts "
+                "WHERE status = 'open' AND website_url IS NOT NULL AND website_url != '' "
+                "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+            ), {'limit': limit}).fetchall()
+            for r in rows:
+                chk = check_url(r.website_url)
+                results.append({
+                    'id': r.id, 'type': 'supply', 'title': r.title, 'agency': r.agency,
+                    'url': r.website_url, 'source': 'database:supply_contracts', **chk
+                })
+
+            # Government contracts (if table exists)
+            if 'government' in lead_types:
+                try:
+                    rows = db.session.execute(text(
+                    "SELECT id, title, agency, website_url FROM government_contracts "
+                    "WHERE website_url IS NOT NULL AND website_url != '' "
+                    "ORDER BY posted_date DESC NULLS LAST LIMIT :limit"
+                    ), {'limit': limit}).fetchall()
+                    for r in rows:
+                        chk = check_url(r.website_url)
+                        results.append({
+                            'id': r.id, 'type': 'government', 'title': r.title, 'agency': r.agency,
+                            'url': r.website_url, 'source': 'database:government_contracts', **chk
+                        })
+                except Exception as e:
+                    print(f"Link Doctor: government_contracts not available or error: {e}")
+
+            # Regular contracts
+            if 'contract' in lead_types:
+                rows = db.session.execute(text(
+                "SELECT id, title, agency, website_url FROM contracts "
+                "WHERE website_url IS NOT NULL AND website_url != '' "
+                "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+            ), {'limit': limit}).fetchall()
+            for r in rows:
+                chk = check_url(r.website_url)
+                results.append({
+                    'id': r.id, 'type': 'contract', 'title': r.title, 'agency': r.agency,
+                    'url': r.website_url, 'source': 'database:contracts', **chk
+                })
+
+            # Commercial opportunities (if a website column exists)
+            if 'commercial' in lead_types:
+                try:
+                    rows = db.session.execute(text(
+                    "SELECT id, business_name as title, location as agency, website as website_url FROM commercial_opportunities "
+                    "WHERE website IS NOT NULL AND website != '' "
+                    "ORDER BY created_at DESC NULLS LAST LIMIT :limit"
+                    ), {'limit': limit}).fetchall()
+                    for r in rows:
+                        chk = check_url(r.website_url)
+                        results.append({
+                            'id': r.id, 'type': 'commercial', 'title': r.title, 'agency': r.agency,
+                            'url': r.website_url, 'source': 'database:commercial_opportunities', **chk
+                        })
+                except Exception as e:
+                    print(f"Link Doctor: commercial_opportunities scan error: {e}")
+
+        # Template static external links scan
+        if 'templates' in mode:
+            try:
+                templates_root = os.path.join(os.path.dirname(__file__), 'templates')
+                collected = []
+                for root, _, files in os.walk(templates_root):
+                    for fname in files:
+                        if not fname.endswith('.html'):
+                            continue
+                        fpath = os.path.join(root, fname)
+                        try:
+                            with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
+                                html = f.read()
+                            # Only extract absolute http(s) to avoid unresolved Jinja url_for
+                            soup = BeautifulSoup(html, 'lxml')
+                            def add_url(u, kind):
+                                if not u:
+                                    return
+                                if isinstance(u, str) and u.strip().startswith(('http://', 'https://')):
+                                    collected.append((u.strip(), fpath, kind))
+                            for a in soup.find_all('a'):
+                                add_url(a.get('href'), 'a')
+                            for l in soup.find_all('link'):
+                                add_url(l.get('href'), 'link')
+                            for s in soup.find_all('script'):
+                                add_url(s.get('src'), 'script')
+                            for img in soup.find_all('img'):
+                                add_url(img.get('src'), 'img')
+                        except Exception as ee:
+                            print(f"Template scan error {fpath}: {ee}")
+                # Deduplicate
+                seen = set()
+                for url, source_file, kind in collected:
+                    if url in seen:
+                        continue
+                    seen.add(url)
+                    chk = check_url(url)
+                    results.append({
+                        'id': 0, 'type': 'website', 'title': f'{kind} link in template', 'agency': '-',
+                        'url': url, 'source': source_file.replace(templates_root + os.sep, 'templates/'), **chk
+                    })
+                    if len(seen) >= max(1, limit):
+                        break
+            except Exception as e:
+                print(f"Template link scan failed: {e}")
+
+        # Public site crawl (shallow)
+        if 'crawl' in mode:
+            try:
+                base = request.host_url.rstrip('/')
+                same_host = urlparse(base).netloc
+                q = []
+                visited_pages = set()
+                # seed
+                for s in start_urls:
+                    full = s if s.startswith(('http://', 'https://')) else urljoin(base + '/', s)
+                    q.append((full, 0))
+                while q and len(visited_pages) < max_pages:
+                    url, depth = q.pop(0)
+                    if url in visited_pages or depth > max_depth:
+                        continue
+                    visited_pages.add(url)
+                    # fetch page
+                    try:
+                        resp = requests.get(url, timeout=8, allow_redirects=True)
+                        page_status = resp.status_code
+                        # Record page itself
+                        results.append({
+                            'id': 0, 'type': 'website', 'title': 'page', 'agency': '-', 'url': url,
+                            'source': 'crawl', 'status': 'ok' if 200 <= page_status < 300 else 'broken',
+                            'http_status': page_status, 'final_url': resp.url
+                        })
+                        if 'text/html' in (resp.headers.get('Content-Type') or '') and depth < max_depth:
+                            soup = BeautifulSoup(resp.text, 'lxml')
+                            links = []
+                            for a in soup.find_all('a'):
+                                href = a.get('href')
+                                if href:
+                                    links.append(href)
+                            # assets too
+                            for tag, attr in [(soup.find_all('img'), 'src'), (soup.find_all('script'), 'src'), (soup.find_all('link'), 'href')]:
+                                for t in tag:
+                                    u = t.get(attr)
+                                    if u:
+                                        links.append(u)
+                            # normalize and schedule/check
+                            for l in links:
+                                # Build absolute
+                                absu = l
+                                if not l.startswith(('http://', 'https://')):
+                                    absu = urljoin(resp.url, l)
+                                parsed = urlparse(absu)
+                                # Check and record link target quickly
+                                chk = check_url(absu)
+                                results.append({
+                                    'id': 0, 'type': 'website', 'title': 'linked', 'agency': '-', 'url': absu,
+                                    'source': url, **chk
+                                })
+                                # Enqueue only same-host HTML pages
+                                if parsed.netloc == same_host and parsed.scheme in ('http', 'https'):
+                                    if absu not in visited_pages and depth + 1 <= max_depth:
+                                        q.append((absu, depth + 1))
+                        # throttle omitted (short crawl)
+                    except Exception as ce:
+                        results.append({
+                            'id': 0, 'type': 'website', 'title': 'page', 'agency': '-', 'url': url,
+                            'source': 'crawl', 'status': 'error', 'http_status': None, 'final_url': None,
+                            'reason': str(ce)
+                        })
+            except Exception as e:
+                print(f"Crawl failed: {e}")
+
+        return jsonify({'success': True, 'results': results, 'count': len(results)})
+    except Exception as e:
+        print(f"Error in Link Doctor scan: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/link-doctor/repair', methods=['POST'])
+@login_required
+@admin_required
+def admin_link_doctor_repair():
+    """Attempt to repair or clear URLs for selected items.
+
+    - action = 'repair':
+        * federal: prefer canonical https://sam.gov/opp/{notice_id}/view if notice_id exists,
+                   else build resilient search URL via _build_sam_search_url(naics_code, city, 'VA')
+        * others: try simple https upgrade/trim if present
+    - action = 'clear': set URL field to NULL
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        items = data.get('items', [])
+        action = data.get('action', 'repair')
+        repaired = 0
+        cleared = 0
+
+        for it in items:
+            lead_id = int(it.get('id'))
+            lead_type = it.get('type')
+
+            if lead_type == 'federal':
+                # Fetch fields
+                row = db.session.execute(text(
+                    "SELECT notice_id, naics_code, location FROM federal_contracts WHERE id = :id"
+                ), {'id': lead_id}).fetchone()
+                if not row:
+                    continue
+                if action == 'clear':
+                    db.session.execute(text(
+                        "UPDATE federal_contracts SET sam_gov_url = NULL WHERE id = :id"
+                    ), {'id': lead_id})
+                    cleared += 1
+                    continue
+                # repair
+                notice_id = (row.notice_id or '').strip() if hasattr(row, 'notice_id') else (row[0] or '').strip()
+                naics_code = row.naics_code if hasattr(row, 'naics_code') else row[1]
+                location = row.location if hasattr(row, 'location') else row[2]
+                if notice_id:
+                    new_url = f"https://sam.gov/opp/{notice_id}/view"
+                else:
+                    city = None
+                    try:
+                        # Attempt to derive city from location like "Norfolk, VA"
+                        if location and ',' in location:
+                            city = location.split(',')[0].strip()
+                    except Exception:
+                        city = None
+                    new_url = _build_sam_search_url(naics_code=naics_code, city=city, state='VA')
+                db.session.execute(text(
+                    "UPDATE federal_contracts SET sam_gov_url = :u WHERE id = :id"
+                ), {'u': new_url, 'id': lead_id})
+                repaired += 1
+
+            elif lead_type == 'supply':
+                if action == 'clear':
+                    db.session.execute(text(
+                        "UPDATE supply_contracts SET website_url = NULL WHERE id = :id"
+                    ), {'id': lead_id})
+                    cleared += 1
+                else:
+                    # best-effort https upgrade/trim
+                    row = db.session.execute(text(
+                        "SELECT website_url FROM supply_contracts WHERE id = :id"
+                    ), {'id': lead_id}).fetchone()
+                    if not row:
+                        continue
+                    url = (row.website_url if hasattr(row, 'website_url') else row[0]) or ''
+                    url = url.strip()
+                    if url and not url.startswith(('http://', 'https://')):
+                        url = 'https://' + url
+                    url = url.replace('http://', 'https://')
+                    db.session.execute(text(
+                        "UPDATE supply_contracts SET website_url = :u WHERE id = :id"
+                    ), {'u': url, 'id': lead_id})
+                    repaired += 1
+
+            elif lead_type == 'government':
+                if action == 'clear':
+                    db.session.execute(text(
+                        "UPDATE government_contracts SET website_url = NULL WHERE id = :id"
+                    ), {'id': lead_id})
+                    cleared += 1
+                else:
+                    row = db.session.execute(text(
+                        "SELECT website_url FROM government_contracts WHERE id = :id"
+                    ), {'id': lead_id}).fetchone()
+                    if not row:
+                        continue
+                    url = (row.website_url if hasattr(row, 'website_url') else row[0]) or ''
+                    url = url.strip()
+                    if url and not url.startswith(('http://', 'https://')):
+                        url = 'https://' + url
+                    url = url.replace('http://', 'https://')
+                    db.session.execute(text(
+                        "UPDATE government_contracts SET website_url = :u WHERE id = :id"
+                    ), {'u': url, 'id': lead_id})
+                    repaired += 1
+
+            elif lead_type == 'contract':
+                if action == 'clear':
+                    db.session.execute(text(
+                        "UPDATE contracts SET website_url = NULL WHERE id = :id"
+                    ), {'id': lead_id})
+                    cleared += 1
+                else:
+                    row = db.session.execute(text(
+                        "SELECT website_url FROM contracts WHERE id = :id"
+                    ), {'id': lead_id}).fetchone()
+                    if not row:
+                        continue
+                    url = (row.website_url if hasattr(row, 'website_url') else row[0]) or ''
+                    url = url.strip()
+                    if url and not url.startswith(('http://', 'https://')):
+                        url = 'https://' + url
+                    url = url.replace('http://', 'https://')
+                    db.session.execute(text(
+                        "UPDATE contracts SET website_url = :u WHERE id = :id"
+                    ), {'u': url, 'id': lead_id})
+                    repaired += 1
+
+            elif lead_type == 'commercial':
+                if action == 'clear':
+                    db.session.execute(text(
+                        "UPDATE commercial_opportunities SET website = NULL WHERE id = :id"
+                    ), {'id': lead_id})
+                    cleared += 1
+                else:
+                    row = db.session.execute(text(
+                        "SELECT website FROM commercial_opportunities WHERE id = :id"
+                    ), {'id': lead_id}).fetchone()
+                    if not row:
+                        continue
+                    url = (row.website if hasattr(row, 'website') else row[0]) or ''
+                    url = url.strip()
+                    if url and not url.startswith(('http://', 'https://')):
+                        url = 'https://' + url
+                    url = url.replace('http://', 'https://')
+                    db.session.execute(text(
+                        "UPDATE commercial_opportunities SET website = :u WHERE id = :id"
+                    ), {'u': url, 'id': lead_id})
+                    repaired += 1
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+        return jsonify({'success': True, 'repaired': repaired, 'cleared': cleared})
+    except Exception as e:
+        print(f"Error in Link Doctor repair: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/admin/populate-missing-urls', methods=['GET', 'POST'])
 @login_required
 @admin_required
