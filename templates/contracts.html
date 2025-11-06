@@ -13,25 +13,9 @@
         <p class="lead text-white fs-3">Virginia government cleaning and janitorial service opportunities</p>
         <div class="row justify-content-center mt-4">
             <div class="col-md-8">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-landmark"></i><br>
-                            <strong>30+</strong> Contracts
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-check-circle"></i><br>
-                            Included with subscription
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="badge bg-success text-white p-3 fs-6 w-100">
-                            <i class="fas fa-unlock"></i><br>
-                            <strong>Full Access</strong>
-                        </div>
-                    </div>
+                <div class="alert alert-warning text-dark mb-0">
+                    <h5 class="mb-2"><i class="fas fa-tools me-2"></i>Currently Under Development</h5>
+                    <p class="mb-0">We're building verified integrations with Virginia city procurement portals. <strong>Federal contracts</strong> and <strong>600+ supply buyers</strong> are available now!</p>
                 </div>
             </div>
         </div>
@@ -228,8 +212,71 @@
             {% include 'components/pagination.html' %}
         </div>
     {% else %}
-        <div class="alert alert-warning">
-            No contracts found matching your criteria. Try adjusting your filters.
+        <!-- Empty State - No Contracts Available -->
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-clipboard-list fa-5x text-muted opacity-50"></i>
+                        </div>
+                        <h2 class="mb-3">Local & State Contracts Coming Soon</h2>
+                        <p class="lead text-muted mb-4">We're currently building verified contract sources for Virginia state and local governments.</p>
+                        
+                        <div class="alert alert-info text-start mx-auto" style="max-width: 600px;">
+                            <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>What We're Working On:</h5>
+                            <ul class="mb-0">
+                                <li>Direct integration with Virginia city procurement portals</li>
+                                <li>Real-time contract notifications from municipal websites</li>
+                                <li>Verified contract data from official government sources</li>
+                                <li>Coverage for Hampton, Norfolk, Virginia Beach, Newport News, and more</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="row mt-5">
+                            <div class="col-md-4">
+                                <div class="p-4 bg-light rounded">
+                                    <i class="fas fa-flag-usa fa-2x text-primary mb-3"></i>
+                                    <h5>Federal Contracts</h5>
+                                    <p class="small text-muted mb-3">Access federal opportunities from SAM.gov</p>
+                                    <a href="{{ url_for('federal_contracts') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-arrow-right me-2"></i>View Federal Contracts
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-4 bg-light rounded">
+                                    <i class="fas fa-box fa-2x text-success mb-3"></i>
+                                    <h5>Supply Buyers</h5>
+                                    <p class="small text-muted mb-3">600+ verified buyers nationwide</p>
+                                    <a href="{{ url_for('quick_wins') }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-arrow-right me-2"></i>View Supply Contracts
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-4 bg-light rounded">
+                                    <i class="fas fa-building fa-2x text-warning mb-3"></i>
+                                    <h5>Commercial Leads</h5>
+                                    <p class="small text-muted mb-3">Private sector opportunities</p>
+                                    <a href="{{ url_for('commercial_leads') }}" class="btn btn-warning btn-sm text-dark">
+                                        <i class="fas fa-arrow-right me-2"></i>View Commercial Leads
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5 p-4 bg-success bg-opacity-10 rounded">
+                            <h5 class="text-success mb-3"><i class="fas fa-bell me-2"></i>Get Notified When Local Contracts Launch</h5>
+                            <p class="mb-3">Be the first to know when we add Virginia state and local government contracts</p>
+                            <a href="{{ url_for('subscription') }}" class="btn btn-success">
+                                <i class="fas fa-crown me-2"></i>Subscribe Now - $497/year
+                            </a>
+                            <p class="small text-muted mt-3 mb-0">Premium members get instant access to all new contracts as they're added</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     {% endif %}
 {% include 'components/disclaimer.html' %}
