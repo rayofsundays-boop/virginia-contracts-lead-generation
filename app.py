@@ -3199,9 +3199,13 @@ def signin():
     
     return render_template('signin.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     """Alternative login endpoint for direct POST requests"""
+    # Redirect GET requests to /auth (login form page)
+    if request.method == 'GET':
+        return redirect(url_for('auth'))
+    
     username = request.form.get('username')
     password = request.form.get('password')
     
