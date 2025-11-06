@@ -11372,20 +11372,21 @@ def admin_populate_missing_urls():
                     'type': 'supply'
                 })
         
-        if 'government' in lead_types:
-            gov = db.session.execute(text(
-                "SELECT id, title, agency, location, naics_code, description "
-                "FROM government_contracts "
-                "WHERE (website_url IS NULL OR website_url = '') "
-                "ORDER BY posted_date DESC "
-                "LIMIT :limit"
-            ), {'limit': limit}).fetchall()
-            for lead in gov:
-                leads_data.append({
-                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
-                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
-                    'type': 'government'
-                })
+        # Skip government_contracts - table does not exist in production schema
+        # if 'government' in lead_types:
+        #     gov = db.session.execute(text(
+        #         "SELECT id, title, agency, location, naics_code, description "
+        #         "FROM government_contracts "
+        #         "WHERE (website_url IS NULL OR website_url = '') "
+        #         "ORDER BY posted_date DESC "
+        #         "LIMIT :limit"
+        #     ), {'limit': limit}).fetchall()
+        #     for lead in gov:
+        #         leads_data.append({
+        #             'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+        #             'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+        #             'type': 'government'
+        #         })
         
         if not leads_data:
             return jsonify({'success': False, 'message': 'No leads without URLs found'}), 404
@@ -11567,22 +11568,22 @@ def auto_populate_missing_urls_background():
                     'type': 'supply'
                 })
             
-            # Government contracts
-            gov = db.session.execute(text(
-                "SELECT id, title, agency, location, naics_code, description "
-                "FROM government_contracts "
-                "WHERE (website_url IS NULL OR website_url = '') "
-                "AND posted_date >= CURRENT_DATE - INTERVAL '30 days' "
-                "ORDER BY posted_date DESC "
-                "LIMIT 5"
-            )).fetchall()
-            
-            for lead in gov:
-                leads_data.append({
-                    'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
-                    'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
-                    'type': 'government'
-                })
+            # Skip government_contracts - table does not exist in production schema
+            # gov = db.session.execute(text(
+            #     "SELECT id, title, agency, location, naics_code, description "
+            #     "FROM government_contracts "
+            #     "WHERE (website_url IS NULL OR website_url = '') "
+            #     "AND posted_date >= CURRENT_DATE - INTERVAL '30 days' "
+            #     "ORDER BY posted_date DESC "
+            #     "LIMIT 5"
+            # )).fetchall()
+            # 
+            # for lead in gov:
+            #     leads_data.append({
+            #         'id': lead[0], 'title': lead[1], 'agency': lead[2], 'location': lead[3],
+            #         'naics': lead[4], 'description': lead[5][:300] if lead[5] else '',
+            #         'type': 'government'
+            #     })
             
             if not leads_data:
                 print("✅ No leads without URLs found - all up to date!")
@@ -11731,20 +11732,21 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
                         'type': 'supply'
                     })
             
-            elif lead_type == 'government':
-                leads = db.session.execute(text(
-                    "SELECT id, title, agency, location, naics_code, description "
-                    "FROM government_contracts "
-                    "WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')"
-                ), {'ids': lead_ids}).fetchall()
-                
-                for lead in leads:
-                    leads_data.append({
-                        'id': lead[0], 'title': lead[1], 'agency': lead[2],
-                        'location': lead[3], 'naics': lead[4],
-                        'description': lead[5][:300] if lead[5] else '',
-                        'type': 'government'
-                    })
+            # Skip government_contracts - table does not exist in production schema
+            # elif lead_type == 'government':
+            #     leads = db.session.execute(text(
+            #         "SELECT id, title, agency, location, naics_code, description "
+            #         "FROM government_contracts "
+            #         "WHERE id = ANY(:ids) AND (website_url IS NULL OR website_url = '')"
+            #     ), {'ids': lead_ids}).fetchall()
+            #     
+            #     for lead in leads:
+            #         leads_data.append({
+            #             'id': lead[0], 'title': lead[1], 'agency': lead[2],
+            #             'location': lead[3], 'naics': lead[4],
+            #             'description': lead[5][:300] if lead[5] else '',
+            #             'type': 'government'
+            #         })
             
             if not leads_data:
                 return
