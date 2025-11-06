@@ -15546,13 +15546,24 @@ def community_forum():
 
         res_where_sql = ' AND '.join(res_where)
 
-        # Counts for pagination
-        comm_count = db.session.execute(text(f'''
-            SELECT COUNT(1) FROM commercial_lead_requests WHERE {comm_where_sql}
-        '''), comm_params).scalar()
-        res_count = db.session.execute(text(f'''
-            SELECT COUNT(1) FROM residential_leads WHERE {res_where_sql}
-        '''), res_params).scalar()
+        # Counts for pagination (with error handling for missing tables)
+        try:
+            comm_count = db.session.execute(text(f'''
+                SELECT COUNT(1) FROM commercial_lead_requests WHERE {comm_where_sql}
+            '''), comm_params).scalar()
+        except Exception as e:
+            print(f"Error counting commercial lead requests: {e}")
+            db.session.rollback()
+            comm_count = 0
+        
+        try:
+            res_count = db.session.execute(text(f'''
+                SELECT COUNT(1) FROM residential_leads WHERE {res_where_sql}
+            '''), res_params).scalar()
+        except Exception as e:
+            print(f"Error counting residential leads: {e}")
+            db.session.rollback()
+            res_count = 0
 
         # Pages
         def _pages(count):
@@ -15571,37 +15582,58 @@ def community_forum():
         residential_requests = []
 
         if req_type in ('all', 'commercial'):
-            commercial_requests = db.session.execute(text(f'''
-                SELECT id, business_name, contact_name, city, business_type, 
-                       square_footage, frequency, services_needed, budget_range, 
-                       urgency, created_at
-                FROM commercial_lead_requests 
-                WHERE {comm_where_sql}
-                ORDER BY created_at DESC
-                LIMIT :comm_limit OFFSET :comm_offset
-            '''), {**comm_params, 'comm_limit': per_page, 'comm_offset': comm_offset}).fetchall()
+            try:
+                commercial_requests = db.session.execute(text(f'''
+                    SELECT id, business_name, contact_name, city, business_type, 
+                           square_footage, frequency, services_needed, budget_range, 
+                           urgency, created_at
+                    FROM commercial_lead_requests 
+                    WHERE {comm_where_sql}
+                    ORDER BY created_at DESC
+                    LIMIT :comm_limit OFFSET :comm_offset
+                '''), {**comm_params, 'comm_limit': per_page, 'comm_offset': comm_offset}).fetchall()
+            except Exception as e:
+                print(f"Error fetching commercial lead requests: {e}")
+                db.session.rollback()
+                commercial_requests = []
 
         if req_type in ('all', 'residential'):
-            residential_requests = db.session.execute(text(f'''
-                SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
-                       square_footage, cleaning_frequency, services_needed, 
-                       estimated_value, created_at
-                FROM residential_leads 
+            try:
+                residential_requests = db.session.execute(text(f'''
+                    SELECT id, homeowner_name, city, property_type, bedrooms, bathrooms,
+                           square_footage, cleaning_frequency, services_needed, 
+                           estimated_value, created_at
+                    FROM residential_leads 
                 WHERE {res_where_sql}
                 ORDER BY created_at DESC
                 LIMIT :res_limit OFFSET :res_offset
             '''), {**res_params, 'res_limit': per_page, 'res_offset': res_offset}).fetchall()
+            except Exception as e:
+                print(f"Error fetching residential leads: {e}")
+                db.session.rollback()
+                residential_requests = []
 
-        # City options (distinct)
-        comm_cities_rows = db.session.execute(text('''
-            SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''
-        ''')).fetchall()
-        comm_cities = [r.city for r in comm_cities_rows]
+        # City options (distinct) - with error handling
+        comm_cities = []
+        res_cities = []
         
-        res_cities_rows = db.session.execute(text('''
-            SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''
-        ''')).fetchall()
-        res_cities = [r.city for r in res_cities_rows]
+        try:
+            comm_cities_rows = db.session.execute(text('''
+                SELECT DISTINCT city FROM commercial_lead_requests WHERE status='approved' AND city IS NOT NULL AND city <> ''
+            ''')).fetchall()
+            comm_cities = [r.city for r in comm_cities_rows]
+        except Exception as e:
+            print(f"Error fetching commercial cities: {e}")
+            db.session.rollback()
+        
+        try:
+            res_cities_rows = db.session.execute(text('''
+                SELECT DISTINCT city FROM residential_leads WHERE status='approved' AND city IS NOT NULL AND city <> ''
+            ''')).fetchall()
+            res_cities = [r.city for r in res_cities_rows]
+        except Exception as e:
+            print(f"Error fetching residential cities: {e}")
+            db.session.rollback()
         
         all_cities = sorted({c for c in comm_cities + res_cities if isinstance(c, str) and c.strip()})
 
