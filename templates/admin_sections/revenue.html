@@ -140,8 +140,11 @@
                             <strong>{{ revenue_stats.active_paid_users|default(0) }}</strong>
                         </div>
                         <div class="progress" style="height: 25px;">
-                            <div class="progress-bar bg-success" style="width: {{ (revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100 }}%">
-                                {{ ((revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%
+                            {% set total = revenue_stats.total_users|default(0) %}
+                            {% set paid = revenue_stats.active_paid_users|default(0) %}
+                            {% set pct = (paid / total * 100) if total > 0 else 0 %}
+                            <div class="progress-bar bg-success" style="width: {{ pct }}%">
+                                {{ pct|round(1) }}%
                             </div>
                         </div>
                     </div>
@@ -151,15 +154,17 @@
                             <strong>{{ revenue_stats.free_users|default(0) }}</strong>
                         </div>
                         <div class="progress" style="height: 25px;">
-                            <div class="progress-bar bg-info" style="width: {{ (revenue_stats.free_users|default(0) / (revenue_stats.total_users|default(1))) * 100 }}%">
-                                {{ ((revenue_stats.free_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%
+                            {% set free = revenue_stats.free_users|default(0) %}
+                            {% set free_pct = (free / total * 100) if total > 0 else 0 %}
+                            <div class="progress-bar bg-info" style="width: {{ free_pct }}%">
+                                {{ free_pct|round(1) }}%
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1">
                             <span>Conversion Rate</span>
-                            <strong>{{ ((revenue_stats.active_paid_users|default(0) / (revenue_stats.total_users|default(1))) * 100)|round(1) }}%</strong>
+                            <strong>{{ pct|round(1) }}%</strong>
                         </div>
                     </div>
                 </div>
@@ -183,7 +188,13 @@
                 <div class="col-md-4 mb-3">
                     <div class="border-start border-primary border-4 ps-3">
                         <h6 class="text-muted mb-1">Average Revenue Per User</h6>
-                        <h3 class="mb-0 text-primary">${{ (revenue_stats.total_revenue|default(0) / revenue_stats.active_paid_users|default(1))|round(2) }}</h3>
+                        <h3 class="mb-0 text-primary">
+                            {% if revenue_stats.active_paid_users and revenue_stats.active_paid_users > 0 %}
+                                ${{ (revenue_stats.total_revenue|default(0) / revenue_stats.active_paid_users)|round(2) }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </h3>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
