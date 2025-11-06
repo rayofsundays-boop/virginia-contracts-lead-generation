@@ -1,0 +1,262 @@
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0"><i class="fas fa-file-upload text-primary"></i> Bulk CSV Upload</h2>
+            <p class="text-muted">Import multiple contracts at once using CSV files</p>
+        </div>
+    </div>
+
+    <!-- CSV Upload Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload CSV File
+                </div>
+                <div class="card-body">
+                    <form id="csvUploadForm" enctype="multipart/form-data">
+                        <!-- Contract Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Contract Type</label>
+                            <select class="form-select" id="contractType" name="contract_type" required>
+                                <option value="contracts">Local/State Government Contracts</option>
+                                <option value="federal_contracts">Federal Contracts (SAM.gov)</option>
+                                <option value="supply_contracts">Supply Contracts (Commercial)</option>
+                            </select>
+                            <small class="text-muted">Select the type of contracts in your CSV file</small>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">CSV File</label>
+                            <input type="file" class="form-control" id="csvFile" name="csv_file" accept=".csv" required>
+                            <small class="text-muted">Maximum file size: 10MB</small>
+                        </div>
+
+                        <!-- Upload Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Upload CSV
+                        </button>
+                    </form>
+
+                    <!-- Progress -->
+                    <div id="uploadProgress" class="mt-3" style="display: none;">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <small class="text-muted d-block mt-2">Processing your file...</small>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="uploadResults" class="mt-4" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions & CSV Format Guide -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-info-circle"></i> CSV Format Guide
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2">Required Columns:</h6>
+                    
+                    <!-- Local/State Contracts Format -->
+                    <div id="formatLocalState" class="format-guide">
+                        <p class="mb-1"><strong>Local/State Government Contracts:</strong></p>
+                        <ul class="small">
+                            <li><code>title</code></li>
+                            <li><code>agency</code></li>
+                            <li><code>location</code></li>
+                            <li><code>value</code></li>
+                            <li><code>deadline</code></li>
+                            <li><code>description</code></li>
+                            <li><code>url</code></li>
+                            <li><code>posted_date</code> (optional)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Federal Contracts Format -->
+                    <div id="formatFederal" class="format-guide" style="display: none;">
+                        <p class="mb-1"><strong>Federal Contracts:</strong></p>
+                        <ul class="small">
+                            <li><code>title</code></li>
+                            <li><code>agency</code></li>
+                            <li><code>location</code></li>
+                            <li><code>value</code></li>
+                            <li><code>deadline</code></li>
+                            <li><code>description</code></li>
+                            <li><code>url</code> (SAM.gov URL)</li>
+                            <li><code>notice_id</code></li>
+                            <li><code>naics_code</code></li>
+                            <li><code>posted_date</code> (optional)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Supply Contracts Format -->
+                    <div id="formatSupply" class="format-guide" style="display: none;">
+                        <p class="mb-1"><strong>Supply Contracts:</strong></p>
+                        <ul class="small">
+                            <li><code>title</code></li>
+                            <li><code>agency</code></li>
+                            <li><code>location</code></li>
+                            <li><code>product_category</code></li>
+                            <li><code>estimated_value</code></li>
+                            <li><code>bid_deadline</code></li>
+                            <li><code>description</code></li>
+                            <li><code>website_url</code></li>
+                            <li><code>contact_name</code> (optional)</li>
+                            <li><code>contact_email</code> (optional)</li>
+                            <li><code>contact_phone</code> (optional)</li>
+                            <li><code>is_quick_win</code> (true/false)</li>
+                            <li><code>status</code> (open/closed)</li>
+                            <li><code>posted_date</code> (optional)</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning mt-3 small">
+                        <i class="fas fa-exclamation-triangle"></i> The first row must contain column headers matching these exact names.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample CSV Downloads -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-download"></i> Download Templates
+                </div>
+                <div class="card-body">
+                    <p class="small">Download sample CSV templates:</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="downloadTemplate('contracts')">
+                            <i class="fas fa-file-download"></i> Local/State Template
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="downloadTemplate('federal')">
+                            <i class="fas fa-file-download"></i> Federal Template
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="downloadTemplate('supply')">
+                            <i class="fas fa-file-download"></i> Supply Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show appropriate format guide based on contract type
+document.getElementById('contractType').addEventListener('change', function() {
+    const type = this.value;
+    document.querySelectorAll('.format-guide').forEach(el => el.style.display = 'none');
+    
+    if (type === 'contracts') {
+        document.getElementById('formatLocalState').style.display = 'block';
+    } else if (type === 'federal_contracts') {
+        document.getElementById('formatFederal').style.display = 'block';
+    } else if (type === 'supply_contracts') {
+        document.getElementById('formatSupply').style.display = 'block';
+    }
+});
+
+// Handle CSV upload
+document.getElementById('csvUploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    const fileInput = document.getElementById('csvFile');
+    const contractType = document.getElementById('contractType').value;
+    
+    if (!fileInput.files[0]) {
+        alert('Please select a CSV file');
+        return;
+    }
+    
+    formData.append('csv_file', fileInput.files[0]);
+    formData.append('contract_type', contractType);
+    
+    // Show progress
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('uploadResults').style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-upload-csv', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+        
+        // Show results
+        const resultsDiv = document.getElementById('uploadResults');
+        resultsDiv.style.display = 'block';
+        
+        if (result.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> Upload Successful!</h5>
+                    <p class="mb-0">Successfully imported <strong>${result.inserted}</strong> contracts.</p>
+                    ${result.errors && result.errors.length > 0 ? `
+                        <hr>
+                        <p class="mb-1"><strong>Errors encountered:</strong></p>
+                        <ul class="small mb-0">
+                            ${result.errors.map(err => `<li>${err}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Reset form
+            document.getElementById('csvUploadForm').reset();
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Upload Failed</h5>
+                    <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+        
+        document.getElementById('uploadResults').innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Upload Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+    }
+});
+
+// Download CSV template
+function downloadTemplate(type) {
+    let csvContent = '';
+    
+    if (type === 'contracts') {
+        csvContent = 'title,agency,location,value,deadline,description,url,posted_date\n';
+        csvContent += '"Example Janitorial Services","City of Hampton","Hampton, VA","$50,000","2025-12-31","Cleaning services for city buildings","https://example.com","2025-11-01"';
+    } else if (type === 'federal') {
+        csvContent = 'title,agency,location,value,deadline,description,url,notice_id,naics_code,posted_date\n';
+        csvContent += '"Federal Cleaning Contract","GSA","Washington, DC","$100,000","2025-12-31","GSA cleaning services","https://sam.gov/opp/123/view","123456789","561720","2025-11-01"';
+    } else if (type === 'supply') {
+        csvContent = 'title,agency,location,product_category,estimated_value,bid_deadline,description,website_url,contact_name,contact_email,contact_phone,is_quick_win,status,posted_date\n';
+        csvContent += '"Hospital Cleaning Supplies","Mayo Clinic","Rochester, MN","Healthcare","$800,000","2025-12-31","Medical cleaning supplies","https://www.mayoclinic.org/suppliers","Procurement Dept","supplies@mayo.edu","(507) 284-2511","true","open","2025-11-01"';
+    }
+    
+    // Create download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${type}_template.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>

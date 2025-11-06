@@ -7842,6 +7842,129 @@ def admin_upload_lead():
         print(f"Error uploading lead: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-upload-csv', methods=['POST'])
+@login_required
+@admin_required
+def admin_upload_csv():
+    """Upload CSV file to bulk import contracts"""
+    try:
+        # Check if file is in request
+        if 'csv_file' not in request.files:
+            return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+        
+        file = request.files['csv_file']
+        contract_type = request.form.get('contract_type', 'contracts')  # contracts, federal_contracts, supply_contracts
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+        
+        if not file.filename.endswith('.csv'):
+            return jsonify({'success': False, 'error': 'File must be a CSV'}), 400
+        
+        # Read CSV file
+        import csv
+        import io
+        
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_reader = csv.DictReader(stream)
+        
+        inserted_count = 0
+        errors = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
+            try:
+                # Insert based on contract type
+                if contract_type == 'contracts':
+                    # Local/State Government Contracts
+                    db.session.execute(text('''
+                        INSERT INTO contracts 
+                        (title, agency, location, value, deadline, description, url, posted_date)
+                        VALUES (:title, :agency, :location, :value, :deadline, :description, :url, :posted_date)
+                    '''), {
+                        'title': row.get('title', ''),
+                        'agency': row.get('agency', ''),
+                        'location': row.get('location', ''),
+                        'value': row.get('value', ''),
+                        'deadline': row.get('deadline', ''),
+                        'description': row.get('description', ''),
+                        'url': row.get('url', ''),
+                        'posted_date': row.get('posted_date', datetime.now().strftime('%Y-%m-%d'))
+                    })
+                    
+                elif contract_type == 'federal_contracts':
+                    # Federal Contracts
+                    db.session.execute(text('''
+                        INSERT INTO federal_contracts 
+                        (title, agency, location, value, deadline, description, sam_gov_url, notice_id, 
+                         naics_code, posted_date)
+                        VALUES (:title, :agency, :location, :value, :deadline, :description, :url, :notice_id,
+                                :naics_code, :posted_date)
+                    '''), {
+                        'title': row.get('title', ''),
+                        'agency': row.get('agency', ''),
+                        'location': row.get('location', ''),
+                        'value': row.get('value', ''),
+                        'deadline': row.get('deadline', ''),
+                        'description': row.get('description', ''),
+                        'url': row.get('url', ''),
+                        'notice_id': row.get('notice_id', ''),
+                        'naics_code': row.get('naics_code', '561720'),
+                        'posted_date': row.get('posted_date', datetime.now().strftime('%Y-%m-%d'))
+                    })
+                    
+                elif contract_type == 'supply_contracts':
+                    # Supply Contracts
+                    db.session.execute(text('''
+                        INSERT INTO supply_contracts 
+                        (title, agency, location, product_category, estimated_value, bid_deadline, 
+                         description, website_url, contact_name, contact_email, contact_phone, 
+                         is_quick_win, status, posted_date)
+                        VALUES (:title, :agency, :location, :category, :value, :deadline,
+                                :description, :url, :contact_name, :contact_email, :contact_phone,
+                                :is_quick_win, :status, :posted_date)
+                    '''), {
+                        'title': row.get('title', ''),
+                        'agency': row.get('agency', ''),
+                        'location': row.get('location', ''),
+                        'category': row.get('product_category', 'General Supplies'),
+                        'value': row.get('estimated_value', ''),
+                        'deadline': row.get('bid_deadline', ''),
+                        'description': row.get('description', ''),
+                        'url': row.get('website_url', ''),
+                        'contact_name': row.get('contact_name', ''),
+                        'contact_email': row.get('contact_email', ''),
+                        'contact_phone': row.get('contact_phone', ''),
+                        'is_quick_win': row.get('is_quick_win', 'false').lower() == 'true',
+                        'status': row.get('status', 'open'),
+                        'posted_date': row.get('posted_date', datetime.now().strftime('%Y-%m-%d'))
+                    })
+                
+                inserted_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {row_num}: {str(e)}")
+                continue
+        
+        db.session.commit()
+        
+        result_message = f"Successfully imported {inserted_count} contracts"
+        if errors:
+            result_message += f" ({len(errors)} errors)"
+        
+        return jsonify({
+            'success': True,
+            'message': result_message,
+            'inserted': inserted_count,
+            'errors': errors[:10]  # Return first 10 errors only
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"CSV upload error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-delete-user', methods=['POST'])
 def admin_delete_user():
     """Admin function to delete a user account"""

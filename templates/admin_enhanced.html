@@ -163,6 +163,9 @@ Error: (psycopg.errors.UndefinedTable) relation "commercial_lead_requests" does 
                     <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                         System Tools
                     </div>
+                    <a class="nav-link {% if section == 'upload-csv' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='upload-csv') }}">
+                        <i class="fas fa-file-upload"></i>Upload CSV
+                    </a>
                     <a class="nav-link {% if section == 'manage-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='manage-urls') }}">
                         <i class="fas fa-edit"></i>Manage SAM.gov URLs
                     </a>
@@ -236,6 +239,9 @@ Error: (psycopg.errors.UndefinedTable) relation "commercial_lead_requests" does 
             
             {% elif section == 'manage-admins' %}
             {% include 'admin_sections/manage_admins.html' %}
+            
+            {% elif section == 'upload-csv' %}
+            {% include 'admin_sections/upload_csv.html' %}
             
             {% endif %}
         </div>
