@@ -3168,16 +3168,16 @@ def signin():
         
         # Admin users get paid subscription status and unlimited credits
         if session['is_admin']:
-                session['subscription_status'] = 'paid'  # Force paid status for all admins
-                session['credits_balance'] = 999999  # Unlimited credits for admins
-            else:
-                session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
-            
-            # Show appropriate welcome message
-            if session['is_admin']:
-                flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
-            else:
-                flash(f'Welcome back, {result[4]}! 🎉', 'success')
+            session['subscription_status'] = 'paid'  # Force paid status for all admins
+            session['credits_balance'] = 999999  # Unlimited credits for admins
+        else:
+            session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
+        
+        # Show appropriate welcome message
+        if session['is_admin']:
+            flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
+        else:
+            flash(f'Welcome back, {result[4]}! 🎉', 'success')
             
             return redirect(url_for('customer_leads'))
         else:
