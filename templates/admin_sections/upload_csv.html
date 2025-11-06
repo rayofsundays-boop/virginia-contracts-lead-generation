@@ -6,6 +6,36 @@
         </div>
     </div>
 
+    <!-- Quick Import 600 Buyers -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success border-success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="alert-heading mb-2">
+                            <i class="fas fa-magic"></i> Quick Import: 600 Supply Buyers
+                        </h5>
+                        <p class="mb-0">
+                            Automatically generate and import 600 cleaning supply buyers across all 50 states 
+                            (12 buyer types per state: Government, Education, Healthcare, Hotels, etc.)
+                        </p>
+                    </div>
+                    <button id="import600Btn" class="btn btn-success btn-lg ms-3" onclick="import600Buyers()">
+                        <i class="fas fa-rocket"></i> Import 600 Buyers
+                    </button>
+                </div>
+                <div id="import600Progress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Generating and importing buyers...</small>
+                </div>
+                <div id="import600Results" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- CSV Upload Form -->
     <div class="row">
         <div class="col-lg-8">
@@ -259,4 +289,75 @@ function downloadTemplate(type) {
     a.click();
     window.URL.revokeObjectURL(url);
 }
+
+// Import 600 buyers automatically
+async function import600Buyers() {
+    const btn = document.getElementById('import600Btn');
+    const progressDiv = document.getElementById('import600Progress');
+    const resultsDiv = document.getElementById('import600Results');
+    
+    // Disable button and show progress
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+    progressDiv.style.display = 'block';
+    resultsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-import-600-buyers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        
+        if (result.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> Import Successful!</h5>
+                    <p class="mb-2">Successfully imported <strong>${result.inserted}</strong> supply buyers.</p>
+                    <p class="mb-0"><strong>Total in database:</strong> ${result.total} supply contracts</p>
+                    ${result.errors && result.errors.length > 0 ? `
+                        <hr>
+                        <p class="mb-1"><strong>Errors encountered:</strong></p>
+                        <ul class="small mb-0">
+                            ${result.errors.map(err => `<li>${err}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                    <hr>
+                    <a href="/supply-contracts" class="btn btn-success btn-sm">
+                        <i class="fas fa-eye"></i> View Supply Contracts
+                    </a>
+                </div>
+            `;
+            btn.innerHTML = '<i class="fas fa-check"></i> Import Complete';
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Import Failed</h5>
+                    <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+                </div>
+            `;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Import 600 Buyers';
+        }
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Import Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Import 600 Buyers';
+    }
+}
 </script>
+

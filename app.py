@@ -7966,6 +7966,218 @@ def admin_upload_csv():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-import-600-buyers', methods=['POST'])
+def admin_import_600_buyers():
+    """Generate and import 600 supply buyers directly into database"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    try:
+        # State data for generating contacts
+        STATES = {
+            'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+            'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+            'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+            'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+            'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+            'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+            'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+            'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+            'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+            'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+        }
+        
+        BUYER_TYPES = [
+            ('Facilities Management Department', 'Facilities Management', '$500,000 - $2,000,000'),
+            ('Department of Education', 'Education', '$1,000,000 - $5,000,000'),
+            ('University System Facilities', 'Education', '$800,000 - $3,000,000'),
+            ('Healthcare Network', 'Healthcare', '$1,500,000 - $5,000,000'),
+            ('Hospitality Group', 'Hospitality', '$400,000 - $1,500,000'),
+            ('Commercial Properties', 'Commercial Real Estate', '$600,000 - $2,000,000'),
+            ('Airport Authority', 'Transportation', '$700,000 - $2,500,000'),
+            ('Correctional Facilities', 'Government', '$500,000 - $1,800,000'),
+            ('Port Authority', 'Transportation', '$500,000 - $1,800,000'),
+            ('Senior Living & Care', 'Healthcare', '$600,000 - $2,000,000'),
+            ('Retail Chain HQ', 'Retail', '$1,200,000 - $4,000,000'),
+            ('Manufacturing Plant', 'Manufacturing', '$800,000 - $2,500,000')
+        ]
+        
+        inserted = 0
+        errors = []
+        deadline = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
+        posted_date = datetime.now().strftime('%Y-%m-%d')
+        
+        print(f"🚀 Starting import of 600 supply buyers...")
+        
+        for state_code, state_name in STATES.items():
+            for buyer_type, category, value in BUYER_TYPES:
+                try:
+                    vendor_name = f"{state_name} {buyer_type}"
+                    state_lower = state_name.lower().replace(' ', '')
+                    
+                    # Generate contact info based on buyer type
+                    if 'Facilities Management' in buyer_type:
+                        website = f'https://dgs.{state_code.lower()}.gov'
+                        email = f'facilities@dgs.{state_code.lower()}.gov'
+                        phone = f'({state_code}) State Facilities Office'
+                        contact_name = 'Facilities Director'
+                        description = f'{state_name} Department of General Services - Facilities Management Division. Handles statewide procurement for cleaning supplies, janitorial services, and facility maintenance products.'
+                    
+                    elif 'Department of Education' in buyer_type:
+                        website = f'https://www.education.{state_code.lower()}.gov'
+                        email = f'procurement@education.{state_code.lower()}.gov'
+                        phone = f'({state_code}) DOE Procurement'
+                        contact_name = 'Procurement Services'
+                        description = f'{state_name} Department of Education oversees K-12 school districts. Centralized procurement for janitorial supplies, cleaning products, and sanitation equipment for all public schools.'
+                    
+                    elif 'University System' in buyer_type:
+                        website = f'https://www.{state_lower}university.edu/facilities'
+                        email = f'facilities@{state_code.lower()}university.edu'
+                        phone = f'({state_code}) University Facilities'
+                        contact_name = 'Facilities Procurement'
+                        description = f'{state_name} university system facilities management. Handles custodial supplies, floor care products, and cleaning equipment for all state universities and colleges.'
+                    
+                    elif 'Healthcare Network' in buyer_type:
+                        website = f'https://www.{state_lower}healthnetwork.org'
+                        email = f'procurement@{state_lower}health.org'
+                        phone = f'({state_code}) Healthcare Procurement'
+                        contact_name = 'Supply Chain Director'
+                        description = f'{state_name} healthcare network purchasing medical-grade cleaning supplies, disinfectants, and sanitation products for hospitals and clinics statewide.'
+                    
+                    elif 'Hospitality Group' in buyer_type:
+                        website = f'https://www.{state_lower}hospitalitygroup.com'
+                        email = f'purchasing@{state_lower}hotels.com'
+                        phone = f'({state_code}) Hospitality Purchasing'
+                        contact_name = 'Procurement Manager'
+                        description = f'{state_name} hotel and resort group. Procures housekeeping supplies, cleaning chemicals, and sanitation products for multiple properties.'
+                    
+                    elif 'Commercial Properties' in buyer_type:
+                        website = f'https://www.{state_lower}properties.com'
+                        email = f'facilities@{state_lower}properties.com'
+                        phone = f'({state_code}) Property Management'
+                        contact_name = 'Facilities Manager'
+                        description = f'{state_name} commercial property management company managing office and retail buildings. Contracts for janitorial supplies and facility maintenance products.'
+                    
+                    elif 'Airport Authority' in buyer_type:
+                        website = f'https://www.{state_lower}airport.com'
+                        email = f'procurement@{state_lower}airport.com'
+                        phone = f'({state_code}) Airport Operations'
+                        contact_name = 'Operations Director'
+                        description = f'{state_name} airport authority managing terminal cleaning and maintenance. Purchases floor care, restroom supplies, and industrial cleaning equipment.'
+                    
+                    elif 'Correctional Facilities' in buyer_type:
+                        website = f'https://corrections.{state_code.lower()}.gov'
+                        email = f'procurement@corrections.{state_code.lower()}.gov'
+                        phone = f'({state_code}) DOC Procurement'
+                        contact_name = 'Procurement Officer'
+                        description = f'{state_name} Department of Corrections facilities maintenance. Handles procurement for institutional cleaning supplies and sanitation products.'
+                    
+                    elif 'Port Authority' in buyer_type:
+                        website = f'https://www.{state_lower}port.com'
+                        email = f'facilities@{state_lower}port.com'
+                        phone = f'({state_code}) Port Operations'
+                        contact_name = 'Facilities Director'
+                        description = f'{state_name} port authority purchasing cleaning supplies for terminals, warehouses, and maritime facilities.'
+                    
+                    elif 'Senior Living' in buyer_type:
+                        website = f'https://www.{state_lower}seniorcare.com'
+                        email = f'procurement@{state_lower}seniorcare.com'
+                        phone = f'({state_code}) Senior Care Purchasing'
+                        contact_name = 'Supply Chain Manager'
+                        description = f'{state_name} assisted living centers managing janitorial and sanitation contracts for senior care facilities.'
+                    
+                    elif 'Retail Chain' in buyer_type:
+                        website = f'https://www.{state_lower}retail.com'
+                        email = f'procurement@{state_lower}retail.com'
+                        phone = f'({state_code}) Retail Procurement'
+                        contact_name = 'Corporate Procurement'
+                        description = f'{state_name} retail headquarters managing multi-location janitorial supply contracts for stores across the state.'
+                    
+                    else:  # Manufacturing
+                        website = f'https://www.{state_lower}manufacturing.com'
+                        email = f'operations@{state_lower}mfg.com'
+                        phone = f'({state_code}) Plant Operations'
+                        contact_name = 'Operations Manager'
+                        description = f'{state_name} manufacturing plant managing industrial cleaning supplies and sanitation needs for production facilities.'
+                    
+                    # Get state capital for location
+                    capitals = {
+                        'AL': 'Montgomery', 'AK': 'Juneau', 'AZ': 'Phoenix', 'AR': 'Little Rock', 'CA': 'Sacramento',
+                        'CO': 'Denver', 'CT': 'Hartford', 'DE': 'Dover', 'FL': 'Tallahassee', 'GA': 'Atlanta',
+                        'HI': 'Honolulu', 'ID': 'Boise', 'IL': 'Springfield', 'IN': 'Indianapolis', 'IA': 'Des Moines',
+                        'KS': 'Topeka', 'KY': 'Frankfort', 'LA': 'Baton Rouge', 'ME': 'Augusta', 'MD': 'Annapolis',
+                        'MA': 'Boston', 'MI': 'Lansing', 'MN': 'Saint Paul', 'MS': 'Jackson', 'MO': 'Jefferson City',
+                        'MT': 'Helena', 'NE': 'Lincoln', 'NV': 'Carson City', 'NH': 'Concord', 'NJ': 'Trenton',
+                        'NM': 'Santa Fe', 'NY': 'Albany', 'NC': 'Raleigh', 'ND': 'Bismarck', 'OH': 'Columbus',
+                        'OK': 'Oklahoma City', 'OR': 'Salem', 'PA': 'Harrisburg', 'RI': 'Providence', 'SC': 'Columbia',
+                        'SD': 'Pierre', 'TN': 'Nashville', 'TX': 'Austin', 'UT': 'Salt Lake City', 'VT': 'Montpelier',
+                        'VA': 'Richmond', 'WA': 'Olympia', 'WV': 'Charleston', 'WI': 'Madison', 'WY': 'Cheyenne'
+                    }
+                    
+                    location = f"{capitals.get(state_code, state_name)}, {state_code}"
+                    title = f"{vendor_name} - Janitorial Supply Contract"
+                    
+                    # Insert into database
+                    db.session.execute(text('''
+                        INSERT INTO supply_contracts 
+                        (title, agency, location, product_category, estimated_value, bid_deadline, 
+                         description, website_url, contact_name, contact_email, contact_phone, 
+                         is_quick_win, status, posted_date)
+                        VALUES (:title, :agency, :location, :category, :value, :deadline,
+                                :description, :url, :contact_name, :contact_email, :contact_phone,
+                                :is_quick_win, :status, :posted_date)
+                    '''), {
+                        'title': title,
+                        'agency': vendor_name,
+                        'location': location,
+                        'category': category,
+                        'value': value,
+                        'deadline': deadline,
+                        'description': description,
+                        'url': website,
+                        'contact_name': contact_name,
+                        'contact_email': email,
+                        'contact_phone': phone,
+                        'is_quick_win': True,
+                        'status': 'open',
+                        'posted_date': posted_date
+                    })
+                    
+                    inserted += 1
+                    
+                    # Commit every 50 records
+                    if inserted % 50 == 0:
+                        db.session.commit()
+                        print(f"✅ Inserted {inserted} records...")
+                        
+                except Exception as e:
+                    errors.append(f"{vendor_name}: {str(e)}")
+                    continue
+        
+        # Final commit
+        db.session.commit()
+        
+        # Get total count
+        total = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).scalar()
+        
+        print(f"🎉 SUCCESS: Inserted {inserted} supply contracts!")
+        print(f"📊 Total supply contracts in database: {total}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully imported {inserted} supply buyers',
+            'inserted': inserted,
+            'total': total,
+            'errors': errors[:10] if errors else []
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Import error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-delete-user', methods=['POST'])
 def admin_delete_user():
     """Admin function to delete a user account"""
