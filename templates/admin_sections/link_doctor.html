@@ -249,8 +249,8 @@
         });
         const data = await res.json();
         if (!data.success) { alert('Repair failed: ' + (data.message||'Unknown')); return; }
-        alert('Repaired '+(data.repaired||0)+' item(s).');
-        runScan();
+        alert('✅ Repaired '+(data.repaired||0)+' item(s).\n\nClick "Scan" to refresh results.');
+        // Don't auto-refresh - let user click Scan manually
       } catch(e){ console.error(e); alert('Repair failed.'); }
     }
 
@@ -265,8 +265,8 @@
         });
         const data = await res.json();
         if (!data.success) { alert('Clear failed: ' + (data.message||'Unknown')); return; }
-        alert('Cleared '+(data.cleared||0)+' item(s).');
-        runScan();
+        alert('✅ Cleared '+(data.cleared||0)+' item(s).\n\nClick "Scan" to refresh results.');
+        // Don't auto-refresh - let user click Scan manually
       } catch(e){ console.error(e); alert('Clear failed.'); }
     }
 
@@ -278,7 +278,8 @@
         });
         const data = await res.json();
         if (!data.success) { alert('Repair failed: ' + (data.message||'Unknown')); return; }
-        runScan();
+        alert('✅ Repaired 1 item.\n\nClick "Scan" to refresh results.');
+        // Don't auto-refresh - let user click Scan manually
       } catch(e){ console.error(e); alert('Repair failed.'); }
     }
 
