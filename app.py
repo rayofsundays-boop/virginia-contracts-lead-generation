@@ -17301,6 +17301,124 @@ def admin_reply_message():
         flash('Error sending reply', 'error')
         return redirect(url_for('admin_mailbox'))
 
+@app.route('/admin/url-manager', methods=['GET', 'POST'])
+def admin_url_manager():
+    """Comprehensive URL management and correction system"""
+    if not session.get('is_admin'):
+        flash('Admin access required', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        # Bulk URL correction
+        if action == 'fix_broken':
+            try:
+                # Federal contracts
+                broken_federal = db.session.execute(text(
+                    "UPDATE federal_contracts SET sam_gov_url = NULL "
+                    "WHERE sam_gov_url IS NOT NULL AND (sam_gov_url LIKE '%example%' OR sam_gov_url NOT LIKE 'http%') "
+                    "RETURNING id"
+                )).fetchall()
+                
+                # Supply contracts
+                broken_supply = db.session.execute(text(
+                    "UPDATE supply_contracts SET website_url = NULL "
+                    "WHERE website_url IS NOT NULL AND (website_url LIKE '%example%' OR website_url NOT LIKE 'http%') "
+                    "RETURNING id"
+                )).fetchall()
+                
+                # Regular contracts
+                broken_contracts = db.session.execute(text(
+                    "UPDATE contracts SET website_url = NULL "
+                    "WHERE website_url IS NOT NULL AND (website_url LIKE '%example%' OR website_url NOT LIKE 'http%') "
+                    "RETURNING id"
+                )).fetchall()
+                
+                db.session.commit()
+                
+                total = len(broken_federal) + len(broken_supply) + len(broken_contracts)
+                flash(f'✅ Fixed {total} broken URLs (set to NULL for regeneration)', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'❌ Error fixing URLs: {str(e)}', 'error')
+        
+        # Update specific URL
+        elif action == 'update_url':
+            contract_type = request.form.get('contract_type')
+            contract_id = request.form.get('contract_id')
+            new_url = request.form.get('new_url', '').strip()
+            
+            try:
+                if contract_type == 'federal':
+                    db.session.execute(text(
+                        "UPDATE federal_contracts SET sam_gov_url = :url WHERE id = :id"
+                    ), {'url': new_url or None, 'id': contract_id})
+                elif contract_type == 'supply':
+                    db.session.execute(text(
+                        "UPDATE supply_contracts SET website_url = :url WHERE id = :id"
+                    ), {'url': new_url or None, 'id': contract_id})
+                elif contract_type == 'contract':
+                    db.session.execute(text(
+                        "UPDATE contracts SET website_url = :url WHERE id = :id"
+                    ), {'url': new_url or None, 'id': contract_id})
+                
+                db.session.commit()
+                flash(f'✅ URL updated successfully', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'❌ Error updating URL: {str(e)}', 'error')
+    
+    # Get statistics
+    try:
+        stats = {
+            'federal_total': db.session.execute(text("SELECT COUNT(*) FROM federal_contracts")).scalar() or 0,
+            'federal_with_url': db.session.execute(text("SELECT COUNT(*) FROM federal_contracts WHERE sam_gov_url IS NOT NULL AND sam_gov_url != ''")).scalar() or 0,
+            'federal_broken': db.session.execute(text("SELECT COUNT(*) FROM federal_contracts WHERE sam_gov_url IS NOT NULL AND (sam_gov_url LIKE '%example%' OR sam_gov_url NOT LIKE 'http%')")).scalar() or 0,
+            
+            'supply_total': db.session.execute(text("SELECT COUNT(*) FROM supply_contracts")).scalar() or 0,
+            'supply_with_url': db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE website_url IS NOT NULL AND website_url != ''")).scalar() or 0,
+            'supply_broken': db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE website_url IS NOT NULL AND (website_url LIKE '%example%' OR website_url NOT LIKE 'http%')")).scalar() or 0,
+            
+            'contract_total': db.session.execute(text("SELECT COUNT(*) FROM contracts")).scalar() or 0,
+            'contract_with_url': db.session.execute(text("SELECT COUNT(*) FROM contracts WHERE website_url IS NOT NULL AND website_url != ''")).scalar() or 0,
+            'contract_broken': db.session.execute(text("SELECT COUNT(*) FROM contracts WHERE website_url IS NOT NULL AND (website_url LIKE '%example%' OR website_url NOT LIKE 'http%')")).scalar() or 0,
+        }
+        
+        # Get sample broken URLs for each type
+        broken_federal = db.session.execute(text(
+            "SELECT id, title, agency, sam_gov_url FROM federal_contracts "
+            "WHERE sam_gov_url IS NULL OR sam_gov_url = '' OR sam_gov_url LIKE '%example%' OR sam_gov_url NOT LIKE 'http%' "
+            "ORDER BY id DESC LIMIT 10"
+        )).fetchall()
+        
+        broken_supply = db.session.execute(text(
+            "SELECT id, title, agency, website_url FROM supply_contracts "
+            "WHERE website_url IS NULL OR website_url = '' OR website_url LIKE '%example%' OR website_url NOT LIKE 'http%' "
+            "ORDER BY id DESC LIMIT 10"
+        )).fetchall()
+        
+        broken_contracts = db.session.execute(text(
+            "SELECT id, title, agency, website_url FROM contracts "
+            "WHERE website_url IS NULL OR website_url = '' OR website_url LIKE '%example%' OR website_url NOT LIKE 'http%' "
+            "ORDER BY id DESC LIMIT 10"
+        )).fetchall()
+        
+    except Exception as e:
+        print(f"Error getting URL stats: {e}")
+        stats = {}
+        broken_federal = []
+        broken_supply = []
+        broken_contracts = []
+    
+    return render_template('admin_url_manager.html',
+                         stats=stats,
+                         broken_federal=broken_federal,
+                         broken_supply=broken_supply,
+                         broken_contracts=broken_contracts)
+
 if __name__ == '__main__':
     init_db()
     port = int(os.environ.get('PORT', 8080))
