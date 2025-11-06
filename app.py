@@ -626,14 +626,14 @@ app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
 app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'rayofsundays@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'dlcbocnogloitghw')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME', 'rayofsundays@gmail.com')
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME', '')
 
 # Only initialize mail if credentials are provided
 if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
     mail = Mail(app)
-    print("✅ Email configured successfully")
+    print("✅ Email configured (SMTP ready)")
 else:
     mail = None
     print("⚠️  Email not configured - set MAIL_USERNAME and MAIL_PASSWORD environment variables")
@@ -3178,11 +3178,11 @@ def signin():
             flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
-            
-            return redirect(url_for('customer_leads'))
-        else:
-            flash('Invalid username or password. Please try again.', 'error')
-            return redirect(url_for('auth'))
+        
+        return redirect(url_for('customer_leads'))
+    else:
+        flash('Invalid username or password. Please try again.', 'error')
+        return redirect(url_for('auth'))
     
     return render_template('signin.html')
 
