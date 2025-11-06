@@ -383,34 +383,36 @@
 
 <!-- Local Vendors in Need of Supplies Section -->
 <div class="container my-5">
-    <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-        <div class="card-body text-white py-5">
-            <div class="text-center mb-4">
-                <h2 class="display-5 fw-bold mb-3">
+    <div class="card border-0 shadow-lg">
+        <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <div class="text-center">
+                <h2 class="display-6 fw-bold mb-2">
                     <i class="fas fa-store me-3"></i>Local Vendors in Need of Supplies
                 </h2>
-                <p class="lead">Connect with businesses actively purchasing cleaning supplies across all 50 states</p>
+                <p class="lead mb-0">Connect with businesses actively purchasing cleaning supplies across all 50 states</p>
             </div>
-
+        </div>
+        
+        <div class="card-body bg-light py-4">
             <!-- State Tabs -->
-            <ul class="nav nav-pills nav-fill mb-4" id="vendorTabs" role="tablist">
+            <ul class="nav nav-pills nav-fill mb-4 shadow-sm" id="vendorTabs" role="tablist" style="background: white; border-radius: 10px; padding: 8px;">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="virginia-tab" data-bs-toggle="pill" data-bs-target="#virginia" type="button" role="tab">
+                    <button class="nav-link active" id="virginia-tab" data-bs-toggle="pill" data-bs-target="#virginia" type="button" role="tab" style="border-radius: 8px;">
                         <i class="fas fa-map-marker-alt me-2"></i>Virginia
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="southeast-tab" data-bs-toggle="pill" data-bs-target="#southeast" type="button" role="tab">
+                    <button class="nav-link" id="southeast-tab" data-bs-toggle="pill" data-bs-target="#southeast" type="button" role="tab" style="border-radius: 8px;">
                         <i class="fas fa-map-marked-alt me-2"></i>Southeast
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="northeast-tab" data-bs-toggle="pill" data-bs-target="#northeast" type="button" role="tab">
+                    <button class="nav-link" id="northeast-tab" data-bs-toggle="pill" data-bs-target="#northeast" type="button" role="tab" style="border-radius: 8px;">
                         <i class="fas fa-city me-2"></i>Northeast
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="nationwide-tab" data-bs-toggle="pill" data-bs-target="#nationwide" type="button" role="tab">
+                    <button class="nav-link" id="nationwide-tab" data-bs-toggle="pill" data-bs-target="#nationwide" type="button" role="tab" style="border-radius: 8px;">
                         <i class="fas fa-flag-usa me-2"></i>All States
                     </button>
                 </li>
@@ -745,10 +747,11 @@
                 </div>
             </div>
 
-            <div class="text-center mt-4">
-                <p class="mb-3"><small>Updated weekly with new vendor opportunities • Verified contact information</small></p>
+            <div class="card-footer bg-white text-center py-3 border-top">
+                <p class="text-muted mb-2"><small><i class="fas fa-sync-alt me-2"></i>Updated weekly with new vendor opportunities</small></p>
+                <p class="text-muted mb-0"><small><i class="fas fa-check-circle me-2"></i>Verified contact information</small></p>
                 {% if not is_paid_subscriber and not is_admin %}
-                <a href="{{ url_for('subscription') }}" class="btn btn-light btn-lg">
+                <a href="{{ url_for('subscription') }}" class="btn btn-success btn-lg mt-3">
                     <i class="fas fa-crown me-2"></i>Unlock All Vendor Contacts
                 </a>
                 {% endif %}
