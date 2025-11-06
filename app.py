@@ -16021,27 +16021,17 @@ def community_forum():
         import traceback
         traceback.print_exc()
         
-        # Return simple HTML error page instead of trying to render template
-        return f'''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Community Forum Error</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; padding: 40px; text-align: center; }}
-                .error {{ color: #dc3545; background: #f8d7da; padding: 20px; border-radius: 5px; margin: 20px auto; max-width: 600px; }}
-                pre {{ text-align: left; background: #f5f5f5; padding: 10px; overflow-x: auto; }}
-            </style>
-        </head>
-        <body>
-            <h1>❌ Community Forum Error</h1>
-            <div class="error">
-                <p><strong>Error:</strong> {error_msg}</p>
-            </div>
-            <p><a href="/">← Back to Home</a></p>
-        </body>
-        </html>
-        ''', 500
+        # Return simple HTML error page
+        error_html = f"""<!DOCTYPE html>
+<html><head><title>Community Forum Error</title></head>
+<body style="font-family:Arial;padding:40px;text-align:center">
+<h1 style="color:#dc3545">❌ Community Forum Error</h1>
+<div style="color:#721c24;background:#f8d7da;padding:20px;border-radius:5px;margin:20px auto;max-width:600px">
+<strong>Error:</strong> {error_msg}
+</div>
+<p><a href="/">← Back to Home</a></p>
+</body></html>"""
+        return error_html, 500
 
 @app.route('/admin-approve-request', methods=['POST'])
 def admin_approve_request():
