@@ -17,7 +17,44 @@ All setup steps have been completed:
 
 ## Latest Features (Nov 5, 2025) ✅ DEPLOYED
 
-### 🎉 WIN50 Sales Promotion (Nov 5, 2025) - LIVE ✅
+### � Nationwide Dynamic Pricing Calculator (Nov 5, 2025) - LIVE ✅
+**Enhanced pricing calculator with state/city market data:**
+
+**Features Implemented:**
+1. ✅ **50 US States**: Complete cost-of-living multiplier database (2024 data)
+2. ✅ **Metro Area Selection**: Rural (0.85x), Suburban (1.0x), Urban (1.15x), Major Metro (1.35x)
+3. ✅ **Auto-Calculated Labor Rates**: $16.50 national baseline adjusted by location
+4. ✅ **3 New Facility Types**: Retail, hospitality, data center
+5. ✅ **Competition Level**: High/moderate/low adjustments (-7% to +7%)
+6. ✅ **Profit Margin Slider**: 5-30% with real-time calculation
+7. ✅ **3 Additional Services**: Power washing, after hours, supply restocking (total 8 services)
+8. ✅ **Market Comparison**: Badge showing below/at/above national average
+9. ✅ **Enhanced Breakdown**: Location adjustments, per-sq-ft, per-cleaning metrics
+
+**State Cost Multipliers:**
+- Lowest: MS 0.84x, AR 0.86x, WV 0.86x, AL 0.87x
+- Average: VA 1.03x, CO 1.05x, OR 1.07x
+- Highest: CA 1.38x, NY 1.39x, DC 1.52x, HI 1.96x
+
+**Calculation Examples:**
+- **Virginia Suburban Office** (10K sq ft, 3x/week): $17.00/hr labor, ~$10,296/mo
+- **New York Major Metro Medical** (15K sq ft, daily): $30.96/hr labor, ~$52,883/mo
+- **Mississippi Rural School** (50K sq ft, 2x/week): $11.78/hr labor, ~$18,945/mo
+
+**User Benefits:**
+- Accurate nationwide pricing for any state
+- Location-based labor cost adjustments
+- Competitive intelligence (market comparison)
+- Professional proposal support with detailed breakdowns
+- Data-driven profit margin optimization
+
+**Route:** `/pricing-calculator`
+
+**Documentation:** `NATIONWIDE_PRICING_CALCULATOR.md` - Complete guide with examples
+
+**Commits:** `73bbc54`, `490ea7c` - Nationwide pricing system deployed
+
+### �🎉 WIN50 Sales Promotion (Nov 5, 2025) - LIVE ✅
 **Site-wide 50% discount promotion with promo code WIN50:**
 
 **Features Implemented:**
