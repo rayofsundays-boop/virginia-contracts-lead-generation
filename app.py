@@ -4761,14 +4761,14 @@ def contracts():
                 SELECT COUNT(*) FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc)
                   AND title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
+                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc) 
                   AND title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
+                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset}).fetchall()
@@ -4776,13 +4776,13 @@ def contracts():
             total = db.session.execute(text('''
                 SELECT COUNT(*) FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
+                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
             ''')).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
+                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'limit': per_page, 'offset': offset}).fetchall()
