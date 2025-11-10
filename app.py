@@ -16030,6 +16030,7 @@ def quick_wins():
         urgent_count = len([l for l in filtered_leads if l.get('urgency_level') == 'urgent'])
         quick_win_count = len([l for l in filtered_leads if l.get('urgency_level') == 'quick-win'])
 
+        # Even if no supply contracts exist, show the page with other opportunities
         return render_template('quick_wins.html',
                              leads=paginated_leads,
                              expiring_7days_count=expiring_7days_count,
@@ -16040,13 +16041,32 @@ def quick_wins():
                              total_pages=total_pages,
                              is_paid_subscriber=is_paid,
                              is_admin=is_admin,
-                             supply_contracts=supply_contracts_data)
+                             supply_contracts=supply_contracts_data if supply_contracts_data else [])
     except Exception as e:
-        print(f"Quick Wins error: {e}")
+        print(f"❌ Quick Wins error: {e}")
         import traceback
         traceback.print_exc()
-        flash('Quick Wins feature is currently being set up. Please check back soon.', 'info')
-        return redirect(url_for('customer_leads'))
+        # Show more specific error if admin
+        if session.get('is_admin'):
+            flash(f'Quick Wins error: {str(e)}. Check server logs for details.', 'danger')
+        else:
+            flash('Quick Wins feature is temporarily unavailable. Our team has been notified.', 'warning')
+        # Don't redirect - try to show the page anyway with empty data
+        try:
+            return render_template('quick_wins.html',
+                                 leads=[],
+                                 expiring_7days_count=0,
+                                 urgent_count=0,
+                                 quick_win_count=0,
+                                 total_count=0,
+                                 page=1,
+                                 total_pages=1,
+                                 is_paid_subscriber=session.get('is_admin', False),
+                                 is_admin=session.get('is_admin', False),
+                                 supply_contracts=[])
+        except:
+            # If even that fails, redirect
+            return redirect(url_for('customer_leads'))
 
 @app.route('/global-opportunities')
 @login_required
