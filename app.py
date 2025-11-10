@@ -12783,13 +12783,23 @@ def leads():
             all_supply_leads = [dict(row._mapping) for row in all_supply]
             
         except Exception as e:
-            print(f"Error fetching supply contract leads: {e}")
+            print(f"⚠️  Error fetching supply contract leads: {e}")
+            # Continue with empty lists if database error
         
         return render_template('leads.html', 
                              leads=all_leads,
                              post_construction_leads=post_construction_leads,
                              office_cleaning_leads=office_cleaning_leads,
                              all_supply_leads=all_supply_leads)
+    
+    except Exception as e:
+        print(f"❌ Error in leads() route: {e}")
+        # Fallback - return empty leads
+        return render_template('leads.html', 
+                             leads=[],
+                             post_construction_leads=[],
+                             office_cleaning_leads=[],
+                             all_supply_leads=[])
 
 @app.route('/landing')
 def landing():
