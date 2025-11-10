@@ -1,121 +1,316 @@
 {% extends "base.html" %}
 
-{% block title %}Registered Companies - Virginia Government Contracts{% endblock %}
+{% block title %}Leads - Virginia Government Contracts{% endblock %}
 
 {% block content %}
 <div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Registered Companies</h2>
-        <a href="{{ url_for('register') }}" class="btn btn-primary">Add New Company</a>
-    </div>
-
-    {% if leads %}
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Company Name</th>
-                                <th>Contact</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>State</th>
-                                <th>Experience</th>
-                                <th>Registered</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for lead in leads %}
-                            <tr>
-                                <td>
-                                    <strong>{{ lead[1] }}</strong>
-                                    {% if lead[7] %}
-                                        <br><small class="text-muted">{{ lead[7][:50] }}{% if lead[7]|length > 50 %}...{% endif %}</small>
-                                    {% endif %}
-                                </td>
-                                <td>{{ lead[2] }}</td>
-                                <td>
-                                    <a href="mailto:{{ lead[3] }}">{{ lead[3] }}</a>
-                                </td>
-                                <td>
-                                    {% if lead[4] %}
-                                        <a href="tel:{{ lead[4] }}">{{ lead[4] }}</a>
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if lead[5] %}
-                                        <span class="badge bg-primary">{{ lead[5] }}</span>
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if lead[6] and lead[6] > 0 %}
-                                        {% if lead[6] == 1 %}1-2 years{% endif %}
-                                        {% if lead[6] == 3 %}3-5 years{% endif %}
-                                        {% if lead[6] == 6 %}6-10 years{% endif %}
-                                        {% if lead[6] == 11 %}11-15 years{% endif %}
-                                        {% if lead[6] == 16 %}15+ years{% endif %}
-                                    {% else %}
-                                        <span class="text-muted">Not specified</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <small class="text-muted">{{ lead[8] }}</small>
-                                </td>
-                            </tr>
+    <h1 class="mb-4">📊 Leads Hub</h1>
+    
+    <!-- Tabs for different lead categories -->
+    <ul class="nav nav-tabs mb-4" id="leadsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="post-construction-tab" data-bs-toggle="tab" 
+                    data-bs-target="#post-construction" type="button" role="tab" 
+                    aria-controls="post-construction" aria-selected="true">
+                🏗️ Post Construction Cleanup
+                <span class="badge bg-success ms-2">{{ post_construction_leads|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="office-cleaning-tab" data-bs-toggle="tab" 
+                    data-bs-target="#office-cleaning" type="button" role="tab" 
+                    aria-controls="office-cleaning" aria-selected="false">
+                🏢 Office Cleaning
+                <span class="badge bg-info ms-2">{{ office_cleaning_leads|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="all-leads-tab" data-bs-toggle="tab" 
+                    data-bs-target="#all-leads" type="button" role="tab" 
+                    aria-controls="all-leads" aria-selected="false">
+                📋 All Supply Contracts
+                <span class="badge bg-warning ms-2">{{ all_supply_leads|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="companies-tab" data-bs-toggle="tab" 
+                    data-bs-target="#companies" type="button" role="tab" 
+                    aria-controls="companies" aria-selected="false">
+                🏭 Registered Companies
+                <span class="badge bg-primary ms-2">{{ leads|length }}</span>
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="leadsTabContent">
+        
+        <!-- Post Construction Cleanup Tab -->
+        <div class="tab-pane fade show active" id="post-construction" role="tabpanel" aria-labelledby="post-construction-tab">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🏗️ Post Construction Cleanup Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if post_construction_leads %}
+                        <div class="row">
+                            {% for lead in post_construction_leads %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-left-success">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ lead.title }}</h6>
+                                        <p class="card-text small text-muted">
+                                            <strong>Agency:</strong> {{ lead.agency }}<br>
+                                            <strong>Location:</strong> {{ lead.location }}<br>
+                                            <strong>Value:</strong> {{ lead.estimated_value }}<br>
+                                            <strong>Posted:</strong> {{ lead.posted_date }}
+                                        </p>
+                                        {% if lead.description %}
+                                            <p class="card-text">{{ lead.description[:150] }}{% if lead.description|length > 150 %}...{% endif %}</p>
+                                        {% endif %}
+                                        {% if lead.website_url %}
+                                            <a href="{{ lead.website_url }}" target="_blank" class="btn btn-sm btn-success">View Opportunity →</a>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-secondary" disabled>No URL Available</button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer bg-light small">
+                                        <span class="badge bg-success">{{ lead.category }}</span>
+                                        <span class="badge bg-info">{{ lead.status }}</span>
+                                    </div>
+                                </div>
+                            </div>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No Post Construction Cleanup leads available yet. Check back soon!</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         
-        <div class="mt-4">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-primary">{{ leads|length }}</h4>
-                            <p class="card-text">Total Companies</p>
+        <!-- Office Cleaning Tab -->
+        <div class="tab-pane fade" id="office-cleaning" role="tabpanel" aria-labelledby="office-cleaning-tab">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">🏢 Office Cleaning Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if office_cleaning_leads %}
+                        <div class="row">
+                            {% for lead in office_cleaning_leads %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-left-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ lead.title }}</h6>
+                                        <p class="card-text small text-muted">
+                                            <strong>Agency:</strong> {{ lead.agency }}<br>
+                                            <strong>Location:</strong> {{ lead.location }}<br>
+                                            <strong>Value:</strong> {{ lead.estimated_value }}<br>
+                                            <strong>Posted:</strong> {{ lead.posted_date }}
+                                        </p>
+                                        {% if lead.description %}
+                                            <p class="card-text">{{ lead.description[:150] }}{% if lead.description|length > 150 %}...{% endif %}</p>
+                                        {% endif %}
+                                        {% if lead.website_url %}
+                                            <a href="{{ lead.website_url }}" target="_blank" class="btn btn-sm btn-info">View Opportunity →</a>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-secondary" disabled>No URL Available</button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer bg-light small">
+                                        <span class="badge bg-info">{{ lead.category }}</span>
+                                        <span class="badge bg-info">{{ lead.status }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
+                    {% else %}
+                        <div class="alert alert-info">No Office Cleaning leads available yet. Check back soon!</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- All Supply Contracts Tab -->
+        <div class="tab-pane fade" id="all-leads" role="tabpanel" aria-labelledby="all-leads-tab">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">📋 All Supply Contract Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_supply_leads %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Agency</th>
+                                        <th>Location</th>
+                                        <th>Category</th>
+                                        <th>Value</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lead in all_supply_leads %}
+                                    <tr>
+                                        <td>{{ lead.title[:50] }}{% if lead.title|length > 50 %}...{% endif %}</td>
+                                        <td>{{ lead.agency }}</td>
+                                        <td>{{ lead.location }}</td>
+                                        <td><span class="badge bg-primary">{{ lead.category }}</span></td>
+                                        <td>{{ lead.estimated_value }}</td>
+                                        <td>
+                                            {% if lead.website_url %}
+                                                <a href="{{ lead.website_url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary" disabled>No URL</button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">No supply contract leads available yet. Check back soon!</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Registered Companies Tab -->
+        <div class="tab-pane fade" id="companies" role="tabpanel" aria-labelledby="companies-tab">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">🏭 Registered Companies</h5>
+                        <a href="{{ url_for('register') }}" class="btn btn-light btn-sm">+ Add Company</a>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-success">{{ leads|selectattr('5', 'equalto', 'VA')|list|length }}</h4>
-                            <p class="card-text">Virginia Based</p>
+                <div class="card-body">
+                    {% if leads %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Company Name</th>
+                                        <th>Contact</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>State</th>
+                                        <th>Experience</th>
+                                        <th>Registered</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lead in leads %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ lead[1] }}</strong>
+                                            {% if lead[7] %}
+                                                <br><small class="text-muted">{{ lead[7][:50] }}{% if lead[7]|length > 50 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ lead[2] }}</td>
+                                        <td>
+                                            <a href="mailto:{{ lead[3] }}">{{ lead[3] }}</a>
+                                        </td>
+                                        <td>
+                                            {% if lead[4] %}
+                                                <a href="tel:{{ lead[4] }}">{{ lead[4] }}</a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if lead[5] %}
+                                                <span class="badge bg-primary">{{ lead[5] }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if lead[6] and lead[6] > 0 %}
+                                                {% if lead[6] == 1 %}1-2 years{% endif %}
+                                                {% if lead[6] == 3 %}3-5 years{% endif %}
+                                                {% if lead[6] == 6 %}6-10 years{% endif %}
+                                                {% if lead[6] == 11 %}11-15 years{% endif %}
+                                                {% if lead[6] == 16 %}15+ years{% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ lead[8] }}</small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <h6>No Companies Registered Yet</h6>
+                            <p>Start building your contractor database.</p>
+                            <a href="{{ url_for('register') }}" class="btn btn-primary">Register First Company</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Summary Stats -->
+    <div class="mt-5">
+        <h5>📈 Leads Summary</h5>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-success">{{ post_construction_leads|length }}</h4>
+                        <p class="card-text">Post Construction</p>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-info">{{ leads|selectattr('6', 'greaterthan', 5)|list|length }}</h4>
-                            <p class="card-text">Experienced (6+ years)</p>
-                        </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-info">{{ office_cleaning_leads|length }}</h4>
+                        <p class="card-text">Office Cleaning</p>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-warning">{{ leads|selectattr('7', 'defined')|selectattr('7', 'ne', '')|list|length }}</h4>
-                            <p class="card-text">With Certifications</p>
-                        </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-warning">{{ all_supply_leads|length }}</h4>
+                        <p class="card-text">Total Supply Contracts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-primary">{{ leads|length }}</h4>
+                        <p class="card-text">Registered Companies</p>
                     </div>
                 </div>
             </div>
         </div>
-    {% else %}
-        <div class="alert alert-info text-center">
-            <h4>No Companies Registered Yet</h4>
-            <p>Start building your contractor database by registering the first company.</p>
-            <a href="{{ url_for('register') }}" class="btn btn-primary">Register First Company</a>
-        </div>
-    {% endif %}
+    </div>
 </div>
+
+<style>
+    .border-left-success {
+        border-left: 4px solid #28a745 !important;
+    }
+    .border-left-info {
+        border-left: 4px solid #17a2b8 !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

@@ -1547,6 +1547,7 @@ def fetch_instantmarkets_leads():
                     'posted_date': posted_date,
                     'website_url': website_url,
                     'product_category': 'Cleaning Services',
+                    'category': 'Post Construction Cleanup',  # Tag leads as Post Construction from instantmarkets
                     'is_small_business_set_aside': False
                 })
             except Exception as e:
@@ -1582,9 +1583,9 @@ def fetch_instantmarkets_leads():
                     db.session.execute(text('''
                         INSERT INTO supply_contracts 
                         (title, agency, location, product_category, estimated_value, 
-                         description, website_url, posted_date, status, created_at)
+                         description, website_url, posted_date, status, category, created_at)
                         VALUES (:title, :agency, :location, :product_category, :estimated_value,
-                                :description, :website_url, :posted_date, 'open', CURRENT_TIMESTAMP)
+                                :description, :website_url, :posted_date, 'open', :category, CURRENT_TIMESTAMP)
                     '''), lead)
                     inserted_count += 1
                 except Exception as e:
@@ -2605,6 +2606,7 @@ def init_postgres_db():
                       is_quick_win BOOLEAN DEFAULT FALSE,
                       status TEXT DEFAULT 'open',
                       posted_date TEXT,
+                      category TEXT DEFAULT 'General',
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         # URL tracking table for AI-powered URL analysis
@@ -2624,6 +2626,17 @@ def init_postgres_db():
                       UNIQUE(contract_id, contract_type))'''))
         
         db.session.commit()
+        
+        # Add category column to supply_contracts if it doesn't exist (migration)
+        try:
+            db.session.execute(text('''ALTER TABLE supply_contracts ADD COLUMN category TEXT DEFAULT 'General' '''))
+            db.session.commit()
+            print("✅ Added category column to supply_contracts table")
+        except Exception as e:
+            if "already exists" in str(e) or "column" in str(e).lower():
+                print("✅ Category column already exists in supply_contracts")
+            else:
+                print(f"⚠️  Could not add category column: {e}")
         
         # Invoices table for tracking user-created invoices
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS invoices
@@ -12722,12 +12735,61 @@ def toggle_admin_privilege():
 
 @app.route('/leads')
 def leads():
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT * FROM leads ORDER BY created_at DESC')
-    all_leads = c.fetchall()
-    conn.close()
-    return render_template('leads.html', leads=all_leads)
+    try:
+        # Fetch registered companies
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT * FROM leads ORDER BY created_at DESC')
+        all_leads = c.fetchall()
+        conn.close()
+        
+        # Fetch supply contract opportunities by category
+        post_construction_leads = []
+        office_cleaning_leads = []
+        all_supply_leads = []
+        
+        try:
+            # Get Post Construction Cleanup leads
+            post_construction = db.session.execute(text('''
+                SELECT id, title, agency, location, estimated_value, description, 
+                       website_url, status, posted_date, category
+                FROM supply_contracts 
+                WHERE category = 'Post Construction Cleanup' AND status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 50
+            ''')).fetchall()
+            post_construction_leads = [dict(row._mapping) for row in post_construction]
+            
+            # Get Office Cleaning leads
+            office_cleaning = db.session.execute(text('''
+                SELECT id, title, agency, location, estimated_value, description, 
+                       website_url, status, posted_date, category
+                FROM supply_contracts 
+                WHERE category = 'Office Cleaning' AND status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 50
+            ''')).fetchall()
+            office_cleaning_leads = [dict(row._mapping) for row in office_cleaning]
+            
+            # Get all supply contract opportunities
+            all_supply = db.session.execute(text('''
+                SELECT id, title, agency, location, estimated_value, description, 
+                       website_url, status, posted_date, category
+                FROM supply_contracts 
+                WHERE status = 'open'
+                ORDER BY created_at DESC
+                LIMIT 100
+            ''')).fetchall()
+            all_supply_leads = [dict(row._mapping) for row in all_supply]
+            
+        except Exception as e:
+            print(f"Error fetching supply contract leads: {e}")
+        
+        return render_template('leads.html', 
+                             leads=all_leads,
+                             post_construction_leads=post_construction_leads,
+                             office_cleaning_leads=office_cleaning_leads,
+                             all_supply_leads=all_supply_leads)
 
 @app.route('/landing')
 def landing():
