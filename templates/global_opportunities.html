@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Global Opportunities - ContractLink.ai{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 300px;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 text-white mb-3">
+                    <i class="fas fa-globe-americas me-3"></i>Global Opportunities
+                </h1>
+                <p class="lead text-white mb-4">
+                    International contracts and opportunities from around the world
+                </p>
+                <div class="d-flex gap-4 text-white">
+                    <div>
+                        <h3 class="mb-0">{{ total_contracts }}</h3>
+                        <small>Total Opportunities</small>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ regions_count }}</h3>
+                        <small>Regions</small>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ countries_count }}</h3>
+                        <small>Countries</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="bg-white bg-opacity-10 rounded-3 p-4 backdrop-blur">
+                    <h5 class="text-white mb-2">
+                        <i class="fas fa-rocket me-2"></i>Go Global
+                    </h5>
+                    <p class="text-white small mb-0">
+                        Expand your business with international cleaning contracts
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Filters Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="fas fa-filter me-2"></i>Filter Opportunities
+            </h5>
+            <form method="GET" action="{{ url_for('global_opportunities') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Region</label>
+                        <select name="region" class="form-select">
+                            <option value="">All Regions</option>
+                            {% for region in all_regions %}
+                            <option value="{{ region }}" {% if selected_region == region %}selected{% endif %}>
+                                {{ region }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Country</label>
+                        <select name="country" class="form-select">
+                            <option value="">All Countries</option>
+                            {% for country in all_countries %}
+                            <option value="{{ country }}" {% if selected_country == country %}selected{% endif %}>
+                                {{ country }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search opportunities..." 
+                               value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Apply
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Opportunities Grid -->
+    {% if contracts %}
+    <div class="row g-4">
+        {% for contract in contracts %}
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="mb-0">
+                            <i class="fas fa-building me-2"></i>{{ contract.get('title', 'International Opportunity') }}
+                        </h5>
+                        {% if contract.get('urgent') %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-bolt"></i> Urgent
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ contract.get('country', 'Unknown') }}
+                        </span>
+                        <span class="badge bg-info text-dark me-2">
+                            <i class="fas fa-globe me-1"></i>{{ contract.get('region', 'Other') }}
+                        </span>
+                        {% if contract.get('value') %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-dollar-sign me-1"></i>{{ contract.get('value') }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-muted mb-3">
+                        {{ contract.get('description', 'International cleaning and facility management opportunity') }}
+                    </p>
+
+                    <div class="row g-2 small mb-3">
+                        {% if contract.get('organization') %}
+                        <div class="col-6">
+                            <strong>Organization:</strong><br>
+                            {{ contract.get('organization') }}
+                        </div>
+                        {% endif %}
+                        {% if contract.get('deadline') %}
+                        <div class="col-6">
+                            <strong>Deadline:</strong><br>
+                            <i class="fas fa-calendar me-1"></i>{{ contract.get('deadline') }}
+                        </div>
+                        {% endif %}
+                        {% if contract.get('contract_type') %}
+                        <div class="col-6">
+                            <strong>Type:</strong><br>
+                            {{ contract.get('contract_type') }}
+                        </div>
+                        {% endif %}
+                        {% if contract.get('duration') %}
+                        <div class="col-6">
+                            <strong>Duration:</strong><br>
+                            {{ contract.get('duration') }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if is_paid_subscriber or is_admin %}
+                    <!-- Full Access for Subscribers -->
+                    <div class="alert alert-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Contact Available</strong>
+                    </div>
+                    {% if contract.get('contact_name') %}
+                    <p class="mb-1"><strong>Contact:</strong> {{ contract.get('contact_name') }}</p>
+                    {% endif %}
+                    {% if contract.get('contact_email') %}
+                    <p class="mb-1"><strong>Email:</strong> {{ contract.get('contact_email') }}</p>
+                    {% endif %}
+                    {% if contract.get('contact_phone') %}
+                    <p class="mb-1"><strong>Phone:</strong> {{ contract.get('contact_phone') }}</p>
+                    {% endif %}
+                    {% if contract.get('application_url') %}
+                    <a href="{{ contract.get('application_url') }}" target="_blank" class="btn btn-primary w-100 mt-2">
+                        <i class="fas fa-external-link-alt me-2"></i>Apply Now
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <!-- Limited Preview for Free Users -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-lock me-2"></i>
+                        <strong>Upgrade to view contact details</strong>
+                    </div>
+                    <a href="{{ url_for('subscription') }}" class="btn btn-warning w-100">
+                        <i class="fas fa-crown me-2"></i>Upgrade to Access
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Source: {{ contract.get('source', 'International Database') }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-globe-americas fa-5x text-muted"></i>
+        </div>
+        <h3 class="text-muted mb-3">No Opportunities Found</h3>
+        <p class="text-muted mb-4">
+            {% if selected_region or selected_country or search_query %}
+            Try adjusting your filters to see more results.
+            {% else %}
+            Global opportunities are being added daily. Check back soon!
+            {% endif %}
+        </p>
+        {% if selected_region or selected_country or search_query %}
+        <a href="{{ url_for('global_opportunities') }}" class="btn btn-primary">
+            <i class="fas fa-redo me-2"></i>Clear Filters
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Information Section -->
+    <div class="card shadow-sm mt-5">
+        <div class="card-body">
+            <h4 class="mb-3">
+                <i class="fas fa-info-circle me-2 text-primary"></i>About Global Opportunities
+            </h4>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-building text-success me-2"></i>International Organizations</h5>
+                    <p class="text-muted small">
+                        Access contracts from UN, World Bank, USAID, DFID, and other international development organizations.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-flag text-primary me-2"></i>Embassy & Consulate Contracts</h5>
+                    <p class="text-muted small">
+                        U.S. embassies and consulates worldwide require cleaning and facility maintenance services.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-handshake text-warning me-2"></i>NGO Partnerships</h5>
+                    <p class="text-muted small">
+                        International NGOs and humanitarian organizations need reliable facility management partners.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+}
+</style>
+{% endblock %}

@@ -138,7 +138,7 @@ def main():
             'type': 'Networking',
             'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
             'cost': 'Free (Registration Required)',
-            'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'
+            'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'
         },
         {
             'id': 2,
@@ -162,7 +162,7 @@ def main():
             'type': 'Procurement Fair',
             'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
             'cost': 'Free',
-            'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'
+            'url': 'https://www.hampton.gov/1408/Vendor-Information'
         },
         {
             'id': 4,
@@ -174,7 +174,7 @@ def main():
             'type': 'Workshop',
             'topics': ['Federal Contracts', 'Small Business', 'Set-Asides', 'Certifications'],
             'cost': '$299.99',
-            'url': 'https://www.sba.gov/sbdc/trainings'
+            'url': 'https://www.sba.gov/federal-contracting/contracting-assistance-programs'
         },
         {
             'id': 5,
@@ -186,7 +186,7 @@ def main():
             'type': 'Networking',
             'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
             'cost': '$39.99',
-            'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'
+            'url': 'https://www.roanokeva.gov/185/Purchasing'
         },
         {
             'id': 6,
@@ -198,7 +198,7 @@ def main():
             'type': 'Industry Summit',
             'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
             'cost': 'Free',
-            'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-arlington-tickets'
+            'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'
         },
         {
             'id': 7,
@@ -210,7 +210,7 @@ def main():
             'type': 'Workshop',
             'topics': ['Green Cleaning', 'EPA Certification', 'LEED Standards', 'Sustainable Practices'],
             'cost': 'Free (Certification $59.99)',
-            'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'
+            'url': 'https://www.epa.gov/saferchoice'
         }
     ]
     

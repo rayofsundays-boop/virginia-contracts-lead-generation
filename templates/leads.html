@@ -54,29 +54,44 @@
                 <div class="card-body">
                     <!-- Filter Controls -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted mb-1">
+                                <i class="fas fa-search me-1"></i>Search Keywords
+                            </label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 <input type="text" class="form-control" id="postConstructionSearch" 
-                                       placeholder="Search: cleanup, renovation, commercial, virginia...">
+                                       placeholder="cleanup, renovation, commercial, virginia..."
+                                       onkeypress="if(event.key === 'Enter') filterPostConstructionLeads()">
                             </div>
                             <small class="text-muted mt-1 d-block">
-                                <i class="fas fa-lightbulb me-1"></i>Try keywords: cleanup, renovation, residential, commercial, virginia, maryland
+                                <i class="fas fa-lightbulb me-1"></i>Try: cleanup, renovation, residential, commercial, virginia
                             </small>
                         </div>
-                        <div class="col-md-6">
-                            <select class="form-select" id="postConstructionSourceFilter">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted mb-1">
+                                <i class="fas fa-filter me-1"></i>Filter by Source
+                            </label>
+                            <select class="form-select" id="postConstructionSourceFilter" onchange="filterPostConstructionLeads()">
                                 <option value="">All Sources</option>
                                 <option value="instantmarkets.com">InstantMarkets.com Only</option>
                                 <option value="other">Other Sources</option>
                             </select>
-                            <small class="text-muted mt-1 d-block">
-                                <i class="fas fa-filter me-1"></i>Filter by source website
-                            </small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">&nbsp;</label>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" onclick="filterPostConstructionLeads()">
+                                    <i class="fas fa-search me-2"></i>Search
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearPostConstructionFilters()">
+                                    <i class="fas fa-times me-1"></i>Clear
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
-                    {% if post_construction_leads %}
+                    {% if post_construction_leads and post_construction_leads|length > 0 %}
                         <div class="row" id="postConstructionLeadsList">
                             {% for lead in post_construction_leads %}
                             <div class="col-md-6 mb-3 post-construction-lead-card" 
@@ -112,7 +127,20 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="alert alert-info">No Post Construction Cleanup leads available yet. Check back soon!</div>
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle me-2"></i>No Post Construction Cleanup Leads Yet</h5>
+                            <p class="mb-2">Supply contract leads need to be imported into the database.</p>
+                            {% if session.get('is_admin') %}
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Admin Action Required:</strong><br>
+                                Go to <a href="/admin-enhanced?section=upload-csv" class="alert-link">Admin Panel → Upload CSV</a> 
+                                and click <strong>"Import 600 Buyers"</strong> to populate supply contract data.
+                            </p>
+                            {% else %}
+                            <p class="mb-0">Check back soon! Our team is continuously adding new opportunities.</p>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -156,7 +184,18 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="alert alert-info">No Office Cleaning leads available yet. Check back soon!</div>
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle me-2"></i>No Office Cleaning Leads Yet</h5>
+                            <p class="mb-2">Supply contract leads need to be imported into the database.</p>
+                            {% if session.get('is_admin') %}
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Admin Action:</strong> 
+                                <a href="/admin-enhanced?section=upload-csv" class="alert-link">Import 600 Buyers</a> 
+                                to populate data.
+                            </p>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -203,7 +242,18 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-warning">No supply contract leads available yet. Check back soon!</div>
+                        <div class="alert alert-warning">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>No Supply Contract Leads Available</h5>
+                            <p class="mb-2">The supply_contracts table is currently empty.</p>
+                            {% if session.get('is_admin') %}
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Action Required:</strong> 
+                                Navigate to <a href="/admin-enhanced?section=upload-csv" class="alert-link">Admin Panel</a> 
+                                and use the <strong>"Import 600 Buyers"</strong> button to populate supply contract data.
+                            </p>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -333,6 +383,37 @@
 </div>
 
 <style>
+    /* Better tab styling with high contrast */
+    .nav-tabs .nav-link {
+        color: #495057;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: #0056b3;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #fff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        font-weight: 600;
+    }
+    
+    .nav-tabs .nav-link .badge {
+        font-weight: 600;
+    }
+    
+    .nav-tabs .nav-link.active .badge {
+        background-color: rgba(255, 255, 255, 0.3) !important;
+        color: #fff;
+    }
+    
     .border-left-success {
         border-left: 4px solid #28a745 !important;
     }
@@ -348,85 +429,99 @@
 
 <script>
 // Post Construction Leads Filtering
+let leadCards = [];
+
 document.addEventListener('DOMContentLoaded', function() {
+    leadCards = document.querySelectorAll('.post-construction-lead-card');
+    
     const searchInput = document.getElementById('postConstructionSearch');
     const sourceFilter = document.getElementById('postConstructionSourceFilter');
-    const leadCards = document.querySelectorAll('.post-construction-lead-card');
     
-    function filterLeads() {
-        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-        const sourceValue = sourceFilter ? sourceFilter.value.toLowerCase() : '';
-        
-        let visibleCount = 0;
-        
-        leadCards.forEach(card => {
-            const title = card.getAttribute('data-title') || '';
-            const agency = card.getAttribute('data-agency') || '';
-            const location = card.getAttribute('data-location') || '';
-            const description = card.getAttribute('data-description') || '';
-            const url = card.getAttribute('data-url') || '';
-            
-            // Enhanced keyword search - searches across all fields
-            const matchesSearch = !searchTerm || 
-                title.includes(searchTerm) || 
-                agency.includes(searchTerm) || 
-                location.includes(searchTerm) ||
-                description.includes(searchTerm);
-            
-            // Check source filter
-            let matchesSource = true;
-            if (sourceValue === 'instantmarkets.com') {
-                matchesSource = url.includes('instantmarkets.com');
-            } else if (sourceValue === 'other') {
-                matchesSource = !url.includes('instantmarkets.com');
-            }
-            
-            // Show/hide card
-            if (matchesSearch && matchesSource) {
-                card.classList.remove('hidden');
-                visibleCount++;
-            } else {
-                card.classList.add('hidden');
-            }
-        });
-        
-        // Show "no results" message if needed
-        updateNoResultsMessage(visibleCount);
+    // Auto-select InstantMarkets filter if URL has parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('source') === 'instantmarkets' && sourceFilter) {
+        sourceFilter.value = 'instantmarkets.com';
+        filterPostConstructionLeads();
     }
     
-    function updateNoResultsMessage(count) {
-        const leadsList = document.getElementById('postConstructionLeadsList');
-        let noResultsMsg = document.getElementById('noResultsMessage');
-        
-        if (count === 0 && leadCards.length > 0) {
-            if (!noResultsMsg) {
-                noResultsMsg = document.createElement('div');
-                noResultsMsg.id = 'noResultsMessage';
-                noResultsMsg.className = 'col-12';
-                noResultsMsg.innerHTML = '<div class="alert alert-warning"><i class="fas fa-search me-2"></i>No leads match your filters. Try adjusting your search.</div>';
-                leadsList.appendChild(noResultsMsg);
-            }
-        } else if (noResultsMsg) {
-            noResultsMsg.remove();
-        }
-    }
-    
-    // Attach event listeners
+    // Enable live search on typing (optional - keeps existing behavior)
     if (searchInput) {
-        searchInput.addEventListener('input', filterLeads);
-    }
-    
-    if (sourceFilter) {
-        sourceFilter.addEventListener('change', filterLeads);
-        
-        // Auto-select InstantMarkets filter if URL has parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('source') === 'instantmarkets') {
-            sourceFilter.value = 'instantmarkets.com';
-            filterLeads();
-        }
+        searchInput.addEventListener('input', filterPostConstructionLeads);
     }
 });
+
+// Named function that can be called from button click
+function filterPostConstructionLeads() {
+    const searchInput = document.getElementById('postConstructionSearch');
+    const sourceFilter = document.getElementById('postConstructionSourceFilter');
+    
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const sourceValue = sourceFilter ? sourceFilter.value.toLowerCase() : '';
+    
+    let visibleCount = 0;
+    
+    leadCards.forEach(card => {
+        const title = card.getAttribute('data-title') || '';
+        const agency = card.getAttribute('data-agency') || '';
+        const location = card.getAttribute('data-location') || '';
+        const description = card.getAttribute('data-description') || '';
+        const url = card.getAttribute('data-url') || '';
+        
+        // Enhanced keyword search - searches across all fields
+        const matchesSearch = !searchTerm || 
+            title.includes(searchTerm) || 
+            agency.includes(searchTerm) || 
+            location.includes(searchTerm) ||
+            description.includes(searchTerm);
+        
+        // Check source filter
+        let matchesSource = true;
+        if (sourceValue === 'instantmarkets.com') {
+            matchesSource = url.includes('instantmarkets.com');
+        } else if (sourceValue === 'other') {
+            matchesSource = !url.includes('instantmarkets.com');
+        }
+        
+        // Show/hide card
+        if (matchesSearch && matchesSource) {
+            card.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+    
+    // Show "no results" message if needed
+    updateNoResultsMessage(visibleCount);
+}
+
+function updateNoResultsMessage(count) {
+    const leadsList = document.getElementById('postConstructionLeadsList');
+    let noResultsMsg = document.getElementById('noResultsMessage');
+    
+    if (count === 0 && leadCards.length > 0) {
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'noResultsMessage';
+            noResultsMsg.className = 'col-12';
+            noResultsMsg.innerHTML = '<div class="alert alert-warning"><i class="fas fa-search me-2"></i>No leads match your filters. Try adjusting your search.</div>';
+            leadsList.appendChild(noResultsMsg);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+// Clear all filters
+function clearPostConstructionFilters() {
+    const searchInput = document.getElementById('postConstructionSearch');
+    const sourceFilter = document.getElementById('postConstructionSourceFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (sourceFilter) sourceFilter.value = '';
+    
+    filterPostConstructionLeads();
+}
 </script>
 
 {% endblock %}

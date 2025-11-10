@@ -8755,6 +8755,69 @@ def admin_import_600_buyers():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-scrape-janitorial-buyers', methods=['POST'])
+@login_required
+@admin_required
+def admin_scrape_janitorial_buyers():
+    """
+    Scrape nationwide janitorial supply buyers from multiple sources
+    - SAM.gov federal supply requests
+    - State procurement portals
+    - Educational institutions
+    - Healthcare facilities
+    - Commercial property managers
+    """
+    try:
+        print("\n" + "="*60)
+        print("🧹 STARTING JANITORIAL SUPPLY BUYERS SCRAPER")
+        print("="*60)
+        
+        # Import the scraper
+        from scrapers.janitorial_supply_buyers_scraper import JanitorialSupplyBuyersScraper
+        
+        # Initialize and run scraper
+        scraper = JanitorialSupplyBuyersScraper()
+        buyers = scraper.scrape_all_sources()
+        
+        # Save to database
+        saved_count = scraper.save_to_database(db.session)
+        
+        # Get total count
+        total = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).scalar()
+        
+        print("\n" + "="*60)
+        print(f"✅ SCRAPING COMPLETE")
+        print(f"📊 Found: {len(buyers)} buyers")
+        print(f"💾 Saved: {saved_count} to database")
+        print(f"📊 Total supply_contracts: {total}")
+        print("="*60)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully scraped and imported {saved_count} janitorial supply buyers',
+            'found': len(buyers),
+            'saved': saved_count,
+            'total': total,
+            'sources': {
+                'sam_gov': 'Federal supply requests',
+                'state_portals': '10 major states',
+                'education': '5 major school districts',
+                'healthcare': '4 major hospital systems',
+                'property_mgmt': '4 national companies'
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Scraper error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 @app.route('/admin-clear-fake-contracts', methods=['POST'])
 def admin_clear_fake_contracts():
     """Delete all sample/demo/fake contracts from the contracts table"""
@@ -12833,7 +12896,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
                 'cost': 'Free (Registration Required)',
-                'url': 'https://www.rva.gov/office-procurement-services/small-business-development'
+                'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'
             },
             {
                 'id': 2,
@@ -12869,7 +12932,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['Federal Contracts', 'Small Business', 'Set-Asides', 'Certifications'],
                 'cost': '$299.99',
-                'url': 'https://www.sba.gov/events'
+                'url': 'https://www.sba.gov/federal-contracting/contracting-assistance-programs'
             },
             {
                 'id': 5,
@@ -12881,7 +12944,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
                 'cost': '$39.99',
-                'url': 'https://www.eventbrite.com/d/va--virginia/business--events/'
+                'url': 'https://www.roanokeva.gov/185/Purchasing'
             },
             {
                 'id': 6,
@@ -12893,7 +12956,7 @@ def industry_days_events():
                 'type': 'Industry Summit',
                 'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
                 'cost': 'Free',
-                'url': 'https://www.arlingtonva.us/Government/Departments/DTS/Procurement'
+                'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'
             },
             {
                 'id': 7,
@@ -12905,7 +12968,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['Green Cleaning', 'EPA Certification', 'LEED Standards', 'Sustainable Practices'],
                 'cost': 'Free (Certification $59.99)',
-                'url': 'https://www.usgbc.org/education/sessions'
+                'url': 'https://www.epa.gov/saferchoice'
             }
         ]
         
@@ -12924,13 +12987,13 @@ def validate_event_urls():
         
         # Get all events from the industry_days_events function
         events = [
-            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'},
+            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'},
             {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov'},
-            {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'},
-            {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/sbdc/trainings'},
-            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'},
-            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-arlington-tickets'},
-            {'id': 7, 'title': 'Green Cleaning Certification Workshop', 'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'}
+            {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.hampton.gov/1408/Vendor-Information'},
+            {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/federal-contracting/contracting-assistance-programs'},
+            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.roanokeva.gov/185/Purchasing'},
+            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'},
+            {'id': 7, 'title': 'Green Cleaning Certification Workshop', 'url': 'https://www.epa.gov/saferchoice'}
         ]
         
         working_urls = []
@@ -13014,6 +13077,7 @@ def validate_event_urls():
 
 @app.route('/leads')
 def leads():
+    """Leads Hub - Supply contract opportunities by category"""
     try:
         # Fetch registered companies
         conn = get_db_connection()
@@ -13028,42 +13092,59 @@ def leads():
         all_supply_leads = []
         
         try:
-            # Get Post Construction Cleanup leads
-            post_construction = db.session.execute(text('''
-                SELECT id, title, agency, location, estimated_value, description, 
-                       website_url, status, posted_date, category
-                FROM supply_contracts 
-                WHERE category = 'Post Construction Cleanup' AND status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 50
-            ''')).fetchall()
-            post_construction_leads = [dict(row._mapping) for row in post_construction]
+            # Check if supply_contracts table has data
+            count_check = db.session.execute(text(
+                'SELECT COUNT(*) as total FROM supply_contracts'
+            )).fetchone()
             
-            # Get Office Cleaning leads
-            office_cleaning = db.session.execute(text('''
-                SELECT id, title, agency, location, estimated_value, description, 
-                       website_url, status, posted_date, category
-                FROM supply_contracts 
-                WHERE category = 'Office Cleaning' AND status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 50
-            ''')).fetchall()
-            office_cleaning_leads = [dict(row._mapping) for row in office_cleaning]
+            total_supply = count_check[0] if count_check else 0
+            print(f"📊 Total supply_contracts in database: {total_supply}")
             
-            # Get all supply contract opportunities
-            all_supply = db.session.execute(text('''
-                SELECT id, title, agency, location, estimated_value, description, 
-                       website_url, status, posted_date, category
-                FROM supply_contracts 
-                WHERE status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 100
-            ''')).fetchall()
-            all_supply_leads = [dict(row._mapping) for row in all_supply]
+            if total_supply > 0:
+                # Get Post Construction Cleanup leads
+                post_construction = db.session.execute(text('''
+                    SELECT id, title, agency, location, estimated_value, description, 
+                           website_url, status, posted_date, category
+                    FROM supply_contracts 
+                    WHERE category = 'Post Construction Cleanup' 
+                    ORDER BY created_at DESC
+                    LIMIT 50
+                ''')).fetchall()
+                post_construction_leads = [dict(row._mapping) for row in post_construction]
+                print(f"  🏗️  Post Construction: {len(post_construction_leads)}")
+                
+                # Get Office Cleaning leads
+                office_cleaning = db.session.execute(text('''
+                    SELECT id, title, agency, location, estimated_value, description, 
+                           website_url, status, posted_date, category
+                    FROM supply_contracts 
+                    WHERE category = 'Office Cleaning'
+                    ORDER BY created_at DESC
+                    LIMIT 50
+                ''')).fetchall()
+                office_cleaning_leads = [dict(row._mapping) for row in office_cleaning]
+                print(f"  🏢 Office Cleaning: {len(office_cleaning_leads)}")
+                
+                # Get all supply contract opportunities
+                all_supply = db.session.execute(text('''
+                    SELECT id, title, agency, location, estimated_value, description, 
+                           website_url, status, posted_date, category
+                    FROM supply_contracts 
+                    ORDER BY created_at DESC
+                    LIMIT 100
+                ''')).fetchall()
+                all_supply_leads = [dict(row._mapping) for row in all_supply]
+                print(f"  📋 All Supply: {len(all_supply_leads)}")
+            else:
+                print("⚠️  supply_contracts table is empty!")
+                print("💡 Use Admin Panel → Upload CSV → 'Import 600 Buyers' to populate data")
             
         except Exception as e:
             print(f"⚠️  Error fetching supply contract leads: {e}")
-            # Continue with empty lists if database error
+            import traceback
+            traceback.print_exc()
+        
+        print(f"✅ Rendering leads.html with {len(all_leads)} registered companies")
         
         return render_template('leads.html', 
                              leads=all_leads,
@@ -13073,6 +13154,8 @@ def leads():
     
     except Exception as e:
         print(f"❌ Error in leads() route: {e}")
+        import traceback
+        traceback.print_exc()
         # Fallback - return empty leads
         return render_template('leads.html', 
                              leads=[],
@@ -15912,6 +15995,91 @@ def quick_wins():
         import traceback
         traceback.print_exc()
         flash('Quick Wins feature is currently being set up. Please check back soon.', 'info')
+        return redirect(url_for('customer_leads'))
+
+@app.route('/global-opportunities')
+@login_required
+def global_opportunities():
+    """
+    Global Opportunities - International contracts and opportunities worldwide
+    
+    Features:
+    - International government contracts
+    - UN and World Bank projects
+    - Foreign aid contracts (USAID, DFID, etc.)
+    - Multinational corporation opportunities
+    - Embassy and consulate contracts
+    - NGO cleaning and facility contracts
+    """
+    try:
+        # Check subscription status
+        is_admin = session.get('is_admin', False)
+        is_paid = False
+        
+        if is_admin:
+            is_paid = True
+        elif 'user_id' in session:
+            result = db.session.execute(
+                text("SELECT subscription_status FROM leads WHERE id = :user_id"),
+                {'user_id': session['user_id']}
+            ).fetchone()
+            if result and result[0] == 'paid':
+                is_paid = True
+        
+        # Get filter parameters
+        region_filter = request.args.get('region', '')
+        country_filter = request.args.get('country', '')
+        search_query = request.args.get('search', '')
+        
+        # Fetch international contracts from integrations
+        try:
+            from integrations.international_sources import fetch_international_cleaning
+            global_contracts = fetch_international_cleaning()
+        except Exception as e:
+            print(f"Error fetching international contracts: {e}")
+            global_contracts = []
+        
+        # Apply filters
+        filtered_contracts = global_contracts
+        
+        if region_filter:
+            filtered_contracts = [c for c in filtered_contracts if c.get('region', '').lower() == region_filter.lower()]
+        
+        if country_filter:
+            filtered_contracts = [c for c in filtered_contracts if country_filter.lower() in c.get('country', '').lower()]
+        
+        if search_query:
+            filtered_contracts = [c for c in filtered_contracts 
+                                if search_query.lower() in c.get('title', '').lower() 
+                                or search_query.lower() in c.get('description', '').lower()]
+        
+        # Get unique regions and countries for filters
+        all_regions = sorted(set(c.get('region', 'Other') for c in global_contracts))
+        all_countries = sorted(set(c.get('country', 'Unknown') for c in global_contracts))
+        
+        # Statistics
+        total_contracts = len(filtered_contracts)
+        regions_count = len(set(c.get('region', '') for c in filtered_contracts))
+        countries_count = len(set(c.get('country', '') for c in filtered_contracts))
+        
+        return render_template('global_opportunities.html',
+                             contracts=filtered_contracts,
+                             total_contracts=total_contracts,
+                             regions_count=regions_count,
+                             countries_count=countries_count,
+                             all_regions=all_regions,
+                             all_countries=all_countries,
+                             selected_region=region_filter,
+                             selected_country=country_filter,
+                             search_query=search_query,
+                             is_paid_subscriber=is_paid,
+                             is_admin=is_admin)
+    
+    except Exception as e:
+        print(f"Global opportunities error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Global Opportunities feature is currently being updated. Please check back soon.', 'info')
         return redirect(url_for('customer_leads'))
 
 @app.route('/property-management-companies')

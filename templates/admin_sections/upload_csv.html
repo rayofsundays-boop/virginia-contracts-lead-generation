@@ -6,6 +6,47 @@
         </div>
     </div>
 
+    <!-- NEW: Scrape Real Janitorial Supply Buyers -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info border-info" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="alert-heading mb-2">
+                            <i class="fas fa-globe-americas"></i> <strong>NEW:</strong> Scrape Real Janitorial Supply Buyers
+                        </h5>
+                        <p class="mb-2">
+                            <strong>Comprehensive nationwide scraper</strong> that finds organizations actively requesting janitorial supplies:
+                        </p>
+                        <ul class="mb-0 small">
+                            <li><strong>SAM.gov</strong> - Federal supply requests (cleaning chemicals, paper products, equipment)</li>
+                            <li><strong>State Procurement Portals</strong> - 10 major states (CA, TX, FL, NY, PA, IL, OH, GA, NC, MI)</li>
+                            <li><strong>Educational Institutions</strong> - University systems & major school districts (UC, LAUSD, NYC, Chicago, Houston)</li>
+                            <li><strong>Healthcare Facilities</strong> - Major hospital networks (Kaiser, HCA, Cleveland Clinic, Mayo)</li>
+                            <li><strong>Commercial Property</strong> - National property managers (CBRE, JLL, Cushman & Wakefield, ISS)</li>
+                        </ul>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-success">Real Data</span>
+                            <span class="badge bg-primary">50+ Buyers</span>
+                            <span class="badge bg-warning text-dark">Multi-Million $$</span>
+                        </p>
+                    </div>
+                    <button id="scrapeBuyersBtn" class="btn btn-info btn-lg ms-3" onclick="scrapeJanitorialBuyers()">
+                        <i class="fas fa-spider"></i> Scrape Buyers
+                    </button>
+                </div>
+                <div id="scrapeBuyersProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Scraping real buyer data from multiple sources...</small>
+                </div>
+                <div id="scrapeBuyersResults" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Import 600 Buyers -->
     <div class="row mb-4">
         <div class="col-12">
@@ -407,6 +448,98 @@ async function import600Buyers() {
                 <div class="alert alert-danger">
                     <h5><i class="fas fa-times-circle"></i> Import Failed</h5>
                     <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+                </div>
+            `;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Import 600 Buyers';
+        }
+        
+        btn.disabled = false;
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Import Error</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Import 600 Buyers';
+        btn.disabled = false;
+    }
+}
+
+// NEW: Scrape real janitorial supply buyers
+async function scrapeJanitorialBuyers() {
+    const btn = document.getElementById('scrapeBuyersBtn');
+    const progressDiv = document.getElementById('scrapeBuyersProgress');
+    const resultsDiv = document.getElementById('scrapeBuyersResults');
+    
+    // Disable button and show progress
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+    progressDiv.style.display = 'block';
+    resultsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin-scrape-janitorial-buyers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        
+        if (result.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle"></i> Scraping Successful!</h5>
+                    <p class="mb-2">
+                        Found <strong>${result.found}</strong> janitorial supply buyers.<br>
+                        Saved <strong>${result.saved}</strong> to database.
+                    </p>
+                    <p class="mb-2"><strong>Total in database:</strong> ${result.total} supply contracts</p>
+                    
+                    <div class="card bg-light mt-3">
+                        <div class="card-body">
+                            <h6 class="card-title mb-2">Sources Scraped:</h6>
+                            <ul class="small mb-0">
+                                <li><strong>SAM.gov:</strong> ${result.sources.sam_gov || 'Federal supply requests'}</li>
+                                <li><strong>State Portals:</strong> ${result.sources.state_portals || '10 major states'}</li>
+                                <li><strong>Education:</strong> ${result.sources.education || 'Universities & school districts'}</li>
+                                <li><strong>Healthcare:</strong> ${result.sources.healthcare || 'Hospital systems'}</li>
+                                <li><strong>Property Management:</strong> ${result.sources.property_mgmt || 'National companies'}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <a href="/leads" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Leads Hub
+                        </a>
+                        <a href="/supply-contracts" class="btn btn-success btn-sm">
+                            <i class="fas fa-boxes"></i> View Supply Contracts
+                        </a>
+                    </div>
+                </div>
+            `;
+            btn.innerHTML = '<i class="fas fa-check"></i> Scraping Complete';
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Scraping Failed</h5>
+                    <p class="mb-2">${result.error || 'Unknown error occurred'}</p>
+                    ${result.traceback ? `
+                        <details>
+                            <summary class="text-danger">Show Error Details</summary>
+                            <pre class="small mt-2 bg-white p-2 rounded">${result.traceback}</pre>
+                        </details>
+                    ` : ''}
                 </div>
             `;
             btn.disabled = false;
