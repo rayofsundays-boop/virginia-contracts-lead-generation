@@ -34,11 +34,11 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm">
+                    <div class="card border-0 shadow-sm bg-success text-white">
                         <div class="card-body text-center">
-                            <i class="fas fa-flag-usa fa-2x text-primary mb-2"></i>
-                            <h4 class="mb-0">{{ states|length }}</h4>
-                            <small class="text-muted">States Covered</small>
+                            <i class="fas fa-flag-usa fa-2x mb-2"></i>
+                            <h4 class="mb-0">All 50</h4>
+                            <small>US States Covered</small>
                         </div>
                     </div>
                 </div>
@@ -81,10 +81,30 @@
     </div>
     {% endif %}
     
+    <!-- All 50 States Notice -->
+    <div class="alert alert-success border-0 shadow-sm mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-1">
+                    <i class="fas fa-flag-usa me-2"></i>Nationwide Coverage - All 50 States
+                </h5>
+                <p class="mb-0">
+                    <i class="fas fa-check-circle me-2 text-success"></i>
+                    Browse {{ total_count }} procurement events across Alabama, Alaska, Arizona, Arkansas, California, Colorado, Connecticut, Delaware, Florida, Georgia, Hawaii, Idaho, Illinois, Indiana, Iowa, Kansas, Kentucky, Louisiana, Maine, Maryland, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana, Nebraska, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Carolina, North Dakota, Ohio, Oklahoma, Oregon, Pennsylvania, Rhode Island, South Carolina, South Dakota, Tennessee, Texas, Utah, Vermont, Virginia, Washington, West Virginia, Wisconsin, and Wyoming.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="badge bg-success fs-5 px-3 py-2">
+                    <i class="fas fa-map-marked-alt me-2"></i>50 States
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Filters -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-white">
-            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Events - All 50 States Available</h6>
+            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Events - Select from All 50 US States</h6>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ url_for('industry_days') }}" class="row g-3">
@@ -266,19 +286,56 @@
     <!-- Pagination -->
     {% if total_pages > 1 %}
     <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination justify-content-center flex-wrap">
+            <!-- Previous Button -->
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('industry_days', page=page-1, city=current_filters.city if current_filters.city else '', event_type=current_filters.event_type if current_filters.event_type else '') }}">Previous</a>
+                <a class="page-link" href="{{ url_for('industry_days', page=page-1, state=current_filters.state, city=current_filters.city, event_type=current_filters.event_type, is_virtual=current_filters.is_virtual) }}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
             </li>
-            {% for p in range(1, total_pages + 1) %}
+            
+            <!-- First Page -->
+            {% if page > 3 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('industry_days', page=1, state=current_filters.state, city=current_filters.city, event_type=current_filters.event_type, is_virtual=current_filters.is_virtual) }}">1</a>
+            </li>
+            {% if page > 4 %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endif %}
+            
+            <!-- Page Numbers (show 5 pages max) -->
+            {% for p in range([1, page - 2]|max, [total_pages, page + 2]|min + 1) %}
             <li class="page-item {% if p == page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('industry_days', page=p, city=current_filters.city if current_filters.city else '', event_type=current_filters.event_type if current_filters.event_type else '') }}">{{ p }}</a>
+                <a class="page-link" href="{{ url_for('industry_days', page=p, state=current_filters.state, city=current_filters.city, event_type=current_filters.event_type, is_virtual=current_filters.is_virtual) }}">{{ p }}</a>
             </li>
             {% endfor %}
+            
+            <!-- Last Page -->
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('industry_days', page=total_pages, state=current_filters.state, city=current_filters.city, event_type=current_filters.event_type, is_virtual=current_filters.is_virtual) }}">{{ total_pages }}</a>
+            </li>
+            {% endif %}
+            
+            <!-- Next Button -->
             <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('industry_days', page=page+1, city=current_filters.city if current_filters.city else '', event_type=current_filters.event_type if current_filters.event_type else '') }}">Next</a>
+                <a class="page-link" href="{{ url_for('industry_days', page=page+1, state=current_filters.state, city=current_filters.city, event_type=current_filters.event_type, is_virtual=current_filters.is_virtual) }}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
             </li>
         </ul>
+        
+        <!-- Page Info -->
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Page {{ page }} of {{ total_pages }} | Showing {{ events|length }} of {{ total_count }} events across all 50 states
+            </small>
+        </div>
     </nav>
     {% endif %}
     
