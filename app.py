@@ -12749,7 +12749,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
                 'cost': 'Free (Registration Required)',
-                'url': 'https://www.eventbrite.com/e/virginia-construction-networking-summit-2025-tickets'
+                'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'
             },
             {
                 'id': 2,
@@ -12797,7 +12797,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
                 'cost': '$39.99',
-                'url': 'https://www.eventbrite.com/e/supply-chain-networking-breakfast-roanoke-2025-tickets'
+                'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'
             },
             {
                 'id': 6,
@@ -12809,7 +12809,7 @@ def industry_days_events():
                 'type': 'Industry Summit',
                 'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
                 'cost': 'Free',
-                'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-2025-tickets'
+                'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-arlington-tickets'
             },
             {
                 'id': 7,
@@ -12840,12 +12840,12 @@ def validate_event_urls():
         
         # Get all events from the industry_days_events function
         events = [
-            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.eventbrite.com/e/virginia-construction-networking-summit-2025-tickets'},
+            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'},
             {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov/content/pages/training-and-events'},
             {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'},
             {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/sbdc/trainings'},
-            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.eventbrite.com/e/supply-chain-networking-breakfast-roanoke-2025-tickets'},
-            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-2025-tickets'},
+            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'},
+            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-arlington-tickets'},
             {'id': 7, 'title': 'Green Cleaning Certification Workshop', 'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'}
         ]
         
