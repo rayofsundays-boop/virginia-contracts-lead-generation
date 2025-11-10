@@ -1448,6 +1448,28 @@ def update_contracts_from_usaspending():
     except Exception as e:
         print(f"❌ Error updating from USAspending.gov: {e}")
 
+def cleanup_closed_contracts():
+    """Remove all closed, cancelled, and awarded contracts from local/state government contracts table"""
+    try:
+        print("🧹 Cleaning up closed, cancelled, and awarded contracts...")
+        
+        with app.app_context():
+            # Delete contracts with closed, cancelled, or awarded status
+            result = db.session.execute(text('''
+                DELETE FROM contracts 
+                WHERE status IN ('closed', 'cancelled', 'awarded', 'Closed', 'Cancelled', 'Awarded')
+            '''))
+            
+            deleted_count = result.rowcount
+            db.session.commit()
+            
+            print(f"✅ Cleanup complete: {deleted_count} closed/cancelled/awarded contracts removed")
+            return deleted_count
+    except Exception as e:
+        print(f"❌ Error cleaning up contracts: {e}")
+        db.session.rollback()
+        return 0
+
 def fetch_instantmarkets_leads():
     """Fetch daily leads from instantmarkets.com and add to supply_contracts"""
     try:
@@ -2276,9 +2298,18 @@ def init_postgres_db():
                       description TEXT,
                       naics_code TEXT,
                       website_url TEXT,
+                      status TEXT DEFAULT 'open',
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         db.session.commit()
+        
+        # Ensure status column exists for existing databases (migration)
+        try:
+            db.session.execute(text('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT \'open\''))
+            db.session.commit()
+        except Exception:
+            # Column already exists, continue
+            pass
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS federal_contracts
                      (id SERIAL PRIMARY KEY,
@@ -8082,6 +8113,23 @@ def trigger_instantmarkets_pull():
         })
     except Exception as e:
         print(f"Error triggering instantmarkets pull: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/cleanup-closed-contracts', methods=['POST'])
+@admin_required
+def cleanup_contracts_endpoint():
+    """Manually trigger cleanup of closed, cancelled, and awarded contracts (admin only)"""
+    try:
+        print("🚀 Admin triggered contract cleanup...")
+        count = cleanup_closed_contracts()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully removed {count} closed, cancelled, and awarded contracts',
+            'contracts_removed': count
+        })
+    except Exception as e:
+        print(f"Error triggering contract cleanup: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/admin-update-user', methods=['POST'])
