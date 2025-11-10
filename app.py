@@ -12761,7 +12761,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['SAM.gov', 'Federal Contracts', 'Bidding Strategy', 'NAICS Codes'],
                 'cost': '$49.99',
-                'url': 'https://www.sam.gov/content/pages/training-and-events'
+                'url': 'https://www.sam.gov'
             },
             {
                 'id': 3,
@@ -12841,7 +12841,7 @@ def validate_event_urls():
         # Get all events from the industry_days_events function
         events = [
             {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'},
-            {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov/content/pages/training-and-events'},
+            {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov'},
             {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'},
             {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/sbdc/trainings'},
             {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'},
