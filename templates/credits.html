@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Purchase Credits - Virginia Contracts{% endblock %}
+{% block title %}Purchase Credits - ContractLink.ai{% endblock %}
 
 {% block content %}
 <!-- PayPal SDK -->
@@ -405,7 +405,7 @@ function initializePayPalButton(price, credits, description) {
                     amount: {
                         value: price.toFixed(2)
                     },
-                    description: `${description} - ${credits} Credits for Virginia Contracts Lead Generation`
+                    description: `${description} - ${credits} Credits for ContractLink.ai Lead Generation`
                 }]
             });
         },

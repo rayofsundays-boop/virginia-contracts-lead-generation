@@ -775,10 +775,10 @@ def send_request_confirmation_email(request_type, data):
         📞 CONTACT
         If you have any questions in the meantime, please reply to this email.
         
-        Thank you for choosing VA Contract Lead Generation!
+        Thank you for choosing ContractLink.ai!
         
         Best regards,
-        The VA Contract Hub Team
+        The ContractLink.ai Team
         """
         
         msg = Message(
@@ -892,7 +892,7 @@ def send_bid_notification(business_email, contractor_info, bid_info):
         
         The contractor will be reaching out to you soon to discuss the details.
         
-        Thank you for using VA Contract Hub!
+        Thank you for using ContractLink.ai!
         """
         
         msg = Message(
@@ -2981,7 +2981,7 @@ def dashboard_video_preview():
 
 @app.route('/hero-video')
 def hero_video():
-    """30-second professional marketing video for VA Contract Hub"""
+    """30-second professional marketing video for ContractLink.ai"""
     return render_template('hero_video.html')
 
 @app.route('/test')
@@ -9233,7 +9233,7 @@ def email_proposal():
                 <hr>
                 {proposal}
                 <hr>
-                <p>Best regards,<br>Virginia Contract Leads Team</p>
+                <p>Best regards,<br>ContractLink.ai Team</p>
             </body>
             </html>
             """
@@ -13965,9 +13965,9 @@ def send_confirmation_email():
         email = user_data.get('email')
         if email:
             if confirmation_type == 'payment':
-                subject = "Payment Confirmed - Virginia Contract Leads"
+                subject = "Payment Confirmed - ContractLink.ai"
                 body = f"""
-Thank you for subscribing to Virginia Contract Leads!
+Thank you for subscribing to ContractLink.ai!
 
 Your payment has been processed and your premium access is now active.
 
@@ -13983,12 +13983,12 @@ Next billing date: {(datetime.now().replace(day=datetime.now().day + 30)).strfti
 Questions? Reply to this email or contact info@eliteecocareservices.com
 
 Best regards,
-Virginia Contract Leads Team
+ContractLink.ai Team
                 """
             else:
                 subject = "Welcome! Your 3 Free Contract Leads Are Coming"
                 body = f"""
-Welcome to Virginia Contract Leads, {user_data.get('contact_name', 'there')}!
+Welcome to ContractLink.ai, {user_data.get('contact_name', 'there')}!
 
 Your registration is confirmed and you'll receive your first contract opportunity within 24 hours.
 
@@ -14002,7 +14002,7 @@ After your 3 free leads, continue unlimited access for just $25/month.
 Watch your inbox for opportunities!
 
 Best regards,
-Virginia Contract Leads Team
+ContractLink.ai Team
 info@eliteecocareservices.com
                 """
             
@@ -17714,7 +17714,7 @@ def admin_approve_request():
                 Thank you for using VA Contract Lead Generation!
                 
                 Best regards,
-                The VA Contract Hub Team
+                The ContractLink.ai Team
                 """
                 
                 msg = Message(
@@ -18622,7 +18622,7 @@ def submit_gsa_application():
                     </ul>
                     
                     <p>Best regards,<br>
-                    <strong>VA Contract Hub GSA Approval Team</strong></p>
+                    <strong>ContractLink.ai GSA Approval Team</strong></p>
                 </body>
                 </html>
                 """
@@ -19356,7 +19356,7 @@ def email_invoice():
                 </table>
                 
                 <p><strong>Notes:</strong> {data.get('notes', 'N/A')}</p>
-                <p>Sent from VA Contract Hub</p>
+                <p>Sent from ContractLink.ai</p>
             </body>
         </html>
         """
