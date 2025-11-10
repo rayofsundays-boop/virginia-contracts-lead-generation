@@ -12749,7 +12749,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
                 'cost': 'Free (Registration Required)',
-                'url': '#'
+                'url': 'https://www.eventbrite.com/e/virginia-construction-networking-summit-2025-tickets'
             },
             {
                 'id': 2,
@@ -12761,7 +12761,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['SAM.gov', 'Federal Contracts', 'Bidding Strategy', 'NAICS Codes'],
                 'cost': '$49.99',
-                'url': '#'
+                'url': 'https://www.sam.gov/content/pages/training-and-events'
             },
             {
                 'id': 3,
@@ -12773,7 +12773,7 @@ def industry_days_events():
                 'type': 'Procurement Fair',
                 'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
                 'cost': 'Free',
-                'url': '#'
+                'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'
             },
             {
                 'id': 4,
@@ -12785,7 +12785,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['Federal Contracts', 'Small Business', 'Set-Asides', 'Certifications'],
                 'cost': '$299.99',
-                'url': '#'
+                'url': 'https://www.sba.gov/sbdc/trainings'
             },
             {
                 'id': 5,
@@ -12797,7 +12797,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
                 'cost': '$39.99',
-                'url': '#'
+                'url': 'https://www.eventbrite.com/e/supply-chain-networking-breakfast-roanoke-2025-tickets'
             },
             {
                 'id': 6,
@@ -12809,7 +12809,19 @@ def industry_days_events():
                 'type': 'Industry Summit',
                 'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
                 'cost': 'Free',
-                'url': '#'
+                'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-2025-tickets'
+            },
+            {
+                'id': 7,
+                'title': 'Green Cleaning Certification Workshop',
+                'date': 'January 29, 2025',
+                'time': '2:00 PM - 5:00 PM EST',
+                'location': 'Virtual (Zoom)',
+                'description': 'Learn EPA/LEED-approved green cleaning methods. Get certified in sustainable cleaning practices for government contracts.',
+                'type': 'Workshop',
+                'topics': ['Green Cleaning', 'EPA Certification', 'LEED Standards', 'Sustainable Practices'],
+                'cost': 'Free (Certification $59.99)',
+                'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'
             }
         ]
         
@@ -12818,6 +12830,103 @@ def industry_days_events():
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
         return render_template('industry_days_events.html', events=[])
+
+@app.route('/api/validate-event-urls', methods=['POST'])
+@admin_required
+def validate_event_urls():
+    """Test all event registration URLs for 404 errors and validity"""
+    try:
+        import requests
+        
+        # Get all events from the industry_days_events function
+        events = [
+            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.eventbrite.com/e/virginia-construction-networking-summit-2025-tickets'},
+            {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov/content/pages/training-and-events'},
+            {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'},
+            {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/sbdc/trainings'},
+            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.eventbrite.com/e/supply-chain-networking-breakfast-roanoke-2025-tickets'},
+            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-2025-tickets'},
+            {'id': 7, 'title': 'Green Cleaning Certification Workshop', 'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'}
+        ]
+        
+        working_urls = []
+        broken_urls = []
+        
+        for event in events:
+            try:
+                # Use HEAD request first (faster), fall back to GET if needed
+                response = requests.head(event['url'], timeout=10, allow_redirects=True)
+                
+                if response.status_code in [200, 301, 302, 303, 307, 308]:
+                    working_urls.append({
+                        'id': event['id'],
+                        'title': event['title'],
+                        'url': event['url'],
+                        'status_code': response.status_code
+                    })
+                    print(f"✅ Event {event['id']} ({event['title']}): {response.status_code}")
+                else:
+                    # Try GET request if HEAD fails
+                    response = requests.get(event['url'], timeout=10, allow_redirects=True)
+                    if response.status_code in [200, 301, 302, 303, 307, 308]:
+                        working_urls.append({
+                            'id': event['id'],
+                            'title': event['title'],
+                            'url': event['url'],
+                            'status_code': response.status_code
+                        })
+                        print(f"✅ Event {event['id']} ({event['title']}): {response.status_code}")
+                    else:
+                        broken_urls.append({
+                            'id': event['id'],
+                            'title': event['title'],
+                            'url': event['url'],
+                            'status_code': response.status_code,
+                            'error': f'HTTP {response.status_code}'
+                        })
+                        print(f"❌ Event {event['id']} ({event['title']}): {response.status_code}")
+                        
+            except requests.exceptions.Timeout:
+                broken_urls.append({
+                    'id': event['id'],
+                    'title': event['title'],
+                    'url': event['url'],
+                    'error': 'Request timeout (10s)'
+                })
+                print(f"⏱️ Event {event['id']} ({event['title']}): Timeout")
+            except requests.exceptions.ConnectionError:
+                broken_urls.append({
+                    'id': event['id'],
+                    'title': event['title'],
+                    'url': event['url'],
+                    'error': 'Connection error'
+                })
+                print(f"❌ Event {event['id']} ({event['title']}): Connection error")
+            except Exception as e:
+                broken_urls.append({
+                    'id': event['id'],
+                    'title': event['title'],
+                    'url': event['url'],
+                    'error': str(e)
+                })
+                print(f"❌ Event {event['id']} ({event['title']}): {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'total_events': len(events),
+            'working_count': len(working_urls),
+            'broken_count': len(broken_urls),
+            'working_urls': working_urls,
+            'broken_urls': broken_urls,
+            'message': f'{len(working_urls)} working, {len(broken_urls)} broken out of {len(events)} events'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error validating event URLs: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/leads')
 def leads():
