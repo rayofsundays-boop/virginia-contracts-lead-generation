@@ -9701,6 +9701,29 @@ def admin_enhanced():
                 "WHERE data_source = 'VA Builders Summit Web Scraper'"
             )).scalar() or 0
         
+        elif section == 'industry-days-scraper':
+            # Industry Days & Events Scraper Section (All 50 States)
+            context['recent_industry_events'] = db.session.execute(text(
+                "SELECT * FROM government_contracts "
+                "WHERE data_source LIKE '%Industry Days%' OR data_source LIKE '%SBA Events%' "
+                "   OR contract_type LIKE '%Industry Day%' OR contract_type LIKE '%Event%' "
+                "ORDER BY created_at DESC LIMIT 30"
+            )).fetchall()
+            
+            context['total_industry_events'] = db.session.execute(text(
+                "SELECT COUNT(*) FROM government_contracts "
+                "WHERE data_source LIKE '%Industry Days%' OR data_source LIKE '%SBA Events%' "
+                "   OR contract_type LIKE '%Industry Day%' OR contract_type LIKE '%Event%'"
+            )).scalar() or 0
+            
+            # Count by state
+            context['events_by_state'] = db.session.execute(text(
+                "SELECT state, COUNT(*) as count FROM government_contracts "
+                "WHERE data_source LIKE '%Industry Days%' OR data_source LIKE '%SBA Events%' "
+                "   OR contract_type LIKE '%Industry Day%' OR contract_type LIKE '%Event%' "
+                "GROUP BY state ORDER BY count DESC LIMIT 20"
+            )).fetchall()
+        
         elif section == 'all-contracts':
             # Fetch all contracts for admin editing
             context['federal_contracts'] = db.session.execute(text(
@@ -19431,6 +19454,62 @@ def verify_va_builders_links():
         return jsonify({
             'success': False,
             'message': f'Error verifying links: {str(e)}'
+        }), 500
+
+@app.route('/admin/run-industry-days-scraper', methods=['POST'])
+@login_required
+@admin_required
+def run_industry_days_scraper():
+    """Run Industry Days & Events scraper for all 50 states"""
+    try:
+        from scrapers.industry_days_events_scraper import IndustryDaysEventsScraper
+        
+        # Get parameters
+        state_filter = request.json.get('state') if request.json else None
+        scrape_all = request.json.get('scrape_all', False) if request.json else False
+        
+        # Initialize scraper
+        scraper = IndustryDaysEventsScraper()
+        
+        # Scrape events
+        if scrape_all:
+            events = scraper.scrape_all_states(limit_per_state=5)
+        elif state_filter:
+            events = scraper.scrape_state_procurement_events(state_filter)
+            events.extend(scraper.scrape_sba_events(state_filter))
+            events.extend(scraper.scrape_sam_gov_events(state_filter))
+        else:
+            # Default: scrape federal events
+            events = scraper.scrape_sam_gov_events()
+            events.extend(scraper.scrape_sba_events())
+        
+        if not events:
+            return jsonify({
+                'success': False,
+                'message': 'No events found'
+            }), 404
+        
+        # Save to database
+        saved_count = scraper.save_to_database(events, db.session)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully scraped {len(events)} events, saved {saved_count} new entries',
+            'total_scraped': len(events),
+            'saved': saved_count,
+            'duplicates': len(events) - saved_count,
+            'states_covered': len(set(e.get('state', 'N/A') for e in events))
+        })
+        
+    except ImportError as e:
+        return jsonify({
+            'success': False,
+            'message': f'Scraper module not found: {str(e)}'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error running scraper: {str(e)}'
         }), 500
 
 if __name__ == '__main__':
