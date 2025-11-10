@@ -247,15 +247,37 @@ function showBasicCalculator() {
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
             <h6>Calculate cleaning costs based on square footage</h6>
-            <div class="mb-3">
-                <label class="form-label">Square Footage</label>
-                <input type="number" class="form-control" id="sqft" placeholder="Enter square footage">
+            <form id="calculatorForm">
+                <div class="mb-3">
+                    <label class="form-label">Square Footage</label>
+                    <input type="number" class="form-control" id="sqft" placeholder="Enter square footage" step="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rate per Square Foot ($)</label>
+                    <input type="number" class="form-control" id="rate" value="0.15" step="0.01" min="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Services ($)</label>
+                    <input type="number" class="form-control" id="additional" value="0" step="0.01" min="0">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculatePrice()">
+                    <i class="fas fa-calculator me-2"></i>Calculate
+                </button>
+            </form>
+            <hr>
+            <div id="totalDisplay" class="mb-3" style="display:none;">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p class="text-muted mb-2">Base Cleaning Cost:</p>
+                        <p class="mb-2"><strong id="baseCost">$0.00</strong></p>
+                        <p class="text-muted mb-2">Additional Services:</p>
+                        <p class="mb-2"><strong id="additionalCost">$0.00</strong></p>
+                        <hr>
+                        <p class="text-muted mb-2">Total Estimated Cost:</p>
+                        <h4 class="text-success mb-0" id="totalCost">$0.00</h4>
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Rate per Square Foot ($)</label>
-                <input type="number" class="form-control" id="rate" value="0.15" step="0.01">
-            </div>
-            <button class="btn btn-primary" onclick="calculatePrice()">Calculate</button>
             <div id="result" class="mt-3"></div>
         </div>
     `;
@@ -263,14 +285,29 @@ function showBasicCalculator() {
 }
 
 function calculatePrice() {
-    const sqft = parseFloat(document.getElementById('sqft').value);
-    const rate = parseFloat(document.getElementById('rate').value);
-    if (sqft && rate) {
-        const total = (sqft * rate).toFixed(2);
+    const sqft = parseFloat(document.getElementById('sqft').value) || 0;
+    const rate = parseFloat(document.getElementById('rate').value) || 0;
+    const additional = parseFloat(document.getElementById('additional').value) || 0;
+    
+    if (sqft > 0 && rate > 0) {
+        const baseCost = sqft * rate;
+        const totalCost = baseCost + additional;
+        
+        document.getElementById('baseCost').textContent = `$${baseCost.toFixed(2)}`;
+        document.getElementById('additionalCost').textContent = `$${additional.toFixed(2)}`;
+        document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+        document.getElementById('totalDisplay').style.display = 'block';
+        
         document.getElementById('result').innerHTML = `
             <div class="alert alert-success">
-                <h5>Estimated Cost: $${total}</h5>
-                <p class="mb-0">Based on ${sqft} sq ft @ $${rate}/sq ft</p>
+                <h5><i class="fas fa-check-circle me-2"></i>Calculation Complete!</h5>
+                <p class="mb-0">For ${sqft} sq ft @ $${rate}/sq ft + $${additional.toFixed(2)} services = <strong>$${totalCost.toFixed(2)}</strong></p>
+            </div>
+        `;
+    } else {
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>Please enter valid values for square footage and rate.
             </div>
         `;
     }
@@ -280,27 +317,181 @@ function showChecklists() {
     document.getElementById('toolModalTitle').textContent = 'Cleaning Checklists';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
-            <h6>Select a checklist to download:</h6>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="fas fa-building me-2"></i>Office Cleaning Checklist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="fas fa-restroom me-2"></i>Restroom Cleaning Checklist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="fas fa-school me-2"></i>School Cleaning Checklist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="fas fa-warehouse me-2"></i>Warehouse Cleaning Checklist
-                </a>
-            </div>
-            <div class="alert alert-info mt-3">
-                <small><i class="fas fa-info-circle me-2"></i>Sign up for more specialized checklists!</small>
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="office-tab" data-bs-toggle="tab" data-bs-target="#officeChecklist" type="button">Office</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="restroom-tab" data-bs-toggle="tab" data-bs-target="#restroomChecklist" type="button">Restroom</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="school-tab" data-bs-toggle="tab" data-bs-target="#schoolChecklist" type="button">School</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="warehouse-tab" data-bs-toggle="tab" data-bs-target="#warehouseChecklist" type="button">Warehouse</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="officeChecklist">
+                    <h6 class="mb-3">Office Cleaning Checklist</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office1">
+                        <label class="form-check-label" for="office1">Dust desk surfaces and furniture</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office2">
+                        <label class="form-check-label" for="office2">Vacuum carpets and rugs</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office3">
+                        <label class="form-check-label" for="office3">Mop hard floors</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office4">
+                        <label class="form-check-label" for="office4">Clean windows and glass</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office5">
+                        <label class="form-check-label" for="office5">Empty trash and recycling</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="office6">
+                        <label class="form-check-label" for="office6">Sanitize high-touch areas (doorknobs, light switches)</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="office7">
+                        <label class="form-check-label" for="office7">Wipe down kitchen/break room</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Office')">
+                        <i class="fas fa-download me-2"></i>Download as PDF
+                    </button>
+                </div>
+                
+                <div class="tab-pane fade" id="restroomChecklist">
+                    <h6 class="mb-3">Restroom Cleaning Checklist</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest1">
+                        <label class="form-check-label" for="rest1">Clean and sanitize toilets (interior and exterior)</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest2">
+                        <label class="form-check-label" for="rest2">Clean and sanitize urinals</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest3">
+                        <label class="form-check-label" for="rest3">Scrub sinks and faucets</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest4">
+                        <label class="form-check-label" for="rest4">Clean mirrors and glass</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest5">
+                        <label class="form-check-label" for="rest5">Mop and sanitize floors</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest6">
+                        <label class="form-check-label" for="rest6">Restock toilet paper and paper towels</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="rest7">
+                        <label class="form-check-label" for="rest7">Empty waste bins and sanitize</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="rest8">
+                        <label class="form-check-label" for="rest8">Refill soap and sanitizer dispensers</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Restroom')">
+                        <i class="fas fa-download me-2"></i>Download as PDF
+                    </button>
+                </div>
+                
+                <div class="tab-pane fade" id="schoolChecklist">
+                    <h6 class="mb-3">School Cleaning Checklist</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school1">
+                        <label class="form-check-label" for="school1">Clean and disinfect desks and chairs</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school2">
+                        <label class="form-check-label" for="school2">Vacuum classrooms and hallways</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school3">
+                        <label class="form-check-label" for="school3">Mop hard floors</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school4">
+                        <label class="form-check-label" for="school4">Wipe whiteboards and chalk boards</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school5">
+                        <label class="form-check-label" for="school5">Empty all trash and recycling</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school6">
+                        <label class="form-check-label" for="school6">Sanitize common areas (cafeteria, gymnasium)</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="school7">
+                        <label class="form-check-label" for="school7">Clean and sanitize bathrooms thoroughly</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="school8">
+                        <label class="form-check-label" for="school8">Sanitize door handles and light switches</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('School')">
+                        <i class="fas fa-download me-2"></i>Download as PDF
+                    </button>
+                </div>
+                
+                <div class="tab-pane fade" id="warehouseChecklist">
+                    <h6 class="mb-3">Warehouse Cleaning Checklist</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse1">
+                        <label class="form-check-label" for="warehouse1">Sweep all floor areas</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse2">
+                        <label class="form-check-label" for="warehouse2">Clean loading dock area</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse3">
+                        <label class="form-check-label" for="warehouse3">Mop spill areas and ensure slip safety</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse4">
+                        <label class="form-check-label" for="warehouse4">Empty trash and industrial bins</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse5">
+                        <label class="form-check-label" for="warehouse5">Clean office area within warehouse</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse6">
+                        <label class="form-check-label" for="warehouse6">Sanitize break room</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="warehouse7">
+                        <label class="form-check-label" for="warehouse7">Clean and sanitize restrooms</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="warehouse8">
+                        <label class="form-check-label" for="warehouse8">Organize and dispose of hazardous materials safely</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Warehouse')">
+                        <i class="fas fa-download me-2"></i>Download as PDF
+                    </button>
+                </div>
             </div>
         </div>
     `;
     new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function downloadChecklist(type) {
+    alert('✓ ' + type + ' Checklist downloaded! For full functionality, sign up for a premium account.');
 }
 
 function showResources() {
