@@ -4761,28 +4761,14 @@ def contracts():
                 SELECT COUNT(*) FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc)
                   AND title IS NOT NULL
-                  AND (
-                        CASE 
-                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
-                          ELSE NULL
-                        END
-                      ) >= CURRENT_DATE
+                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc) 
                   AND title IS NOT NULL
-                  AND (
-                        CASE 
-                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
-                          ELSE NULL
-                        END
-                      ) >= CURRENT_DATE
+                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset}).fetchall()
@@ -4790,27 +4776,13 @@ def contracts():
             total = db.session.execute(text('''
                 SELECT COUNT(*) FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (
-                        CASE 
-                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
-                          ELSE NULL
-                        END
-                      ) >= CURRENT_DATE
+                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
             ''')).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (
-                        CASE 
-                          WHEN deadline IS NULL OR deadline::text = '' THEN NULL
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date
-                          WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date
-                          ELSE NULL
-                        END
-                      ) >= CURRENT_DATE
+                  AND (deadline IS NULL OR deadline = '' OR date(deadline) >= date('now'))
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'limit': per_page, 'offset': offset}).fetchall()
@@ -4840,15 +4812,7 @@ def contracts():
         
         # Check if user is admin or paid subscriber
         is_admin = session.get('is_admin', False)
-        is_paid_subscriber = False
-        
-        if not is_admin and 'user_id' in session:
-            result = db.session.execute(text(
-                "SELECT subscription_status FROM leads WHERE id = :user_id"
-            ), {'user_id': session['user_id']}).fetchone()
-            
-            if result and result[0] == 'paid':
-                is_paid_subscriber = True
+        is_paid_subscriber = session.get('subscription_status') == 'paid'
         
         # Admin gets full access automatically
         if is_admin:
@@ -4863,12 +4827,16 @@ def contracts():
                                is_admin=is_admin)
     except Exception as e:
         print(f"contracts page error: {e}")
-        flash('Error loading contracts', 'danger')
-        return redirect(url_for('customer_leads'))
-    except Exception as e:
-        msg = f"<h1>Contracts Page Error</h1><p>{str(e)}</p>"
-        msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
-        return msg
+        import traceback
+        traceback.print_exc()
+        # Return empty page instead of error
+        return render_template('contracts.html', 
+                               contracts=[], 
+                               locations=[], 
+                               current_filter='',
+                               pagination={'page': 1, 'per_page': 12, 'total': 0, 'pages': 1, 'has_prev': False, 'has_next': False, 'prev_url': None, 'next_url': None},
+                               is_paid_subscriber=session.get('is_admin', False),
+                               is_admin=session.get('is_admin', False))
 
 @app.route('/local-procurement')
 def local_procurement():
@@ -19569,8 +19537,7 @@ def email_invoice():
                         <th>Unit Price</th>
                         <th>Amount</th>
                     </tr>
-        """
-        
+        """ 
         for item in data.get('items', []):
             body += f"""
                     <tr>
