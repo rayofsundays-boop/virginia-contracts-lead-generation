@@ -9,10 +9,11 @@
             <div class="card shadow">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
-                        <i class="fas fa-inbox me-2"></i>Customer Messages
+                        <i class="fas fa-inbox me-2"></i>Admin Mailbox - All Requests
                         {% if unread_count > 0 %}
                         <span class="badge bg-warning text-dark ms-2">{{ unread_count }} Unread</span>
                         {% endif %}
+                        <span class="badge bg-light text-dark ms-2">{{ total_count }} Total</span>
                     </h4>
                     <a href="{{ url_for('admin_enhanced') }}" class="btn btn-light btn-sm">
                         <i class="fas fa-arrow-left me-1"></i>Back to Admin
@@ -25,10 +26,11 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width: 5%;">Status</th>
+                                        <th style="width: 10%;">Type</th>
                                         <th style="width: 20%;">From</th>
-                                        <th style="width: 35%;">Subject</th>
+                                        <th style="width: 30%;">Subject</th>
                                         <th style="width: 15%;">Date</th>
-                                        <th style="width: 25%;">Actions</th>
+                                        <th style="width: 20%;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -42,20 +44,36 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            {% if message.type == 'customer_message' %}
+                                            <span class="badge bg-primary"><i class="fas fa-comment"></i> Message</span>
+                                            {% elif message.type == 'contact_form' %}
+                                            <span class="badge bg-info"><i class="fas fa-paper-plane"></i> Contact</span>
+                                            {% elif message.type == 'proposal_review' %}
+                                            <span class="badge bg-warning"><i class="fas fa-file-contract"></i> Proposal</span>
+                                            {% elif message.type == 'commercial_lead' %}
+                                            <span class="badge bg-success"><i class="fas fa-building"></i> Lead</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
                                             {{ message.sender_name or message.sender_email }}<br>
                                             <small class="text-muted">{{ message.sender_email }}</small>
+                                            {% if message.company %}
+                                            <br><small class="text-primary"><i class="fas fa-building"></i> {{ message.company }}</small>
+                                            {% endif %}
                                         </td>
                                         <td>{{ message.subject }}</td>
                                         <td>
-                                            <small>{{ message.sent_at.strftime('%m/%d/%Y') }}<br>{{ message.sent_at.strftime('%I:%M %p') }}</small>
+                                            <small>{{ message.created_at.strftime('%m/%d/%Y') }}<br>{{ message.created_at.strftime('%I:%M %p') }}</small>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ message.id }}">
                                                 <i class="fas fa-eye"></i> View
                                             </button>
+                                            {% if message.sender_id %}
                                             <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#replyModal{{ message.id }}">
                                                 <i class="fas fa-reply"></i> Reply
                                             </button>
+                                            {% endif %}
                                         </td>
                                     </tr>
 
@@ -69,8 +87,22 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="mb-3">
+                                                        <strong>Type:</strong> 
+                                                        {% if message.type == 'customer_message' %}
+                                                        <span class="badge bg-primary">Customer Message</span>
+                                                        {% elif message.type == 'contact_form' %}
+                                                        <span class="badge bg-info">Contact Form</span>
+                                                        {% elif message.type == 'proposal_review' %}
+                                                        <span class="badge bg-warning">Proposal Review</span>
+                                                        {% elif message.type == 'commercial_lead' %}
+                                                        <span class="badge bg-success">Commercial Lead</span>
+                                                        {% endif %}
+                                                        <br><br>
                                                         <strong>From:</strong> {{ message.sender_name or message.sender_email }} ({{ message.sender_email }})<br>
-                                                        <strong>Date:</strong> {{ message.sent_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                                        {% if message.company %}
+                                                        <strong>Company:</strong> {{ message.company }}<br>
+                                                        {% endif %}
+                                                        <strong>Date:</strong> {{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}
                                                     </div>
                                                     <hr>
                                                     <div class="message-body">
@@ -136,8 +168,15 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                            <h5>No Customer Messages</h5>
-                            <p class="text-muted">You don't have any messages from customers yet.</p>
+                            <h5>No Messages or Requests</h5>
+                            <p class="text-muted">You don't have any customer messages, contact forms, proposal reviews, or commercial leads yet.</p>
+                            <p class="text-muted small">All requests from customers will appear here including:</p>
+                            <ul class="list-unstyled text-muted small">
+                                <li><span class="badge bg-primary me-2"><i class="fas fa-comment"></i></span> Customer Messages</li>
+                                <li><span class="badge bg-info me-2"><i class="fas fa-paper-plane"></i></span> Contact Form Submissions</li>
+                                <li><span class="badge bg-warning me-2"><i class="fas fa-file-contract"></i></span> Proposal Review Requests</li>
+                                <li><span class="badge bg-success me-2"><i class="fas fa-building"></i></span> Commercial Lead Requests</li>
+                            </ul>
                         </div>
                     {% endif %}
                 </div>

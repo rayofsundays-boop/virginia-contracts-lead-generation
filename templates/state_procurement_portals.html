@@ -1,0 +1,996 @@
+{% extends "base.html" %}
+
+{% block title %}State Procurement Portals - All 50 States{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 250px;">
+    <div class="container">
+        <h1 class="display-4 text-white mb-3">
+            <i class="fas fa-flag-usa me-3"></i>State Procurement Portals
+        </h1>
+        <p class="lead text-white mb-0">
+            Direct access to procurement websites for all 50 states and Washington DC
+        </p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Search Bar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="input-group">
+                <span class="input-group-text bg-primary text-white">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control form-control-lg" id="stateSearch" 
+                       placeholder="Search for a state...">
+            </div>
+        </div>
+    </div>
+
+    <!-- States Grid -->
+    <div class="row g-4" id="statesContainer">
+        <!-- Alabama -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="alabama">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Alabama</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Alabama government contracts</p>
+                    <a href="https://www.purchasing.alabama.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://alison.alabama.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>ALISON (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alaska -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="alaska">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Alaska</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Alaska government contracts</p>
+                    <a href="https://online.alaska.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://iris-web.alaska.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>IRIS (Contracts)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arizona -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="arizona">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Arizona</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Arizona government contracts</p>
+                    <a href="https://spo.az.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://azscitech.com/Procurement" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>AZ Procurement
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arkansas -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="arkansas">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Arkansas</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Arkansas government contracts</p>
+                    <a href="https://www.dfa.arkansas.gov/offices/procurement/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.arkansas.gov/purchasing" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>AR Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- California -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="california">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>California</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for California government contracts</p>
+                    <a href="https://www.dgs.ca.gov/PD" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://caleprocure.ca.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>Cal eProcure
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colorado -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="colorado">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Colorado</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Colorado government contracts</p>
+                    <a href="https://www.colorado.gov/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://bidscolorado.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>BidsColorado
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connecticut -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="connecticut">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Connecticut</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Connecticut government contracts</p>
+                    <a href="https://portal.ct.gov/DAS/Procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.biznet.ct.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>BizNet
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delaware -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="delaware">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Delaware</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Delaware government contracts</p>
+                    <a href="https://gss.omb.delaware.gov/procurement/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://bids.delaware.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>DE Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Florida -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="florida">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Florida</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Florida government contracts</p>
+                    <a href="https://www.dms.myflorida.com/business_operations/state_purchasing" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.myfloridamarketplace.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>MyFloridaMarketPlace
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Georgia -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="georgia">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Georgia</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Georgia government contracts</p>
+                    <a href="https://doas.ga.gov/state-purchasing" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://ssl.doas.state.ga.us/gpr/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>GPR (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hawaii -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="hawaii">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Hawaii</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Hawaii government contracts</p>
+                    <a href="https://spo.hawaii.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://hands.ehawaii.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>HANDS (eProcurement)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Idaho -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="idaho">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Idaho</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Idaho government contracts</p>
+                    <a href="https://adm.idaho.gov/purchasing/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://purchasing.idaho.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>ID Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Illinois -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="illinois">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Illinois</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Illinois government contracts</p>
+                    <a href="https://www2.illinois.gov/cms/business/sell2/Pages/default.aspx" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.illinoisbids.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>Illinois Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indiana -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="indiana">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Indiana</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Indiana government contracts</p>
+                    <a href="https://www.in.gov/idoa/procurement/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://fs.gmis.in.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>GMIS (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Iowa -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="iowa">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Iowa</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Iowa government contracts</p>
+                    <a href="https://das.iowa.gov/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://bidopportunities.iowa.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>Bid Opportunities
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kansas -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="kansas">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Kansas</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Kansas government contracts</p>
+                    <a href="https://admin.ks.gov/offices/procurement-and-contracts" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://kansasbidsystem.ksgov.net" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>KS Bid System
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kentucky -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="kentucky">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Kentucky</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Kentucky government contracts</p>
+                    <a href="https://finance.ky.gov/services/statewidecontracting/Pages/default.aspx" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://eprocurement.ky.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>eProcurement
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Louisiana -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="louisiana">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Louisiana</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Louisiana government contracts</p>
+                    <a href="https://wwwcfprd.doa.louisiana.gov/osp/lapac/pubMain.cfm" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.doa.la.gov/osp/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>LA Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maine -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="maine">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Maine</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Maine government contracts</p>
+                    <a href="https://www.maine.gov/dafs/bbm/procurementservices" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.maine.gov/bids" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>ME Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maryland -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="maryland">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Maryland</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Maryland government contracts</p>
+                    <a href="https://procurement.maryland.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://emaryland.buyspeed.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>eMaryland
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Massachusetts -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="massachusetts">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Massachusetts</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Massachusetts government contracts</p>
+                    <a href="https://www.mass.gov/orgs/operational-services-division" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.commbuys.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>COMMBUYS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Michigan -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="michigan">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Michigan</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Michigan government contracts</p>
+                    <a href="https://www.michigan.gov/dtmb/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.sigma.michigan.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>SIGMA (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minnesota -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="minnesota">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Minnesota</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Minnesota government contracts</p>
+                    <a href="https://mn.gov/admin/osp/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://mn.gov/admin/osp/government/bidding/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>MN Bidding
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mississippi -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="mississippi">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Mississippi</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Mississippi government contracts</p>
+                    <a href="https://www.dfa.ms.gov/dfa-offices/mmrs/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.mmrs.state.ms.us" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>MMRS (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Missouri -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="missouri">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Missouri</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Missouri government contracts</p>
+                    <a href="https://oa.mo.gov/purchasing" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.moBuy.mo.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>MO Buy
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Montana -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="montana">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Montana</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Montana government contracts</p>
+                    <a href="https://gsd.mt.gov/About-Us/State-Procurement-Bureau" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://marketplace.mt.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>MT Marketplace
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nebraska -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="nebraska">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Nebraska</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Nebraska government contracts</p>
+                    <a href="https://das.nebraska.gov/materiel/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.negp.ne.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NEGP (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nevada -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="nevada">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Nevada</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Nevada government contracts</p>
+                    <a href="https://purchasing.nv.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nevadaepro.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NV ePro
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Hampshire -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="new-hampshire">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>New Hampshire</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for New Hampshire government contracts</p>
+                    <a href="https://das.nh.gov/purchasing/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nh.gov/purchasing/bids/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NH Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Jersey -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="new-jersey">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>New Jersey</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for New Jersey government contracts</p>
+                    <a href="https://www.njstart.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nj.gov/treasury/purchase/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NJ Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Mexico -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="new-mexico">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>New Mexico</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for New Mexico government contracts</p>
+                    <a href="https://www.generalservices.state.nm.us/state-purchasing/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nmspo.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NM SPO
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- New York -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="new-york">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>New York</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for New York government contracts</p>
+                    <a href="https://ogs.ny.gov/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nyscr.ny.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NY Contract Reporter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- North Carolina -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="north-carolina">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>North Carolina</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for North Carolina government contracts</p>
+                    <a href="https://www.pandc.nc.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://eprocurement.nc.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>NC eProcurement
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- North Dakota -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="north-dakota">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>North Dakota</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for North Dakota government contracts</p>
+                    <a href="https://www.nd.gov/omb/public/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.nd.gov/omb/public/procurement/solicitations" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>ND Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ohio -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="ohio">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Ohio</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Ohio government contracts</p>
+                    <a href="https://www.ohio.gov/busdev/services/procurement" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://ohio.diversitysoftware.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>OH Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oklahoma -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="oklahoma">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Oklahoma</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Oklahoma government contracts</p>
+                    <a href="https://oklahoma.gov/omes/services/purchasing.html" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.ok.gov/dcs/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>OK Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oregon -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="oregon">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Oregon</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Oregon government contracts</p>
+                    <a href="https://www.oregon.gov/das/procurement/pages/index.aspx" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://orpin.oregon.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>ORPIN (Bids)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pennsylvania -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="pennsylvania">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Pennsylvania</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Pennsylvania government contracts</p>
+                    <a href="https://www.dgs.pa.gov/Businesses-Vendors/Pages/default.aspx" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.pasupplierportal.state.pa.us" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>PA Supplier Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rhode Island -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="rhode-island">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Rhode Island</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Rhode Island government contracts</p>
+                    <a href="https://www.ridop.ri.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.purchasing.ri.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>RI Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- South Carolina -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="south-carolina">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>South Carolina</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for South Carolina government contracts</p>
+                    <a href="https://procurement.sc.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.scbo.sc.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>SC Business One Stop
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- South Dakota -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="south-dakota">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>South Dakota</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for South Dakota government contracts</p>
+                    <a href="https://boa.sd.gov/procurement-management/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.sdgfp.bidnetdirect.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>SD Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tennessee -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="tennessee">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Tennessee</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Tennessee government contracts</p>
+                    <a href="https://www.tn.gov/generalservices/procurement.html" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.tn.gov/generalservices/procurement/central-procurement-office--cpo-/open-solicitations.html" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>TN Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Texas -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="texas">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Texas</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Texas government contracts</p>
+                    <a href="https://comptroller.texas.gov/purchasing/" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.txsmartbuy.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>TXSMART Buy
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utah -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="utah">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Utah</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Utah government contracts</p>
+                    <a href="https://purchasing.utah.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://transparent.utah.gov/openbids.php" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>UT Open Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vermont -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="vermont">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Vermont</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Vermont government contracts</p>
+                    <a href="https://bgs.vermont.gov/purchasing-contracting" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://bid.vermont.gov" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>VT Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Virginia -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="virginia">
+            <div class="card h-100 shadow-sm hover-lift border-success" style="border-width: 3px !important;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Virginia</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3"><strong>Your State!</strong> Virginia procurement portal for state government contracts</p>
+                    <a href="https://eva.virginia.gov" target="_blank" class="btn btn-success btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>eVA Portal
+                    </a>
+                    <a href="https://www.eva.virginia.gov/pages/eva-bids-search.htm" target="_blank" class="btn btn-outline-success btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>VA Bids Search
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Washington -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="washington">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Washington</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Washington government contracts</p>
+                    <a href="https://des.wa.gov/services/contracting-purchasing" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.washingtoneprocurement.org" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>WA eProcurement
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Washington DC -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="washington-dc">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Washington DC</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Procurement portal for Washington DC government contracts</p>
+                    <a href="https://ocp.dc.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>DC Portal
+                    </a>
+                    <a href="https://app.ocp.dc.gov/PublicSite/Search.aspx" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>DC Bids
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- West Virginia -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="west-virginia">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>West Virginia</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for West Virginia government contracts</p>
+                    <a href="https://购.wv.gov" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://www.state.wv.us/admin/purchase/" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>WV Purchasing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wisconsin -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="wisconsin">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Wisconsin</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Wisconsin government contracts</p>
+                    <a href="https://doa.wi.gov/pages/doavbs/default.aspx" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="https://vendornet.state.wi.us" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>VendorNet
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wyoming -->
+        <div class="col-md-6 col-lg-4 state-card" data-state="wyoming">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Wyoming</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">State procurement portal for Wyoming government contracts</p>
+                    <a href="https://ai.wyo.gov/divisions/procurement-programs" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
+                    </a>
+                    <a href="http://wybuys.egov.com" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-file-contract me-2"></i>WyBUYS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+
+.state-card.hidden {
+    display: none !important;
+}
+
+/* Improved text contrast */
+.card-body .text-muted {
+    color: #2c3e50 !important;
+    font-weight: 500;
+}
+
+.card-header h5 {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('stateSearch').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const stateCards = document.querySelectorAll('.state-card');
+    
+    stateCards.forEach(card => {
+        const stateName = card.getAttribute('data-state');
+        if (stateName.includes(searchTerm) || searchTerm === '') {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+});
+</script>
+
+{% endblock %}

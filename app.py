@@ -4838,10 +4838,10 @@ def contracts():
                                is_paid_subscriber=session.get('is_admin', False),
                                is_admin=session.get('is_admin', False))
 
-@app.route('/local-procurement')
-def local_procurement():
-    """Virginia local and state procurement portals guide"""
-    return render_template('local_procurement.html')
+@app.route('/state-procurement-portals')
+def state_procurement_portals():
+    """State procurement portals guide for all 50 states"""
+    return render_template('state_procurement_portals.html')
 
 # Convenience redirectors so any internal "View Active Bids" links resolve
 @app.route('/active-bids/<city_slug>')
@@ -9500,24 +9500,44 @@ def admin_enhanced():
             "SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'"
         )).scalar() or 0
         
-        # Get unread admin messages count (with error handling)
+        # Get unread admin messages count (with error handling) - includes all request types
         try:
-            unread_admin_messages = db.session.execute(text(
-                "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = FALSE"
-            ), {'user_id': session['user_id']}).scalar() or 0
+            # Count unread customer messages
+            customer_messages = db.session.execute(text(
+                "SELECT COUNT(*) FROM messages WHERE recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) AND is_read = FALSE"
+            )).scalar() or 0
+            
+            # Count recent contact form submissions (last 30 days)
+            try:
+                contact_forms = db.session.execute(text(
+                    "SELECT COUNT(*) FROM contact_messages WHERE created_at > NOW() - INTERVAL '30 days'"
+                )).scalar() or 0
+            except:
+                contact_forms = 0
+            
+            # Count pending proposal reviews
+            try:
+                pending_proposals = db.session.execute(text(
+                    "SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'"
+                )).scalar() or 0
+            except:
+                pending_proposals = 0
+            
+            # Count open commercial leads
+            try:
+                commercial_leads = db.session.execute(text(
+                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
+                )).scalar() or 0
+            except:
+                commercial_leads = 0
+            
+            # Total unread messages and requests
+            unread_admin_messages = customer_messages + contact_forms + pending_proposals + commercial_leads
+            
         except Exception as e:
             print(f"Warning: Could not fetch admin messages: {e}")
             db.session.rollback()
             unread_admin_messages = 0
-        
-        # Get pending proposals count (with error handling)
-        try:
-            pending_proposals = db.session.execute(text(
-                "SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'"
-            )).scalar() or 0
-        except Exception as e:
-            print(f"Warning: Could not fetch pending proposals: {e}")
-            db.session.rollback()
             pending_proposals = 0
         
         context = {
@@ -16222,7 +16242,6 @@ def property_management_companies():
         return redirect(url_for('customer_leads'))
 
 @app.route('/bulk-products')
-@login_required
 def bulk_products():
     """Marketplace for bulk cleaning product requests"""
     category_filter = request.args.get('category', '')
@@ -16230,72 +16249,72 @@ def bulk_products():
     urgency_filter = request.args.get('urgency', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
     per_page = 12
-    offset = (page - 1) * per_page
     
     # Check if paid subscriber or admin
     is_admin = session.get('is_admin', False)
-    is_paid = False
-    if not is_admin and 'user_id' in session:
-        result = db.session.execute(text(
-            "SELECT subscription_status FROM leads WHERE id = :user_id"
-        ), {'user_id': session['user_id']}).fetchone()
-        if result and result[0] == 'paid':
-            is_paid = True
+    is_paid = session.get('subscription_status') == 'paid' or is_admin
     
-    # Admin gets full access
-    if is_admin:
-        is_paid = True
-    
-    # Build query
-    where_conditions = ["status = 'open'"]
-    params = {}
-    
-    if category_filter:
-        where_conditions.append("category = :category")
-        params['category'] = category_filter
-    
-    if urgency_filter:
-        where_conditions.append("urgency = :urgency")
-        params['urgency'] = urgency_filter
-    
-    where_clause = " AND ".join(where_conditions)
-    
-    # Get stats
-    active_requests = db.session.execute(text(
-        "SELECT COUNT(*) FROM bulk_product_requests WHERE status = 'open'"
-    )).scalar() or 0
-    
-    total_value = db.session.execute(text(
-        "SELECT SUM(total_budget) FROM bulk_product_requests WHERE status = 'open'"
-    )).scalar() or 0
-    
-    categories_count = db.session.execute(text(
-        "SELECT COUNT(DISTINCT category) FROM bulk_product_requests WHERE status = 'open'"
-    )).scalar() or 0
-    
-    # Get requests
-    total_count_sql = f"SELECT COUNT(*) FROM bulk_product_requests WHERE {where_clause}"
-    total_count = db.session.execute(text(total_count_sql), params).scalar() or 0
-    
-    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-    
-    params['limit'] = per_page
-    params['offset'] = offset
-    
-    requests_sql = (
-        "SELECT * FROM bulk_product_requests "
-        f"WHERE {where_clause} "
-        "ORDER BY "
-        "    CASE urgency "
-        "        WHEN 'immediate' THEN 1 "
-        "        WHEN 'this_week' THEN 2 "
-        "        WHEN 'this_month' THEN 3 "
-        "        ELSE 4 "
-        "    END, "
-        "    created_at DESC "
-        "LIMIT :limit OFFSET :offset"
-    )
-    requests_data = db.session.execute(text(requests_sql), params).fetchall()
+    try:
+        # Build query
+        where_conditions = ["status = 'open'"]
+        params = {}
+        
+        if category_filter:
+            where_conditions.append("category = :category")
+            params['category'] = category_filter
+        
+        if urgency_filter:
+            where_conditions.append("urgency = :urgency")
+            params['urgency'] = urgency_filter
+        
+        where_clause = " AND ".join(where_conditions)
+        offset = (page - 1) * per_page
+        
+        # Get stats
+        active_requests = db.session.execute(text(
+            "SELECT COUNT(*) FROM bulk_product_requests WHERE status = 'open'"
+        )).scalar() or 0
+        
+        total_value = db.session.execute(text(
+            "SELECT SUM(total_budget) FROM bulk_product_requests WHERE status = 'open'"
+        )).scalar() or 0
+        
+        categories_count = db.session.execute(text(
+            "SELECT COUNT(DISTINCT category) FROM bulk_product_requests WHERE status = 'open'"
+        )).scalar() or 0
+        
+        # Get requests
+        total_count_sql = f"SELECT COUNT(*) FROM bulk_product_requests WHERE {where_clause}"
+        total_count = db.session.execute(text(total_count_sql), params).scalar() or 0
+        
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        
+        params['limit'] = per_page
+        params['offset'] = offset
+        
+        requests_sql = (
+            "SELECT * FROM bulk_product_requests "
+            f"WHERE {where_clause} "
+            "ORDER BY "
+            "    CASE urgency "
+            "        WHEN 'immediate' THEN 1 "
+            "        WHEN 'this_week' THEN 2 "
+            "        WHEN 'this_month' THEN 3 "
+            "        ELSE 4 "
+            "    END, "
+            "    created_at DESC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        requests_data = db.session.execute(text(requests_sql), params).fetchall()
+        
+    except Exception as e:
+        # Table doesn't exist or other error - show empty page
+        print(f"Bulk products error: {str(e)}")
+        requests_data = []
+        active_requests = 0
+        total_value = 0
+        categories_count = 0
+        total_pages = 1
     
     return render_template('bulk_products.html',
                          requests=requests_data,
@@ -19088,10 +19107,13 @@ def my_messages():
 @login_required
 @admin_required
 def admin_mailbox():
-    """Admin mailbox to view all customer messages"""
+    """Admin mailbox to view all customer messages and requests"""
     try:
         # Get all messages sent to admins
-        messages = db.session.execute(
+        messages_list = []
+        
+        # 1. Regular customer messages
+        customer_messages = db.session.execute(
             text("SELECT m.*, sender.email as sender_email, "
                  "sender.first_name || ' ' || sender.last_name as sender_name, "
                  "sender.company_name FROM messages m "
@@ -19100,9 +19122,101 @@ def admin_mailbox():
                  "ORDER BY m.is_read ASC, m.sent_at DESC")
         ).fetchall()
         
-        unread_count = sum(1 for msg in messages if not msg.is_read)
+        for msg in customer_messages:
+            messages_list.append({
+                'id': msg.id,
+                'type': 'customer_message',
+                'sender_name': msg.sender_name or 'Unknown',
+                'sender_email': msg.sender_email or '',
+                'company': msg.company_name or '',
+                'subject': msg.subject,
+                'body': msg.body,
+                'created_at': msg.sent_at,
+                'is_read': msg.is_read,
+                'sender_id': msg.sender_id
+            })
         
-        return render_template('admin_mailbox.html', messages=messages, unread_count=unread_count)
+        # 2. Contact form submissions
+        try:
+            contact_messages = db.session.execute(
+                text("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+            ).fetchall()
+            
+            for msg in contact_messages:
+                messages_list.append({
+                    'id': f"contact_{msg.id}",
+                    'type': 'contact_form',
+                    'sender_name': msg.name,
+                    'sender_email': msg.email,
+                    'company': '',
+                    'subject': msg.subject or 'Contact Form Submission',
+                    'body': msg.message,
+                    'created_at': msg.created_at,
+                    'is_read': False,
+                    'sender_id': None
+                })
+        except Exception as e:
+            print(f"Could not fetch contact messages: {e}")
+        
+        # 3. Proposal review submissions
+        try:
+            proposal_reviews = db.session.execute(
+                text("SELECT pr.*, l.email, l.company_name, l.contact_name "
+                     "FROM proposal_reviews pr "
+                     "LEFT JOIN leads l ON pr.user_id = l.id "
+                     "WHERE pr.status = 'pending' "
+                     "ORDER BY pr.created_at DESC")
+            ).fetchall()
+            
+            for review in proposal_reviews:
+                messages_list.append({
+                    'id': f"proposal_{review.id}",
+                    'type': 'proposal_review',
+                    'sender_name': review.contact_name or 'Unknown',
+                    'sender_email': review.email or '',
+                    'company': review.company_name or '',
+                    'subject': f'📋 Proposal Review Request - ${review.proposal_value}',
+                    'body': f"Contract: {review.contract_type}\nDeadline: {review.deadline}\nValue: ${review.proposal_value}\nWebsite: {review.agency_website}",
+                    'created_at': review.created_at,
+                    'is_read': False,
+                    'sender_id': review.user_id
+                })
+        except Exception as e:
+            print(f"Could not fetch proposal reviews: {e}")
+        
+        # 4. Commercial lead requests
+        try:
+            commercial_leads = db.session.execute(
+                text("SELECT * FROM commercial_lead_requests "
+                     "WHERE status = 'open' "
+                     "ORDER BY created_at DESC LIMIT 50")
+            ).fetchall()
+            
+            for lead in commercial_leads:
+                messages_list.append({
+                    'id': f"commercial_{lead.id}",
+                    'type': 'commercial_lead',
+                    'sender_name': lead.contact_name,
+                    'sender_email': lead.contact_email,
+                    'company': lead.business_name,
+                    'subject': f'🏢 Commercial Cleaning Request - {lead.urgency.upper()}',
+                    'body': f"Service Type: {lead.service_type}\nProperty Size: {lead.property_size} sq ft\nBudget: ${lead.budget}\nLocation: {lead.location}",
+                    'created_at': lead.created_at,
+                    'is_read': False,
+                    'sender_id': None
+                })
+        except Exception as e:
+            print(f"Could not fetch commercial leads: {e}")
+        
+        # Sort all messages by date (newest first, unread first)
+        messages_list.sort(key=lambda x: (x['is_read'], x['created_at']), reverse=True)
+        
+        unread_count = sum(1 for msg in messages_list if not msg['is_read'])
+        
+        return render_template('admin_mailbox.html', 
+                             messages=messages_list, 
+                             unread_count=unread_count,
+                             total_count=len(messages_list))
         
     except Exception as e:
         print(f"Error loading admin mailbox: {e}")

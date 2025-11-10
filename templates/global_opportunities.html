@@ -122,33 +122,35 @@
                         {% endif %}
                     </div>
 
-                    <p class="text-muted mb-3">
+                    <p class="mb-3" style="color: #2c3e50 !important; font-weight: 500;">
                         {{ contract.get('description', 'International cleaning and facility management opportunity') }}
                     </p>
 
                     <div class="row g-2 small mb-3">
                         {% if contract.get('organization') %}
                         <div class="col-6">
-                            <strong>Organization:</strong><br>
-                            {{ contract.get('organization') }}
+                            <strong style="color: #1a202c !important;">Organization:</strong><br>
+                            <span style="color: #2c3e50 !important;">{{ contract.get('organization') }}</span>
                         </div>
                         {% endif %}
                         {% if contract.get('deadline') %}
                         <div class="col-6">
-                            <strong>Deadline:</strong><br>
-                            <i class="fas fa-calendar me-1"></i>{{ contract.get('deadline') }}
+                            <strong style="color: #1a202c !important;">Deadline:</strong><br>
+                            <span style="color: #2c3e50 !important;">
+                                <i class="fas fa-calendar me-1"></i>{{ contract.get('deadline') }}
+                            </span>
                         </div>
                         {% endif %}
                         {% if contract.get('contract_type') %}
                         <div class="col-6">
-                            <strong>Type:</strong><br>
-                            {{ contract.get('contract_type') }}
+                            <strong style="color: #1a202c !important;">Type:</strong><br>
+                            <span style="color: #2c3e50 !important;">{{ contract.get('contract_type') }}</span>
                         </div>
                         {% endif %}
                         {% if contract.get('duration') %}
                         <div class="col-6">
-                            <strong>Duration:</strong><br>
-                            {{ contract.get('duration') }}
+                            <strong style="color: #1a202c !important;">Duration:</strong><br>
+                            <span style="color: #2c3e50 !important;">{{ contract.get('duration') }}</span>
                         </div>
                         {% endif %}
                     </div>
@@ -196,10 +198,10 @@
     <!-- Empty State -->
     <div class="text-center py-5">
         <div class="mb-4">
-            <i class="fas fa-globe-americas fa-5x text-muted"></i>
+            <i class="fas fa-globe-americas fa-5x" style="color: #a0aec0;"></i>
         </div>
-        <h3 class="text-muted mb-3">No Opportunities Found</h3>
-        <p class="text-muted mb-4">
+        <h3 class="mb-3" style="color: #2c3e50 !important; font-weight: 700;">No Opportunities Found</h3>
+        <p class="mb-4" style="color: #4a5568 !important; font-weight: 500;">
             {% if selected_region or selected_country or search_query %}
             Try adjusting your filters to see more results.
             {% else %}
@@ -217,25 +219,31 @@
     <!-- Information Section -->
     <div class="card shadow-sm mt-5">
         <div class="card-body">
-            <h4 class="mb-3">
+            <h4 class="mb-3" style="color: #1a202c !important; font-weight: 700;">
                 <i class="fas fa-info-circle me-2 text-primary"></i>About Global Opportunities
             </h4>
             <div class="row g-4">
                 <div class="col-md-4">
-                    <h5><i class="fas fa-building text-success me-2"></i>International Organizations</h5>
-                    <p class="text-muted small">
+                    <h5 style="color: #1a202c !important; font-weight: 700;">
+                        <i class="fas fa-building text-success me-2"></i>International Organizations
+                    </h5>
+                    <p class="small" style="color: #2c3e50 !important; font-weight: 500;">
                         Access contracts from UN, World Bank, USAID, DFID, and other international development organizations.
                     </p>
                 </div>
                 <div class="col-md-4">
-                    <h5><i class="fas fa-flag text-primary me-2"></i>Embassy & Consulate Contracts</h5>
-                    <p class="text-muted small">
+                    <h5 style="color: #1a202c !important; font-weight: 700;">
+                        <i class="fas fa-flag text-primary me-2"></i>Embassy & Consulate Contracts
+                    </h5>
+                    <p class="small" style="color: #2c3e50 !important; font-weight: 500;">
                         U.S. embassies and consulates worldwide require cleaning and facility maintenance services.
                     </p>
                 </div>
                 <div class="col-md-4">
-                    <h5><i class="fas fa-handshake text-warning me-2"></i>NGO Partnerships</h5>
-                    <p class="text-muted small">
+                    <h5 style="color: #1a202c !important; font-weight: 700;">
+                        <i class="fas fa-handshake text-warning me-2"></i>NGO Partnerships
+                    </h5>
+                    <p class="small" style="color: #2c3e50 !important; font-weight: 500;">
                         International NGOs and humanitarian organizations need reliable facility management partners.
                     </p>
                 </div>
@@ -256,6 +264,36 @@
 
 .backdrop-blur {
     backdrop-filter: blur(10px);
+}
+
+/* Fix color contrast issues */
+.card-header h5 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.card-body .text-muted {
+    color: #2c3e50 !important;
+    font-weight: 500 !important;
+}
+
+.card-body strong {
+    color: #1a202c !important;
+    font-weight: 700 !important;
+}
+
+.card-body h5 {
+    color: #1a202c !important;
+    font-weight: 700 !important;
+}
+
+.card-body p {
+    color: #2c3e50 !important;
+}
+
+.small.text-muted {
+    color: #4a5568 !important;
+    font-weight: 500 !important;
 }
 </style>
 {% endblock %}
