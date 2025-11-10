@@ -305,6 +305,7 @@
                         </div>
                         <h3 class="partner-company-name">Elite Eco Care Services</h3>
                         <p class="partner-tagline">Premium Eco-Friendly Cleaning</p>
+                        <p class="partner-location"><i class="fas fa-map-marker-alt"></i> Hampton Roads, VA</p>
                     </div>
                 </div>
                 <div class="col-lg-8">
@@ -313,9 +314,9 @@
                             <i class="fas fa-handshake me-2"></i>Welcome to the ContractLink.ai Community!
                         </h4>
                         <p class="partner-description">
-                            We're excited to spotlight <strong>Elite Eco Care Services</strong>, a premier cleaning company dedicated to 
-                            providing environmentally responsible, high-quality cleaning solutions. With expertise in both residential 
-                            and commercial spaces, they deliver exceptional results using eco-friendly products and sustainable practices.
+                            We're excited to spotlight <strong>Elite Eco Care Services</strong>, a premier cleaning company serving the Hampton Roads, Virginia area. 
+                            Dedicated to providing environmentally responsible, high-quality cleaning solutions, they specialize in both residential 
+                            and commercial spaces, delivering exceptional results using eco-friendly products and sustainable practices.
                         </p>
                         
                         <div class="partner-services">
@@ -1135,10 +1136,10 @@ section, .container, .row {
 
 /* ==================== FEATURED PARTNER SECTION ==================== */
 .featured-partner-section {
-    padding: 5rem 0;
+    padding: 6rem 0;
     background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .featured-partner-section::before {
@@ -1249,6 +1250,22 @@ section, .container, .row {
     color: var(--color-gray-200);
     font-size: 1rem;
     font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.partner-location {
+    color: #10b981;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.partner-location i {
+    color: #ffd700;
 }
 
 .partner-content {
@@ -1663,6 +1680,15 @@ section, .container, .row {
     
     .partner-company-name {
         font-size: 1.5rem;
+    }
+    
+    .partner-tagline {
+        font-size: 0.9rem;
+    }
+    
+    .partner-location {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
     }
     
     .partner-welcome {
