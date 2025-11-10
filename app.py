@@ -14353,14 +14353,14 @@ def partnerships():
     return render_template('partnerships.html')
 
 @app.route('/subscription')
-@login_required
 def subscription():
-    """Subscription and pricing page"""
+    """Subscription and pricing page - Public access, no login required"""
     user_email = session.get('user_email') or session.get('email')
     subscription_status = session.get('subscription_status', 'free')
+    credits_balance = 0
     
-    # Get user's current subscription info from database
-    if user_email:
+    # Get user's current subscription info from database if logged in
+    if user_email and session.get('user_id'):
         try:
             result = db.session.execute(
                 text('SELECT subscription_status, credits_balance FROM leads WHERE email = :email'),
@@ -14370,9 +14370,7 @@ def subscription():
                 subscription_status = result[0] or 'free'
                 credits_balance = result[1] or 0
         except:
-            credits_balance = 0
-    else:
-        credits_balance = 0
+            pass
     
     return render_template('subscription.html', 
                          subscription_status=subscription_status,
