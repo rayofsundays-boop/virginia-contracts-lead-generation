@@ -52,10 +52,32 @@
                     <h5 class="mb-0">🏗️ Post Construction Cleanup Opportunities</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Filter Controls -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="postConstructionSearch" 
+                                       placeholder="Search by title, agency, or location...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select" id="postConstructionSourceFilter">
+                                <option value="">All Sources</option>
+                                <option value="instantmarkets.com">InstantMarkets.com Only</option>
+                                <option value="other">Other Sources</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     {% if post_construction_leads %}
-                        <div class="row">
+                        <div class="row" id="postConstructionLeadsList">
                             {% for lead in post_construction_leads %}
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3 post-construction-lead-card" 
+                                 data-title="{{ lead.title|lower }}"
+                                 data-agency="{{ lead.agency|lower }}"
+                                 data-location="{{ lead.location|lower }}"
+                                 data-url="{{ lead.website_url|lower if lead.website_url else '' }}">
                                 <div class="card h-100 border-left-success">
                                     <div class="card-body">
                                         <h6 class="card-title">{{ lead.title }}</h6>
@@ -310,7 +332,92 @@
     .border-left-info {
         border-left: 4px solid #17a2b8 !important;
     }
+    .post-construction-lead-card.hidden {
+        display: none !important;
+    }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Post Construction Leads Filtering
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('postConstructionSearch');
+    const sourceFilter = document.getElementById('postConstructionSourceFilter');
+    const leadCards = document.querySelectorAll('.post-construction-lead-card');
+    
+    function filterLeads() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const sourceValue = sourceFilter ? sourceFilter.value.toLowerCase() : '';
+        
+        let visibleCount = 0;
+        
+        leadCards.forEach(card => {
+            const title = card.getAttribute('data-title') || '';
+            const agency = card.getAttribute('data-agency') || '';
+            const location = card.getAttribute('data-location') || '';
+            const url = card.getAttribute('data-url') || '';
+            
+            // Check search term
+            const matchesSearch = !searchTerm || 
+                title.includes(searchTerm) || 
+                agency.includes(searchTerm) || 
+                location.includes(searchTerm);
+            
+            // Check source filter
+            let matchesSource = true;
+            if (sourceValue === 'instantmarkets.com') {
+                matchesSource = url.includes('instantmarkets.com');
+            } else if (sourceValue === 'other') {
+                matchesSource = !url.includes('instantmarkets.com');
+            }
+            
+            // Show/hide card
+            if (matchesSearch && matchesSource) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+        
+        // Show "no results" message if needed
+        updateNoResultsMessage(visibleCount);
+    }
+    
+    function updateNoResultsMessage(count) {
+        const leadsList = document.getElementById('postConstructionLeadsList');
+        let noResultsMsg = document.getElementById('noResultsMessage');
+        
+        if (count === 0 && leadCards.length > 0) {
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.id = 'noResultsMessage';
+                noResultsMsg.className = 'col-12';
+                noResultsMsg.innerHTML = '<div class="alert alert-warning"><i class="fas fa-search me-2"></i>No leads match your filters. Try adjusting your search.</div>';
+                leadsList.appendChild(noResultsMsg);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+    
+    // Attach event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', filterLeads);
+    }
+    
+    if (sourceFilter) {
+        sourceFilter.addEventListener('change', filterLeads);
+        
+        // Auto-select InstantMarkets filter if URL has parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('source') === 'instantmarkets') {
+            sourceFilter.value = 'instantmarkets.com';
+            filterLeads();
+        }
+    }
+});
+</script>
+
 {% endblock %}
