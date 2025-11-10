@@ -108,6 +108,17 @@ SUBSCRIPTION_PLANS = {
         'name': 'Annual Subscription',
         'price': 950.00,
         'plan_id': os.environ.get('PAYPAL_ANNUAL_PLAN_ID', 'P-ANNUAL-PLAN-ID')
+    },
+    # WIN50 Discounted Plans (50% OFF)
+    'monthly_win50': {
+        'name': 'Monthly Subscription (50% OFF)',
+        'price': 49.50,
+        'plan_id': os.environ.get('PAYPAL_MONTHLY_WIN50_PLAN_ID', 'P-MONTHLY-WIN50-PLAN-ID')
+    },
+    'annual_win50': {
+        'name': 'Annual Subscription (50% OFF)',
+        'price': 475.00,
+        'plan_id': os.environ.get('PAYPAL_ANNUAL_WIN50_PLAN_ID', 'P-ANNUAL-WIN50-PLAN-ID')
     }
 }
 
@@ -4557,6 +4568,29 @@ def subscribe(plan_type):
     user_email = session.get('user_email')
     company_name = session.get('company_name', 'User')
     
+    # Check for promo code
+    promo_code = request.args.get('promo', '').upper()
+    discount_applied = False
+    discount_percent = 0
+    
+    # Apply WIN50 promo code - switch to discounted plan
+    if promo_code == 'WIN50':
+        # Use discounted plan ID
+        discounted_plan_type = f"{plan_type}_win50"
+        
+        if discounted_plan_type in SUBSCRIPTION_PLANS:
+            plan_type = discounted_plan_type
+            discount_percent = 50
+            discount_applied = True
+            
+            # Store promo code in session for reference
+            session['promo_code_used'] = 'WIN50'
+            session['discount_percent'] = 50
+            
+            flash(f'🎉 Promo code WIN50 applied! You\'re getting 50% OFF!', 'success')
+        else:
+            flash('Promo code is valid but discounted plan not configured. Contact support.', 'warning')
+    
     if plan_type not in SUBSCRIPTION_PLANS:
         flash('Invalid subscription plan selected.', 'error')
         return redirect(url_for('register'))
@@ -4614,6 +4648,10 @@ def subscription_success():
             user_email = session.get('user_email')
             agreement_id = billing_agreement.id
             
+            # Check if promo code was used
+            promo_code_used = session.get('promo_code_used', None)
+            discount_percent = session.get('discount_percent', 0)
+            
             db.session.execute(text('''
                 UPDATE leads 
                 SET subscription_status = 'paid',
@@ -4629,7 +4667,16 @@ def subscription_success():
             })
             db.session.commit()
             
-            flash('🎉 Subscription activated! Welcome to exclusive cleaning contract leads.', 'success')
+            # Log promo code usage for analytics
+            if promo_code_used:
+                print(f"✅ Promo Code Used: {promo_code_used} ({discount_percent}% off) - User: {user_email}")
+                # Clear promo code from session after use
+                session.pop('promo_code_used', None)
+                session.pop('discount_percent', None)
+                flash(f'🎉 Subscription activated with {discount_percent}% discount! Welcome to exclusive cleaning contract leads.', 'success')
+            else:
+                flash('🎉 Subscription activated! Welcome to exclusive cleaning contract leads.', 'success')
+            
             return redirect(url_for('lead_marketplace'))
         else:
             flash('Subscription activation failed. Please contact support.', 'error')

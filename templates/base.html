@@ -320,6 +320,90 @@
                 transform: scale(1.1);
             }
         }
+        
+        /* Sales Banner Styles */
+        .sales-banner {
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 50%, #e74c3c 100%);
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+            color: white;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .sales-banner-emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            animation: bounce 1s infinite;
+        }
+        
+        .sales-banner-code {
+            font-size: 1.1rem;
+            margin-left: 15px;
+        }
+        
+        .code-highlight {
+            background: rgba(255,255,255,0.25);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 2px dashed white;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        .sales-banner-cta {
+            background: white !important;
+            color: #e74c3c !important;
+            font-weight: bold;
+            border: none;
+            padding: 6px 16px !important;
+            transition: all 0.3s ease;
+        }
+        
+        .sales-banner-cta:hover {
+            background: #f8f9fa !important;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .sales-banner-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            line-height: 1;
+            padding: 0 10px;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .sales-banner-close:hover {
+            opacity: 1;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .sales-banner.hidden {
+            display: none;
+        }
     </style>
     
     <!-- Global Search System (Subscribers Only) -->
@@ -328,6 +412,21 @@
     {% endif %}
 </head>
 <body>
+    <!-- 50% OFF Sales Banner -->
+    <div class="sales-banner" id="salesBanner">
+        <div class="container-fluid">
+            <div class="row align-items-center py-2">
+                <div class="col-12 text-center">
+                    <span class="sales-banner-emoji">🎉</span>
+                    <strong>LIMITED TIME OFFER:</strong> Get 50% OFF Your Subscription!
+                    <span class="sales-banner-code">Use Code: <span class="code-highlight">WIN50</span></span>
+                    <a href="{{ url_for('subscription') }}" class="btn btn-sm btn-light ms-3 sales-banner-cta">Subscribe Now →</a>
+                    <button class="sales-banner-close" onclick="closeSalesBanner()" aria-label="Close banner">×</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Navigation Header -->
     <header class="site-header">
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -942,6 +1041,28 @@
                 toastElement.addEventListener('hidden.bs.toast', function() {
                     this.closest('.toast-container').remove();
                 });
+            }
+        });
+    </script>
+    
+    <!-- Sales Banner Close Script -->
+    <script>
+        function closeSalesBanner() {
+            const banner = document.getElementById('salesBanner');
+            if (banner) {
+                banner.classList.add('hidden');
+                // Store in session storage so it stays closed during session
+                sessionStorage.setItem('salesBannerClosed', 'true');
+            }
+        }
+        
+        // Check if banner was closed in this session
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('salesBannerClosed') === 'true') {
+                const banner = document.getElementById('salesBanner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
             }
         });
     </script>
