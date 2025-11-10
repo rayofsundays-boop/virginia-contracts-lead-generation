@@ -4828,6 +4828,72 @@ def active_bids_redirect(city_slug):
         slug = (city_slug or '').strip().lower().replace(' ', '-').replace('_', '-')
         mapping = {
             # Hampton Roads
+            'virginia-beach': 'https://www.vbgov.com/government/departments/procurement/Pages/bids.aspx',
+            'norfolk': 'https://www.norfolk.gov/bids.aspx',
+            'hampton': 'https://www.hampton.gov/bids.aspx',
+            'newport-news': 'https://www.nngov.com/procurement',
+            'chesapeake': 'https://www.cityofchesapeake.net/government/city-departments/departments/finance/purchasing-division.htm',
+            'suffolk': 'https://www.suffolkva.us/263/Purchasing',
+            'williamsburg': 'https://www.williamsburgva.gov/purchasing',
+            # Northern VA
+            'arlington': 'https://www.arlingtonva.us/Government/Programs/Procurement',
+            'alexandria': 'https://www.alexandriava.gov/Purchasing',
+            'fairfax': 'https://www.fairfaxcounty.gov/procurement/',
+            'loudoun': 'https://www.loudoun.gov/procurement',
+            'prince-william': 'https://www.pwcva.gov/department/finance/purchasing',
+            'manassas': 'https://www.manassascity.org/185/Purchasing',
+            'manassas-park': 'https://www.manassasparkva.gov/purchasing',
+            'falls-church': 'https://www.fallschurchva.gov/202/Purchasing',
+            # Richmond Metro
+            'richmond': 'https://www.rva.gov/procurement',
+            'henrico': 'https://henrico.us/finance/purchasing/',
+            'chesterfield': 'https://www.chesterfield.gov/1068/Procurement',
+            'hanover': 'https://www.hanovercounty.gov/183/Purchasing',
+            'petersburg': 'https://www.petersburgva.gov/181/Purchasing',
+            'colonial-heights': 'https://www.colonialheightsva.gov/purchasing',
+            # Central/Southwest/Valley
+            'charlottesville': 'https://www.charlottesville.gov/155/Purchasing',
+            'lynchburg': 'https://www.lynchburgva.gov/purchasing',
+            'danville': 'https://www.danville-va.gov/156/Purchasing',
+            'fredericksburg': 'https://www.fredericksburgva.gov/206/Purchasing',
+            'culpeper': 'https://www.culpeperva.gov/purchasing',
+            'roanoke': 'https://www.roanokeva.gov/190/Purchasing',
+            'blacksburg': 'https://www.blacksburg.gov/departments/finance/purchasing-department',
+            'bristol': 'https://www.bristolva.org/purchasing',
+            'radford': 'https://www.radfordva.gov/165/Purchasing',
+            'salem': 'https://www.salemva.gov/203/Purchasing',
+            'christiansburg': 'https://www.christiansburg.org/purchasing',
+            'winchester': 'https://www.winchesterva.gov/purchasing',
+            'harrisonburg': 'https://www.harrisonburgva.gov/purchasing',
+            'staunton': 'https://www.staunton.va.us/departments/finance/purchasing',
+            'waynesboro': 'https://www.waynesboro.va.us/purchasing',
+            'lexington': 'https://www.lexingtonva.gov/purchasing',
+            # K-12 subsets
+            'virginia-beach-schools': 'https://www.vbschools.com/departments/purchasing',
+            'norfolk-public-schools': 'https://www.nps.k12.va.us/departments/business_and_finance/',
+            'williamsburg-james-city-schools': 'https://wjccschools.org/departments/business-operations/',
+        }
+
+        target = mapping.get(slug)
+        if not target:
+            # Unknown slug: default to eVA (statewide portal)
+            target = 'https://eva.virginia.gov'
+        return redirect(target)
+    except Exception as e:
+        print(f"active_bids_redirect error for slug '{city_slug}': {e}")
+        return redirect('https://eva.virginia.gov')
+
+@app.route('/api/test-procurement-urls', methods=['POST'])
+@admin_required
+def test_procurement_urls():
+    """Test all Virginia procurement portal URLs for 404 errors and fix them"""
+    try:
+        print("🔍 Testing Virginia procurement portal URLs...")
+        import requests
+        
+        # Define all procurement portal URLs
+        portals = {
+            # Hampton Roads
             'virginia-beach': 'https://www.vbgov.com/government/departments/procurement/Pages/Current-Solicitations.aspx',
             'norfolk': 'https://norfolk.ionwave.net/',
             'hampton': 'https://hampton.gov/164/Current-Bids-RFPs',
@@ -4873,15 +4939,68 @@ def active_bids_redirect(city_slug):
             'norfolk-public-schools': 'https://www.nps.k12.va.us/departments/business_and_finance/',
             'williamsburg-james-city-schools': 'https://wjccschools.org/departments/business-operations/',
         }
-
-        target = mapping.get(slug)
-        if not target:
-            # Unknown slug: default to eVA (statewide portal)
-            target = 'https://eva.virginia.gov'
-        return redirect(target)
+        
+        errors_found = []
+        working = []
+        
+        for city, url in portals.items():
+            try:
+                response = requests.head(url, timeout=10, allow_redirects=True)
+                
+                if response.status_code == 404:
+                    print(f"❌ 404 ERROR: {city} -> {url}")
+                    errors_found.append({
+                        'city': city,
+                        'url': url,
+                        'status': 404
+                    })
+                elif response.status_code >= 400:
+                    print(f"⚠️  ERROR {response.status_code}: {city} -> {url}")
+                    errors_found.append({
+                        'city': city,
+                        'url': url,
+                        'status': response.status_code
+                    })
+                else:
+                    print(f"✅ OK: {city} -> {url}")
+                    working.append({
+                        'city': city,
+                        'url': url,
+                        'status': response.status_code
+                    })
+                    
+            except requests.exceptions.Timeout:
+                print(f"⏱️  TIMEOUT: {city} -> {url}")
+                errors_found.append({
+                    'city': city,
+                    'url': url,
+                    'status': 'timeout'
+                })
+            except requests.exceptions.RequestException as e:
+                print(f"🌐 CONNECTION ERROR: {city} -> {url}")
+                errors_found.append({
+                    'city': city,
+                    'url': url,
+                    'status': f'error: {str(e)[:50]}'
+                })
+            except Exception as e:
+                print(f"❌ UNKNOWN ERROR: {city} -> {url}: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Tested {len(portals)} procurement portals',
+            'working': len(working),
+            'errors': len(errors_found),
+            'working_portals': working,
+            'error_portals': errors_found,
+            'total_tested': len(portals)
+        })
+        
     except Exception as e:
-        print(f"active_bids_redirect error for slug '{city_slug}': {e}")
-        return redirect('https://eva.virginia.gov')
+        print(f"Error testing procurement URLs: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/educational-contracts')
 def educational_contracts():
