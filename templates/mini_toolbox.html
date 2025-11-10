@@ -870,7 +870,7 @@ function showPostConstructionChecklist() {
     document.getElementById('toolModalTitle').textContent = 'Post-Construction Cleanup & Windows';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3" style="max-height: 600px; overflow-y: auto;">
-            <ul class="nav nav-tabs mb-3" role="tablist">
+            <ul class="nav nav-tabs mb-3 checklist-tabs" role="tablist" style="border-bottom: 1px solid #dee2e6;">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#postconstChecklist">Checklist</a>
                 </li>
@@ -937,7 +937,7 @@ function calculatePostConstructionPricing() {
     const taxes = taxableAmount * 0.15;
     
     // Total
-    const totalCost = basePrice + materials + taxes;
+    const totalCost = basePrice + materialsCost + taxes;
     const profitMargin = basePrice - totalEmployeeCost - materialsCost;
     
     const html = `
