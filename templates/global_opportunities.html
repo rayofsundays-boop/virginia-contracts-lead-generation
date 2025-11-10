@@ -97,7 +97,7 @@
             <div class="card h-100 shadow-sm hover-lift">
                 <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="d-flex justify-content-between align-items-start">
-                        <h5 class="mb-0">
+                        <h5 class="mb-0" style="color: #ffffff !important; font-weight: 700 !important;">
                             <i class="fas fa-building me-2"></i>{{ contract.get('title', 'International Opportunity') }}
                         </h5>
                         {% if contract.get('urgent') %}
@@ -159,16 +159,16 @@
                     <!-- Full Access for Subscribers -->
                     <div class="alert alert-success mb-3">
                         <i class="fas fa-check-circle me-2"></i>
-                        <strong>Contact Available</strong>
+                        <strong style="color: #155724 !important;">Contact Available</strong>
                     </div>
                     {% if contract.get('contact_name') %}
-                    <p class="mb-1"><strong>Contact:</strong> {{ contract.get('contact_name') }}</p>
+                    <p class="mb-1" style="color: #2c3e50 !important;"><strong style="color: #1a202c !important;">Contact:</strong> {{ contract.get('contact_name') }}</p>
                     {% endif %}
                     {% if contract.get('contact_email') %}
-                    <p class="mb-1"><strong>Email:</strong> {{ contract.get('contact_email') }}</p>
+                    <p class="mb-1" style="color: #2c3e50 !important;"><strong style="color: #1a202c !important;">Email:</strong> {{ contract.get('contact_email') }}</p>
                     {% endif %}
                     {% if contract.get('contact_phone') %}
-                    <p class="mb-1"><strong>Phone:</strong> {{ contract.get('contact_phone') }}</p>
+                    <p class="mb-1" style="color: #2c3e50 !important;"><strong style="color: #1a202c !important;">Phone:</strong> {{ contract.get('contact_phone') }}</p>
                     {% endif %}
                     {% if contract.get('application_url') %}
                     <a href="{{ contract.get('application_url') }}" target="_blank" class="btn btn-primary w-100 mt-2">
@@ -186,7 +186,7 @@
                     </a>
                     {% endif %}
                 </div>
-                <div class="card-footer text-muted small">
+                <div class="card-footer small" style="background-color: #f8f9fa; color: #495057 !important; font-weight: 500;">
                     <i class="fas fa-info-circle me-1"></i>
                     Source: {{ contract.get('source', 'International Database') }}
                 </div>
@@ -266,10 +266,14 @@
     backdrop-filter: blur(10px);
 }
 
-/* Fix color contrast issues */
+/* Fix color contrast issues for WCAG 2.1 AA compliance */
 .card-header h5 {
     color: #ffffff !important;
     font-weight: 700 !important;
+}
+
+.card-header .badge {
+    font-weight: 600 !important;
 }
 
 .card-body .text-muted {
@@ -289,11 +293,50 @@
 
 .card-body p {
     color: #2c3e50 !important;
+    font-weight: 500 !important;
+}
+
+.card-body span {
+    color: #2c3e50 !important;
+}
+
+.card-body .alert strong {
+    color: inherit !important;
+}
+
+.card-footer {
+    color: #495057 !important;
+    font-weight: 500 !important;
 }
 
 .small.text-muted {
     color: #4a5568 !important;
     font-weight: 500 !important;
+}
+
+/* Ensure badge text has sufficient contrast */
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+    font-weight: 600 !important;
+}
+
+.badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+    font-weight: 600 !important;
 }
 </style>
 {% endblock %}
