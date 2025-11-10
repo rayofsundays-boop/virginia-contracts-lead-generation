@@ -100,7 +100,7 @@ def generate_url_manually(event):
     
     # Hampton Roads events
     if 'Hampton Roads' in title or 'Hampton' in event['location']:
-        return 'https://www.hampton.gov/1408/Vendor-Information'
+        return 'https://www.hampton.gov/procurement'
     
     # Virginia Beach
     if 'Virginia Beach' in title or 'Virginia Beach' in event['location']:
@@ -162,7 +162,7 @@ def main():
             'type': 'Procurement Fair',
             'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
             'cost': 'Free',
-            'url': 'https://www.hampton.gov/1408/Vendor-Information'
+            'url': 'https://www.hampton.gov/procurement'
         },
         {
             'id': 4,
@@ -186,7 +186,7 @@ def main():
             'type': 'Networking',
             'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
             'cost': '$39.99',
-            'url': 'https://www.roanokeva.gov/185/Purchasing'
+            'url': 'https://www.roanokeva.gov/purchasing'
         },
         {
             'id': 6,
@@ -198,7 +198,7 @@ def main():
             'type': 'Industry Summit',
             'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
             'cost': 'Free',
-            'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'
+            'url': 'https://www.arlingtonva.us/purchasing'
         },
         {
             'id': 7,

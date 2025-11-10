@@ -4896,7 +4896,7 @@ def active_bids_redirect(city_slug):
             'suffolk': 'https://www.suffolkva.us/263/Purchasing',
             'williamsburg': 'https://www.williamsburgva.gov/purchasing',
             # Northern VA
-            'arlington': 'https://www.arlingtonva.us/Government/Programs/Procurement',
+            'arlington': 'https://www.arlingtonva.us/purchasing',
             'alexandria': 'https://www.alexandriava.gov/Purchasing',
             'fairfax': 'https://www.fairfaxcounty.gov/procurement/',
             'loudoun': 'https://www.loudoun.gov/procurement',
@@ -4962,7 +4962,7 @@ def test_procurement_urls():
             'suffolk': 'https://www.suffolkva.us/263/Purchasing',
             'williamsburg': 'https://www.williamsburgva.gov/',
             # Northern VA
-            'arlington': 'https://www.arlingtonva.us/Government/Programs/Procurement',
+            'arlington': 'https://www.arlingtonva.us/purchasing',
             'alexandria': 'https://www.alexandriava.gov/Purchasing',
             'fairfax': 'https://www.fairfaxcounty.gov/procurement/',
             'loudoun': 'https://www.loudoun.gov/procurement',
@@ -12920,7 +12920,7 @@ def industry_days_events():
                 'type': 'Procurement Fair',
                 'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
                 'cost': 'Free',
-                'url': 'https://www.hampton.gov/1408/Vendor-Information'
+                'url': 'https://www.hampton.gov/procurement'
             },
             {
                 'id': 4,
@@ -12944,7 +12944,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
                 'cost': '$39.99',
-                'url': 'https://www.roanokeva.gov/185/Purchasing'
+                'url': 'https://www.roanokeva.gov/purchasing'
             },
             {
                 'id': 6,
@@ -12956,7 +12956,7 @@ def industry_days_events():
                 'type': 'Industry Summit',
                 'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
                 'cost': 'Free',
-                'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'
+                'url': 'https://www.arlingtonva.us/purchasing'
             },
             {
                 'id': 7,
@@ -12989,10 +12989,10 @@ def validate_event_urls():
         events = [
             {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.rva.gov/procurement-services'},
             {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov'},
-            {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.hampton.gov/1408/Vendor-Information'},
+            {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.hampton.gov/procurement'},
             {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/federal-contracting/contracting-assistance-programs'},
-            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.roanokeva.gov/185/Purchasing'},
-            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.arlingtonva.us/Government/Programs/Procurement'},
+            {'id': 5, 'title': 'Supply Chain & Vendor Networking Breakfast', 'url': 'https://www.roanokeva.gov/purchasing'},
+            {'id': 6, 'title': 'Northern Virginia Cleaning Services Summit', 'url': 'https://www.arlingtonva.us/purchasing'},
             {'id': 7, 'title': 'Green Cleaning Certification Workshop', 'url': 'https://www.epa.gov/saferchoice'}
         ]
         
