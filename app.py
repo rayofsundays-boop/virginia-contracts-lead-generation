@@ -8670,6 +8670,77 @@ def admin_remove_broken_urls():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/fix-404-urls-quick-wins', methods=['POST'])
+@admin_required
+def fix_404_urls_quick_wins():
+    """Identify and fix 404 errors in Quick Wins supply contracts and commercial leads"""
+    try:
+        print("🔍 Checking for 404 URLs in Quick Wins...")
+        import requests
+        
+        fixed_count = 0
+        errors_found = []
+        
+        # Check supply contracts URLs
+        supply_contracts = db.session.execute(text('''
+            SELECT id, website_url, title, agency 
+            FROM supply_contracts 
+            WHERE website_url IS NOT NULL 
+            AND website_url != ''
+            AND status = 'open'
+            LIMIT 100
+        ''')).fetchall()
+        
+        print(f"📦 Checking {len(supply_contracts)} supply contract URLs...")
+        
+        for contract in supply_contracts:
+            try:
+                url = contract[1]
+                if not url or url.startswith('http') is False:
+                    continue
+                
+                response = requests.head(url, timeout=5, allow_redirects=True)
+                
+                if response.status_code == 404:
+                    print(f"❌ 404 Found: {url}")
+                    errors_found.append({
+                        'id': contract[0],
+                        'type': 'supply_contract',
+                        'url': url,
+                        'title': contract[2],
+                        'status': 404
+                    })
+                    
+                    # Set URL to NULL for regeneration
+                    db.session.execute(text('''
+                        UPDATE supply_contracts 
+                        SET website_url = NULL 
+                        WHERE id = :id
+                    '''), {'id': contract[0]})
+                    fixed_count += 1
+                    
+            except requests.exceptions.RequestException as e:
+                # Network error, don't mark as 404
+                pass
+            except Exception as e:
+                pass
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Fixed {fixed_count} URLs with 404 errors in Quick Wins',
+            'fixed_count': fixed_count,
+            'errors_found': errors_found
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error fixing 404 URLs: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-delete-user', methods=['POST'])
 def admin_delete_user():
     """Admin function to delete a user account"""
