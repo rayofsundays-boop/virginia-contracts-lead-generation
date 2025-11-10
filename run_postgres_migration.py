@@ -1,9 +1,27 @@
 """
 Run PostgreSQL migration to create commercial tables on production database
 Usage: python run_postgres_migration.py
+
+⚠️  DISABLED: SQL migration file has been disabled to prevent fake data insertion.
+This script will not run until migrations/create_commercial_tables_postgres.sql is restored.
 """
 import os
+import sys
 from sqlalchemy import create_engine, text
+
+print("❌ MIGRATION DISABLED")
+print("=" * 80)
+print("The SQL migration file has been disabled (.DISABLED extension) to prevent")
+print("insertion of fake/demo commercial leads into the production database.")
+print("")
+print("File location: migrations/create_commercial_tables_postgres.sql.DISABLED")
+print("")
+print("If you need to run this migration:")
+print("1. Remove the fake data INSERT statements from the SQL file")
+print("2. Rename the file back to .sql (remove .DISABLED)")
+print("3. Run this script again")
+print("=" * 80)
+sys.exit(1)
 
 # Get DATABASE_URL from environment
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -24,7 +42,7 @@ try:
     # Create engine
     engine = create_engine(DATABASE_URL)
     
-    # Read migration SQL
+    # Read migration SQL - THIS WILL FAIL NOW SINCE FILE IS DISABLED
     with open('migrations/create_commercial_tables_postgres.sql', 'r') as f:
         migration_sql = f.read()
     
