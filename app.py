@@ -1,7 +1,7 @@
 import os
 import json
 import urllib.parse
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, send_file
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -2444,6 +2444,31 @@ def init_postgres_db():
                       tracking_notes TEXT,
                       analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(contract_id, contract_type))'''))
+        
+        db.session.commit()
+        
+        # Invoices table for tracking user-created invoices
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS invoices
+                     (id SERIAL PRIMARY KEY,
+                      user_email TEXT NOT NULL,
+                      invoice_name TEXT NOT NULL,
+                      invoice_date DATE NOT NULL,
+                      due_date DATE,
+                      bill_to TEXT NOT NULL,
+                      your_company TEXT NOT NULL,
+                      items JSON NOT NULL,
+                      notes TEXT,
+                      total DECIMAL(12,2) NOT NULL,
+                      status TEXT DEFAULT 'draft',
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+        
+        # Create indexes for faster invoice queries
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_user_email 
+                                   ON invoices(user_email)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_created_at 
+                                   ON invoices(created_at DESC)'''))
         
         db.session.commit()
         
@@ -18292,6 +18317,310 @@ def admin_url_manager():
                          broken_federal=broken_federal,
                          broken_supply=broken_supply,
                          broken_contracts=broken_contracts)
+
+# ========== INVOICE MANAGEMENT ENDPOINTS ==========
+
+@app.route('/api/save-invoice', methods=['POST'])
+def save_invoice():
+    """Save invoice to user profile"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    user_email = session.get('email')
+    
+    try:
+        invoice = db.session.execute(text('''
+            INSERT INTO invoices 
+            (user_email, invoice_name, invoice_date, due_date, bill_to, your_company, items, notes, total, status)
+            VALUES (:email, :name, :inv_date, :due, :bill_to, :company, :items, :notes, :total, 'saved')
+            RETURNING id
+        '''), {
+            'email': user_email,
+            'name': data.get('invoiceName'),
+            'inv_date': data.get('invoiceDate'),
+            'due': data.get('dueDate'),
+            'bill_to': data.get('billTo'),
+            'company': data.get('yourCompany'),
+            'items': json.dumps(data.get('items', [])),
+            'notes': data.get('notes'),
+            'total': float(data.get('total', 0))
+        }).scalar()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'invoice_id': invoice, 'message': 'Invoice saved successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/get-invoices', methods=['GET'])
+def get_invoices():
+    """Get all invoices for logged-in user"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('email')
+        invoices = db.session.execute(text('''
+            SELECT id, invoice_name, invoice_date, due_date, bill_to, your_company, total, status, created_at
+            FROM invoices
+            WHERE user_email = :email
+            ORDER BY created_at DESC
+        '''), {'email': user_email}).fetchall()
+        
+        invoice_list = [{
+            'id': inv[0],
+            'invoice_name': inv[1],
+            'invoice_date': inv[2],
+            'due_date': inv[3],
+            'bill_to': inv[4],
+            'your_company': inv[5],
+            'total': float(inv[6]),
+            'status': inv[7],
+            'created_at': inv[8].isoformat() if inv[8] else None
+        } for inv in invoices]
+        
+        return jsonify({'success': True, 'invoices': invoice_list})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/get-invoice/<int:invoice_id>', methods=['GET'])
+def get_invoice(invoice_id):
+    """Get specific invoice details"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('email')
+        invoice_data = db.session.execute(text('''
+            SELECT id, invoice_name, invoice_date, due_date, bill_to, your_company, items, notes, total, status, created_at
+            FROM invoices
+            WHERE id = :id AND user_email = :email
+        '''), {'id': invoice_id, 'email': user_email}).fetchone()
+        
+        if not invoice_data:
+            return jsonify({'success': False, 'message': 'Invoice not found'}), 404
+        
+        invoice = {
+            'id': invoice_data[0],
+            'invoice_name': invoice_data[1],
+            'invoice_date': invoice_data[2],
+            'due_date': invoice_data[3],
+            'bill_to': invoice_data[4],
+            'your_company': invoice_data[5],
+            'items': json.loads(invoice_data[6]) if isinstance(invoice_data[6], str) else invoice_data[6],
+            'notes': invoice_data[7],
+            'total': float(invoice_data[8]),
+            'status': invoice_data[9],
+            'created_at': invoice_data[10].isoformat() if invoice_data[10] else None
+        }
+        
+        return jsonify({'success': True, 'invoice': invoice})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/delete-invoice/<int:invoice_id>', methods=['DELETE'])
+def delete_invoice(invoice_id):
+    """Delete invoice"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    try:
+        user_email = session.get('email')
+        result = db.session.execute(text('''
+            DELETE FROM invoices
+            WHERE id = :id AND user_email = :email
+        '''), {'id': invoice_id, 'email': user_email})
+        
+        db.session.commit()
+        
+        if result.rowcount == 0:
+            return jsonify({'success': False, 'message': 'Invoice not found'}), 404
+        
+        return jsonify({'success': True, 'message': 'Invoice deleted successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/generate-invoice-pdf', methods=['POST'])
+def generate_invoice_pdf():
+    """Generate PDF from invoice data"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib import colors
+        from datetime import datetime
+        import io
+        
+        data = request.get_json()
+        buffer = io.BytesIO()
+        
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#667eea'),
+            spaceAfter=6,
+            alignment=1  # Center
+        )
+        story.append(Paragraph('INVOICE', title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Company and invoice info
+        header_data = [
+            [Paragraph(f"<b>{data.get('yourCompany', 'Your Company')}</b>", styles['Normal']), 
+             Paragraph(f"<b>Invoice #:</b> {data.get('invoiceName', '')}", styles['Normal'])],
+            [Paragraph(f"Bill To: {data.get('billTo', '')}", styles['Normal']),
+             Paragraph(f"<b>Date:</b> {data.get('invoiceDate', '')}", styles['Normal'])],
+            ['',
+             Paragraph(f"<b>Due Date:</b> {data.get('dueDate', '')}", styles['Normal'])]
+        ]
+        header_table = Table(header_data, colWidths=[3.5*inch, 3*inch])
+        header_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        story.append(header_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Items table
+        items = data.get('items', [])
+        table_data = [['Description', 'Qty', 'Unit Price', 'Amount']]
+        
+        for item in items:
+            table_data.append([
+                item.get('description', ''),
+                str(item.get('quantity', '0')),
+                f"${item.get('unitPrice', '0'):.2f}",
+                f"${item.get('amount', '0'):.2f}"
+            ])
+        
+        # Add totals row
+        table_data.append(['', '', 'TOTAL:', f"${data.get('total', '0'):.2f}"])
+        
+        items_table = Table(table_data, colWidths=[3*inch, 1*inch, 1.25*inch, 1.25*inch])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('ALIGN', (0, -1), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f8f9fa')])
+        ]))
+        story.append(items_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Notes
+        if data.get('notes'):
+            story.append(Paragraph('<b>Notes:</b>', styles['Normal']))
+            story.append(Paragraph(data.get('notes', ''), styles['Normal']))
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f"{data.get('invoiceName', 'invoice')}.pdf"
+        )
+    
+    except ImportError:
+        return jsonify({'success': False, 'message': 'PDF generation library not installed'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/email-invoice', methods=['POST'])
+def email_invoice():
+    """Send invoice via email"""
+    if 'email' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        recipient_email = data.get('email')
+        sender_email = session.get('email')
+        
+        # Create email subject and body
+        subject = f"Invoice: {data.get('invoiceName', 'Invoice')}"
+        
+        body = f"""
+        <html>
+            <body>
+                <h2>Invoice</h2>
+                <p><strong>Invoice Name:</strong> {data.get('invoiceName', '')}</p>
+                <p><strong>Bill To:</strong> {data.get('billTo', '')}</p>
+                <p><strong>From:</strong> {data.get('yourCompany', '')}</p>
+                <p><strong>Invoice Date:</strong> {data.get('invoiceDate', '')}</p>
+                <p><strong>Due Date:</strong> {data.get('dueDate', '')}</p>
+                
+                <h3>Items</h3>
+                <table border="1" cellpadding="10">
+                    <tr>
+                        <th>Description</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Amount</th>
+                    </tr>
+        """
+        
+        for item in data.get('items', []):
+            body += f"""
+                    <tr>
+                        <td>{item.get('description', '')}</td>
+                        <td>{item.get('quantity', '0')}</td>
+                        <td>${item.get('unitPrice', '0'):.2f}</td>
+                        <td>${item.get('amount', '0'):.2f}</td>
+                    </tr>
+            """
+        
+        body += f"""
+                    <tr>
+                        <td colspan="3" align="right"><strong>TOTAL:</strong></td>
+                        <td><strong>${data.get('total', '0'):.2f}</strong></td>
+                    </tr>
+                </table>
+                
+                <p><strong>Notes:</strong> {data.get('notes', 'N/A')}</p>
+                <p>Sent from VA Contract Hub</p>
+            </body>
+        </html>
+        """
+        
+        # Send email
+        msg = Message(
+            subject=subject,
+            recipients=[recipient_email],
+            html=body,
+            sender=app.config.get('MAIL_DEFAULT_SENDER', 'noreply@vacontracthub.com')
+        )
+        mail.send(msg)
+        
+        return jsonify({'success': True, 'message': 'Invoice sent successfully'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
     init_db()
