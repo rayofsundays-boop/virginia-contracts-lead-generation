@@ -53,13 +53,16 @@
                 </div>
                 <div class="card-body">
                     <!-- Filter Controls -->
-                    <div class="row mb-4">
+                    <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 <input type="text" class="form-control" id="postConstructionSearch" 
-                                       placeholder="Search by title, agency, or location...">
+                                       placeholder="Search: cleanup, renovation, commercial, virginia...">
                             </div>
+                            <small class="text-muted mt-1 d-block">
+                                <i class="fas fa-lightbulb me-1"></i>Try keywords: cleanup, renovation, residential, commercial, virginia, maryland
+                            </small>
                         </div>
                         <div class="col-md-6">
                             <select class="form-select" id="postConstructionSourceFilter">
@@ -67,6 +70,9 @@
                                 <option value="instantmarkets.com">InstantMarkets.com Only</option>
                                 <option value="other">Other Sources</option>
                             </select>
+                            <small class="text-muted mt-1 d-block">
+                                <i class="fas fa-filter me-1"></i>Filter by source website
+                            </small>
                         </div>
                     </div>
                     
@@ -77,6 +83,7 @@
                                  data-title="{{ lead.title|lower }}"
                                  data-agency="{{ lead.agency|lower }}"
                                  data-location="{{ lead.location|lower }}"
+                                 data-description="{{ lead.description|lower if lead.description else '' }}"
                                  data-url="{{ lead.website_url|lower if lead.website_url else '' }}">
                                 <div class="card h-100 border-left-success">
                                     <div class="card-body">
@@ -356,13 +363,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = card.getAttribute('data-title') || '';
             const agency = card.getAttribute('data-agency') || '';
             const location = card.getAttribute('data-location') || '';
+            const description = card.getAttribute('data-description') || '';
             const url = card.getAttribute('data-url') || '';
             
-            // Check search term
+            // Enhanced keyword search - searches across all fields
             const matchesSearch = !searchTerm || 
                 title.includes(searchTerm) || 
                 agency.includes(searchTerm) || 
-                location.includes(searchTerm);
+                location.includes(searchTerm) ||
+                description.includes(searchTerm);
             
             // Check source filter
             let matchesSource = true;
