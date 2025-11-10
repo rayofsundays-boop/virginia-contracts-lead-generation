@@ -290,48 +290,242 @@
 </style>
 
 <script>
+// ====== ENHANCED CHATBOT SYSTEM ======
+// Features:
+// 1. Pricing table intelligence - answers cleaning questions with rates
+// 2. Page detection & navigation help - context-aware assistance
+// 3. 5-minute check-in - asks if customer needs help (once per session)
+// 4. External resources - provides links to government databases
+// 5. Low bidder strategy - real advice on competitive pricing
+
+// Cleaning service pricing reference
+const pricingTable = {
+    office: { rate: 0.15, sqftMin: 5000, sqftMax: 50000, services: ['vacuuming', 'dusting', 'restrooms', 'break room cleaning'] },
+    school: { rate: 0.12, sqftMin: 20000, sqftMax: 100000, services: ['classroom cleaning', 'cafeteria sanitizing', 'athletic facilities', 'hallways'] },
+    warehouse: { rate: 0.08, sqftMin: 50000, sqftMax: 500000, services: ['floor sweeping', 'break room', 'office areas', 'sanitation'] },
+    medical: { rate: 0.22, sqftMin: 10000, sqftMax: 100000, services: ['biohazard cleaning', 'deep sanitizing', 'HIPAA compliance'] },
+    retail: { rate: 0.13, sqftMin: 5000, sqftMax: 30000, services: ['sales floor', 'restrooms', 'stockroom', 'windows'] },
+    hospitality: { rate: 0.18, sqftMin: 10000, sqftMax: 100000, services: ['lobby cleaning', 'room servicing', 'laundry coordination'] }
+};
+
+// Current page tracking for context-aware help
+let currentPage = 'dashboard';
+let pageEntryTime = Date.now();
+let checkinShown = false;
+
+// Detect current page from URL or DOM
+function detectCurrentPage() {
+    const url = window.location.href;
+    if (url.includes('customer-leads') || url.includes('federal-contracts')) currentPage = 'leads';
+    else if (url.includes('saved')) currentPage = 'saved_leads';
+    else if (url.includes('contracts')) currentPage = 'all_contracts';
+    else if (url.includes('payment') || url.includes('subscription')) currentPage = 'billing';
+    else if (url.includes('proposal')) currentPage = 'proposal';
+    else if (url.includes('admin')) currentPage = 'admin';
+    else currentPage = 'dashboard';
+    
+    pageEntryTime = Date.now();
+    checkinShown = false;
+}
+
+// 5-minute check-in system
+function initPageCheckIn() {
+    setTimeout(() => {
+        if (!checkinShown && document.getElementById('chatbot-container')) {
+            const container = document.getElementById('chatbot-container');
+            if (container.classList.contains('chatbot-minimized')) {
+                // Show subtle badge
+                document.getElementById('unread-count').style.display = 'flex';
+                addMessage('👋 Still looking for something? I can help guide you around this page!', 'bot', 
+                    ['Show me what\'s here', 'How do I find contracts?', 'Need pricing help?']);
+                checkinShown = true;
+            }
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+}
+
+const pageGuides = {
+    leads: {
+        help: "On the <strong>Leads Page</strong>, you can:<br>• View all available contracts from federal, state, and local sources<br>• Use filters on the left: location, budget, deadline, facility type<br>• Click any lead for full details and requirements<br>• Use 'Get Contact Info' to access client details<br>• Bookmark leads with the heart icon to save for later",
+        tips: ['How to filter leads?', 'What do the colors mean?', 'How do I save leads?']
+    },
+    saved_leads: {
+        help: "Your <strong>Saved Leads</strong> repository stores all bookmarked opportunities:<br>• Sort by date added, deadline, or contract value<br>• Click a lead to view details again<br>• Add notes to track your thoughts<br>• Remove leads you're no longer pursuing<br>• Export your saved leads list as CSV",
+        tips: ['How do I add notes?', 'Can I share saved leads?', 'How do I remove a lead?']
+    },
+    all_contracts: {
+        help: "The <strong>All Contracts View</strong> shows opportunities by type:<br>• <strong>Federal Contracts:</strong> SAM.gov opportunities with notice IDs<br>• <strong>State Procurement:</strong> Virginia eVA opportunities<br>• <strong>Supply Contracts:</strong> Vendor procurement from commercial buyers<br>• <strong>Local:</strong> City and county contracts<br>Click any card to see full requirements and deadlines.",
+        tips: ['What\'s the difference?', 'Which is best for me?', 'Show pricing examples']
+    },
+    proposal: {
+        help: "The <strong>Proposal Support</strong> section helps you build winning bids:<br>• Use templates for technical approaches, pricing, and staffing<br>• Our AI reviews proposals and scores them<br>• Get feedback on compliance with RFP requirements<br>• Access past performance examples<br>• Schedule expert consultation for complex bids",
+        tips: ['How do I write a proposal?', 'What should I include?', 'Can you review mine?']
+    },
+    billing: {
+        help: "Manage your subscription and credits:<br>• View current plan and next billing date<br>• Upgrade to access advanced features<br>• Purchase additional credits for lead access<br>• View invoices and payment history<br>• Update payment method",
+        tips: ['What\'s included in Pro?', 'How do credits work?', 'Can I upgrade?']
+    },
+    dashboard: {
+        help: "Your <strong>Dashboard</strong> gives quick access to:<br>• Contract opportunities by source (Federal, State, Commercial, Local)<br>• Your saved leads and recent activity<br>• Account subscription status<br>• Quick links to all major features<br>• Performance metrics on your bids",
+        tips: ['Show me federal contracts', 'How do saved leads work?', 'Need pricing help?']
+    }
+};
+
 const chatbotKnowledge = {
+    // ====== PRICING & COST CALCULATION ======
+    "pricing": {
+        response: generatePricingResponse(),
+        suggestions: ["Office cleaning rates?", "What about warehouse cleaning?", "Medical facility pricing?"]
+    },
+    "cleaning cost": {
+        response: "I can help estimate cleaning costs! Please tell me:<br>1. What type of facility? (office, school, warehouse, medical, retail, hospitality)<br>2. Square footage?<br>3. Cleaning frequency? (daily, 3x/week, weekly)<br><br>Then I'll give you:<br>✓ Base rate per sq ft<br>✓ Estimated monthly cost<br>✓ How you compare to market rates",
+        suggestions: ["Office 25,000 sq ft", "School 50,000 sq ft", "Warehouse 100,000 sq ft"]
+    },
+    "cost calculation": {
+        response: "I'll calculate realistic cleaning costs! Provide:<br>• Facility type & square footage<br>• Services needed (deep clean, daily maintenance, restrooms, etc.)<br>• Frequency (daily, weekly, etc.)<br><br>Virginia Cleaning Rates (base labor cost per sq ft, excludes overhead/profit):<br>Office: $0.15/sq ft | School: $0.12/sq ft | Warehouse: $0.08/sq ft<br>Medical: $0.22/sq ft | Retail: $0.13/sq ft | Hospitality: $0.18/sq ft",
+        suggestions: ["Calculate my estimate", "How are rates set?", "Low bidder strategy?"]
+    },
+    
+    // ====== LOW BIDDER STRATEGY ======
+    "low bid": {
+        response: generateLowBidderResponse(),
+        suggestions: ["When to challenge a low bid?", "How to compete without lowering price?", "Risk assessment guide?"]
+    },
+    "low bidder": {
+        response: generateLowBidderResponse(),
+        suggestions: ["Competitive strategy tips", "When to walk away?", "How do evaluators score?"]
+    },
+    "underbidding": {
+        response: generateLowBidderResponse(),
+        suggestions: ["Price vs quality trade-offs", "How to build confidence", "What guarantees matter?"]
+    },
+    
+    // ====== GOVERNMENT RESOURCES ======
+    "external resources": {
+        response: generateExternalResourcesResponse(),
+        suggestions: ["Federal contract databases", "State opportunities", "Getting registered", "Prevailing wage"]
+    },
+    "sam.gov": {
+        response: "<strong>SAM.gov - System for Award Management</strong><br>Official federal contracting database.<br><br><a href='https://sam.gov' target='_blank' class='btn btn-sm btn-primary'>Go to SAM.gov →</a><br><br>Features:<br>• Search federal contracts and opportunities<br>• Register your business<br>• Check certification status (8(a), HUBZone, WOSB, etc.)<br>• Set up opportunity alerts<br><br>Pro Tip: All our federal contracts are sourced from SAM.gov and cross-verified with notice IDs.",
+        suggestions: ["Register my business", "What certifications help?", "How to set up alerts?"]
+    },
+    "eva virginia": {
+        response: "<strong>Virginia eVA - Electronic Procurement System</strong><br>State of Virginia procurement portal.<br><br><a href='https://mvendor.cgieva.com' target='_blank' class='btn btn-sm btn-primary'>Go to Virginia eVA →</a><br><br>Features:<br>• Search state & local opportunities<br>• Register to bid on Virginia contracts<br>• View contract awards and history<br>• Submit bids online<br><br>Covers: State agencies, schools, colleges, local governments, authorities",
+        suggestions: ["Register on eVA", "How to bid on state contracts?", "Which cities use eVA?"]
+    },
+    "sba": {
+        response: "<strong>SBA.gov - Small Business Administration</strong><br>Federal small business support and contracting programs.<br><br><a href='https://www.sba.gov/federal-contracting' target='_blank' class='btn btn-sm btn-primary'>Go to SBA.gov →</a><br><br>Key Programs:<br>• 8(a) Business Development<br>• HUBZone Program<br>• Women-Owned Small Business (WOSB)<br>• Service-Disabled Veteran-Owned (SDVO)<br>• Certified Nurse Business (CNBS)<br><br>These certifications can set your bids apart and increase opportunities!",
+        suggestions: ["Which certification fits me?", "How to get certified?", "What's my advantage?"]
+    },
+    "prevailing wage": {
+        response: "<strong>Prevailing Wage Requirements</strong><br>Many government contracts require paying prevailing wages (often much higher than market rates).<br><br>Check:<br>• <strong>Federal:</strong> <a href='https://sam.gov/content/prevailing-wage' target='_blank'>SAM.gov Prevailing Wage Rates</a><br>• <strong>Virginia State:</strong> <a href='https://www.doli.virginia.gov/prevailing-wage/' target='_blank'>Virginia Dept of Labor Prevailing Wage</a><br>• <strong>Local:</strong> Check individual RFP for specific requirements<br><br>Virginia Prevailing Wage Examples (cleaning):<br>• Janitorial: $18-24/hr<br>• Lead Janitor: $22-28/hr<br>• Supervisor: $25-32/hr<br><br>⚠️ <strong>Critical:</strong> Check RFP for prevailing wage BEFORE bidding! Adds 30-50% to labor costs.",
+        suggestions: ["Virginia prevailing wage rates", "How does this affect pricing?", "Federal vs state rates?"]
+    },
+    
+    // ====== ORIGINAL FEATURES ======
     "find contracts": {
         response: "To find contracts, go to the <strong>Customer Portal</strong> and use the filters to search by location, contract type, or value. You can save leads you're interested in by clicking the bookmark icon.",
-        suggestions: ["How do I apply?", "What's the difference between government and commercial contracts?"]
+        suggestions: ["How do I apply?", "What's the difference between government and commercial contracts?", "Show me pricing examples"]
     },
     "apply": {
         response: "To apply for a contract:<br>1. Click on the lead in your Customer Portal<br>2. Review the requirements carefully<br>3. Click 'Get Contact Info' or 'Apply' button<br>4. You can also request proposal help for assistance",
-        suggestions: ["What are the requirements?", "How do I save leads?"]
+        suggestions: ["What are the requirements?", "How do I save leads?", "Need proposal help?"]
     },
     "requirements": {
         response: "Each contract has specific requirements shown in the lead details. Common requirements include:<br>• Business license<br>• Insurance coverage<br>• Certifications (CIMS, ISSA, etc.)<br>• Past performance references<br>• Financial capacity",
-        suggestions: ["How do I find contracts?", "What if I don't meet requirements?"]
+        suggestions: ["How do I find contracts?", "What if I don't meet requirements?", "What certifications help?"]
     },
     "save leads": {
         response: "Click the bookmark icon on any lead card to save it to your <strong>Saved Leads</strong> repository. Access your saved leads from the button in the Customer Portal header.",
-        suggestions: ["How do I apply?", "Can I add notes to saved leads?"]
-    },
-    "branding materials": {
-        response: "Pro subscribers get access to professional branding materials including logos, business cards, and marketing templates. Visit <strong>Pro Resources → Branding Materials</strong> from your portal.",
-        suggestions: ["What else is included in Pro?", "How do I schedule a consultation?"]
+        suggestions: ["How do I apply?", "Can I add notes to saved leads?", "How many can I save?"]
     },
     "proposal help": {
         response: "We offer proposal writing support with templates, guides, and samples. Pro subscribers can also schedule one-on-one consultations for personalized help. Access these from the <strong>Pro Resources</strong> menu.",
-        suggestions: ["How do I schedule a consultation?", "Are there proposal templates?"]
-    },
-    "consultation": {
-        response: "Pro subscribers can schedule one-on-one consultations for proposal reviews, bidding strategy, or business development. Click <strong>Pro Resources → One-on-One Consultations</strong> to book a session.",
-        suggestions: ["What types of consultations are available?", "How long are sessions?"]
-    },
-    "subscription": {
-        response: "Subscription plans include:<br>• Unlimited lead access<br>• Branding materials<br>• Proposal templates & guides<br>• One-on-one consultations<br>• Priority support<br><br>Visit the <strong>Payment</strong> page to subscribe.",
-        suggestions: ["What's the cost?", "Can I cancel anytime?"]
+        suggestions: ["How do I schedule a consultation?", "Are there proposal templates?", "What should I include?"]
     },
     "navigate": {
-        response: "Main navigation:<br>• <strong>Customer Portal</strong> - View all leads<br>• <strong>Saved Leads</strong> - Your bookmarked opportunities<br>• <strong>Pro Resources</strong> - Branding, proposals, consultations<br>• <strong>Payment</strong> - Manage subscription",
-        suggestions: ["How do I find contracts?", "What are Pro Resources?"]
+        response: generateNavigationHelp(),
+        suggestions: ["Show me the leads page", "How do saved leads work?", "Where's proposal help?"]
     },
     "default": {
-        response: "I can help you with:<br>• Finding and applying for contracts<br>• Understanding requirements<br>• Using platform features<br>• Accessing Pro resources<br><br>What specific question do you have?",
-        suggestions: ["How do I find contracts?", "What's included in my subscription?", "How do I get help with proposals?"]
+        response: "I can help you with:<br>• 💼 Finding and applying for contracts<br>• 💰 Pricing & cost calculations<br>• 📋 Proposal writing support<br>• 🏢 Understanding facility types<br>• 📊 Competitive bidding strategy<br>• 🔗 External government resources<br><br>What specific question do you have?",
+        suggestions: ["Show me contracts", "Pricing help", "Proposal advice", "Government resources"]
     }
 };
+
+// Response generation functions
+function generatePricingResponse() {
+    return `<strong>Virginia Cleaning Service Rates (Base Labor)</strong><br><br>` +
+        `📊 <strong>By Facility Type:</strong><br>` +
+        `• Office: $0.15/sq ft (light to moderate foot traffic)<br>` +
+        `• Retail: $0.13/sq ft (high traffic, specialized floors)<br>` +
+        `• Warehouse: $0.08/sq ft (large spaces, light maintenance)<br>` +
+        `• School: $0.12/sq ft (classrooms, cafeteria, athletic areas)<br>` +
+        `• Hospitality: $0.18/sq ft (high standards, multiple areas)<br>` +
+        `• Medical: $0.22/sq ft (HIPAA, biohazard protocols, deep sanitizing)<br><br>` +
+        `💡 <strong>These rates DO NOT include:</strong><br>` +
+        `• Equipment & supplies (5-10% of cost)<br>` +
+        `• Management & overhead (15-20%)<br>` +
+        `• Profit margin (8-12%)<br>` +
+        `• Prevailing wage premiums (30-50% more if required)<br><br>` +
+        `✅ <strong>Example: 25,000 sq ft office, daily service:</strong><br>` +
+        `Base: 25,000 × $0.15 = $3,750/day<br>` +
+        `Add overhead (20%): +$750<br>` +
+        `Add profit (10%): +$450<br>` +
+        `<strong>Realistic bid: ~$4,900-5,500/day</strong><br><br>` +
+        `Want me to calculate your specific facility?`;
+}
+
+function generateLowBidderResponse() {
+    return `<strong>Real Strategy: Responding to Low Bidders</strong><br><br>` +
+        `❌ <strong>DON'T:</strong> Panic and lower your price<br><br>` +
+        `✅ <strong>DO THIS INSTEAD:</strong><br><br>` +
+        `<strong>1. Verify the Math</strong><br>` +
+        `• Is their bid physically possible? (Can you profitably deliver?)<br>` +
+        `• Did they miss requirements that add cost?<br>` +
+        `• Are they including prevailing wage (if required)?<br><br>` +
+        `<strong>2. Document Your Value</strong><br>` +
+        `• <em>Experience:</em> Your past performance on similar facilities<br>` +
+        `• <em>Team Stability:</em> Lower turnover = consistent quality<br>` +
+        `• <em>Insurance:</em> Bonding, liability, workers comp details<br>` +
+        `• <em>Response:</em> How fast you fix problems (24-hour callback time)<br><br>` +
+        `<strong>3. Challenge Unsustainable Bids (if applicable)</strong><br>` +
+        `• Federal/State procurements may invalidate unrealistic bids<br>` +
+        `• File a formal protest if bid violates wage/bonding requirements<br>` +
+        `• Evidence: Show your calculation vs theirs<br><br>` +
+        `<strong>4. Competitive Positioning</strong><br>` +
+        `• "We're competitive AND sustainable"<br>` +
+        `• Emphasize risk: low-cost providers often fail mid-contract<br>` +
+        `• Highlight references from similar facilities<br><br>` +
+        `<strong>5. Know When to Walk Away</strong><br>` +
+        `• If bid is 30%+ below your cost = likely losing money<br>` +
+        `• Low-margin contracts drain resources from profitable work<br>` +
+        `• One failed contract damages your reputation more than walking away<br><br>` +
+        `💡 <em>Rule of Thumb:</em> Your bid should be within 10-15% of market average. Outside that range? Something's wrong with either bid.`;
+}
+
+function generateExternalResourcesResponse() {
+    return `<strong>Government Contracting Resource Links</strong><br><br>` +
+        `🏛️ <strong>Federal Contracts:</strong><br>` +
+        `<a href='https://sam.gov' target='_blank' class='btn btn-sm btn-primary'>SAM.gov - Federal Opportunities</a><br>` +
+        `<a href='https://www.fpds.gov' target='_blank' class='btn btn-sm btn-secondary'>FPDS - Contract Awards Search</a><br><br>` +
+        `🏢 <strong>Virginia State & Local:</strong><br>` +
+        `<a href='https://mvendor.cgieva.com' target='_blank' class='btn btn-sm btn-primary'>Virginia eVA</a><br>` +
+        `<a href='https://www.doli.virginia.gov' target='_blank' class='btn btn-sm btn-secondary'>VA Dept of Labor</a><br><br>` +
+        `🤝 <strong>Small Business Support:</strong><br>` +
+        `<a href='https://www.sba.gov/federal-contracting' target='_blank' class='btn btn-sm btn-primary'>SBA Federal Contracting Programs</a><br>` +
+        `<a href='https://www.sba.gov/local/virginia' target='_blank' class='btn btn-sm btn-secondary'>Virginia SBA District Office</a><br><br>` +
+        `📊 <strong>Compliance & Wages:</strong><br>` +
+        `<a href='https://sam.gov/content/prevailing-wage' target='_blank' class='btn btn-sm btn-primary'>Federal Prevailing Wage Rates</a><br>` +
+        `<a href='https://www.doli.virginia.gov/prevailing-wage/' target='_blank' class='btn btn-sm btn-secondary'>Virginia Prevailing Wage</a><br><br>` +
+        `Which resource would you like help using?`;
+}
+
+function generateNavigationHelp() {
+    const guide = pageGuides[currentPage] || pageGuides.dashboard;
+    const helpText = `On this <strong>${currentPage.replace(/_/g, ' ').toUpperCase()}</strong> page:<br><br>${guide.help}`;
+    return helpText;
+}
 
 function toggleChatbot() {
     const container = document.getElementById('chatbot-container');
@@ -339,6 +533,8 @@ function toggleChatbot() {
         container.classList.remove('chatbot-minimized');
         container.classList.add('chatbot-expanded');
         document.getElementById('unread-count').style.display = 'none';
+        detectCurrentPage(); // Update context when opening
+        initPageCheckIn(); // Reset check-in timer
     } else {
         minimizeChatbot();
     }
@@ -364,12 +560,12 @@ function sendMessage(event) {
     // Show typing indicator
     showTyping();
     
-    // Get bot response
+    // Get bot response with enhanced intelligence
     setTimeout(() => {
         hideTyping();
         const response = getBotResponse(message);
         addMessage(response.text, 'bot', response.suggestions);
-    }, 1000);
+    }, 800 + Math.random() * 400);
 }
 
 function sendQuickMessage(message) {
@@ -439,11 +635,16 @@ function hideTyping() {
 function getBotResponse(message) {
     const lowerMessage = message.toLowerCase();
     
-    // Match keywords to responses
+    // Try exact keyword match first
     for (const [key, data] of Object.entries(chatbotKnowledge)) {
-        if (lowerMessage.includes(key)) {
+        if (key !== 'default' && lowerMessage.includes(key)) {
             return { text: data.response, suggestions: data.suggestions };
         }
+    }
+    
+    // Try loose matching for pricing calculations
+    if (lowerMessage.includes('sq ft') || lowerMessage.includes('square foot') || lowerMessage.match(/\d+.*sqft/i)) {
+        return handlePricingCalculation(message);
     }
     
     // Default response
@@ -453,10 +654,66 @@ function getBotResponse(message) {
     };
 }
 
-// Show badge after 3 seconds on first visit
-setTimeout(() => {
-    if (document.getElementById('chatbot-container').classList.contains('chatbot-minimized')) {
-        document.getElementById('unread-count').style.display = 'flex';
+function handlePricingCalculation(message) {
+    // Parse square footage from message
+    const sqftMatch = message.match(/(\d+,?\d*)\s*(?:sq\.?\s*ft|square\s*feet|sqft)/i);
+    const sqft = sqftMatch ? parseInt(sqftMatch[1].replace(/,/g, '')) : null;
+    
+    // Try to detect facility type
+    let facility = null;
+    for (const type of Object.keys(pricingTable)) {
+        if (message.toLowerCase().includes(type)) {
+            facility = type;
+            break;
+        }
     }
-}, 3000);
+    
+    if (sqft && facility) {
+        const data = pricingTable[facility];
+        const baseDaily = sqft * data.rate;
+        const withOverhead = baseDaily * 1.25;
+        const withProfit = withOverhead * 1.12;
+        
+        return {
+            text: `<strong>Pricing Estimate: ${facility.charAt(0).toUpperCase() + facility.slice(1)} - ${sqft.toLocaleString()} sq ft</strong><br><br>` +
+                `📊 <strong>Base Rate:</strong> $${data.rate}/sq ft<br>` +
+                `💼 <strong>Daily Labor Cost:</strong> $${baseDaily.toLocaleString('en-US', {maximumFractionDigits: 0})}<br>` +
+                `➕ <strong>With Overhead (20%):</strong> $${withOverhead.toLocaleString('en-US', {maximumFractionDigits: 0})}<br>` +
+                `💰 <strong>With Profit (12%):</strong> $${withProfit.toLocaleString('en-US', {maximumFractionDigits: 0})}<br><br>` +
+                `📅 <strong>Monthly (22 work days):</strong> $${(withProfit * 22).toLocaleString('en-US', {maximumFractionDigits: 0})}<br>` +
+                `📅 <strong>Annual:</strong> $${(withProfit * 264).toLocaleString('en-US', {maximumFractionDigits: 0})}<br><br>` +
+                `⚠️ <strong>Don't forget:</strong> Prevailing wage requirements can add 30-50% to labor costs!<br>` +
+                `Check the RFP before finalizing your bid.`,
+            suggestions: ['How do prevailing wages work?', 'Is this competitive?', 'What am I missing?']
+        };
+    } else if (sqft) {
+        return {
+            text: `I see you mentioned <strong>${sqft.toLocaleString()} square feet</strong>! What type of facility?<br><br>` +
+                `• Office • Retail • Warehouse • School • Hospitality • Medical`,
+            suggestions: ['It\'s an office', 'It\'s a warehouse', 'It\'s a school']
+        };
+    }
+    
+    return {
+        text: `I can calculate cleaning costs! Please provide:<br>` +
+            `1. Square footage (example: 25000 sq ft)<br>` +
+            `2. Facility type (office, warehouse, school, medical, etc.)<br><br>` +
+            `Example: "25000 sq ft office" or "50000 warehouse"`,
+        suggestions: ['Office pricing', 'Warehouse rates', 'Medical facility costs']
+    };
+}
+
+// Initialize chatbot features
+window.addEventListener('load', function() {
+    detectCurrentPage();
+    initPageCheckIn();
+    
+    // Show badge after 3 seconds on first visit
+    setTimeout(() => {
+        const container = document.getElementById('chatbot-container');
+        if (container && container.classList.contains('chatbot-minimized')) {
+            document.getElementById('unread-count').style.display = 'flex';
+        }
+    }, 3000);
+});
 </script>
