@@ -159,6 +159,14 @@
                         <i class="fas fa-user-shield"></i>Manage Admins
                     </a>
                     
+                    <!-- Web Scrapers -->
+                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-robot"></i> Web Scrapers
+                    </div>
+                    <a class="nav-link {% if section == 'va-builders-scraper' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='va-builders-scraper') }}">
+                        <i class="fas fa-hammer"></i>VA Builders Summit
+                    </a>
+                    
                     <!-- System Tools -->
                     <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                         System Tools
@@ -263,6 +271,9 @@
             
             {% elif section == 'upload-csv' %}
             {% include 'admin_sections/upload_csv.html' %}
+            
+            {% elif section == 'va-builders-scraper' %}
+            {% include 'admin_sections/va_builders_scraper.html' %}
             
             {% elif section == 'all-contracts' %}
             {% include 'admin_sections/all_contracts.html' %}

@@ -9687,6 +9687,20 @@ def admin_enhanced():
                 "END, created_at DESC"
             )).fetchall()
         
+        elif section == 'va-builders-scraper':
+            # VA Builders Summit Web Scraper Section
+            # Get recent scraped contracts from this source
+            context['recent_va_builders_contracts'] = db.session.execute(text(
+                "SELECT * FROM government_contracts "
+                "WHERE data_source = 'VA Builders Summit Web Scraper' "
+                "ORDER BY created_at DESC LIMIT 20"
+            )).fetchall()
+            
+            context['total_va_builders_contracts'] = db.session.execute(text(
+                "SELECT COUNT(*) FROM government_contracts "
+                "WHERE data_source = 'VA Builders Summit Web Scraper'"
+            )).scalar() or 0
+        
         elif section == 'all-contracts':
             # Fetch all contracts for admin editing
             context['federal_contracts'] = db.session.execute(text(
@@ -19337,6 +19351,87 @@ def email_invoice():
     
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/run-va-builders-scraper', methods=['POST'])
+@login_required
+@admin_required
+def run_va_builders_scraper():
+    """Run VA Builders Summit web scraper to fetch real construction leads"""
+    try:
+        from scrapers.va_builders_summit_scraper import VABuildersSummitScraper
+        
+        # Initialize scraper
+        scraper = VABuildersSummitScraper()
+        
+        # Scrape all opportunities
+        opportunities = scraper.scrape_all_opportunities()
+        
+        if not opportunities:
+            return jsonify({
+                'success': False,
+                'message': 'No opportunities found from VA Builders Summit'
+            }), 404
+        
+        # Save to database
+        saved_count = scraper.save_to_database(opportunities, db.session)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully scraped {len(opportunities)} opportunities, saved {saved_count} new leads',
+            'total_scraped': len(opportunities),
+            'saved': saved_count,
+            'duplicates': len(opportunities) - saved_count
+        })
+        
+    except ImportError as e:
+        return jsonify({
+            'success': False,
+            'message': f'Scraper module not found: {str(e)}'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error running scraper: {str(e)}'
+        }), 500
+
+@app.route('/admin/verify-va-builders-links', methods=['GET'])
+@login_required
+@admin_required
+def verify_va_builders_links():
+    """Verify all links on VA Builders Summit website"""
+    try:
+        from scrapers.va_builders_summit_scraper import VABuildersSummitScraper
+        
+        # Initialize scraper
+        scraper = VABuildersSummitScraper()
+        
+        # Get all internal links
+        links = scraper.get_all_internal_links()
+        
+        # Verify links
+        results = scraper.verify_all_links(links)
+        
+        return jsonify({
+            'success': True,
+            'total_links': len(links),
+            'accessible': len(results['accessible']),
+            'warnings': len(results['warnings']),
+            'errors': len(results['errors']),
+            'accessible_urls': [r['url'] for r in results['accessible']],
+            'warning_urls': [{'url': r['url'], 'status': r['status_code']} for r in results['warnings']],
+            'error_urls': [{'url': r['url'], 'error': r.get('error', 'Unknown')} for r in results['errors']]
+        })
+        
+    except ImportError as e:
+        return jsonify({
+            'success': False,
+            'message': f'Scraper module not found: {str(e)}'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error verifying links: {str(e)}'
+        }), 500
 
 if __name__ == '__main__':
     init_db()

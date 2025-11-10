@@ -1,0 +1,261 @@
+<div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-hammer text-primary"></i> VA Builders Summit Web Scraper</h2>
+            <p class="text-muted">Automatically extract construction and cleaning leads from vabuilderssummit.com</p>
+        </div>
+    </div>
+
+    <!-- Scraper Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-database fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Scraped</h6>
+                            <h3 class="mb-0">{{ total_va_builders_contracts or 0 }}</h3>
+                            <small class="text-muted">Opportunities from VA Builders Summit</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Status</h6>
+                            <h3 class="mb-0"><span id="scraper-status">Ready</span></h3>
+                            <small class="text-muted">Last run: <span id="last-run">Never</span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-link fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Links</h6>
+                            <h3 class="mb-0"><span id="verified-links">0</span></h3>
+                            <small class="text-muted">Verified accessible URLs</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scraper Actions -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-robot"></i> Scraper Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6><i class="fas fa-search text-info"></i> Verify Links</h6>
+                            <p class="text-muted small">Test all links on vabuilderssummit.com and check accessibility status</p>
+                            <button class="btn btn-outline-info btn-sm" onclick="verifyLinks()">
+                                <i class="fas fa-link"></i> Run Link Verification
+                            </button>
+                            <div id="verify-result" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h6><i class="fas fa-download text-success"></i> Full Scrape</h6>
+                            <p class="text-muted small">Scrape all opportunities and save to database (may take several minutes)</p>
+                            <button class="btn btn-success btn-sm" onclick="runFullScrape()">
+                                <i class="fas fa-hammer"></i> Start Full Scrape
+                            </button>
+                            <div id="scrape-result" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div id="scraper-progress" class="card mb-4" style="display: none;">
+        <div class="card-body">
+            <h6><i class="fas fa-spinner fa-spin"></i> Scraping in Progress...</h6>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                     style="width: 100%"></div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Please wait while we extract opportunities from VA Builders Summit. This may take a few minutes.</p>
+        </div>
+    </div>
+
+    <!-- Recent Scraped Contracts -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Recently Scraped Opportunities (Last 20)</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_va_builders_contracts and recent_va_builders_contracts|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Location</th>
+                            <th>Date</th>
+                            <th>URL</th>
+                            <th>Scraped At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in recent_va_builders_contracts %}
+                        <tr>
+                            <td>
+                                <strong>{{ contract.title[:60] }}{% if contract.title|length > 60 %}...{% endif %}</strong>
+                                {% if contract.description %}
+                                <br><small class="text-muted">{{ contract.description[:100] }}{% if contract.description|length > 100 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ contract.location or 'Virginia' }}</td>
+                            <td>{{ contract.posted_date or 'N/A' }}</td>
+                            <td>
+                                <a href="{{ contract.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt"></i> View
+                                </a>
+                            </td>
+                            <td><small class="text-muted">{{ contract.created_at.strftime('%m/%d/%Y') if contract.created_at else 'N/A' }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No contracts have been scraped yet. Click "Start Full Scrape" above to begin.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function verifyLinks() {
+    const button = event.target;
+    const resultDiv = document.getElementById('verify-result');
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    resultDiv.innerHTML = '<div class="alert alert-info mt-2"><i class="fas fa-spinner fa-spin"></i> Checking links...</div>';
+    
+    fetch('/admin/verify-va-builders-links', {
+        method: 'GET'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('verified-links').textContent = data.accessible;
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-2">
+                    <strong><i class="fas fa-check-circle"></i> Verification Complete!</strong><br>
+                    <small>
+                        ✅ Accessible: ${data.accessible}<br>
+                        ⚠️ Warnings: ${data.warnings}<br>
+                        ❌ Errors: ${data.errors}<br>
+                        Total Links: ${data.total_links}
+                    </small>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger mt-2"><i class="fas fa-times-circle"></i> ${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `<div class="alert alert-danger mt-2"><i class="fas fa-times-circle"></i> Error: ${error.message}</div>`;
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-link"></i> Run Link Verification';
+    });
+}
+
+function runFullScrape() {
+    if (!confirm('This will scrape all opportunities from VA Builders Summit and may take several minutes. Continue?')) {
+        return;
+    }
+    
+    const button = event.target;
+    const resultDiv = document.getElementById('scrape-result');
+    const progressCard = document.getElementById('scraper-progress');
+    const statusSpan = document.getElementById('scraper-status');
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+    progressCard.style.display = 'block';
+    statusSpan.textContent = 'Running';
+    statusSpan.className = 'text-warning';
+    resultDiv.innerHTML = '';
+    
+    fetch('/admin/run-va-builders-scraper', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        progressCard.style.display = 'none';
+        
+        if (data.success) {
+            statusSpan.textContent = 'Complete';
+            statusSpan.className = 'text-success';
+            document.getElementById('last-run').textContent = 'Just now';
+            
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-2">
+                    <strong><i class="fas fa-check-circle"></i> Scraping Complete!</strong><br>
+                    <small>
+                        📥 Total Scraped: ${data.total_scraped}<br>
+                        ✅ New Saved: ${data.saved}<br>
+                        ⏭️ Duplicates Skipped: ${data.duplicates}
+                    </small>
+                </div>
+            `;
+            
+            // Reload page after 2 seconds to show new contracts
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            statusSpan.textContent = 'Error';
+            statusSpan.className = 'text-danger';
+            resultDiv.innerHTML = `<div class="alert alert-danger mt-2"><i class="fas fa-times-circle"></i> ${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        progressCard.style.display = 'none';
+        statusSpan.textContent = 'Error';
+        statusSpan.className = 'text-danger';
+        resultDiv.innerHTML = `<div class="alert alert-danger mt-2"><i class="fas fa-times-circle"></i> Error: ${error.message}</div>`;
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-hammer"></i> Start Full Scrape';
+    });
+}
+</script>
