@@ -12733,6 +12733,92 @@ def toggle_admin_privilege():
             'message': f'Error: {str(e)}'
         }), 500
 
+@app.route('/industry-days-events')
+def industry_days_events():
+    """Display networking and bidding events for contractors"""
+    try:
+        # Sample events data - can be extended with database in future
+        events = [
+            {
+                'id': 1,
+                'title': 'Virginia Construction Networking Summit 2025',
+                'date': 'January 15, 2025',
+                'time': '9:00 AM - 4:00 PM EST',
+                'location': 'Richmond Convention Center, Richmond, VA',
+                'description': 'Network with government buyers, facility managers, and other contractors. Learn about upcoming procurement opportunities.',
+                'type': 'Networking',
+                'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
+                'cost': 'Free (Registration Required)',
+                'url': '#'
+            },
+            {
+                'id': 2,
+                'title': 'SAM.gov & Federal Contracting Workshop',
+                'date': 'January 22, 2025',
+                'time': '10:00 AM - 1:00 PM EST',
+                'location': 'Virtual (Zoom)',
+                'description': 'Master SAM.gov registration, NAICS codes, and federal contract bidding strategies. Expert instructors from GSA.',
+                'type': 'Workshop',
+                'topics': ['SAM.gov', 'Federal Contracts', 'Bidding Strategy', 'NAICS Codes'],
+                'cost': '$49.99',
+                'url': '#'
+            },
+            {
+                'id': 3,
+                'title': 'Hampton Roads Government Procurement Fair',
+                'date': 'February 5, 2025',
+                'time': '8:30 AM - 3:00 PM EST',
+                'location': 'Hampton Convention Center, Hampton, VA',
+                'description': 'Meet directly with procurement officers from Hampton, Norfolk, Virginia Beach, Newport News, and Williamsburg. Pitch your services.',
+                'type': 'Procurement Fair',
+                'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
+                'cost': 'Free',
+                'url': '#'
+            },
+            {
+                'id': 4,
+                'title': 'Small Business Federal Contracting Bootcamp',
+                'date': 'February 12-14, 2025',
+                'time': '9:00 AM - 5:00 PM EST',
+                'location': 'Alexandria, VA',
+                'description': '3-day intensive training on federal contracting for small businesses. Learn about set-asides, certifications, and bidding.',
+                'type': 'Workshop',
+                'topics': ['Federal Contracts', 'Small Business', 'Set-Asides', 'Certifications'],
+                'cost': '$299.99',
+                'url': '#'
+            },
+            {
+                'id': 5,
+                'title': 'Supply Chain & Vendor Networking Breakfast',
+                'date': 'February 20, 2025',
+                'time': '7:30 AM - 9:30 AM EST',
+                'location': 'Roanoke Hotel & Conference Center, Roanoke, VA',
+                'description': 'Connect with government agencies, prime contractors, and potential partners. Exclusive breakfast networking event.',
+                'type': 'Networking',
+                'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
+                'cost': '$39.99',
+                'url': '#'
+            },
+            {
+                'id': 6,
+                'title': 'Northern Virginia Cleaning Services Summit',
+                'date': 'March 1, 2025',
+                'time': '9:00 AM - 3:00 PM EST',
+                'location': 'Arlington, VA',
+                'description': 'Specialized event for cleaning contractors. Learn about government facility cleaning standards, certifications, and winning bids.',
+                'type': 'Industry Summit',
+                'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
+                'cost': 'Free',
+                'url': '#'
+            }
+        ]
+        
+        return render_template('industry_days_events.html', events=events)
+    
+    except Exception as e:
+        print(f"❌ Error in industry_days_events() route: {e}")
+        return render_template('industry_days_events.html', events=[])
+
 @app.route('/leads')
 def leads():
     try:

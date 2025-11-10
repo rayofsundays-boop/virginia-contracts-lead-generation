@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Industry Days & Events - Networking & Bidding Opportunities{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="mb-5">
+        <h1 class="display-4 fw-bold mb-3">📅 Industry Days & Events</h1>
+        <p class="lead text-muted">Network with government buyers, learn bidding strategies, and discover new opportunities at industry events and conferences.</p>
+    </div>
+
+    <!-- Search & Filter Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search events...">
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Event Types</option>
+                        <option value="Networking">Networking Events</option>
+                        <option value="Workshop">Workshops & Training</option>
+                        <option value="Procurement Fair">Procurement Fairs</option>
+                        <option value="Industry Summit">Industry Summits</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="costFilter">
+                        <option value="">All Price Ranges</option>
+                        <option value="free">Free Events</option>
+                        <option value="paid">Paid Events</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-primary fw-bold">{{ events|length }}</h3>
+                    <p class="card-text text-muted">Total Events</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success fw-bold">{{ events|selectattr('type', 'equalto', 'Networking')|list|length }}</h3>
+                    <p class="card-text text-muted">Networking Events</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-info fw-bold">{{ events|selectattr('type', 'equalto', 'Workshop')|list|length }}</h3>
+                    <p class="card-text text-muted">Workshops</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-warning fw-bold">{{ events|selectattr('cost', 'equalto', 'Free (Registration Required)')|list|length + events|selectattr('cost', 'equalto', 'Free')|list|length }}</h3>
+                    <p class="card-text text-muted">Free Events</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events List -->
+    <div class="events-container">
+        {% if events %}
+            {% for event in events %}
+            <div class="card event-card shadow-sm mb-4 border-left-primary event-item" data-type="{{ event.type }}" data-cost="{{ event.cost }}" data-title="{{ event.title.lower() }}">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Date & Time Column -->
+                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center border-end mb-3 mb-md-0">
+                            <div class="fs-5 fw-bold text-primary">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <div>{{ event.date }}</div>
+                            </div>
+                            <small class="text-muted mt-2">
+                                <i class="fas fa-clock me-1"></i>{{ event.time }}
+                            </small>
+                        </div>
+
+                        <!-- Event Details Column -->
+                        <div class="col-md-7 ps-md-4">
+                            <div class="d-flex align-items-start justify-content-between mb-2">
+                                <div>
+                                    <h5 class="card-title fw-bold mb-2">{{ event.title }}</h5>
+                                    <p class="card-text text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt me-2 text-danger"></i>{{ event.location }}
+                                    </p>
+                                </div>
+                                <span class="badge bg-primary ms-2">{{ event.type }}</span>
+                            </div>
+
+                            <p class="card-text">{{ event.description }}</p>
+
+                            <!-- Topics Tags -->
+                            <div class="mb-3">
+                                {% for topic in event.topics %}
+                                <span class="badge bg-light text-dark me-2 mb-2">{{ topic }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Cost & Action Column -->
+                        <div class="col-md-3 d-flex flex-column justify-content-center align-items-end">
+                            <div class="text-end mb-3">
+                                {% if 'Free' in event.cost %}
+                                    <div class="fs-6 fw-bold text-success">
+                                        {{ event.cost }}
+                                    </div>
+                                {% else %}
+                                    <div class="fs-6 fw-bold text-primary">
+                                        {{ event.cost }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if event.url != '#' %}
+                            <a href="{{ event.url }}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-external-link-alt me-1"></i>Register Now
+                            </a>
+                            {% else %}
+                            <button class="btn btn-outline-primary btn-sm w-100" disabled title="Registration link coming soon">
+                                <i class="fas fa-clock me-1"></i>Coming Soon
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info text-center py-5">
+                <h4>No Events Available</h4>
+                <p>Check back soon for upcoming industry days and networking events!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Subscribe to Event Updates -->
+    <div class="card bg-light mt-5 border-0">
+        <div class="card-body py-5">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-bell me-2 text-primary"></i>Get Event Notifications
+                    </h5>
+                    <p class="text-muted">Subscribe to receive updates about upcoming industry days, networking events, and bidding opportunities.</p>
+                </div>
+                <div class="col-md-6">
+                    <form class="d-flex gap-2">
+                        <input type="email" class="form-control" placeholder="Enter your email...">
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="mt-5">
+        <h4 class="fw-bold mb-4">💡 Tips for Getting the Most Out of Industry Events</h4>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card border-left-success h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold">
+                            <i class="fas fa-briefcase me-2 text-success"></i>Come Prepared
+                        </h6>
+                        <p class="card-text small">Bring business cards, a one-page overview of your services, and a list of government agencies you want to work with.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card border-left-info h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold">
+                            <i class="fas fa-network-wired me-2 text-info"></i>Network Strategically
+                        </h6>
+                        <p class="card-text small">Focus on building genuine relationships. Ask questions and listen to what government buyers need.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card border-left-warning h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold">
+                            <i class="fas fa-pencil-alt me-2 text-warning"></i>Take Notes
+                        </h6>
+                        <p class="card-text small">Document contact information, requirements, and opportunities mentioned. Follow up within 24 hours.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card border-left-danger h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold">
+                            <i class="fas fa-graduation-cap me-2 text-danger"></i>Learn & Improve
+                        </h6>
+                        <p class="card-text small">Attend workshops to improve your bidding skills and understand government procurement processes better.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #667eea !important;
+    }
+    .border-left-success {
+        border-left: 4px solid #10b981 !important;
+    }
+    .border-left-info {
+        border-left: 4px solid #3b82f6 !important;
+    }
+    .border-left-warning {
+        border-left: 4px solid #f59e0b !important;
+    }
+    .border-left-danger {
+        border-left: 4px solid #ef4444 !important;
+    }
+
+    .event-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+
+    .event-card:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px);
+    }
+
+    .event-item {
+        display: block;
+    }
+
+    .event-item.hidden {
+        display: none;
+    }
+</style>
+
+<script>
+    // Search and filter functionality
+    document.getElementById('searchInput').addEventListener('keyup', filterEvents);
+    document.getElementById('typeFilter').addEventListener('change', filterEvents);
+    document.getElementById('costFilter').addEventListener('change', filterEvents);
+
+    function filterEvents() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        const costFilter = document.getElementById('costFilter').value;
+        
+        const eventItems = document.querySelectorAll('.event-item');
+        let visibleCount = 0;
+
+        eventItems.forEach(item => {
+            const title = item.getAttribute('data-title');
+            const type = item.getAttribute('data-type');
+            const cost = item.getAttribute('data-cost');
+
+            let typeMatch = !typeFilter || type === typeFilter;
+            let titleMatch = !searchTerm || title.includes(searchTerm);
+            let costMatch = true;
+
+            if (costFilter === 'free') {
+                costMatch = cost.includes('Free');
+            } else if (costFilter === 'paid') {
+                costMatch = !cost.includes('Free');
+            }
+
+            if (typeMatch && titleMatch && costMatch) {
+                item.classList.remove('hidden');
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.classList.add('hidden');
+                item.style.display = 'none';
+            }
+        });
+
+        // Show message if no results
+        const container = document.querySelector('.events-container');
+        if (visibleCount === 0 && eventItems.length > 0) {
+            if (!document.getElementById('noResults')) {
+                const noResults = document.createElement('div');
+                noResults.id = 'noResults';
+                noResults.className = 'alert alert-info text-center py-5';
+                noResults.innerHTML = '<h4>No Events Found</h4><p>Try adjusting your search or filters.</p>';
+                container.appendChild(noResults);
+            }
+        } else if (document.getElementById('noResults')) {
+            document.getElementById('noResults').remove();
+        }
+    }
+</script>
+
+{% endblock %}
