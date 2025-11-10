@@ -179,8 +179,8 @@ All setup steps have been completed:
 **30-second cinematic marketing video for homepage:**
 
 **Video Script Implementation:**
-- **Scene 1 (0-3s)**: VA Contract Hub logo with glow animation
-- **Scene 2 (3-8s)**: Glowing Virginia map with 5 featured cities (Hampton, Suffolk, Virginia Beach, Newport News, Williamsburg)
+- **Scene 1 (0-3s)**: ContractLink.ai logo with glow animation
+- **Scene 2 (3-8s)**: Coverage disclosure with 12 Major Virginia Markets
 - **Scene 3 (8-14s)**: "24+ Commercial Property Managers" statistic
 - **Scene 4 (14-20s)**: AI technology visualization with rotating circles
 - **Scene 5 (20-25s)**: Real-time dashboard preview with metrics
