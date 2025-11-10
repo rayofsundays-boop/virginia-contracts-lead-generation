@@ -128,9 +128,12 @@
                             </div>
 
                             {% if event.url != '#' and event.url %}
-                            <a href="{{ event.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm w-100 register-link" data-url="{{ event.url }}">
+                            <a href="{{ event.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm w-100 register-link" data-url="{{ event.url }}" onclick="handleRegistrationClick(event, '{{ event.title }}', '{{ event.url }}')">
                                 <i class="fas fa-external-link-alt me-1"></i>Register Now
                             </a>
+                            <small class="text-muted mt-2" id="fallback-{{ event.id }}" style="display: none;">
+                                <span class="text-danger">Link issue?</span> Search for "{{ event.title }}" or contact us for details
+                            </small>
                             {% else %}
                             <button class="btn btn-outline-primary btn-sm w-100" disabled title="Registration link coming soon">
                                 <i class="fas fa-clock me-1"></i>Coming Soon
@@ -147,6 +150,25 @@
                 <p>Check back soon for upcoming industry days and networking events!</p>
             </div>
         {% endif %}
+    </div>
+
+    <!-- Broken Link Help Section -->
+    <div class="card bg-warning-light border-warning mt-4" style="display: none;" id="brokenLinkHelp">
+        <div class="card-body">
+            <h5 class="card-title text-warning mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>Having trouble with a link?
+            </h5>
+            <p class="card-text mb-3">
+                If a registration link isn't working, here are some alternatives:
+            </p>
+            <ul class="mb-0">
+                <li><strong>Search by Event Name:</strong> Try searching for the event name on Google or Eventbrite directly</li>
+                <li><strong>Contact Event Organizer:</strong> Reach out to the city/agency directly during business hours</li>
+                <li><strong>Check Your Email:</strong> You may have received event details via email previously</li>
+                <li><strong>Contact Support:</strong> Email our team at support@contracts.local for help finding event registration</li>
+                <li><strong>Try Again Later:</strong> Event websites occasionally have temporary issues - try again in a few minutes</li>
+            </ul>
+        </div>
     </div>
 
     <!-- Subscribe to Event Updates -->
@@ -305,6 +327,58 @@
         } else if (document.getElementById('noResults')) {
             document.getElementById('noResults').remove();
         }
+    }
+
+    // Handle broken registration links
+    function handleRegistrationClick(e, eventTitle, eventUrl) {
+        // Try to detect if the link is broken
+        const xhr = new XMLHttpRequest();
+        xhr.open('HEAD', eventUrl, true);
+        xhr.timeout = 3000; // 3 second timeout
+        
+        xhr.onload = function() {
+            if (xhr.status >= 400) {
+                // Link is broken
+                e.preventDefault();
+                showBrokenLinkHelp(eventTitle);
+            }
+        };
+        
+        xhr.onerror = function() {
+            // Network error or CORS issue
+            e.preventDefault();
+            showBrokenLinkHelp(eventTitle);
+        };
+        
+        xhr.ontimeout = function() {
+            // Timeout - let it through anyway
+            console.warn('Link check timeout for ' + eventTitle);
+        };
+        
+        try {
+            xhr.send();
+        } catch(err) {
+            // CORS or other error - let the link through
+            console.warn('Could not verify link for ' + eventTitle);
+        }
+    }
+
+    function showBrokenLinkHelp(eventTitle) {
+        const helpSection = document.getElementById('brokenLinkHelp');
+        helpSection.style.display = 'block';
+        
+        // Scroll to help section
+        helpSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Add temporary alert
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-warning alert-dismissible fade show mt-3';
+        alert.role = 'alert';
+        alert.innerHTML = `
+            <strong>Link Issue:</strong> The registration link for "${eventTitle}" may not be available right now.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        helpSection.parentNode.insertBefore(alert, helpSection.nextSibling);
     }
 </script>
 
