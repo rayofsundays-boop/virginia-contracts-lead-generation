@@ -138,7 +138,7 @@ def main():
             'type': 'Networking',
             'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
             'cost': 'Free (Registration Required)',
-            'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'
+            'url': 'https://www.rva.gov/procurement-services'
         },
         {
             'id': 2,

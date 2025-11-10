@@ -12896,7 +12896,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
                 'cost': 'Free (Registration Required)',
-                'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'
+                'url': 'https://www.rva.gov/procurement-services'
             },
             {
                 'id': 2,
@@ -12987,7 +12987,7 @@ def validate_event_urls():
         
         # Get all events from the industry_days_events function
         events = [
-            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.richmondva.gov/ProcurementServices/index.aspx'},
+            {'id': 1, 'title': 'Virginia Construction Networking Summit 2025', 'url': 'https://www.rva.gov/procurement-services'},
             {'id': 2, 'title': 'SAM.gov & Federal Contracting Workshop', 'url': 'https://www.sam.gov'},
             {'id': 3, 'title': 'Hampton Roads Government Procurement Fair', 'url': 'https://www.hampton.gov/1408/Vendor-Information'},
             {'id': 4, 'title': 'Small Business Federal Contracting Bootcamp', 'url': 'https://www.sba.gov/federal-contracting/contracting-assistance-programs'},
