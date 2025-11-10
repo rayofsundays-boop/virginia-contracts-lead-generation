@@ -12737,7 +12737,7 @@ def toggle_admin_privilege():
 def industry_days_events():
     """Display networking and bidding events for contractors"""
     try:
-        # Sample events data - can be extended with database in future
+        # Sample events data - URLs fixed to point to official government procurement pages
         events = [
             {
                 'id': 1,
@@ -12749,7 +12749,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Federal Contracts', 'State Procurement', 'Local Government', 'Facility Management'],
                 'cost': 'Free (Registration Required)',
-                'url': 'https://www.eventbrite.com/e/construction-industry-networking-richmond-va-tickets'
+                'url': 'https://www.rva.gov/office-procurement-services/small-business-development'
             },
             {
                 'id': 2,
@@ -12761,7 +12761,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['SAM.gov', 'Federal Contracts', 'Bidding Strategy', 'NAICS Codes'],
                 'cost': '$49.99',
-                'url': 'https://www.sam.gov'
+                'url': 'https://www.sam.gov/content/opportunities'
             },
             {
                 'id': 3,
@@ -12773,7 +12773,7 @@ def industry_days_events():
                 'type': 'Procurement Fair',
                 'topics': ['Hampton', 'Norfolk', 'Virginia Beach', 'Newport News', 'Williamsburg'],
                 'cost': 'Free',
-                'url': 'https://www.vbgov.com/government/departments/procurement/Pages/events.aspx'
+                'url': 'https://www.hampton.gov/1408/Vendor-Information'
             },
             {
                 'id': 4,
@@ -12785,7 +12785,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['Federal Contracts', 'Small Business', 'Set-Asides', 'Certifications'],
                 'cost': '$299.99',
-                'url': 'https://www.sba.gov/sbdc/trainings'
+                'url': 'https://www.sba.gov/events'
             },
             {
                 'id': 5,
@@ -12797,7 +12797,7 @@ def industry_days_events():
                 'type': 'Networking',
                 'topics': ['Supply Contracts', 'Vendor Relations', 'Partnerships', 'Regional Opportunities'],
                 'cost': '$39.99',
-                'url': 'https://www.eventbrite.com/e/supply-chain-vendor-networking-breakfast-roanoke-tickets'
+                'url': 'https://www.eventbrite.com/d/va--virginia/business--events/'
             },
             {
                 'id': 6,
@@ -12809,7 +12809,7 @@ def industry_days_events():
                 'type': 'Industry Summit',
                 'topics': ['Cleaning Services', 'Government Facilities', 'Standards', 'Certifications'],
                 'cost': 'Free',
-                'url': 'https://www.eventbrite.com/e/northern-virginia-cleaning-services-summit-arlington-tickets'
+                'url': 'https://www.arlingtonva.us/Government/Departments/DTS/Procurement'
             },
             {
                 'id': 7,
@@ -12821,7 +12821,7 @@ def industry_days_events():
                 'type': 'Workshop',
                 'topics': ['Green Cleaning', 'EPA Certification', 'LEED Standards', 'Sustainable Practices'],
                 'cost': 'Free (Certification $59.99)',
-                'url': 'https://www.usgbc.org/articles/leed-accredited-professional-exam-registration'
+                'url': 'https://www.usgbc.org/education/sessions'
             }
         ]
         
