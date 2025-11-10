@@ -8,7 +8,7 @@
     <div class="container">
         <div class="text-center text-white py-4">
             <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.3);">
-                ⚡ QUICK WINS
+                QUICK WINS
             </h1>
             <p class="lead mb-4">Hot opportunities requiring immediate response</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
@@ -83,7 +83,9 @@
                                     {% elif lead.urgency_level == 'urgent' %}
                                         <span class="badge bg-warning text-dark me-2">🟠 URGENT</span>
                                     {% else %}
-                                        <span class="badge bg-success me-2">⚡ QUICK WIN</span>
+                                                            {% else %}
+                        <span class="badge bg-success me-2">✨ QUICK WIN</span>
+                    {% endif %}
                                     {% endif %}
                                     {% if lead.source == 'government' %}
                                         <a href="{{ url_for('contracts') }}#contract-{{ lead.id.split('_')[1] }}" class="text-dark text-decoration-none hover-underline">
