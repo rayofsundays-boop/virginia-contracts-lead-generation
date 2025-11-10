@@ -317,7 +317,41 @@ function showChecklists() {
     document.getElementById('toolModalTitle').textContent = 'Cleaning Checklists';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
-            <ul class="nav nav-tabs mb-3" role="tablist">
+            <style>
+                .checklist-tabs .nav-link {
+                    background-color: #f8f9fa;
+                    color: #333;
+                    border: 1px solid #dee2e6;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                }
+                .checklist-tabs .nav-link.active {
+                    background-color: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+                .checklist-tabs .nav-link:hover:not(.active) {
+                    background-color: #e9ecef;
+                    color: #333;
+                }
+                .phase-section {
+                    margin: 15px 0;
+                    padding: 12px;
+                    background-color: #f8f9fa;
+                    border-left: 4px solid #667eea;
+                    border-radius: 4px;
+                }
+                .phase-title {
+                    font-weight: 600;
+                    color: #667eea;
+                    margin-bottom: 10px;
+                    font-size: 0.95rem;
+                }
+                .form-check {
+                    margin-bottom: 8px;
+                }
+            </style>
+            <ul class="nav nav-tabs mb-3 checklist-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="office-tab" data-bs-toggle="tab" data-bs-target="#officeChecklist" type="button">Office</button>
                 </li>
@@ -334,152 +368,378 @@ function showChecklists() {
             
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="officeChecklist">
-                    <h6 class="mb-3">Office Cleaning Checklist</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office1">
-                        <label class="form-check-label" for="office1">Dust desk surfaces and furniture</label>
+                    <h6 class="mb-3">✓ Office Cleaning Checklist</h6>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🔵 PHASE 1: PRE-CLEAN (Setup & Safety)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office1">
+                            <label class="form-check-label" for="office1">Post wet floor signs if mopping</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office2">
+                            <label class="form-check-label" for="office2">Set up cleaning stations and equipment</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office3">
+                            <label class="form-check-label" for="office3">Collect and empty all trash bins and recycling</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office4">
+                            <label class="form-check-label" for="office4">Straighten chairs and organize desks</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office5">
+                            <label class="form-check-label" for="office5">Remove personal items from floor</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office2">
-                        <label class="form-check-label" for="office2">Vacuum carpets and rugs</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟢 PHASE 2: DEEP CLEAN (Main Tasks)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office6">
+                            <label class="form-check-label" for="office6">Dust all desk surfaces and furniture</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office7">
+                            <label class="form-check-label" for="office7">Vacuum carpets and rugs thoroughly</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office8">
+                            <label class="form-check-label" for="office8">Mop hard floors with appropriate cleaner</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office9">
+                            <label class="form-check-label" for="office9">Clean windows and glass partitions</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office10">
+                            <label class="form-check-label" for="office10">Wipe down kitchen/break room surfaces</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office11">
+                            <label class="form-check-label" for="office11">Clean and disinfect refrigerator handles</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office12">
+                            <label class="form-check-label" for="office12">Sanitize high-touch areas (doorknobs, switches)</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office3">
-                        <label class="form-check-label" for="office3">Mop hard floors</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟡 PHASE 3: FINAL INSPECTION & FINISHING</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office13">
+                            <label class="form-check-label" for="office13">Restock paper towels and restroom supplies</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office14">
+                            <label class="form-check-label" for="office14">Empty restroom waste bins</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office15">
+                            <label class="form-check-label" for="office15">Final walkthrough for missed spots</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="office16">
+                            <label class="form-check-label" for="office16">Ensure all lights are on and building is secure</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="office17">
+                            <label class="form-check-label" for="office17">Document any damage or special requests</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office4">
-                        <label class="form-check-label" for="office4">Clean windows and glass</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office5">
-                        <label class="form-check-label" for="office5">Empty trash and recycling</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="office6">
-                        <label class="form-check-label" for="office6">Sanitize high-touch areas (doorknobs, light switches)</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="office7">
-                        <label class="form-check-label" for="office7">Wipe down kitchen/break room</label>
-                    </div>
+                    
                     <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Office')">
                         <i class="fas fa-download me-2"></i>Download as PDF
                     </button>
                 </div>
                 
                 <div class="tab-pane fade" id="restroomChecklist">
-                    <h6 class="mb-3">Restroom Cleaning Checklist</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest1">
-                        <label class="form-check-label" for="rest1">Clean and sanitize toilets (interior and exterior)</label>
+                    <h6 class="mb-3">✓ Restroom Cleaning Checklist</h6>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🔵 PHASE 1: PRE-CLEAN (Setup & Safety)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest1">
+                            <label class="form-check-label" for="rest1">Post wet floor and occupied signs</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest2">
+                            <label class="form-check-label" for="rest2">Gather all cleaning supplies and equipment</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest3">
+                            <label class="form-check-label" for="rest3">Empty all waste bins and replace liners</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest4">
+                            <label class="form-check-label" for="rest4">Inspect for damage or maintenance issues</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest5">
+                            <label class="form-check-label" for="rest5">Remove personal items from counters</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest2">
-                        <label class="form-check-label" for="rest2">Clean and sanitize urinals</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟢 PHASE 2: DEEP CLEAN (Main Tasks)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest6">
+                            <label class="form-check-label" for="rest6">Clean and disinfect all toilets (interior & exterior)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest7">
+                            <label class="form-check-label" for="rest7">Clean and disinfect urinals (if applicable)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest8">
+                            <label class="form-check-label" for="rest8">Scrub and sanitize all sinks and faucets</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest9">
+                            <label class="form-check-label" for="rest9">Clean mirrors and glass partitions</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest10">
+                            <label class="form-check-label" for="rest10">Mop and sanitize floors with appropriate cleaner</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest11">
+                            <label class="form-check-label" for="rest11">Clean walls and baseboards for splashing</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest12">
+                            <label class="form-check-label" for="rest12">Sanitize all dispensers (soap, sanitizer, etc.)</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest3">
-                        <label class="form-check-label" for="rest3">Scrub sinks and faucets</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟡 PHASE 3: FINAL INSPECTION & FINISHING</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest13">
+                            <label class="form-check-label" for="rest13">Refill toilet paper in all stalls</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest14">
+                            <label class="form-check-label" for="rest14">Refill paper towel dispensers</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest15">
+                            <label class="form-check-label" for="rest15">Refill soap and hand sanitizer dispensers</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest16">
+                            <label class="form-check-label" for="rest16">Final walkthrough for cleanliness</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="rest17">
+                            <label class="form-check-label" for="rest17">Remove wet floor signs when area is dry</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="rest18">
+                            <label class="form-check-label" for="rest18">Document any maintenance needs or damage</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest4">
-                        <label class="form-check-label" for="rest4">Clean mirrors and glass</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest5">
-                        <label class="form-check-label" for="rest5">Mop and sanitize floors</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest6">
-                        <label class="form-check-label" for="rest6">Restock toilet paper and paper towels</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="rest7">
-                        <label class="form-check-label" for="rest7">Empty waste bins and sanitize</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="rest8">
-                        <label class="form-check-label" for="rest8">Refill soap and sanitizer dispensers</label>
-                    </div>
+                    
                     <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Restroom')">
                         <i class="fas fa-download me-2"></i>Download as PDF
                     </button>
                 </div>
                 
+                                
                 <div class="tab-pane fade" id="schoolChecklist">
-                    <h6 class="mb-3">School Cleaning Checklist</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school1">
-                        <label class="form-check-label" for="school1">Clean and disinfect desks and chairs</label>
+                    <h6 class="mb-3">✓ School Cleaning Checklist</h6>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🔵 PHASE 1: PRE-CLEAN (Setup & Safety)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school1">
+                            <label class="form-check-label" for="school1">Post wet floor and restricted area signs</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school2">
+                            <label class="form-check-label" for="school2">Gather all cleaning supplies and equipment</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school3">
+                            <label class="form-check-label" for="school3">Empty all waste and recycling bins</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school4">
+                            <label class="form-check-label" for="school4">Clear desks and floors of student items</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school5">
+                            <label class="form-check-label" for="school5">Inspect for spills, damage, or safety hazards</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school2">
-                        <label class="form-check-label" for="school2">Vacuum classrooms and hallways</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟢 PHASE 2: DEEP CLEAN (Main Tasks)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school6">
+                            <label class="form-check-label" for="school6">Dust all surfaces including desks and shelves</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school7">
+                            <label class="form-check-label" for="school7">Wipe whiteboards and glass boards clean</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school8">
+                            <label class="form-check-label" for="school8">Vacuum all carpeted areas thoroughly</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school9">
+                            <label class="form-check-label" for="school9">Mop and sanitize tile and hard floors</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school10">
+                            <label class="form-check-label" for="school10">Sanitize cafeteria tables and chairs</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school11">
+                            <label class="form-check-label" for="school11">Clean and sanitize all restroom facilities</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school12">
+                            <label class="form-check-label" for="school12">Wipe all high-touch surfaces and door handles</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school13">
+                            <label class="form-check-label" for="school13">Clean athletic areas and bleachers if applicable</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school14">
+                            <label class="form-check-label" for="school14">Sanitize gym equipment and mats</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school3">
-                        <label class="form-check-label" for="school3">Mop hard floors</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟡 PHASE 3: FINAL INSPECTION & FINISHING</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school15">
+                            <label class="form-check-label" for="school15">Restock bathroom supplies (toilet paper, soap)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school16">
+                            <label class="form-check-label" for="school16">Empty cafeteria waste and sanitize bins</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school17">
+                            <label class="form-check-label" for="school17">Final walkthrough of all classrooms</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="school18">
+                            <label class="form-check-label" for="school18">Remove all wet floor signs and barriers</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="school19">
+                            <label class="form-check-label" for="school19">Report any maintenance issues to administration</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school4">
-                        <label class="form-check-label" for="school4">Wipe whiteboards and chalk boards</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school5">
-                        <label class="form-check-label" for="school5">Empty all trash and recycling</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school6">
-                        <label class="form-check-label" for="school6">Sanitize common areas (cafeteria, gymnasium)</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="school7">
-                        <label class="form-check-label" for="school7">Clean and sanitize bathrooms thoroughly</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="school8">
-                        <label class="form-check-label" for="school8">Sanitize door handles and light switches</label>
-                    </div>
+                    
                     <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('School')">
                         <i class="fas fa-download me-2"></i>Download as PDF
                     </button>
                 </div>
                 
+                                
                 <div class="tab-pane fade" id="warehouseChecklist">
-                    <h6 class="mb-3">Warehouse Cleaning Checklist</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse1">
-                        <label class="form-check-label" for="warehouse1">Sweep all floor areas</label>
+                    <h6 class="mb-3">✓ Warehouse Cleaning Checklist</h6>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🔵 PHASE 1: PRE-CLEAN (Setup & Safety)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse1">
+                            <label class="form-check-label" for="warehouse1">Post hazard and wet floor signs</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse2">
+                            <label class="form-check-label" for="warehouse2">Turn off equipment and machines if safe</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse3">
+                            <label class="form-check-label" for="warehouse3">Sweep up debris and larger waste items</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse4">
+                            <label class="form-check-label" for="warehouse4">Empty all waste bins and dumpsters</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse5">
+                            <label class="form-check-label" for="warehouse5">Set up cleaning equipment and supplies</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse2">
-                        <label class="form-check-label" for="warehouse2">Clean loading dock area</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟢 PHASE 2: DEEP CLEAN (Main Tasks)</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse6">
+                            <label class="form-check-label" for="warehouse6">Deep clean and seal warehouse floors</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse7">
+                            <label class="form-check-label" for="warehouse7">Clean loading dock and entrance area</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse8">
+                            <label class="form-check-label" for="warehouse8">Dust and wipe warehouse shelving and racking</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse9">
+                            <label class="form-check-label" for="warehouse9">Clean and sanitize break room</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse10">
+                            <label class="form-check-label" for="warehouse10">Sanitize all restroom facilities</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse11">
+                            <label class="form-check-label" for="warehouse11">Wipe high-touch surfaces and door handles</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse12">
+                            <label class="form-check-label" for="warehouse12">Clean office areas and desks</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse13">
+                            <label class="form-check-label" for="warehouse13">Remove grease and oil stains from floors</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse14">
+                            <label class="form-check-label" for="warehouse14">Clean windows and skylights if accessible</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse3">
-                        <label class="form-check-label" for="warehouse3">Mop spill areas and ensure slip safety</label>
+                    
+                    <div class="phase-section">
+                        <div class="phase-title">🟡 PHASE 3: FINAL INSPECTION & FINISHING</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse15">
+                            <label class="form-check-label" for="warehouse15">Restock bathroom and break room supplies</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse16">
+                            <label class="form-check-label" for="warehouse16">Empty office and break room waste bins</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse17">
+                            <label class="form-check-label" for="warehouse17">Final walkthrough of entire warehouse</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse18">
+                            <label class="form-check-label" for="warehouse18">Remove all wet floor signs and barriers</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="warehouse19">
+                            <label class="form-check-label" for="warehouse19">Document any maintenance issues or hazards</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="warehouse20">
+                            <label class="form-check-label" for="warehouse20">Notify supervisor of completion</label>
+                        </div>
                     </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse4">
-                        <label class="form-check-label" for="warehouse4">Empty trash and industrial bins</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse5">
-                        <label class="form-check-label" for="warehouse5">Clean office area within warehouse</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse6">
-                        <label class="form-check-label" for="warehouse6">Sanitize break room</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="warehouse7">
-                        <label class="form-check-label" for="warehouse7">Clean and sanitize restrooms</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="warehouse8">
-                        <label class="form-check-label" for="warehouse8">Organize and dispose of hazardous materials safely</label>
-                    </div>
+                    
                     <button class="btn btn-sm btn-outline-primary" onclick="downloadChecklist('Warehouse')">
                         <i class="fas fa-download me-2"></i>Download as PDF
                     </button>
