@@ -5141,7 +5141,7 @@ def educational_contracts():
 
 @app.route('/industry-days')
 def industry_days():
-    """Industry days and procurement events for subscribers"""
+    """Industry days and procurement events for subscribers - All 50 States"""
     try:
         # Check if table exists
         table_check = db.session.execute(text("""
@@ -5155,15 +5155,22 @@ def industry_days():
             flash('Industry days feature is being set up. Check back soon!', 'info')
             return redirect(url_for('customer_leads'))
         
+        # Get filter parameters
+        state_filter = request.args.get('state', '')
         city_filter = request.args.get('city', '')
         event_type_filter = request.args.get('event_type', '')
+        is_virtual_filter = request.args.get('is_virtual', '')
         page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = 10
+        per_page = 12
         offset = (page - 1) * per_page
         
         # Build where conditions
         where_conditions = ["status = 'upcoming'", "event_date >= CURRENT_DATE"]
         params = {}
+        
+        if state_filter:
+            where_conditions.append("state = :state")
+            params['state'] = state_filter
         
         if city_filter:
             where_conditions.append("city = :city")
@@ -5172,6 +5179,10 @@ def industry_days():
         if event_type_filter:
             where_conditions.append("event_type = :event_type")
             params['event_type'] = event_type_filter
+        
+        if is_virtual_filter:
+            where_conditions.append("is_virtual = :is_virtual")
+            params['is_virtual'] = 1 if is_virtual_filter == 'true' else 0
         
         where_clause = " AND ".join(where_conditions)
         
@@ -5187,11 +5198,17 @@ def industry_days():
         events = db.session.execute(text(f'''
             SELECT * FROM industry_days 
             WHERE {where_clause}
-            ORDER BY event_date ASC
+            ORDER BY event_date ASC, state ASC
             LIMIT :limit OFFSET :offset
         '''), params).fetchall()
         
-        # Get filter options
+        # Get filter options (all 50 states)
+        states = db.session.execute(text('''
+            SELECT DISTINCT state FROM industry_days 
+            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            ORDER BY state
+        ''')).fetchall()
+        
         cities = db.session.execute(text('''
             SELECT DISTINCT city FROM industry_days 
             WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
@@ -5203,6 +5220,12 @@ def industry_days():
             WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
             ORDER BY event_type
         ''')).fetchall()
+        
+        # Get virtual event count
+        virtual_count = db.session.execute(text('''
+            SELECT COUNT(*) FROM industry_days 
+            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE AND is_virtual = 1
+        ''')).scalar() or 0
         
         total_pages = math.ceil(total / per_page) if total > 0 else 1
         
@@ -5223,11 +5246,15 @@ def industry_days():
         
         return render_template('industry_days.html',
                              events=events,
+                             states=[s[0] for s in states],
                              cities=[c[0] for c in cities],
                              event_types=[et[0] for et in event_types],
+                             virtual_count=virtual_count,
                              current_filters={
+                                 'state': state_filter,
                                  'city': city_filter,
-                                 'event_type': event_type_filter
+                                 'event_type': event_type_filter,
+                                 'is_virtual': is_virtual_filter
                              },
                              page=page,
                              total_pages=total_pages,
@@ -5236,6 +5263,8 @@ def industry_days():
                              is_admin=is_admin)
     except Exception as e:
         print(f"Industry days error: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Industry days feature is being set up. Check back soon!', 'info')
         return redirect(url_for('customer_leads'))
 
