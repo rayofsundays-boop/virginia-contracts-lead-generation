@@ -410,8 +410,141 @@
     {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/search-system.css') }}">
     {% endif %}
+    
+    <style>
+        /* Cookie Consent Banner Styles */
+        .cookie-consent-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem 0;
+            z-index: 9999;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-top: 3px solid var(--primary-color);
+        }
+        
+        .cookie-consent-banner.show {
+            transform: translateY(0);
+        }
+        
+        .cookie-consent-banner.hidden {
+            display: none;
+        }
+        
+        .cookie-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+        
+        .cookie-text {
+            flex: 1;
+            min-width: 300px;
+            color: #333;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+        
+        .cookie-text strong {
+            color: var(--primary-color);
+        }
+        
+        .cookie-text a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .cookie-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .cookie-btn {
+            padding: 0.65rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .cookie-btn-accept {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .cookie-btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .cookie-btn-preferences {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .cookie-btn-preferences:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .cookie-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .cookie-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .cookie-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-consent-banner" id="cookieConsent">
+        <div class="container">
+            <div class="cookie-content">
+                <div class="cookie-icon">
+                    <i class="fas fa-cookie-bite"></i>
+                </div>
+                <div class="cookie-text">
+                    We use essential cookies to make our site work. With your consent, we may also use non-essential cookies to improve user experience, personalize content, customize advertisements, and analyze website traffic. For these reasons, we may share your site usage data with our advertising and analytics partners. By clicking "<strong>Accept</strong>," you agree to store on your device all the technologies described in our <a href="{{ url_for('privacy') }}" target="_blank">Cookie Policy</a>. You can change your cookie settings at any time by clicking "<strong>Preferences</strong>."
+                </div>
+                <div class="cookie-actions">
+                    <button class="cookie-btn cookie-btn-accept" onclick="acceptCookies()">
+                        <i class="fas fa-check me-2"></i>Accept
+                    </button>
+                    <button class="cookie-btn cookie-btn-preferences" onclick="openCookiePreferences()">
+                        <i class="fas fa-sliders-h me-2"></i>Preferences
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 50% OFF Sales Banner -->
     <div class="sales-banner" id="salesBanner">
         <div class="container-fluid">
@@ -1077,6 +1210,126 @@
                 }
             }
         });
+    </script>
+    
+    <!-- Cookie Consent Script -->
+    <script>
+        // Check if user has already accepted cookies
+        function checkCookieConsent() {
+            const consent = localStorage.getItem('cookieConsent');
+            const banner = document.getElementById('cookieConsent');
+            
+            if (!consent && banner) {
+                // Show banner with animation after short delay
+                setTimeout(() => {
+                    banner.classList.add('show');
+                }, 500);
+            } else if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+        
+        // Accept all cookies
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            localStorage.setItem('cookiePreferences', JSON.stringify({
+                essential: true,
+                analytics: true,
+                advertising: true,
+                personalization: true
+            }));
+            
+            const banner = document.getElementById('cookieConsent');
+            if (banner) {
+                banner.classList.remove('show');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 400);
+            }
+            
+            // Initialize analytics and tracking if accepted
+            initializeTracking();
+            
+            console.log('✅ Cookie consent accepted - all cookies enabled');
+        }
+        
+        // Open cookie preferences (can be expanded to show detailed modal)
+        function openCookiePreferences() {
+            // For now, redirect to privacy policy or open a preferences modal
+            // You can expand this to show a detailed preferences dialog
+            const confirmPrefs = confirm(
+                'Cookie Preferences:\n\n' +
+                '✓ Essential cookies (required)\n' +
+                '□ Analytics cookies\n' +
+                '□ Advertising cookies\n' +
+                '□ Personalization cookies\n\n' +
+                'Click OK to accept only essential cookies, or Cancel to configure.'
+            );
+            
+            if (confirmPrefs) {
+                // Accept only essential cookies
+                localStorage.setItem('cookieConsent', 'essential-only');
+                localStorage.setItem('cookiePreferences', JSON.stringify({
+                    essential: true,
+                    analytics: false,
+                    advertising: false,
+                    personalization: false
+                }));
+                
+                const banner = document.getElementById('cookieConsent');
+                if (banner) {
+                    banner.classList.remove('show');
+                    setTimeout(() => {
+                        banner.classList.add('hidden');
+                    }, 400);
+                }
+                
+                console.log('✅ Cookie consent set - essential cookies only');
+            } else {
+                // Redirect to privacy policy for full details
+                window.open('{{ url_for("privacy") }}', '_blank');
+            }
+        }
+        
+        // Initialize tracking scripts (Google Analytics, etc.)
+        function initializeTracking() {
+            const preferences = JSON.parse(localStorage.getItem('cookiePreferences') || '{}');
+            
+            if (preferences.analytics) {
+                console.log('📊 Analytics tracking initialized');
+                // Add Google Analytics or other analytics here
+            }
+            
+            if (preferences.advertising) {
+                console.log('📢 Advertising tracking initialized');
+                // Add advertising pixels here
+            }
+            
+            if (preferences.personalization) {
+                console.log('🎯 Personalization enabled');
+                // Add personalization scripts here
+            }
+        }
+        
+        // Check consent on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkCookieConsent();
+            
+            // If user already accepted, initialize tracking
+            const consent = localStorage.getItem('cookieConsent');
+            if (consent === 'accepted') {
+                initializeTracking();
+            }
+        });
+        
+        // Global function to manually show cookie banner (for settings page)
+        window.showCookieBanner = function() {
+            const banner = document.getElementById('cookieConsent');
+            if (banner) {
+                banner.classList.remove('hidden');
+                banner.classList.add('show');
+            }
+        };
     </script>
     
     <!-- Global Search System (Subscribers Only) -->
