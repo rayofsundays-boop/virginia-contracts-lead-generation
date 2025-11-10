@@ -12900,7 +12900,7 @@ def industry_days_events():
             },
             {
                 'id': 3,
-                'title': 'Hampton Roads Government Procurement Fair',
+                'title': 'Hampton Roads Government Procurement',
                 'date': 'February 5, 2025',
                 'time': '8:30 AM - 3:00 PM EST',
                 'location': 'Hampton Convention Center, Hampton, VA',
