@@ -17,6 +17,51 @@ All setup steps have been completed:
 
 ## Latest Features (Nov 5, 2025) ✅ DEPLOYED
 
+### 🎉 WIN50 Sales Promotion (Nov 5, 2025) - LIVE ✅
+**Site-wide 50% discount promotion with promo code WIN50:**
+
+**Features Implemented:**
+1. ✅ **Sales Banner**: Animated gradient banner across all pages with pulsing emoji
+2. ✅ **Promo Code Input**: Validation field on subscription page with real-time feedback
+3. ✅ **Automatic Discount**: Backend switches to discounted PayPal billing plans
+4. ✅ **Price Updates**: JavaScript shows strikethrough original price with discount
+5. ✅ **Session Tracking**: Stores WIN50 usage for analytics and reporting
+6. ✅ **Success Logging**: Console logs promo code usage for conversion tracking
+
+**Pricing:**
+- Monthly: ~~$99.00~~ **$49.50**/month (50% OFF)
+- Annual: ~~$950.00~~ **$475.00**/year (50% OFF)
+
+**User Flows:**
+- **Banner Click**: Homepage → Click "Subscribe Now" → Auto-applies WIN50 → Checkout
+- **Manual Entry**: /subscription → Enter WIN50 → Apply Code → See discount → Checkout
+
+**Technical Implementation:**
+- Added `monthly_win50` and `annual_win50` to SUBSCRIPTION_PLANS dictionary
+- Updated `/subscribe/<plan_type>` route to detect ?promo=WIN50 parameter
+- Enhanced `/subscription-success` route with promo tracking
+- Sales banner in templates/base.html with sessionStorage dismissal
+- JavaScript validation and price calculation in templates/subscription.html
+
+**PayPal Setup Required:**
+- Create 2 discounted billing plans in PayPal Dashboard
+- Set environment variables: `PAYPAL_MONTHLY_WIN50_PLAN_ID`, `PAYPAL_ANNUAL_WIN50_PLAN_ID`
+- See WIN50_PROMOTION_GUIDE.md for complete setup instructions
+
+**Documentation:**
+- `WIN50_PROMOTION_GUIDE.md` - Complete setup guide with user flows
+- `WIN50_IMPLEMENTATION_SUMMARY.md` - Feature overview and testing checklist
+- `WIN50_QUICK_REFERENCE.md` - Quick troubleshooting and setup card
+
+**Benefits:**
+- Reduces barrier to entry for new subscribers
+- Increases conversion rate with prominent site-wide visibility
+- Easy redemption with simple code entry
+- Real-time feedback improves user experience
+- Analytics tracking for measuring promotional effectiveness
+
+**Commits:** `9fa1aa5`, `812131b` - WIN50 promotion system fully deployed
+
 ### 🚫 Fake Data Prevention (Nov 5, 2025) - COMPLETE ✅
 **All scripts that generate fake/demo contracts permanently disabled:**
 
