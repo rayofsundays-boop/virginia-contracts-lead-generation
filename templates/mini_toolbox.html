@@ -989,7 +989,25 @@ function showCommercialCleaningChecklist() {
     document.getElementById('toolModalTitle').textContent = 'Commercial Cleaning Professional';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3" style="max-height: 600px; overflow-y: auto;">
-            <ul class="nav nav-tabs mb-3" role="tablist">
+            <style>
+                .commercial-tabs .nav-link {
+                    background-color: #f8f9fa;
+                    color: #333;
+                    border: 1px solid #dee2e6;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                }
+                .commercial-tabs .nav-link.active {
+                    background-color: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+                .commercial-tabs .nav-link:hover:not(.active) {
+                    background-color: #e9ecef;
+                    color: #333;
+                }
+            </style>
+            <ul class="nav nav-tabs mb-3 commercial-tabs" role="tablist" style="border-bottom: 1px solid #dee2e6;">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#commChecklist">Checklist</a>
                 </li>
@@ -1131,7 +1149,25 @@ function showResidentialCleaningChecklist() {
     document.getElementById('toolModalTitle').textContent = 'Residential Cleaning Professional';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3" style="max-height: 600px; overflow-y: auto;">
-            <ul class="nav nav-tabs mb-3" role="tablist">
+            <style>
+                .residential-tabs .nav-link {
+                    background-color: #f8f9fa;
+                    color: #333;
+                    border: 1px solid #dee2e6;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                }
+                .residential-tabs .nav-link.active {
+                    background-color: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+                .residential-tabs .nav-link:hover:not(.active) {
+                    background-color: #e9ecef;
+                    color: #333;
+                }
+            </style>
+            <ul class="nav nav-tabs mb-3 residential-tabs" role="tablist" style="border-bottom: 1px solid #dee2e6;">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#resChecklist">Checklist</a>
                 </li>
