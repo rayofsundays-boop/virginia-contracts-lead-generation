@@ -12969,6 +12969,71 @@ def industry_days_events():
                 'topics': ['Green Cleaning', 'EPA Certification', 'LEED Standards', 'Sustainable Practices'],
                 'cost': 'Free (Certification $59.99)',
                 'url': 'https://www.epa.gov/saferchoice'
+            },
+            {
+                'id': 8,
+                'title': 'Small Business Networking Mixer - Government Contractors',
+                'date': 'December 15, 2024',
+                'time': '6:00 PM - 9:00 PM EST',
+                'location': 'Various Cities Nationwide',
+                'description': 'Connect with fellow small business owners, government contractors, and procurement professionals. Share insights, build partnerships, and grow your network.',
+                'type': 'Networking',
+                'topics': ['Small Business', 'Networking', 'Partnerships', 'Government Contracting'],
+                'cost': 'Varies by location',
+                'url': 'https://www.eventbrite.com/d/online/small-business-networking/',
+                'platform': 'Eventbrite'
+            },
+            {
+                'id': 9,
+                'title': 'Cleaning Business Expo & Conference',
+                'date': 'Ongoing Events',
+                'time': 'Various Times',
+                'location': 'Multiple Locations',
+                'description': 'Industry conferences featuring the latest cleaning technologies, business strategies, and networking opportunities for cleaning service professionals.',
+                'type': 'Conference',
+                'topics': ['Cleaning Industry', 'Business Growth', 'Technology', 'Best Practices'],
+                'cost': 'Varies by event',
+                'url': 'https://www.eventbrite.com/d/online/cleaning-business/',
+                'platform': 'Eventbrite'
+            },
+            {
+                'id': 10,
+                'title': 'Government Contracting 101 Workshop',
+                'date': 'Monthly Events',
+                'time': 'Various Times',
+                'location': 'Virtual & In-Person',
+                'description': 'Learn the fundamentals of government contracting, from registration to winning your first contract. Perfect for contractors new to government work.',
+                'type': 'Workshop',
+                'topics': ['Government Contracts', 'Getting Started', 'Registration', 'Bidding'],
+                'cost': 'Free to $99',
+                'url': 'https://www.eventbrite.com/d/online/government-contracting/',
+                'platform': 'Eventbrite'
+            },
+            {
+                'id': 11,
+                'title': 'Janitorial Services Business Summit',
+                'date': 'Quarterly Events',
+                'time': 'Various Times',
+                'location': 'Major US Cities',
+                'description': 'Summit for janitorial business owners covering operations, marketing, hiring, and scaling your cleaning company. Network with industry leaders.',
+                'type': 'Summit',
+                'topics': ['Janitorial Services', 'Business Operations', 'Growth Strategies', 'Leadership'],
+                'cost': '$149 - $299',
+                'url': 'https://www.eventbrite.com/d/online/janitorial-services/',
+                'platform': 'Eventbrite'
+            },
+            {
+                'id': 12,
+                'title': 'Procurement Matchmaking Events',
+                'date': 'Monthly',
+                'time': 'Various Times',
+                'location': 'Virtual & Major Cities',
+                'description': 'Speed networking events connecting small businesses with government buyers and prime contractors. Get direct access to decision-makers.',
+                'type': 'Matchmaking',
+                'topics': ['Procurement', 'Networking', 'Direct Connections', 'Opportunities'],
+                'cost': 'Free to $49',
+                'url': 'https://www.eventbrite.com/d/online/procurement/',
+                'platform': 'Eventbrite'
             }
         ]
         
