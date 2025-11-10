@@ -1448,6 +1448,138 @@ def update_contracts_from_usaspending():
     except Exception as e:
         print(f"❌ Error updating from USAspending.gov: {e}")
 
+def fetch_instantmarkets_leads():
+    """Fetch daily leads from instantmarkets.com and add to supply_contracts"""
+    try:
+        print("🌐 Fetching leads from instantmarkets.com...")
+        import requests
+        from bs4 import BeautifulSoup
+        
+        # Instantmarkets URL for cleaning/janitorial services
+        base_url = "https://www.instantmarkets.com"
+        search_url = f"{base_url}/search?keywords=cleaning+janitorial&location=Virginia&radius=50"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        }
+        
+        response = requests.get(search_url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Parse leads from instantmarkets
+        leads = []
+        
+        # Find all opportunity listings (adjust selector based on site structure)
+        listings = soup.find_all('div', class_=['opportunity', 'listing', 'card'])
+        
+        if not listings:
+            # Fallback: Try alternative selectors
+            listings = soup.find_all('article') or soup.find_all('div', class_='result')
+        
+        print(f"📊 Found {len(listings)} listings on instantmarkets.com")
+        
+        for listing in listings[:50]:  # Limit to first 50 to avoid overloading
+            try:
+                # Extract lead information
+                title_elem = listing.find(['h2', 'h3', 'a', 'span'], class_=['title', 'name', 'heading'])
+                title = title_elem.text.strip() if title_elem else "Cleaning Project"
+                
+                # Get company/agency
+                agency_elem = listing.find(['div', 'span'], class_=['company', 'agency', 'organization'])
+                agency = agency_elem.text.strip() if agency_elem else "Anonymous"
+                
+                # Get location
+                location_elem = listing.find(['div', 'span'], class_=['location', 'city', 'address'])
+                location = location_elem.text.strip() if location_elem else "Virginia"
+                
+                # Get project description
+                desc_elem = listing.find(['p', 'div'], class_=['description', 'details', 'content'])
+                description = desc_elem.text.strip() if desc_elem else "Cleaning project opportunity"
+                
+                # Get posted/deadline date
+                date_elem = listing.find(['span', 'time'], class_=['date', 'posted', 'deadline'])
+                posted_date = date_elem.text.strip() if date_elem else datetime.now().strftime('%Y-%m-%d')
+                
+                # Get value/budget if available
+                value_elem = listing.find(['span', 'div'], class_=['price', 'value', 'budget'])
+                estimated_value = value_elem.text.strip() if value_elem else "Contact for pricing"
+                
+                # Get direct link to opportunity
+                link_elem = listing.find('a', href=True)
+                website_url = link_elem['href'] if link_elem else f"{base_url}/opportunity/{title.replace(' ', '-')}"
+                
+                # Make URL absolute if relative
+                if website_url.startswith('/'):
+                    website_url = base_url + website_url
+                elif not website_url.startswith('http'):
+                    website_url = base_url + '/' + website_url
+                
+                leads.append({
+                    'title': title,
+                    'agency': agency,
+                    'location': location,
+                    'description': description,
+                    'estimated_value': estimated_value,
+                    'posted_date': posted_date,
+                    'website_url': website_url,
+                    'product_category': 'Cleaning Services',
+                    'is_small_business_set_aside': False
+                })
+            except Exception as e:
+                print(f"⚠️  Error parsing listing: {e}")
+                continue
+        
+        if not leads:
+            print("⚠️  No leads found on instantmarkets.com - site structure may have changed")
+            return 0
+        
+        # Insert leads into database
+        with app.app_context():
+            inserted_count = 0
+            skipped_count = 0
+            
+            for lead in leads:
+                try:
+                    # Check for duplicates (by title + agency + location)
+                    existing = db.session.execute(text('''
+                        SELECT COUNT(*) FROM supply_contracts 
+                        WHERE title = :title AND agency = :agency AND location = :location
+                    '''), {
+                        'title': lead['title'],
+                        'agency': lead['agency'],
+                        'location': lead['location']
+                    }).fetchone()
+                    
+                    if existing and existing[0] > 0:
+                        skipped_count += 1
+                        continue
+                    
+                    # Insert new lead
+                    db.session.execute(text('''
+                        INSERT INTO supply_contracts 
+                        (title, agency, location, product_category, estimated_value, 
+                         description, website_url, posted_date, status, created_at)
+                        VALUES (:title, :agency, :location, :product_category, :estimated_value,
+                                :description, :website_url, :posted_date, 'open', CURRENT_TIMESTAMP)
+                    '''), lead)
+                    inserted_count += 1
+                except Exception as e:
+                    print(f"⚠️  Error inserting lead '{lead.get('title')}': {e}")
+                    continue
+            
+            db.session.commit()
+            print(f"✅ Instantmarkets.com update complete: {inserted_count} new leads added, {skipped_count} duplicates skipped")
+            return inserted_count
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Network error fetching from instantmarkets.com: {e}")
+        return 0
+    except Exception as e:
+        print(f"❌ Error fetching instantmarkets.com leads: {e}")
+        return 0
+
 def schedule_samgov_updates():
     """Run SAM.gov updates during off-peak hours (midnight-6 AM EST)"""
     # Schedule hourly during off-peak hours for reduced API load
@@ -1494,6 +1626,16 @@ def schedule_usaspending_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
+def schedule_instantmarkets_updates():
+    """Run instantmarkets.com lead pulls daily at 5 AM EST"""
+    schedule.every().day.at("05:00").do(fetch_instantmarkets_leads)
+    
+    print("⏰ Instantmarkets.com scheduler started - will fetch supply leads daily at 5 AM EST (off-peak)")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 def schedule_url_population():
     """Run automated URL population at 3 AM daily (off-peak)"""
     schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
@@ -1529,6 +1671,11 @@ def start_background_jobs_once():
     # Start Local Government scheduler in background thread
     localgov_scheduler_thread = threading.Thread(target=schedule_local_gov_updates, daemon=True)
     localgov_scheduler_thread.start()
+
+    # Start Instantmarkets.com scheduler in background thread (runs at 5 AM daily)
+    instantmarkets_scheduler_thread = threading.Thread(target=schedule_instantmarkets_updates, daemon=True)
+    instantmarkets_scheduler_thread.start()
+    print("✅ Instantmarkets.com daily lead pull enabled - will run at 5 AM EST")
 
     # Start Auto URL Population scheduler in background thread (runs at 3 AM daily)
     if OPENAI_AVAILABLE and OPENAI_API_KEY:
@@ -7918,6 +8065,23 @@ def admin_update_payment_status():
     except Exception as e:
         db.session.rollback()
         print(f"Error updating payment status: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/trigger-instantmarkets-pull', methods=['POST'])
+@admin_required
+def trigger_instantmarkets_pull():
+    """Manually trigger instantmarkets.com leads pull (admin only)"""
+    try:
+        print("🚀 Admin triggered instantmarkets.com leads pull...")
+        count = fetch_instantmarkets_leads()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully pulled {count} new leads from instantmarkets.com',
+            'leads_added': count
+        })
+    except Exception as e:
+        print(f"Error triggering instantmarkets pull: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/admin-update-user', methods=['POST'])
