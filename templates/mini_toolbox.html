@@ -215,6 +215,54 @@
             </div>
         </div>
 
+        <!-- Cleaning Supplies Vendors -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-shopping-cart fa-3x text-info"></i>
+                    </div>
+                    <h4 class="card-title">Cleaning Supplies</h4>
+                    <p class="card-text text-muted">Find bulk cleaning supplies from trusted vendors</p>
+                    <button class="btn btn-outline-info" onclick="showCleaningSupplies()">
+                        <i class="fas fa-store me-2"></i>View Vendors
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cleaning Equipment Vendors -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tools fa-3x text-warning"></i>
+                    </div>
+                    <h4 class="card-title">Cleaning Equipment</h4>
+                    <p class="card-text text-muted">Purchase professional cleaning equipment</p>
+                    <button class="btn btn-outline-warning" onclick="showCleaningEquipment()">
+                        <i class="fas fa-store me-2"></i>View Vendors
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Repair Vendors -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-wrench fa-3x text-danger"></i>
+                    </div>
+                    <h4 class="card-title">Equipment Repair</h4>
+                    <p class="card-text text-muted">Professional equipment repair & maintenance</p>
+                    <button class="btn btn-outline-danger" onclick="showEquipmentRepair()">
+                        <i class="fas fa-store me-2"></i>View Vendors
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Call to Action for Full Toolbox -->
@@ -1207,6 +1255,181 @@ function calculateResidentialPricing() {
     `;
     
     document.getElementById('resResults').innerHTML = html;
+}
+
+
+function showCleaningSupplies() {
+    document.getElementById('toolModalTitle').textContent = 'Where to Buy Cleaning Supplies';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <p class="text-muted mb-4">Find quality cleaning supplies from these trusted bulk vendors:</p>
+            
+            <div class="list-group">
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-box text-primary me-2"></i>Grainger Industrial</h6>
+                            <p class="mb-2 text-muted small">Comprehensive cleaning supplies and janitorial products. Large volume discounts.</p>
+                            <span class="badge bg-info me-2">Business Accounts</span>
+                            <span class="badge bg-success">Free Shipping $45+</span>
+                        </div>
+                    </div>
+                    <a href="https://www.grainger.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Grainger.com
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-box text-success me-2"></i>Alibaba Industrial</h6>
+                            <p class="mb-2 text-muted small">Bulk industrial cleaning supplies from manufacturers worldwide. Wholesale pricing.</p>
+                            <span class="badge bg-warning me-2">International</span>
+                            <span class="badge bg-success">Bulk Orders</span>
+                        </div>
+                    </div>
+                    <a href="https://www.alibaba.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Alibaba.com
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-box text-danger me-2"></i>Bunzl USA</h6>
+                            <p class="mb-2 text-muted small">Cleaning chemicals, paper products, and sanitation supplies. Local delivery available.</p>
+                            <span class="badge bg-info me-2">Regional Delivery</span>
+                            <span class="badge bg-success">Local Warehouses</span>
+                        </div>
+                    </div>
+                    <a href="https://www.bunzl-usa.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Bunzl-USA.com
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4 small">
+                <strong>💡 Tip:</strong> Compare bulk pricing across vendors. Ask about contractor discounts and volume pricing for regular orders.
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showCleaningEquipment() {
+    document.getElementById('toolModalTitle').textContent = 'Where to Get Cleaning Equipment';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <p class="text-muted mb-4">Purchase professional cleaning equipment from these suppliers:</p>
+            
+            <div class="list-group">
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-cogs text-primary me-2"></i>ProTeam Equipment</h6>
+                            <p class="mb-2 text-muted small">Backpack vacuums, carpet extractors, and electrostatic sprayers. Trusted by professionals.</p>
+                            <span class="badge bg-success me-2">Professional Grade</span>
+                            <span class="badge bg-warning">Warranty Support</span>
+                        </div>
+                    </div>
+                    <a href="https://www.proteamusa.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit ProTeamUSA.com
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-cogs text-info me-2"></i>Kaivac Clean Systems</h6>
+                            <p class="mb-2 text-muted small">Innovative cleaning systems including no-touch restroom cleaning technology. Commercial solutions.</p>
+                            <span class="badge bg-success me-2">Innovation Leader</span>
+                            <span class="badge bg-info">System Rentals</span>
+                        </div>
+                    </div>
+                    <a href="https://www.kaivac.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Kaivac.com
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-cogs text-warning me-2"></i>Tornado Equipment</h6>
+                            <p class="mb-2 text-muted small">Commercial floor machines, vacuums, and hard floor cleaning equipment. Industrial strength.</p>
+                            <span class="badge bg-danger me-2">Heavy Duty</span>
+                            <span class="badge bg-success">Industrial</span>
+                        </div>
+                    </div>
+                    <a href="https://www.tornadoequipment.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit TornadoEquipment.com
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4 small">
+                <strong>💡 Tip:</strong> Look for rental options if starting out. Many vendors offer rental programs for expensive equipment.
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function showEquipmentRepair() {
+    document.getElementById('toolModalTitle').textContent = 'Equipment Repair & Maintenance';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3">
+            <p class="text-muted mb-4">Professional equipment repair and maintenance services:</p>
+            
+            <div class="list-group">
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-tools text-danger me-2"></i>Bissell Commercial Repair</h6>
+                            <p class="mb-2 text-muted small">Factory-authorized repair for Bissell commercial equipment. Maintenance plans and parts available.</p>
+                            <span class="badge bg-danger me-2">Factory Authorized</span>
+                            <span class="badge bg-success">Maintenance Plans</span>
+                        </div>
+                    </div>
+                    <a href="https://www.bissellclean.com/en-us/commercial" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit BissellClean.com
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-tools text-success me-2"></i>ProTeam Service Centers</h6>
+                            <p class="mb-2 text-muted small">Certified repair and servicing for backpack vacuums and cleaning equipment. Quick turnaround times.</p>
+                            <span class="badge bg-warning me-2">24-48hr Turnaround</span>
+                            <span class="badge bg-info">National Network</span>
+                        </div>
+                    </div>
+                    <a href="https://www.proteamusa.com/support" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit ProTeam Support
+                    </a>
+                </div>
+                
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1"><i class="fas fa-tools text-info me-2"></i>Local Appliance & Equipment Repair</h6>
+                            <p class="mb-2 text-muted small">Find local independent repair shops. Preventive maintenance packages available through local providers.</p>
+                            <span class="badge bg-primary me-2">Local Options</span>
+                            <span class="badge bg-success">Preventive Care</span>
+                        </div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/equipment+repair+near+me" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Find Repair Services
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-4 small">
+                <strong>⚠️ Maintenance Tip:</strong> Regular maintenance prevents costly repairs. Clean filters weekly, inspect hoses monthly, and service equipment annually.
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
 }
 
 
