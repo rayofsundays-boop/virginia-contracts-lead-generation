@@ -70,6 +70,21 @@
 <!-- Second Row of Stats -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
+        <a href="{{ url_for('admin_enhanced', section='all-contracts') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer; transition: all 0.3s ease;">
+                <div class="card-body text-center">
+                    <i class="fas fa-flag-usa fa-3x mb-3" style="color: #dc3545;"></i>
+                    <h3 class="mb-0 text-dark">{{ active_federal_count|default(0) }}</h3>
+                    <p class="text-muted mb-0">Active Federal Contracts</p>
+                    <small class="text-info">
+                        <i class="fas fa-calendar-check"></i> Future deadlines
+                    </small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
         <a href="{{ url_for('quick_wins') }}" class="text-decoration-none">
             <div class="card stat-card shadow-sm border-0" style="cursor: pointer; transition: all 0.3s ease;">
                 <div class="card-body text-center">
@@ -78,6 +93,36 @@
                     <p class="text-muted mb-0">Supply Contracts</p>
                     <small class="text-success">
                         <i class="fas fa-check-circle"></i> Active buyers
+                    </small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('admin_enhanced', section='all-contracts') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer; transition: all 0.3s ease;">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-contract fa-3x mb-3" style="color: #28a745;"></i>
+                    <h3 class="mb-0 text-dark">{{ total_federal_count|default(0) }}</h3>
+                    <p class="text-muted mb-0">Total Federal Contracts</p>
+                    <small class="text-muted">
+                        <i class="fas fa-database"></i> In database
+                    </small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('contracts') }}" class="text-decoration-none">
+            <div class="card stat-card shadow-sm border-0" style="cursor: pointer; transition: all 0.3s ease;">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x mb-3" style="color: #ffc107;"></i>
+                    <h3 class="mb-0 text-dark">{{ expired_federal_count|default(0) }}</h3>
+                    <p class="text-muted mb-0">Expired Contracts</p>
+                    <small class="text-danger">
+                        <i class="fas fa-calendar-times"></i> Past deadlines
                     </small>
                 </div>
             </div>

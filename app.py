@@ -9586,6 +9586,22 @@ def admin_enhanced():
             context['supply_contracts_count'] = supply_count
             print(f"📊 Total supply contracts in database: {supply_count}")
             
+            # Get federal contracts counts
+            active_federal = db.session.execute(text(
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= CURRENT_DATE"
+            )).scalar() or 0
+            total_federal = db.session.execute(text(
+                "SELECT COUNT(*) FROM federal_contracts"
+            )).scalar() or 0
+            expired_federal = db.session.execute(text(
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < CURRENT_DATE"
+            )).scalar() or 0
+            
+            context['active_federal_count'] = active_federal
+            context['total_federal_count'] = total_federal
+            context['expired_federal_count'] = expired_federal
+            print(f"📊 Federal contracts: {active_federal} active, {total_federal} total, {expired_federal} expired")
+            
             # Recent users
             context['recent_users'] = db.session.execute(text(
                 "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT 10"
