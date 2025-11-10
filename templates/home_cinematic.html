@@ -290,6 +290,66 @@
     </div>
 </section>
 
+<!-- Featured Partner Spotlight -->
+<section class="featured-partner-section" id="featured-partner">
+    <div class="container">
+        <div class="featured-partner-card" data-aos="fade-up">
+            <div class="partner-badge">
+                <i class="fas fa-star"></i> FEATURED PARTNER
+            </div>
+            <div class="row align-items-center g-4">
+                <div class="col-lg-4 text-center">
+                    <div class="partner-logo-container">
+                        <div class="partner-logo-circle">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="partner-company-name">Elite Eco Care Services</h3>
+                        <p class="partner-tagline">Premium Eco-Friendly Cleaning</p>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="partner-content">
+                        <h4 class="partner-welcome">
+                            <i class="fas fa-handshake me-2"></i>Welcome to the ContractLink.ai Community!
+                        </h4>
+                        <p class="partner-description">
+                            We're excited to spotlight <strong>Elite Eco Care Services</strong>, a premier cleaning company dedicated to 
+                            providing environmentally responsible, high-quality cleaning solutions. With expertise in both residential 
+                            and commercial spaces, they deliver exceptional results using eco-friendly products and sustainable practices.
+                        </p>
+                        
+                        <div class="partner-services">
+                            <div class="service-badge">
+                                <i class="fas fa-home"></i> Residential Cleaning
+                            </div>
+                            <div class="service-badge">
+                                <i class="fas fa-building"></i> Commercial Cleaning
+                            </div>
+                            <div class="service-badge">
+                                <i class="fas fa-leaf"></i> Eco-Friendly Solutions
+                            </div>
+                        </div>
+                        
+                        <div class="partner-cta-box">
+                            <p class="partner-cta-text">
+                                <strong>Need professional cleaning services?</strong> Elite Eco Care Services is ready to transform your space!
+                            </p>
+                            <div class="partner-cta-buttons">
+                                <a href="https://eliteecocareservices.com" target="_blank" rel="noopener noreferrer" class="btn-partner-primary">
+                                    <i class="fas fa-globe me-2"></i>Visit Website
+                                </a>
+                                <a href="https://eliteecocareservices.com" target="_blank" rel="noopener noreferrer" class="btn-partner-secondary">
+                                    <i class="fas fa-calendar-check me-2"></i>Book a Cleaning Today
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Need Cleaning Services Section -->
 <section class="cleaning-services-section" id="cleaning-services">
     <div class="container">
@@ -1073,6 +1133,238 @@ section, .container, .row {
     margin-bottom: 2.5rem;
 }
 
+/* ==================== FEATURED PARTNER SECTION ==================== */
+.featured-partner-section {
+    padding: 5rem 0;
+    background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.featured-partner-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.05), transparent 70%);
+    pointer-events: none;
+}
+
+.featured-partner-card {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 25px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(255, 215, 0, 0.2);
+    transition: all 0.4s ease;
+}
+
+.featured-partner-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 80px rgba(255, 215, 0, 0.3);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.featured-partner-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.1), transparent 60%);
+    animation: partner-glow 8s ease-in-out infinite;
+}
+
+@keyframes partner-glow {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+    50% { transform: translate(-20%, -20%) scale(1.2); opacity: 0.8; }
+}
+
+.partner-badge {
+    position: absolute;
+    top: -15px;
+    right: 30px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #000;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.partner-badge i {
+    margin-right: 5px;
+    animation: star-spin 3s linear infinite;
+}
+
+@keyframes star-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.partner-logo-container {
+    padding: 2rem;
+}
+
+.partner-logo-circle {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+    border: 3px solid rgba(255, 215, 0, 0.3);
+}
+
+.partner-logo-circle i {
+    font-size: 4rem;
+    color: white;
+}
+
+.partner-company-name {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ffd700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+}
+
+.partner-tagline {
+    color: var(--color-gray-200);
+    font-size: 1rem;
+    font-style: italic;
+}
+
+.partner-content {
+    position: relative;
+    z-index: 2;
+}
+
+.partner-welcome {
+    color: var(--color-white);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.partner-welcome i {
+    color: #ffd700;
+}
+
+.partner-description {
+    color: var(--color-gray-200);
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.partner-services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.service-badge {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 10px 20px;
+    border-radius: 50px;
+    color: #10b981;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.service-badge:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    transform: translateY(-2px);
+}
+
+.partner-cta-box {
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.partner-cta-text {
+    color: var(--color-white);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.partner-cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.btn-partner-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    border: 2px solid transparent;
+}
+
+.btn-partner-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+    color: white;
+    border-color: #ffd700;
+}
+
+.btn-partner-secondary {
+    background: rgba(255, 215, 0, 0.1);
+    color: #ffd700;
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.btn-partner-secondary:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-3px);
+    border-color: #ffd700;
+    color: #ffd700;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+}
+
 /* ==================== CLEANING SERVICES SECTION ==================== */
 .cleaning-services-section {
     padding: 8rem 0;
@@ -1344,9 +1636,63 @@ section, .container, .row {
     .ai-intelligence-section,
     .features-grid-section,
     .stats-cta-section,
+    .featured-partner-section,
     .cleaning-services-section {
         padding: 4rem 0;
         overflow-x: hidden;
+    }
+    
+    .featured-partner-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .partner-badge {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+    
+    .partner-logo-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .partner-logo-circle i {
+        font-size: 3rem;
+    }
+    
+    .partner-company-name {
+        font-size: 1.5rem;
+    }
+    
+    .partner-welcome {
+        font-size: 1.4rem;
+    }
+    
+    .partner-description {
+        font-size: 1rem;
+    }
+    
+    .partner-services {
+        justify-content: center;
+    }
+    
+    .partner-cta-box {
+        padding: 1.5rem;
+    }
+    
+    .partner-cta-text {
+        font-size: 1rem;
+    }
+    
+    .partner-cta-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-partner-primary,
+    .btn-partner-secondary {
+        width: 100%;
+        justify-content: center;
     }
     
     .ai-stats {
