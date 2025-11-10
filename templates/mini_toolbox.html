@@ -71,6 +71,54 @@
             </div>
         </div>
 
+        <!-- Post-Construction Cleanup -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-hammer fa-3x text-warning"></i>
+                    </div>
+                    <h4 class="card-title">Post-Construction Cleanup</h4>
+                    <p class="card-text text-muted">Checklist with pricing, staffing & timeline</p>
+                    <button class="btn btn-outline-warning" onclick="showPostConstructionChecklist()">
+                        <i class="fas fa-list me-2"></i>View Details
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commercial Cleaning Pro -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-building fa-3x text-info"></i>
+                    </div>
+                    <h4 class="card-title">Commercial Cleaning</h4>
+                    <p class="card-text text-muted">Complete guide with pricing & staffing</p>
+                    <button class="btn btn-outline-info" onclick="showCommercialCleaningChecklist()">
+                        <i class="fas fa-list me-2"></i>View Details
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Residential Cleaning Pro -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-home fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">Residential Cleaning</h4>
+                    <p class="card-text text-muted">Residential guide with pricing & staffing</p>
+                    <button class="btn btn-outline-primary" onclick="showResidentialCleaningChecklist()">
+                        <i class="fas fa-list me-2"></i>View Details
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Industry Resources -->
         <div class="col-md-6 col-lg-4">
             <div class="card h-100 shadow-sm hover-lift">
@@ -769,6 +817,398 @@ function showChecklists() {
 function downloadChecklist(type) {
     alert('✓ ' + type + ' Checklist downloaded! For full functionality, sign up for a premium account.');
 }
+
+function showPostConstructionChecklist() {
+    document.getElementById('toolModalTitle').textContent = 'Post-Construction Cleanup & Windows';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3" style="max-height: 600px; overflow-y: auto;">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#postconstChecklist">Checklist</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#postconstPricing">Pricing & Staffing</a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="postconstChecklist">
+                    <h6 class="mb-3">Post-Construction Cleanup Tasks</h6>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Remove protective coverings & tarps</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Sweep and vacuum all debris</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Remove stickers, labels, and adhesive residue</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean all surfaces and fixtures</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Polish/clean windows (interior & exterior)</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Remove dust from HVAC vents</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean fixtures and hardware</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Final walkthrough and touch-ups</div>
+                </div>
+                
+                <div class="tab-pane fade" id="postconstPricing">
+                    <h6 class="mb-3">Pricing Calculator</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Square Footage</label>
+                        <input type="number" class="form-control" id="postconstSqft" placeholder="Enter sq ft" value="5000" min="100">
+                    </div>
+                    <div id="postconstResults"></div>
+                    <button class="btn btn-primary mt-3" onclick="calculatePostConstructionPricing()">Calculate Pricing</button>
+                </div>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function calculatePostConstructionPricing() {
+    const sqft = parseFloat(document.getElementById('postconstSqft').value) || 5000;
+    
+    // Pricing: $0.50-0.75 per sq ft for post-construction
+    const baseRate = 0.60;
+    const basePrice = sqft * baseRate;
+    
+    // Staffing calculation
+    let staff = 1;
+    if (sqft > 3000) staff = 2;
+    if (sqft > 7000) staff = 3;
+    if (sqft > 12000) staff = 4;
+    
+    // Days needed (estimate: 1 person can do 3000-5000 sq ft per day)
+    const daysPerPerson = sqft / 4000;
+    const totalDays = Math.ceil(daysPerPerson);
+    
+    // Employee costs (assume $20/hr, 8hr day)
+    const hourlyRate = 20;
+    const dailyEmployeeCost = hourlyRate * 8 * staff;
+    const totalEmployeeCost = dailyEmployeeCost * totalDays;
+    
+    // Materials (15% of labor)
+    const materialsCost = totalEmployeeCost * 0.15;
+    
+    // Taxes (assume 15% of revenue)
+    const taxableAmount = basePrice;
+    const taxes = taxableAmount * 0.15;
+    
+    // Total
+    const totalCost = basePrice + materials + taxes;
+    const profitMargin = basePrice - totalEmployeeCost - materialsCost;
+    
+    const html = `
+        <div class="alert alert-info">
+            <strong>Job Estimate for ${sqft.toLocaleString()} sq ft:</strong>
+        </div>
+        <table class="table table-sm">
+            <tr>
+                <td><strong>Base Pricing:</strong></td>
+                <td><strong>$${basePrice.toFixed(2)}</strong> (@$0.60/sqft)</td>
+            </tr>
+            <tr>
+                <td>Staff Required:</td>
+                <td>${staff} person(s)</td>
+            </tr>
+            <tr>
+                <td>Days Needed:</td>
+                <td>${totalDays} day(s)</td>
+            </tr>
+            <tr class="table-warning">
+                <td><strong>Labor Cost:</strong></td>
+                <td><strong>$${totalEmployeeCost.toFixed(2)}</strong> (@$${hourlyRate}/hr)</td>
+            </tr>
+            <tr>
+                <td>Materials & Supplies:</td>
+                <td>$${materialsCost.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <td>Estimated Taxes:</td>
+                <td>$${taxes.toFixed(2)}</td>
+            </tr>
+            <tr class="table-success">
+                <td><strong>Estimated Profit:</strong></td>
+                <td><strong>$${profitMargin.toFixed(2)}</strong></td>
+            </tr>
+        </table>
+        <div class="alert alert-secondary small">
+            <strong>Payment Structure:</strong><br>
+            • 50% due upon contract signing<br>
+            • 50% due upon completion<br>
+            • Pay employees: Daily or weekly basis
+        </div>
+    `;
+    
+    document.getElementById('postconstResults').innerHTML = html;
+}
+
+function showCommercialCleaningChecklist() {
+    document.getElementById('toolModalTitle').textContent = 'Commercial Cleaning Professional';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3" style="max-height: 600px; overflow-y: auto;">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#commChecklist">Checklist</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#commPricing">Pricing & Staffing</a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="commChecklist">
+                    <h6 class="mb-3">Daily Commercial Cleaning Tasks</h6>
+                    <h7 class="text-primary mb-2"><strong>Common Areas</strong></h7>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Vacuum/sweep lobby and hallways</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Empty and sanitize trash bins</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Dust surfaces and furniture</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean and disinfect restrooms</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Mop floors</div>
+                    
+                    <h7 class="text-primary mb-2 mt-3"><strong>Offices</strong></h7>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Dust desks and computers</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Empty office trash bins</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Vacuum carpets</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean conference room tables</div>
+                </div>
+                
+                <div class="tab-pane fade" id="commPricing">
+                    <h6 class="mb-3">Commercial Pricing Calculator</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Square Footage</label>
+                        <input type="number" class="form-control" id="commSqft" placeholder="Enter sq ft" value="10000" min="500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Frequency</label>
+                        <select class="form-select" id="commFreq">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly (5x/week)</option>
+                            <option value="biweekly">Bi-Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div id="commResults"></div>
+                    <button class="btn btn-primary mt-3" onclick="calculateCommercialPricing()">Calculate</button>
+                </div>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function calculateCommercialPricing() {
+    const sqft = parseFloat(document.getElementById('commSqft').value) || 10000;
+    const freq = document.getElementById('commFreq').value;
+    
+    // Commercial rates: $0.12-0.18 per sq ft per visit
+    const ratePerSqft = 0.15;
+    const perVisitPrice = sqft * ratePerSqft;
+    
+    // Frequency multiplier
+    let frequencyMultiplier = 5; // daily = 5 visits/week
+    if (freq === 'weekly') frequencyMultiplier = 1;
+    if (freq === 'biweekly') frequencyMultiplier = 0.5;
+    if (freq === 'monthly') frequencyMultiplier = 0.25;
+    
+    const monthlyPrice = perVisitPrice * frequencyMultiplier * 4.33; // weeks per month
+    const annualPrice = monthlyPrice * 12;
+    
+    // Staffing
+    let staffPerVisit = 1;
+    if (sqft > 5000) staffPerVisit = 2;
+    if (sqft > 15000) staffPerVisit = 3;
+    if (sqft > 25000) staffPerVisit = 4;
+    
+    // Time per visit (min 2 hours per 5000 sqft)
+    const timePerVisit = Math.max(2, Math.ceil(sqft / 5000) * 2);
+    
+    // Labor cost per visit
+    const hourlyRate = 18;
+    const laborPerVisit = timePerVisit * staffPerVisit * hourlyRate;
+    const monthlyLabor = laborPerVisit * frequencyMultiplier * 4.33;
+    
+    // Materials (10% of revenue)
+    const monthlyMaterials = monthlyPrice * 0.10;
+    
+    // Taxes (15%)
+    const monthlyTaxes = monthlyPrice * 0.15;
+    
+    // Monthly profit
+    const monthlyProfit = monthlyPrice - monthlyLabor - monthlyMaterials - monthlyTaxes;
+    
+    const html = `
+        <div class="alert alert-info">
+            <strong>Commercial Cleaning Estimate for ${sqft.toLocaleString()} sq ft:</strong>
+        </div>
+        <table class="table table-sm">
+            <tr>
+                <td><strong>Per Visit:</strong></td>
+                <td><strong>$${perVisitPrice.toFixed(2)}</strong></td>
+            </tr>
+            <tr>
+                <td>Staff per Visit:</td>
+                <td>${staffPerVisit} person(s) | ${timePerVisit} hours</td>
+            </tr>
+            <tr class="table-warning">
+                <td><strong>Monthly Revenue:</strong></td>
+                <td><strong>$${monthlyPrice.toFixed(2)}</strong></td>
+            </tr>
+            <tr>
+                <td>Monthly Labor:</td>
+                <td>$${monthlyLabor.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <td>Materials & Supplies:</td>
+                <td>$${monthlyMaterials.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <td>Estimated Taxes:</td>
+                <td>$${monthlyTaxes.toFixed(2)}</td>
+            </tr>
+            <tr class="table-success">
+                <td><strong>Monthly Profit:</strong></td>
+                <td><strong>$${monthlyProfit.toFixed(2)}</strong></td>
+            </tr>
+            <tr class="table-success">
+                <td><strong>Annual Revenue:</strong></td>
+                <td><strong>$\${annualPrice.toFixed(2)}</strong></td>
+            </tr>
+        </table>
+        <div class="alert alert-secondary small">
+            <strong>Employee Payment:</strong><br>
+            • Hourly: \$\${hourlyRate}/hour (\$\${(hourlyRate * 8).toFixed(2)}/day)<br>
+            • Pay frequency: Weekly or bi-weekly
+        </div>
+    `;
+    
+    document.getElementById('commResults').innerHTML = html;
+}
+
+function showResidentialCleaningChecklist() {
+    document.getElementById('toolModalTitle').textContent = 'Residential Cleaning Professional';
+    document.getElementById('toolModalBody').innerHTML = `
+        <div class="p-3" style="max-height: 600px; overflow-y: auto;">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#resChecklist">Checklist</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#resPricing">Pricing & Staffing</a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="resChecklist">
+                    <h6 class="mb-3">Residential Cleaning Tasks</h6>
+                    <h7 class="text-primary mb-2"><strong>Kitchen</strong></h7>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean countertops and appliances</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Sanitize sink and faucet</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Sweep and mop floor</div>
+                    
+                    <h7 class="text-primary mb-2 mt-3"><strong>Bathrooms</strong></h7>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean and sanitize toilet, sink, shower</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Scrub tiles and grout</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Clean mirrors and fixtures</div>
+                    
+                    <h7 class="text-primary mb-2 mt-3"><strong>Living Areas</strong></h7>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Dust all surfaces</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Vacuum carpets and rugs</div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"> Mop hard floors</div>
+                </div>
+                
+                <div class="tab-pane fade" id="resPricing">
+                    <h6 class="mb-3">Residential Pricing Calculator</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Square Footage</label>
+                        <input type="number" class="form-control" id="resSqft" placeholder="Enter sq ft" value="3000" min="300">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Number of Bedrooms</label>
+                        <input type="number" class="form-control" id="resBeds" value="3" min="1">
+                    </div>
+                    <div id="resResults"></div>
+                    <button class="btn btn-primary mt-3" onclick="calculateResidentialPricing()">Calculate</button>
+                </div>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('toolModal')).show();
+}
+
+function calculateResidentialPricing() {
+    const sqft = parseFloat(document.getElementById('resSqft').value) || 3000;
+    const beds = parseInt(document.getElementById('resBeds').value) || 3;
+    
+    // Residential rates: $0.25-0.35 per sq ft or flat rate
+    const pricePerSqft = 0.30;
+    const basePrice = sqft * pricePerSqft;
+    
+    // Add bedroom multiplier ($50-75 per bedroom)
+    const bedroomAdd = beds * 60;
+    const totalPrice = basePrice + bedroomAdd;
+    
+    // Staffing: 1 person for 1500 sqft
+    const staff = Math.max(1, Math.ceil(sqft / 1500));
+    
+    // Time needed: 2-3 hours per 1000 sqft
+    const timeNeeded = Math.ceil((sqft / 1000) * 2.5);
+    
+    // Daily employee cost
+    const hourlyRate = 18;
+    const dailyCost = timeNeeded * hourlyRate * staff;
+    
+    // Materials (12% of revenue)
+    const materials = totalPrice * 0.12;
+    
+    // Taxes (15%)
+    const taxes = totalPrice * 0.15;
+    
+    // Profit
+    const profit = totalPrice - dailyCost - materials - taxes;
+    
+    const html = `
+        <div class="alert alert-info">
+            <strong>Residential Cleaning Estimate (${sqft.toLocaleString()} sqft, ${beds} beds):</strong>
+        </div>
+        <table class="table table-sm">
+            <tr>
+                <td><strong>Base Price:</strong></td>
+                <td><strong>$${totalPrice.toFixed(2)}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><small>($${pricePerSqft}/sqft + $${bedroomAdd} bedroom premium)</small></td>
+            </tr>
+            <tr>
+                <td>Staff Required:</td>
+                <td>${staff} person(s)</td>
+            </tr>
+            <tr>
+                <td>Time Needed:</td>
+                <td>${timeNeeded} hours</td>
+            </tr>
+            <tr class="table-warning">
+                <td><strong>Labor Cost:</strong></td>
+                <td><strong>$${dailyCost.toFixed(2)}</strong> (@$${hourlyRate}/hr)</td>
+            </tr>
+            <tr>
+                <td>Materials & Supplies:</td>
+                <td>$${materials.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <td>Estimated Taxes:</td>
+                <td>$${taxes.toFixed(2)}</td>
+            </tr>
+            <tr class="table-success">
+                <td><strong>Estimated Profit:</strong></td>
+                <td><strong>$${profit.toFixed(2)}</strong></td>
+            </tr>
+        </table>
+        <div class="alert alert-secondary small">
+            <strong>Payment Options:</strong><br>
+            • Per-job basis: Pay after completion<br>
+            • Recurring (weekly/bi-weekly): Weekly payments<br>
+            • Employee: $${hourlyRate}/hour, paid weekly
+        </div>
+    `;
+    
+    document.getElementById('resResults').innerHTML = html;
+}
+
 
 function showResources() {
     document.getElementById('toolModalTitle').textContent = 'Industry Resources';
