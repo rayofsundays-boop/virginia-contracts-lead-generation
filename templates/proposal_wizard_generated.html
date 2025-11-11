@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>AI Draft Proposal & Quote</h2>
+  <div class="alert alert-warning">{{ disclaimer }}</div>
+  <h5>Quote Outline</h5>
+  <pre class="bg-light p-3 border rounded" style="white-space:pre-wrap;">{{ quote }}</pre>
+  <h5 class="mt-4">Proposal Draft</h5>
+  <pre class="bg-light p-3 border rounded" style="white-space:pre-wrap;">{{ proposal }}</pre>
+  <div class="mt-4 d-flex gap-2">
+    <a class="btn btn-secondary" href="{{ url_for('proposal_wizard_select', capability_id=capability_id) }}">Back</a>
+    <a class="btn btn-primary" href="{{ url_for('proposal_wizard_compliance', proposal_id=proposal_id) }}">Run Compliance Check</a>
+  </div>
+</div>
+{% endblock %}

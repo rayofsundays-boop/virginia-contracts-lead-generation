@@ -143,6 +143,139 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
+# =============================
+# Proposal Wizard & Compliance AI Feature (Capability Statements)
+# =============================
+# Provides multi-step flow: upload capability statement PDF -> enrich metadata -> AI draft quote & proposal
+# -> compliance coverage analysis. Accessible to any authenticated user.
+
+def _ensure_proposal_wizard_tables():
+    """Create proposal wizard tables if missing (portable across SQLite/Postgres)."""
+    try:
+        is_postgres = 'postgresql' in str(db.engine.url)
+        id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
+        bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
+        ts_default = 'CURRENT_TIMESTAMP'
+
+        ddl_capability = f'''CREATE TABLE IF NOT EXISTS capability_statements (
+            id {id_type},
+            user_id INTEGER,
+            original_filename TEXT,
+            stored_path TEXT,
+            file_size INTEGER,
+            uploaded_at TIMESTAMP DEFAULT {ts_default},
+            parsed_text TEXT,
+            sector TEXT,
+            naics_codes TEXT,
+            summary TEXT,
+            is_deleted {bool_type} DEFAULT {'FALSE' if is_postgres else 0}
+        )'''
+        ddl_proposal = f'''CREATE TABLE IF NOT EXISTS ai_generated_proposals (
+            id {id_type},
+            capability_id INTEGER,
+            user_id INTEGER,
+            proposal_type TEXT,
+            generated_quote TEXT,
+            generated_proposal TEXT,
+            generation_model TEXT,
+            cost_estimate TEXT,
+            disclaimer TEXT,
+            created_at TIMESTAMP DEFAULT {ts_default}
+        )'''
+        ddl_compliance = f'''CREATE TABLE IF NOT EXISTS compliance_reports (
+            id {id_type},
+            capability_id INTEGER,
+            proposal_id INTEGER,
+            user_id INTEGER,
+            total_requirements INTEGER,
+            matched_requirements INTEGER,
+            coverage_percent REAL,
+            missing_items TEXT,
+            ambiguous_items TEXT,
+            recommendations TEXT,
+            created_at TIMESTAMP DEFAULT {ts_default}
+        )'''
+
+        db.session.execute(text(ddl_capability))
+        db.session.execute(text(ddl_proposal))
+        db.session.execute(text(ddl_compliance))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"DDL proposal wizard error: {e}")
+
+def _extract_pdf_text(file_path: str) -> str:
+    """Extract text from PDF using PyPDF2 if available; graceful fallback."""
+    try:
+        import PyPDF2  # type: ignore
+        with open(file_path, 'rb') as f:
+            reader = PyPDF2.PdfReader(f)
+            pages = []
+            for pg in reader.pages:
+                try:
+                    pages.append(pg.extract_text() or '')
+                except Exception:
+                    pass
+        return '\n'.join(pages)[:15000]
+    except Exception as e:
+        print(f"PDF parse error ({file_path}): {e}")
+        return ''
+
+def _ai_generate_quote_and_proposal(parsed_text: str, sector: str) -> dict:
+    """Generate AI proposal & quote drafts or placeholders if AI unavailable."""
+    disclaimer = ("This AI-generated draft is for acceleration only. Review pricing, scope, compliance, and accuracy before submitting.")
+    if not parsed_text:
+        return {'quote': 'No extractable text found in PDF.', 'proposal': 'Unable to draft proposal without text.', 'disclaimer': disclaimer}
+    if not is_openai_configured():
+        return {
+            'quote': f"[Placeholder Quote]\nSector: {sector or 'General'}\nAdd specific pricing and assumptions manually.",
+            'proposal': (
+                "[Placeholder Proposal]\nExecutive Summary: Summarize company strengths.\n"
+                "Technical Approach: Cleaning methods, scheduling, quality controls.\n"
+                "Staffing & Training: Roles, certifications, training cadence.\n"
+                "Quality Assurance: Inspections, KPIs, corrective actions.\n"
+                "Past Performance: Add project examples with outcomes.\n"
+                "Differentiators: Unique capabilities (e.g., green cleaning, rapid response)."
+            ),
+            'disclaimer': disclaimer + ' (OpenAI not configured)'
+        }
+    try:
+        prompt = (
+            "Given a janitorial/services capability statement, produce (1) a concise quote outline (no pricing) and (2) a structured RFP response draft with sections: Executive Summary, Technical Approach, Staffing & Training, Quality Assurance, Past Performance, Differentiators. Limit output to ~900 words. Neutral professional tone.\n\nCapability Statement:\n" + parsed_text[:6000]
+        )
+        response = openai.ChatCompletion.create(
+            model=os.getenv('OPENAI_MODEL', 'gpt-4'),
+            messages=[{"role": "system", "content": "You are a proposal assistant."}, {"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=1200
+        )
+        content = response['choices'][0]['message']['content']
+        first_block = content.split('\n\n')[0]
+        quote = first_block[:1200]
+        proposal = content[len(first_block):].strip()
+        return {'quote': quote, 'proposal': proposal, 'disclaimer': disclaimer}
+    except Exception as e:
+        print(f"AI generation error: {e}")
+        return {'quote': 'AI generation failed; add quote manually.', 'proposal': 'AI generation failed; draft proposal manually.', 'disclaimer': disclaimer + ' (Error)'}
+
+def _compute_compliance(parsed_text: str, proposal_text: str) -> dict:
+    """Simple keyword compliance scoring; placeholder for future rule engine."""
+    tokens = ['quality assurance','staffing','training','schedule','safety','green cleaning','equipment','experience','past performance','supervision','inspection','reporting','pricing','transition','scope']
+    blob = (parsed_text + '\n' + proposal_text).lower()
+    matched = [t for t in tokens if t in blob]
+    missing = [t for t in tokens if t not in matched]
+    coverage = round((len(matched)/len(tokens))*100.0, 2) if tokens else 0.0
+    ambiguous = [t for t in matched if blob.count(t) == 1]
+    recs = []
+    if 'safety' not in matched: recs.append('Add safety & OSHA compliance section.')
+    if 'green cleaning' not in matched: recs.append('Include sustainable / green cleaning practices section.')
+    if 'past performance' not in matched: recs.append('Add measurable past performance examples.')
+    if not recs: recs.append('Consider KPIs & service levels for stronger evaluation.')
+    return {'total': len(tokens), 'matched': len(matched), 'coverage': coverage, 'missing': missing, 'ambiguous': ambiguous, 'recommendations': recs}
+
+# Routes for Proposal Wizard moved below after login_required is defined
+
+
 # ---------------------------------------------------------------------------
 # Single-instance background jobs guard (avoid duplicate schedulers under Gunicorn)
 # ---------------------------------------------------------------------------
@@ -1040,6 +1173,75 @@ def paid_or_limited_access(f):
         # Allow function to run, but pass click limit info to template
         return f(*args, **kwargs)
     return decorated_function
+
+# ---------------------------------------------------------------------------
+# Proposal Wizard Routes (inserted here after login_required definition)
+# ---------------------------------------------------------------------------
+@app.route('/proposal-wizard/upload', methods=['GET', 'POST'])
+@login_required
+def proposal_wizard_upload():
+    _ensure_proposal_wizard_tables()
+    if request.method == 'GET':
+        return render_template('proposal_wizard_upload.html')
+    file = request.files.get('capability_pdf')
+    if not file or file.filename == '':
+        flash('Please select a PDF file.', 'danger')
+        return redirect(request.url)
+    if not file.filename.lower().endswith('.pdf'):
+        flash('Only PDF files are accepted.', 'warning')
+        return redirect(request.url)
+    store_root = os.path.join(os.path.dirname(__file__), 'capability_uploads')
+    os.makedirs(store_root, exist_ok=True)
+    safe_name = secure_filename(file.filename)
+    stored = os.path.join(store_root, f"{session['user_id']}_{int(time.time())}_{safe_name}")
+    file.save(stored)
+    size = os.path.getsize(stored)
+    parsed = _extract_pdf_text(stored)
+    db.session.execute(text('''INSERT INTO capability_statements (user_id, original_filename, stored_path, file_size, parsed_text) VALUES (:uid,:fn,:sp,:sz,:pt)'''),
+                       {'uid': session['user_id'], 'fn': safe_name, 'sp': stored, 'sz': size, 'pt': parsed})
+    db.session.commit()
+    new_id = db.session.execute(text('SELECT MAX(id) FROM capability_statements WHERE user_id=:uid'), {'uid': session['user_id']}).scalar()
+    return redirect(url_for('proposal_wizard_select', capability_id=new_id))
+
+@app.route('/proposal-wizard/select/<int:capability_id>', methods=['GET', 'POST'])
+@login_required
+def proposal_wizard_select(capability_id):
+    if request.method == 'GET':
+        return render_template('proposal_wizard_select.html', capability_id=capability_id)
+    sector = (request.form.get('sector') or '').strip()[:120]
+    naics_codes = (request.form.get('naics_codes') or '').strip()[:250]
+    summary = (request.form.get('summary') or '').strip()[:600]
+    db.session.execute(text('''UPDATE capability_statements SET sector=:sec, naics_codes=:naics, summary=:sum WHERE id=:cid'''),
+                       {'sec': sector, 'naics': naics_codes, 'sum': summary, 'cid': capability_id})
+    db.session.commit()
+    return redirect(url_for('proposal_wizard_generate', capability_id=capability_id))
+
+@app.route('/proposal-wizard/generate/<int:capability_id>')
+@login_required
+def proposal_wizard_generate(capability_id):
+    cap = db.session.execute(text('SELECT id, parsed_text, sector FROM capability_statements WHERE id=:cid'), {'cid': capability_id}).fetchone()
+    if not cap:
+        flash('Capability statement not found.', 'danger')
+        return redirect(url_for('proposal_wizard_upload'))
+    ai = _ai_generate_quote_and_proposal(cap.parsed_text or '', cap.sector or '')
+    db.session.execute(text('''INSERT INTO ai_generated_proposals (capability_id, user_id, proposal_type, generated_quote, generated_proposal, generation_model, disclaimer) VALUES (:cid,:uid,'rfp-response',:quote,:proposal,:model,:disc)'''),
+                       {'cid': capability_id, 'uid': session['user_id'], 'quote': ai['quote'], 'proposal': ai['proposal'], 'model': os.getenv('OPENAI_MODEL', 'gpt-4'), 'disc': ai['disclaimer']})
+    db.session.commit()
+    proposal_id = db.session.execute(text('SELECT MAX(id) FROM ai_generated_proposals WHERE user_id=:uid'), {'uid': session['user_id']}).scalar()
+    return render_template('proposal_wizard_generated.html', capability_id=capability_id, proposal_id=proposal_id, quote=ai['quote'], proposal=ai['proposal'], disclaimer=ai['disclaimer'])
+
+@app.route('/proposal-wizard/compliance/<int:proposal_id>')
+@login_required
+def proposal_wizard_compliance(proposal_id):
+    row = db.session.execute(text('''SELECT p.id as pid, p.generated_proposal, c.parsed_text, c.id as cid FROM ai_generated_proposals p JOIN capability_statements c ON p.capability_id=c.id WHERE p.id=:pid AND p.user_id=:uid'''), {'pid': proposal_id, 'uid': session['user_id']}).fetchone()
+    if not row:
+        flash('Proposal draft not found.', 'danger')
+        return redirect(url_for('proposal_wizard_upload'))
+    comp = _compute_compliance(row.parsed_text or '', row.generated_proposal or '')
+    db.session.execute(text('''INSERT INTO compliance_reports (capability_id, proposal_id, user_id, total_requirements, matched_requirements, coverage_percent, missing_items, ambiguous_items, recommendations) VALUES (:cid,:pid,:uid,:total,:matched,:cov,:missing,:ambig,:recs)'''),
+                       {'cid': row.cid, 'pid': row.pid, 'uid': session['user_id'], 'total': comp['total'], 'matched': comp['matched'], 'cov': comp['coverage'], 'missing': ','.join(comp['missing']), 'ambig': ','.join(comp['ambiguous']), 'recs': '\n'.join(comp['recommendations'])})
+    db.session.commit()
+    return render_template('proposal_wizard_compliance.html', proposal_id=proposal_id, capability_id=row.cid, compliance=comp)
 
 # ============================================================================
 # AUTOMATED DATA UPDATES FROM SAM.GOV
