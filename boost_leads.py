@@ -37,7 +37,7 @@ def boost_federal_leads():
     print(f"\n📊 Fetcher Configuration:")
     print(f"   • NAICS Codes: {len(fetcher.naics_codes)} categories")
     print(f"   • Lookback Window: 90 days")
-    print(f"   • Target States: VA, MD, DC (DMV Region)")
+    print(f"   • Target States: {len(fetcher.target_states)} states configured")
     print(f"   • Max Retries: 3 attempts before Data.gov fallback")
     print(f"   • Expected: 60-120 new contracts")
     
@@ -46,8 +46,8 @@ def boost_federal_leads():
     print("   (Will automatically switch to Data.gov if SAM.gov fails)")
     
     try:
-        # Fetch contracts (will auto-fallback to Data.gov if needed)
-        contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
+        # Fetch contracts nationwide (will auto-fallback to Data.gov if needed)
+        contracts = fetcher.fetch_us_cleaning_contracts(days_back=90)
         
         if not contracts:
             print("\n⚠️  No contracts found")

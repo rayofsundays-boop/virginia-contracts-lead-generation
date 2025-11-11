@@ -1064,7 +1064,7 @@ def update_federal_contracts_from_samgov():
             try:
                 from sam_gov_fetcher import SAMgovFetcher
                 fetcher = SAMgovFetcher()
-                contracts = fetcher.fetch_va_cleaning_contracts(days_back=14)
+                contracts = fetcher.fetch_us_cleaning_contracts(days_back=14)
                 source = "SAM.gov"
             except Exception as sam_err:
                 print(f"❌ SAM.gov fetch error: {sam_err}")
@@ -1249,7 +1249,7 @@ def update_federal_contracts_from_datagov():
     except Exception as e:
         print(f"❌ Error updating from Data.gov: {e}")
 
-def _build_sam_search_url(naics_code: str | None, city: str | None = None, state: str = "VA") -> str:
+def _build_sam_search_url(naics_code: str | None, city: str | None = None, state: str | None = None) -> str:
     """Build a resilient SAM.gov search URL that won't 404.
 
     Strategy:
@@ -1268,12 +1268,11 @@ def _build_sam_search_url(naics_code: str | None, city: str | None = None, state
         parts = ["janitorial"]
         if naics_code and str(naics_code).strip():
             parts.append(str(naics_code).strip())
-        # Prefer city if present; always include state name for better matches
+        # Prefer city if present; include state hint when available
         if city and str(city).strip():
             parts.append(str(city).strip())
         if state and str(state).strip():
-            # Use full name rather than postal to broaden matches
-            parts.append("Virginia" if state.upper() == "VA" else state)
+            parts.append(str(state).strip())
 
         keywords = quote_plus(" ".join(parts))
         return f"https://sam.gov/search/?index=opp&keywords={keywords}&sort=-relevance"
@@ -1387,7 +1386,7 @@ def update_contracts_from_usaspending():
                     sam_url = _build_sam_search_url(
                         naics_code=naics_code,
                         city=award.get('Place of Performance City Name', ''),
-                        state='VA'
+                        state=None
                     )
                     
                     contract = {
@@ -2682,7 +2681,7 @@ def init_postgres_db():
             try:
                 from sam_gov_fetcher import SAMgovFetcher
                 fetcher = SAMgovFetcher()
-                real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
+                real_contracts = fetcher.fetch_us_cleaning_contracts(days_back=90)
                 
                 if real_contracts:
                     for contract in real_contracts:
@@ -2929,7 +2928,7 @@ def init_db():
             try:
                 from sam_gov_fetcher import SAMgovFetcher
                 fetcher = SAMgovFetcher()
-                real_contracts = fetcher.fetch_va_cleaning_contracts(days_back=90)
+                real_contracts = fetcher.fetch_us_cleaning_contracts(days_back=90)
                 
                 if real_contracts:
                     for contract in real_contracts:
@@ -3616,8 +3615,6 @@ def customer_dashboard():
             quick_wins = 0
             try:
                 # Quick Wins includes: open supply + urgent commercial + capped gov upcoming deadlines
-                quick_wins = db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"))\
-                    .scalar() or 0
                 quick_wins += db.session.execute(text(
                     "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
                 )).scalar() or 0
@@ -3718,7 +3715,7 @@ def customer_dashboard():
             # Commercial Requests
             com_rows = db.session.execute(text(
                 """
-                SELECT business_name, business_type, city || ', VA' as full_city, budget_range, created_at,
+                SELECT business_name, business_type, city as full_city, budget_range, created_at,
                        'Commercial Request' as lead_type, id
                 FROM commercial_lead_requests
                 WHERE status = 'open'
@@ -3730,7 +3727,7 @@ def customer_dashboard():
                 rec = {
                     'title': f"Commercial Cleaning - {r.business_name}", 
                     'agency': r.business_type, 
-                    'location': r.full_city,
+                    'location': (r.full_city or 'Unknown'),
                     'value': r.budget_range or 'Contact for quote', 
                     'posted_date': r.created_at, 
                     'lead_type': r.lead_type, 
@@ -3742,7 +3739,7 @@ def customer_dashboard():
             # Residential Requests
             res_rows = db.session.execute(text(
                 """
-                SELECT homeowner_name, property_type, city || ', VA' as full_city, estimated_value, created_at,
+                SELECT homeowner_name, property_type, city as full_city, estimated_value, created_at,
                        'Residential Request' as lead_type, id
                 FROM residential_leads
                 WHERE status = 'new'
@@ -3754,7 +3751,7 @@ def customer_dashboard():
                 rec = {
                     'title': f"Residential Cleaning - {r.property_type}", 
                     'agency': f"Homeowner: {r.homeowner_name}", 
-                    'location': r.full_city,
+                    'location': (r.full_city or 'Unknown'),
                     'value': r.estimated_value or 'Contact for quote', 
                     'posted_date': r.created_at, 
                     'lead_type': r.lead_type, 
@@ -10495,7 +10492,7 @@ def admin_regenerate_contract_url():
             return jsonify({'success': False, 'message': 'Missing contract_id'}), 400
         
         # Build new URL using keyword search
-        new_url = _build_sam_search_url(naics_code=naics_code, city=None, state='VA')
+        new_url = _build_sam_search_url(naics_code=naics_code, city=None, state=None)
         
         db.session.execute(text(
             "UPDATE federal_contracts SET sam_gov_url = :url WHERE id = :id"
@@ -11732,7 +11729,7 @@ def admin_link_doctor_repair():
 
     - action = 'repair':
         * federal: prefer canonical https://sam.gov/opp/{notice_id}/view if notice_id exists,
-                   else build resilient search URL via _build_sam_search_url(naics_code, city, 'VA')
+                   else build resilient search URL via _build_sam_search_url(naics_code, city, None)
         * others: try simple https upgrade/trim if present
     - action = 'clear': set URL field to NULL
     """
@@ -11774,7 +11771,7 @@ def admin_link_doctor_repair():
                             city = location.split(',')[0].strip()
                     except Exception:
                         city = None
-                    new_url = _build_sam_search_url(naics_code=naics_code, city=city, state='VA')
+                    new_url = _build_sam_search_url(naics_code=naics_code, city=city, state=None)
                 db.session.execute(text(
                     "UPDATE federal_contracts SET sam_gov_url = :u WHERE id = :id"
                 ), {'u': new_url, 'id': lead_id})
@@ -16776,6 +16773,7 @@ def submit_cleaning_request():
             'phone': request.form['phone'],
             'address': request.form['address'],
             'city': request.form['city'],
+            'state': request.form['state'],
             'zip_code': request.form['zip_code'],
             'business_type': request.form['business_type'],
             'square_footage': request.form['square_footage'],
@@ -16790,10 +16788,10 @@ def submit_cleaning_request():
         # Insert into database with pending_review status
         db.session.execute(text(
             "INSERT INTO commercial_lead_requests "
-            "(business_name, contact_name, email, phone, address, city, zip_code, "
+            "(business_name, contact_name, email, phone, address, city, state, zip_code, "
             "business_type, square_footage, frequency, services_needed, "
             "special_requirements, budget_range, start_date, urgency, status) "
-            "VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :zip_code, "
+            "VALUES (:business_name, :contact_name, :email, :phone, :address, :city, :state, :zip_code, "
             ":business_type, :square_footage, :frequency, :services_needed, "
             ":special_requirements, :budget_range, :start_date, :urgency, 'pending_review')"
         ), data)
@@ -16900,6 +16898,7 @@ def submit_residential_cleaning_request():
             'phone': request.form['phone'],
             'address': request.form['address'],
             'city': request.form['city'],
+            'state': request.form['state'],
             'zip_code': request.form['zip_code'],
             'property_type': request.form['property_type'],
             'bedrooms': request.form.get('bedrooms', 0),
@@ -16918,18 +16917,19 @@ def submit_residential_cleaning_request():
         # Insert into residential_leads table with pending_review status
         db.session.execute(text(
             "INSERT INTO residential_leads "
-            "(homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, "
+            "(homeowner_name, address, city, state, zip_code, property_type, bedrooms, bathrooms, "
             "square_footage, contact_email, contact_phone, estimated_value, "
             "cleaning_frequency, services_needed, special_requirements, status, "
             "source, lead_quality, created_at) "
             "VALUES "
-            "(:homeowner_name, :address, :city, :zip_code, :property_type, :bedrooms, :bathrooms, "
+            "(:homeowner_name, :address, :city, :state, :zip_code, :property_type, :bedrooms, :bathrooms, "
             ":square_footage, :email, :phone, :estimated_value, :frequency, :services_needed, "
             ":special_requirements, 'pending_review', 'website_form', 'hot', CURRENT_TIMESTAMP)"
         ), {
             'homeowner_name': data['homeowner_name'],
             'address': data['address'],
             'city': data['city'],
+            'state': data['state'],
             'zip_code': data['zip_code'],
             'property_type': data['property_type'],
             'bedrooms': data['bedrooms'],

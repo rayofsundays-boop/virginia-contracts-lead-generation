@@ -23,7 +23,7 @@ try:
     from sam_gov_fetcher import SAMgovFetcher
     
     fetcher = SAMgovFetcher()
-    contracts = fetcher.fetch_va_cleaning_contracts(days_back=30)
+    contracts = fetcher.fetch_us_cleaning_contracts(days_back=30)
     
     if contracts:
         print(f"   ✅ Successfully fetched {len(contracts)} federal contracts")

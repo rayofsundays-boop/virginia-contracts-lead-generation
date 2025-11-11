@@ -29,14 +29,14 @@ def fetch_real_contracts():
         with app.app_context():
             fetcher = SAMgovFetcher()
             
-            # Fetch Virginia cleaning contracts (last 30 days)
-            print("🔍 Searching for Virginia cleaning contracts...")
-            contracts = fetcher.fetch_va_cleaning_contracts(days_back=30)
+            # Fetch nationwide cleaning contracts (last 30 days)
+            print("🔍 Searching for nationwide cleaning contracts...")
+            contracts = fetcher.fetch_us_cleaning_contracts(days_back=30)
             
             if not contracts:
                 print("⚠️  No contracts found from SAM.gov API")
                 print("   This could mean:")
-                print("   1. No cleaning contracts in Virginia in the last 30 days")
+                print("   1. No cleaning contracts in selected states within the last 30 days")
                 print("   2. API key is invalid")
                 print("   3. API rate limit reached")
                 return False

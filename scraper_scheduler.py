@@ -35,7 +35,7 @@ class ProcurementScraperScheduler:
         """Scrape federal contracts from SAM.gov"""
         logger.info("🔄 Starting federal contract scraping...")
         try:
-            contracts = self.sam_fetcher.fetch_va_cleaning_contracts(days_back=30)
+            contracts = self.sam_fetcher.fetch_us_cleaning_contracts(days_back=30)
             
             if not contracts:
                 logger.warning("⚠️ No federal contracts found")

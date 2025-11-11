@@ -45,7 +45,7 @@ def fetch_real_contracts_safely():
             
             # Fetch with reduced lookback (less data = fewer pages)
             print("🔍 Searching last 14 days only (minimal data)...")
-            contracts = fetcher.fetch_va_cleaning_contracts(days_back=14)
+            contracts = fetcher.fetch_us_cleaning_contracts(days_back=14)
             
             if not contracts:
                 print("\n⚠️  No contracts found in last 14 days")

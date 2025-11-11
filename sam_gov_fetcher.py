@@ -30,8 +30,19 @@ class SAMgovFetcher:
             '562910',  # Remediation Services (deep cleaning, mold removal)
         ]
         
-        # DMV Region (DC, Maryland, Virginia) for maximum coverage
-        self.target_states = ['VA', 'MD', 'DC']
+        # Default to all 50 US states for nationwide coverage (override with SAM_TARGET_STATES env as CSV)
+        default_states = [
+            'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+            'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+            'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+            'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+            'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+        ]
+        env_states = os.environ.get('SAM_TARGET_STATES', '')
+        if env_states.strip():
+            self.target_states = [s.strip().upper() for s in env_states.split(',') if s.strip()]
+        else:
+            self.target_states = default_states
     
     def fetch_with_throttle(self, urls, delay=2):
         """
@@ -63,14 +74,26 @@ class SAMgovFetcher:
     
     def fetch_va_cleaning_contracts(self, days_back=90):
         """
-        Fetch real cleaning contracts from DMV region (DC, Maryland, Virginia)
-        Automatically falls back to Data.gov if SAM.gov fails after 3 attempts
-        
+        Backward-compatible method for legacy callers. Now delegates to nationwide
+        search but prioritizes DMV behavior when SAM_TARGET_STATES isn't set.
+        """
+        return self.fetch_us_cleaning_contracts(days_back=days_back)
+
+    def fetch_us_cleaning_contracts(self, days_back=90, states=None):
+        """
+        Fetch real cleaning contracts across the United States.
+
+        - Iterates states (env-configurable via SAM_TARGET_STATES)
+        - Applies NAICS filtering for cleaning-related opportunities
+        - Handles pagination with throttling and backoff
+        - Falls back to Data.gov after repeated failures
+
         Args:
-            days_back: How many days back to search (default 90 - expanded for more coverage)
-        
+            days_back: Lookback window in days
+            states: Optional list of state codes to search; defaults to configured target_states
+
         Returns:
-            List of contract dictionaries ready for database insertion
+            List[dict]: Contracts ready for DB insertion
         """
         if not self.api_key:
             logger.error("SAM_GOV_API_KEY not set. Get free key from https://open.gsa.gov/api/sam-gov-entity-api/")
@@ -78,28 +101,42 @@ class SAMgovFetcher:
             return self._fallback_to_datagov(days_back)
         
         all_contracts = []
+        seen_notice_ids = set()
+        states_to_search = states or self.target_states
+        # Allow limiting states per run to reduce rate limits if needed
+        max_states = int(os.environ.get('SAM_MAX_STATES_PER_RUN', len(states_to_search)))
+        states_to_search = states_to_search[:max_states]
         
         try:
             self.retry_attempts += 1
             
-            # Search each state in DMV region
-            for state in self.target_states:
+            # Search each state
+            for state in states_to_search:
                 logger.info(f"🔍 Searching {state} contracts...")
                 
                 # Search for each NAICS code in this state
                 for idx, naics in enumerate(self.naics_codes):
                     logger.info(f"  NAICS {naics} in {state}...")
                     contracts = self._search_contracts(naics, days_back, state)
-                    all_contracts.extend(contracts)
+                    for c in contracts:
+                        nid = c.get('notice_id')
+                        if nid and nid in seen_notice_ids:
+                            continue
+                        if nid:
+                            seen_notice_ids.add(nid)
+                        all_contracts.append(c)
                     
                     # Stagger requests to minimize rate limiting
-                    if idx < len(self.naics_codes) - 1 or state != self.target_states[-1]:
-                        sleep_s = 1.5 + random.random() * 1.5
+                    if idx < len(self.naics_codes) - 1 or state != states_to_search[-1]:
+                        # Slightly higher sleep for nationwide runs
+                        base = 1.5 if len(states_to_search) <= 3 else 2.5
+                        jitter = 1.5 if len(states_to_search) <= 3 else 2.0
+                        sleep_s = base + random.random() * jitter
                         logger.info(f"  Sleeping {sleep_s:.1f}s to avoid rate limits...")
                         time.sleep(sleep_s)
             
             if all_contracts:
-                logger.info(f"✅ Fetched {len(all_contracts)} real contracts from DMV region (VA/MD/DC)")
+                logger.info(f"✅ Fetched {len(all_contracts)} real contracts across {len(states_to_search)} state(s)")
                 self.retry_attempts = 0  # Reset on success
                 return all_contracts
             else:
