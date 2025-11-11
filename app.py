@@ -16490,6 +16490,36 @@ def ai_assistant():
     """AI chatbot for last-minute proposal help"""
     return render_template('ai_assistant.html')
 
+@app.route('/api/ai-assistant-reply', methods=['POST'])
+@login_required
+def ai_assistant_reply():
+    """Lightweight KB-powered reply for AI Assistant (no external API).
+    Accepts JSON { message: str } and returns { success, answer, followups, source }.
+    """
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        user_message = (data.get('message') or '').strip()
+        if not user_message:
+            return jsonify({'success': False, 'error': 'Empty message'}), 400
+
+        # Lazy import to avoid circulars at startup
+        try:
+            from chatbot_kb import get_kb_answer
+        except Exception as e:
+            print(f"KB import error: {e}")
+            return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
+
+        result = get_kb_answer(user_message)
+        return jsonify({
+            'success': True,
+            'answer': result.get('answer', ''),
+            'followups': result.get('followups', ''),
+            'source': result.get('source', 'kb')
+        })
+    except Exception as e:
+        print(f"AI assistant reply error: {e}")
+        return jsonify({'success': False, 'error': 'Unexpected server error'}), 500
+
 @app.route('/federal-coming-soon')
 def federal_coming_soon():
     """Coming soon page for federal contracts until November 3"""

@@ -200,12 +200,31 @@ function sendMessage(event) {
     // Show typing indicator
     showTypingIndicator();
     
-    // Simulate AI response (in production, call actual AI API)
-    setTimeout(() => {
+    // Call backend KB-powered API; if it fails, fall back to local generator
+    fetch('/api/ai-assistant-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideTypingIndicator();
+        if (data && data.success) {
+            let txt = data.answer || '';
+            if (data.followups) {
+                txt += `\n\n<em>Related prompts:</em> ${escapeHtml(data.followups)}`;
+            }
+            appendMessage('ai', txt);
+        } else {
+            const aiResponse = generateAIResponse(message);
+            appendMessage('ai', aiResponse);
+        }
+    })
+    .catch(() => {
         hideTypingIndicator();
         const aiResponse = generateAIResponse(message);
         appendMessage('ai', aiResponse);
-    }, 2000 + Math.random() * 1000); // Random delay 2-3 seconds
+    });
 }
 
 function askQuestion(question) {
