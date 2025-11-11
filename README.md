@@ -10,6 +10,13 @@ A Flask web application for government contracting lead generation, specifically
 - **Lead Management**: Track registered companies and their capabilities
 - **Responsive Design**: Mobile-friendly interface with Bootstrap styling
 
+### AI Assistant (KB + Roles)
+- Role-aware proposal/chat assistant at `/ai-assistant`
+- Deterministic in-repo Knowledge Base (no external API calls)
+- API: `POST /api/ai-assistant-reply` with `{ message, role? }`
+- Transparent sources and suggested follow-ups
+- See `AI_ASSISTANT_OVERVIEW.md` for full details
+
 ## Virginia Cities Covered
 
 - **Hampton, VA** - City Hall, municipal buildings, transit facilities
@@ -84,6 +91,11 @@ This project includes VS Code configuration:
 ```bash
 # Using the configured virtual environment:
 "/Users/chinneaquamatthews/Lead Generartion for Cleaning Contracts (VA) ELITE/.venv/bin/python" app.py
+```
+
+### Run Unit Tests
+```bash
+"/Users/chinneaquamatthews/Lead Generartion for Cleaning Contracts (VA) ELITE/.venv/bin/python" -m unittest -q
 ```
 
 ## Project Structure
@@ -213,3 +225,7 @@ This project is intended for educational and business use in government contract
 ## Support
 
 For issues or questions about this Virginia government contracting platform, please refer to the documentation or create an issue in the project repository.
+
+---
+
+Note on Chatbot Docs: `CHATBOT_QUICK_START.md` documents the earlier client-side-only chatbot. The live AI Assistant uses the role-aware KB + API described in `AI_ASSISTANT_OVERVIEW.md`.

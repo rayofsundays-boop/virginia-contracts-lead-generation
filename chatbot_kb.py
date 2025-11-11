@@ -211,13 +211,27 @@ FALLBACK = (
 )
 
 def get_kb_answer(user_text: str, role: Optional[str] = None) -> Dict[str, str]:
-    """Return best KB answer and suggested follow-ups.
-    Scoring: intent tag exact match > keyword match count > fallback.
+    """Return the best KB answer for a user query.
+
+    Contract:
+    - Input: free-form user_text; optional role string (e.g. "economist", "proposal manager", "it").
+    - Scoring order:
+        1. Exact intent tag containment (longer tags prioritized)
+        2. Keyword frequency match
+        3. Role bias (+2) if role substring appears in any article intent tag
+        4. Fallback answer when no matches
+    - Output: dict with keys: answer (HTML-capable string), followups (pipe-delimited), source (article id or 'fallback').
+    - Never raises; returns fallback on unexpected conditions.
+
+    Edge Cases Considered:
+    - Empty or whitespace-only user_text -> handled upstream (returns 400) but would fallback here.
+    - Role provided that has no mapping -> ignored (no additional bias).
+    - Overlapping tags (e.g. 'proposal' vs 'proposal manager') -> longer-first ordering prevents generic overshadowing.
     """
     cleaned = user_text.lower()
 
-    # Direct intent tag match (allow role prefix shorthand e.g. 'economist:' )
-    for tag in _INTENT_MAP:
+    # Direct intent tag match (prefer more specific/longer tags first)
+    for tag in sorted(_INTENT_MAP.keys(), key=len, reverse=True):
         if tag in cleaned:
             art = _INTENT_MAP[tag]
             return {"answer": art.answer, "followups": " | ".join(art.followups), "source": art.id}

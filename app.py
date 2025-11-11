@@ -64,6 +64,22 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Initialize lightweight analytics logger for AI Assistant (optional)
+try:
+    import logging
+    import os as _os
+    from logging.handlers import RotatingFileHandler
+    _os.makedirs('logs', exist_ok=True)
+    _handler = RotatingFileHandler('logs/assistant.log', maxBytes=512_000, backupCount=3)
+    _handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s role=%(role)s source=%(source)s len=%(length)s'))
+    _logger = logging.getLogger('assistant')
+    _logger.setLevel(logging.INFO)
+    _logger.addHandler(_handler)
+    app.assistant_logger = _logger
+except Exception:
+    # If logging setup fails, continue without analytics
+    app.assistant_logger = None
+
 # Build/version marker injection for deployment verification.
 # Adds a timestamp comment to the rendered HTML so external scripts (check_deployment.sh)
 # can detect current deployed build without exposing sensitive data.
@@ -16019,6 +16035,86 @@ def admin_auto_fetch_datagov():
         """
 
 
+@app.route('/api/admin/datagov-fetch', methods=['POST'])
+def api_admin_datagov_fetch():
+    """JSON API endpoint for Data.gov fetch (programmatic access).
+    
+    POST body: {"days_back": int (default 7)}
+    Returns: {"success": bool, "added": int, "total_federal": int, "datagov_total": int, "recent": [...]}
+    """
+    try:
+        from auto_fetch_daily import AutoFetcher
+        
+        data = request.get_json(force=True, silent=True) or {}
+        days_back = int(data.get('days_back', 7))
+        
+        # Validate range
+        if days_back < 1 or days_back > 365:
+            return jsonify({'success': False, 'error': 'days_back must be between 1 and 365'}), 400
+        
+        fetcher = AutoFetcher()
+        added = fetcher.fetch_and_save(days_back=days_back)
+        
+        # Get current stats
+        total_federal = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).scalar() or 0
+        datagov_total = db.session.execute(text(
+            "SELECT COUNT(*) FROM federal_contracts WHERE data_source LIKE '%Data.gov%'"
+        )).scalar() or 0
+        
+        # Get recent 5 contracts
+        recent_rows = db.session.execute(text(
+            "SELECT title, agency, value, created_at FROM federal_contracts "
+            "WHERE data_source LIKE '%Data.gov%' ORDER BY created_at DESC LIMIT 5"
+        )).fetchall()
+        
+        recent = [{'title': r[0], 'agency': r[1], 'value': r[2], 'created_at': str(r[3])} for r in recent_rows]
+        
+        return jsonify({
+            'success': True,
+            'added': added,
+            'total_federal': total_federal,
+            'datagov_total': datagov_total,
+            'recent': recent
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()}), 500
+
+
+@app.route('/api/admin/datagov-status', methods=['GET'])
+def api_admin_datagov_status():
+    """JSON status endpoint for Data.gov integration monitoring.
+    
+    Returns: {"success": bool, "total_federal": int, "datagov_total": int, "sam_total": int, "last_fetch": str}
+    """
+    try:
+        total_federal = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).scalar() or 0
+        datagov_total = db.session.execute(text(
+            "SELECT COUNT(*) FROM federal_contracts WHERE data_source LIKE '%Data.gov%'"
+        )).scalar() or 0
+        sam_total = db.session.execute(text(
+            "SELECT COUNT(*) FROM federal_contracts WHERE data_source LIKE '%SAM.gov%'"
+        )).scalar() or 0
+        
+        # Get most recent contract timestamp as proxy for last fetch
+        last_fetch_row = db.session.execute(text(
+            "SELECT MAX(created_at) FROM federal_contracts WHERE data_source LIKE '%Data.gov%'"
+        )).scalar()
+        last_fetch = str(last_fetch_row) if last_fetch_row else 'Never'
+        
+        return jsonify({
+            'success': True,
+            'total_federal': total_federal,
+            'datagov_total': datagov_total,
+            'sam_total': sam_total,
+            'last_fetch': last_fetch
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/admin/fix-sam-urls')
 def admin_fix_sam_urls():
     """Admin route to fix SAM.gov URLs for all federal contracts"""
@@ -16493,8 +16589,17 @@ def ai_assistant():
 @app.route('/api/ai-assistant-reply', methods=['POST'])
 @login_required
 def ai_assistant_reply():
-    """Lightweight KB-powered reply for AI Assistant (no external API).
-    Accepts JSON { message: str } and returns { success, answer, followups, source }.
+    """AI Assistant KB endpoint.
+
+    Contract:
+    - Input JSON: {"message": str, "role"?: str}
+    - Validation: empty message -> 400 with {success: False, error}
+    - Processing: Delegates to get_kb_answer (keyword + role-biased matcher)
+    - Output JSON: {success: True, answer: str, followups: str, source: str}
+    - Error Modes:
+        * KB import failure -> 500
+        * Unhandled exception -> 500
+    - Side Effects: (Optional) logging of anonymized interaction if analytics handler configured.
     """
     try:
         data = request.get_json(force=True, silent=True) or {}
@@ -16511,6 +16616,19 @@ def ai_assistant_reply():
             return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
 
         result = get_kb_answer(user_message, role=role)
+
+        # Analytics logging (configured later if handler present)
+        try:
+            logger = getattr(app, 'assistant_logger', None)
+            if logger:
+                logger.info("reply", extra={
+                    'role': role or 'general',
+                    'source': result.get('source', 'kb'),
+                    'length': len(user_message),
+                })
+        except Exception:
+            pass  # Never block response on logging issues
+
         return jsonify({
             'success': True,
             'answer': result.get('answer', ''),

@@ -233,6 +233,7 @@ function sendMessage(event) {
             appendMessage('ai', aiResponse);
         }
     })
+    .then(() => { setTimeout(applySourceBadges, 60); })
     .catch(() => {
         hideTypingIndicator();
         const aiResponse = generateAIResponse(message);
@@ -270,9 +271,12 @@ function appendMessage(sender, text) {
                 <div class="avatar bg-primary text-white rounded-circle me-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-robot"></i>
                 </div>
-                <div class="message-content bg-light rounded-3 p-3" style="max-width: 75%;">
+                <div class="message-content bg-light rounded-3 p-3" style="max-width: 75%; position: relative;">
                     <p class="mb-0">${formatAIMessage(text)}</p>
-                    <small class="text-muted d-block mt-1">${timestamp}</small>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="text-muted">${timestamp}</small>
+                        <span class="badge bg-info text-dark kb-source-badge" style="display:none;" title="Knowledge Base Source">KB</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -356,6 +360,13 @@ window.addEventListener('load', function() {
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
 });
+
+function applySourceBadges() {
+    const badges = document.querySelectorAll('.kb-source-badge');
+    if (badges.length) {
+        badges[badges.length - 1].style.display = 'inline-block';
+    }
+}
 </script>
 
 <style>

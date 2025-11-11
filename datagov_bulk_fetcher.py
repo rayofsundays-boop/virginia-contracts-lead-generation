@@ -28,11 +28,17 @@ class DataGovBulkFetcher:
         # Data.gov catalog API
         self.datagov_api = 'https://catalog.data.gov/api/3/action/package_search'
         
-        # Cleaning-related NAICS codes
+        # Cleaning-related NAICS codes (prioritize 561720 - Janitorial Services)
         self.naics_codes = [
-            '561720',  # Janitorial Services
+            '561720',  # Janitorial Services (PRIMARY)
             '561730',  # Landscaping Services
             '561790',  # Other Services to Buildings and Dwellings
+        ]
+        
+        # Strict cleaning keywords for description filtering
+        self.cleaning_keywords = [
+            'janitor', 'cleaning', 'custodial', 'housekeeping',
+            'sanitiz', 'disinfect', 'sweeping', 'mopping'
         ]
         
         # Virginia state codes
@@ -119,28 +125,36 @@ class DataGovBulkFetcher:
                 for award in awards:
                     naics = str(award.get('NAICS Code', ''))
                     naics_desc = str(award.get('NAICS Description', '')).lower()
+                    title = str(award.get('Description', '')).lower()
                     
                     contract = self._parse_usaspending_award(award)
                     if not contract:
                         continue
                     
-                    # Prioritize cleaning-related by NAICS code
-                    if naics and any(naics.startswith(code) for code in self.naics_codes):
+                    # PRIORITY 1: Exact NAICS 561720 (Janitorial Services)
+                    if naics.startswith('561720'):
+                        cleaning_contracts.insert(0, contract)  # Prepend for highest priority
+                    # PRIORITY 2: Other cleaning NAICS codes
+                    elif naics and any(naics.startswith(code) for code in self.naics_codes):
                         cleaning_contracts.append(contract)
-                    # Or by description keywords
-                    elif any(keyword in naics_desc for keyword in ['janitor', 'cleaning', 'custodial', 'landscaping', 'grounds']):
+                    # PRIORITY 3: Strict cleaning keywords in description
+                    elif any(keyword in naics_desc or keyword in title for keyword in self.cleaning_keywords):
                         cleaning_contracts.append(contract)
-                    # Include other service contracts (56xxxx)
+                    # PRIORITY 4: Related service contracts (landscaping/grounds)
+                    elif 'landscap' in naics_desc or 'grounds' in naics_desc or naics.startswith('5617'):
+                        service_contracts.append(contract)
+                    # PRIORITY 5: General service sector (56xxxx) - limited inclusion
                     elif naics.startswith('56'):
                         service_contracts.append(contract)
-                    # Include all VA contracts as fallback
+                    # PRIORITY 6: VA contracts without NAICS (fallback, very limited)
                     else:
                         all_contracts.append(contract)
                 
-                # Combine: prioritize cleaning, then services, then general
-                contracts = cleaning_contracts + service_contracts[:30] + all_contracts[:50]
+                # Combine: prioritize cleaning (unlimited), limit related services and general
+                contracts = cleaning_contracts + service_contracts[:20] + all_contracts[:10]
                             
-                logger.info(f"✅ Filtered to {len(contracts)} service-related contracts (prioritizing cleaning)")
+                logger.info(f"✅ Filtered to {len(contracts)} contracts: {len(cleaning_contracts)} cleaning, "
+                           f"{min(20, len(service_contracts))} related services, {min(10, len(all_contracts))} general")
             else:
                 logger.error(f"❌ Error from USAspending.gov: {response.status_code} - {response.text[:200]}")
                 
