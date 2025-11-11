@@ -12830,10 +12830,36 @@ def toggle_admin_privilege():
 
 @app.route('/industry-days-events')
 def industry_days_events():
-    """Display networking and bidding events for contractors"""
+    """Display networking and bidding events for contractors - All 50 States"""
     try:
-        # Sample events data - URLs fixed to point to official government procurement pages
-        events = [
+        # Query real events from database for all 50 states
+        current_date = datetime.utcnow().date()
+        events_result = db.session.execute(text('''
+            SELECT * FROM industry_days 
+            WHERE status = 'upcoming' AND event_date >= :current_date
+            ORDER BY event_date ASC, state ASC
+            LIMIT 100
+        '''), {'current_date': current_date}).fetchall()
+        
+        # Convert to list of dicts for template compatibility
+        events = []
+        for event in events_result:
+            events.append({
+                'id': event.id,
+                'title': event.title,
+                'date': event.event_date.strftime('%B %d, %Y') if hasattr(event.event_date, 'strftime') else str(event.event_date),
+                'time': event.event_time or 'TBD',
+                'location': f"{event.venue}, {event.city}, {event.state}" if event.venue else f"{event.city}, {event.state}",
+                'description': event.description or 'Contact organizer for details',
+                'type': event.event_type or 'Industry Day',
+                'topics': event.target_industries.split(', ') if event.target_industries else [],
+                'cost': event.cost or 'Free (Registration Required)',
+                'url': event.registration_url or f'https://www.{event.state.lower()}.gov/procurement'
+            })
+        
+        # If no database events, fall back to sample events
+        if not events:
+            events = [
             {
                 'id': 1,
                 'title': 'Virginia Construction Networking Summit 2025',
@@ -12983,12 +13009,14 @@ def industry_days_events():
                 'url': 'https://www.eventbrite.com/d/online/procurement/',
                 'platform': 'Eventbrite'
             }
-        ]
+            ]
         
         return render_template('industry_days_events.html', events=events)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
+        import traceback
+        traceback.print_exc()
         return render_template('industry_days_events.html', events=[])
 
 @app.route('/api/validate-event-urls', methods=['POST'])

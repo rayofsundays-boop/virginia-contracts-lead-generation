@@ -37,42 +37,6 @@
         </div>
     </div>
 
-    <!-- Events Stats -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm">
-                <div class="card-body">
-                    <h3 class="text-primary fw-bold">{{ events|length }}</h3>
-                    <p class="card-text text-muted">Total Events</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm">
-                <div class="card-body">
-                    <h3 class="text-success fw-bold">{{ events|selectattr('type', 'equalto', 'Networking')|list|length }}</h3>
-                    <p class="card-text text-muted">Networking Events</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm">
-                <div class="card-body">
-                    <h3 class="text-info fw-bold">{{ events|selectattr('type', 'equalto', 'Workshop')|list|length }}</h3>
-                    <p class="card-text text-muted">Workshops</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm">
-                <div class="card-body">
-                    <h3 class="text-warning fw-bold">{{ events|selectattr('cost', 'equalto', 'Free (Registration Required)')|list|length + events|selectattr('cost', 'equalto', 'Free')|list|length }}</h3>
-                    <p class="card-text text-muted">Free Events</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Events List -->
     <div class="events-container">
         {% if events %}
