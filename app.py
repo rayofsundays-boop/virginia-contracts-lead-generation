@@ -7026,6 +7026,7 @@ def customer_leads():
         
         # Get government cleaning contracts from federal_contracts table
         try:
+            current_date = (datetime.utcnow() - timedelta(days=1)).date() # Use yesterday to be safe with timezones
             government_leads = db.session.execute(text('''
                 SELECT 
                     fc.id,
@@ -7044,17 +7045,13 @@ def customer_leads():
                     fc.description as requirements
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
-                                    AND (
-                                                CASE 
-                                                    WHEN fc.deadline IS NULL OR fc.deadline::text = '' THEN NULL
-                                                    WHEN fc.deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (fc.deadline::text)::date
-                                                    WHEN fc.deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(fc.deadline::text from 1 for 10)::date
-                                                    ELSE NULL
-                                                END
-                                            ) >= CURRENT_DATE
+                AND (
+                    (fc.deadline IS NOT NULL AND fc.deadline != '' AND CAST(SUBSTRING(fc.deadline, 1, 10) AS DATE) >= :current_date)
+                    OR fc.deadline IS NULL
+                )
                 ORDER BY COALESCE(fc.posted_date, fc.created_at) DESC
                 LIMIT 100
-            ''')).fetchall()
+            '''), {'current_date': current_date}).fetchall()
             print(f"✅ Found {len(government_leads)} government contracts")
         except Exception as e:
             print(f"Error fetching government contracts: {e}")
@@ -7062,6 +7059,7 @@ def customer_leads():
         
         # Get supply/product procurement contracts
         try:
+            current_date = (datetime.utcnow() - timedelta(days=1)).date() # Use yesterday to be safe with timezones
             supply_leads = db.session.execute(text('''
                 SELECT 
                     supply_contracts.id,
@@ -7079,16 +7077,12 @@ def customer_leads():
                     'Active' as status,
                     supply_contracts.requirements
                 FROM supply_contracts 
-                                WHERE (
-                                                CASE 
-                                                    WHEN supply_contracts.bid_deadline IS NULL OR supply_contracts.bid_deadline::text = '' THEN NULL
-                                                    WHEN supply_contracts.bid_deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (supply_contracts.bid_deadline::text)::date
-                                                    WHEN supply_contracts.bid_deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(supply_contracts.bid_deadline::text from 1 for 10)::date
-                                                    ELSE NULL
-                                                END
-                                            ) >= CURRENT_DATE
-                                ORDER BY supply_contracts.posted_date DESC
-            ''')).fetchall()
+                WHERE (
+                    (supply_contracts.bid_deadline IS NOT NULL AND supply_contracts.bid_deadline != '' AND CAST(SUBSTRING(supply_contracts.bid_deadline, 1, 10) AS DATE) >= :current_date)
+                    OR supply_contracts.bid_deadline IS NULL
+                )
+                ORDER BY supply_contracts.posted_date DESC
+            '''), {'current_date': current_date}).fetchall()
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
         

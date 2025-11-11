@@ -1,12 +1,158 @@
 {% extends "base.html" %}
 
+{% block head %}
+{{ super() }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: #5D3FD3; /* A vibrant, modern purple */
+        --secondary-color: #00C9A7; /* A complementary teal */
+        --background-color: #F4F7FC; /* A very light, clean blue-gray */
+        --card-background: #FFFFFF;
+        --text-color: #1E293B; /* A dark, readable slate gray */
+        --text-muted-color: #64748B;
+        --border-color: #E2E8F0;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
+        --font-family-sans-serif: 'Inter', sans-serif;
+    }
+
+    body {
+        background-color: var(--background-color);
+        font-family: var(--font-family-sans-serif);
+        color: var(--text-color);
+    }
+
+    .card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-color: var(--card-background);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .sidebar-sticky .nav-link {
+        color: var(--text-muted-color);
+        font-weight: 500;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-sticky .nav-link i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .sidebar-sticky .nav-link:hover, .sidebar-sticky .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateX(5px);
+    }
+    
+    .sidebar-sticky .nav-link .badge {
+        transition: all 0.2s ease;
+        margin-left: auto;
+    }
+
+    .sidebar-sticky .nav-link:hover .badge, .sidebar-sticky .nav-link.active .badge {
+        background-color: white !important;
+        color: var(--primary-color) !important;
+    }
+
+    .sidebar-heading {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted-color);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 0 1.25rem;
+    }
+
+    .filter-pill {
+        background-color: var(--card-background);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-color);
+        transition: all 0.2s ease;
+    }
+
+    .filter-pill:hover {
+        background-color: #E2E8F0;
+        border-color: #CBD5E1;
+    }
+
+    .filter-pill.active {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px rgba(93, 63, 211, 0.3);
+    }
+
+    .lead-card {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .lead-card .card-header {
+        background-color: var(--card-background);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .lead-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .lead-card .card-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+
+    .lead-card .card-footer {
+        background-color: #F8FAFC;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(93, 63, 211, 0.2);
+    }
+
+    .badge.bg-gradient-primary {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    }
+</style>
+{% endblock %}
+
 {% block title %}Customer Leads Portal - Virginia Government Contracts{% endblock %}
 
 {% block content %}
 <div class="container-fluid my-4">
     <!-- Breadcrumb Navigation -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0">
             <li class="breadcrumb-item"><a href="{{ url_for('customer_dashboard') }}"><i class="fas fa-home me-1"></i>Dashboard</a></li>
             <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-user-tie me-1"></i>Customer Portal</li>
         </ol>
@@ -16,8 +162,8 @@
         <!-- Left Sidebar -->
         <div class="col-lg-3 col-xl-2 mb-4">
             <div class="sidebar-sticky">
-                <h6 class="sidebar-heading px-3 mt-2 mb-3 text-muted">
-                    <i class="fas fa-layer-group me-2"></i>RESOURCES
+                <h6 class="sidebar-heading px-3 mt-2 mb-3">
+                    <i class="fas fa-layer-group me-2"></i>Resources
                 </h6>
                 
                 <!-- All Leads -->
@@ -34,8 +180,8 @@
                 
                 <!-- Education Leads Section (Paid Subscribers Only) -->
                 {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
-                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-                    <i class="fas fa-graduation-cap me-2"></i>EDUCATION LEADS
+                <h6 class="sidebar-heading px-3 mt-4 mb-3">
+                    <i class="fas fa-graduation-cap me-2"></i>Education Leads
                 </h6>
                 
                 <div class="nav flex-column">
@@ -51,8 +197,8 @@
                 </div>
                 {% endif %}
                 
-                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-                    <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS
+                <h6 class="sidebar-heading px-3 mt-4 mb-3">
+                    <i class="fas fa-tools me-2"></i>Proposal Tools
                 </h6>
                 
                 <div class="nav flex-column">
@@ -71,8 +217,8 @@
                     </a>
                 </div>
                 
-                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-                    <i class="fas fa-user-graduate me-2"></i>SUPPORT
+                <h6 class="sidebar-heading px-3 mt-4 mb-3">
+                    <i class="fas fa-user-graduate me-2"></i>Support
                 </h6>
                 
                 <div class="nav flex-column">
@@ -91,8 +237,8 @@
                     </a>
                 </div>
                 
-                <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-                    <i class="fas fa-chart-line me-2"></i>MY ACTIVITY
+                <h6 class="sidebar-heading px-3 mt-4 mb-3">
+                    <i class="fas fa-chart-line me-2"></i>My Activity
                 </h6>
                 
                 <div class="nav flex-column">
@@ -117,13 +263,13 @@
         <!-- Main Content -->
         <div class="col-lg-9 col-xl-10">
             <!-- Gamified Progress Dashboard -->
-            <div class="row mb-4 g-3">
+            <div class="row mb-4 g-4">
                 <!-- Daily Streak Card -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100 streak-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <div class="card-body p-3">
+                    <div class="card h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0"><i class="fas fa-fire"></i> Daily Streak</h6>
+                                <h6 class="mb-0"><i class="fas fa-fire me-1"></i> Daily Streak</h6>
                                 <span class="badge bg-white text-dark pulse-badge">🔥</span>
                             </div>
                             <div class="display-4 fw-bold mb-1" id="streakCount">3</div>
@@ -138,10 +284,10 @@
 
                 <!-- Quick Actions Card -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100 hover-lift">
-                        <div class="card-body p-3">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 text-success"><i class="fas fa-bolt"></i> Hot Opportunities</h6>
+                                <h6 class="mb-0 text-success"><i class="fas fa-bolt me-1"></i> Hot Opportunities</h6>
                                 <span class="badge bg-danger blink-badge">{{ emergency_count|default(0) }} NEW</span>
                             </div>
                             <div class="d-flex align-items-end mb-2">
@@ -149,7 +295,7 @@
                                 <span class="text-muted mb-1">urgent leads</span>
                             </div>
                             <a href="#" onclick="filterUrgent(); return false;" class="btn btn-success btn-sm w-100">
-                                <i class="fas fa-rocket"></i> View Now
+                                <i class="fas fa-rocket me-1"></i> View Now
                             </a>
                         </div>
                     </div>
@@ -157,10 +303,10 @@
 
                 <!-- Activity Score Card -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100 hover-lift">
-                        <div class="card-body p-3">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 text-primary"><i class="fas fa-chart-line"></i> Your Score</h6>
+                                <h6 class="mb-0 text-primary"><i class="fas fa-chart-line me-1"></i> Your Score</h6>
                                 <span class="badge bg-primary">Level 2</span>
                             </div>
                             <div class="d-flex align-items-end mb-2">
@@ -168,7 +314,7 @@
                                 <span class="text-success mb-1">+50 today</span>
                             </div>
                             <div class="progress mb-1" style="height: 8px;">
-                                <div class="progress-bar bg-gradient" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                                <div class="progress-bar" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
                             </div>
                             <small class="text-muted">150 pts to Level 3 🏆</small>
                         </div>
@@ -177,26 +323,26 @@
 
                 <!-- Recent Activity Card -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100 hover-lift">
-                        <div class="card-body p-3">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0 text-warning"><i class="fas fa-star"></i> Today's Actions</h6>
+                                <h6 class="mb-0 text-warning"><i class="fas fa-star me-1"></i> Today's Actions</h6>
                                 <span class="badge bg-warning text-dark" id="todayActionsCount">7</span>
                             </div>
-                            <div class="small mb-2">
-                                <div class="d-flex justify-content-between mb-1">
+                            <ul class="list-unstyled small mb-0">
+                                <li class="d-flex justify-content-between mb-1">
                                     <span>✓ Leads viewed:</span>
                                     <strong id="viewedCount">4</strong>
-                                </div>
-                                <div class="d-flex justify-content-between mb-1">
+                                </li>
+                                <li class="d-flex justify-content-between mb-1">
                                     <span>★ Leads saved:</span>
                                     <strong id="savedCount">2</strong>
-                                </div>
-                                <div class="d-flex justify-content-between">
+                                </li>
+                                <li class="d-flex justify-content-between">
                                     <span>✉ Inquiries sent:</span>
                                     <strong id="inquiriesCount">1</strong>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -205,7 +351,7 @@
             <!-- Live Activity Feed -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
+                    <div class="card" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center">
                                 <div class="me-3 flex-shrink-0">
@@ -221,8 +367,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" onclick="showActivityFeed()">
-                                    <i class="fas fa-users"></i> <span class="d-none d-md-inline">See All</span>
+                                <button class="btn btn-sm btn-outline-primary flex-shrink-0 ms-3" onclick="showActivityFeed()">
+                                    <i class="fas fa-users me-1"></i> <span class="d-none d-md-inline">See All</span>
                                 </button>
                             </div>
                         </div>
@@ -244,32 +390,32 @@
     <!-- Smart Filters with Tabs -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3">
+            <div class="card">
+                <div class="card-body p-4">
                     <!-- Quick Filter Pills -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex gap-2 flex-wrap flex-grow-1">
                             <button class="filter-pill active" data-filter="all" onclick="quickFilter(this, 'all')">
-                                <i class="fas fa-th"></i> All Leads <span class="badge bg-primary ms-1">{{ all_leads|length }}</span>
+                                <i class="fas fa-th me-1"></i> All Leads <span class="badge bg-white text-primary ms-1">{{ all_leads|length }}</span>
                             </button>
                             <button class="filter-pill" data-filter="urgent" onclick="quickFilter(this, 'urgent')">
-                                <i class="fas fa-fire text-danger"></i> Urgent <span class="badge bg-danger ms-1">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+                                <i class="fas fa-fire text-danger me-1"></i> Urgent <span class="badge bg-danger ms-1">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
                             </button>
                             <button class="filter-pill" data-filter="government" onclick="quickFilter(this, 'government')">
-                                <i class="fas fa-landmark text-success"></i> Government
+                                <i class="fas fa-landmark text-success me-1"></i> Government
                             </button>
                             <button class="filter-pill" data-filter="commercial" onclick="quickFilter(this, 'commercial')">
-                                <i class="fas fa-building text-info"></i> Commercial
+                                <i class="fas fa-building text-info me-1"></i> Commercial
                             </button>
                             <button class="filter-pill" data-filter="high-value" onclick="quickFilter(this, 'high-value')">
-                                <i class="fas fa-gem text-warning"></i> High Value ($250K+)
+                                <i class="fas fa-gem text-warning me-1"></i> High Value ($250K+)
                             </button>
                             <button class="filter-pill" data-filter="closing-soon" onclick="quickFilter(this, 'closing-soon')">
-                                <i class="fas fa-clock text-danger"></i> Closing Soon
+                                <i class="fas fa-clock text-danger me-1"></i> Closing Soon
                             </button>
                         </div>
-                        <button class="btn btn-outline-primary btn-sm" onclick="toggleAdvancedFilters()">
-                            <i class="fas fa-sliders-h"></i> <span id="advFilterText">More Filters</span>
+                        <button class="btn btn-outline-primary btn-sm ms-3" onclick="toggleAdvancedFilters()">
+                            <i class="fas fa-sliders-h me-1"></i> <span id="advFilterText">More Filters</span>
                         </button>
                     </div>
 
@@ -350,9 +496,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="text-end mt-2">
+                        <div class="text-end mt-3">
                             <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
-                                <i class="fas fa-undo"></i> Reset All
+                                <i class="fas fa-undo me-1"></i> Reset All
                             </button>
                         </div>
                     </div>
@@ -366,15 +512,14 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <h5 class="mb-0">
-                        <span class="badge bg-gradient-primary clickable-badge" id="resultsCount" style="font-size: 1rem; cursor: pointer;" 
-                              onclick="showAllLeads()" title="Click to show all leads">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <span class="badge bg-gradient-primary me-2" style="font-size: 1.1rem; padding: 0.5em 0.8em;">
                             {{ all_leads|length }}
                         </span>
-                        <span class="ms-2">Active Opportunities</span>
+                        <span>Active Opportunities</span>
                     </h5>
                     <small class="text-muted">
-                        <i class="fas fa-sync-alt"></i> Updated <span id="lastUpdate">2 minutes ago</span>
+                        <i class="fas fa-sync-alt fa-spin me-1"></i> Updated <span id="lastUpdate">just now</span>
                     </small>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
@@ -402,7 +547,7 @@
     <!-- Leads Grid -->
     <div class="row" id="leadsContainer">
         {% for lead in all_leads %}
-        <div class="col-xl-3 col-lg-4 col-md-6 mb-3 lead-card" 
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4 lead-card" 
              data-type="{{ lead.lead_type }}" 
              data-location="{{ lead.location }}" 
              data-value="{{ lead.contract_value }}"
@@ -410,139 +555,109 @@
              data-services="{{ lead.services_needed }}"
              data-status="{{ lead.status }}"
              data-days-left="{{ lead.days_left|default(999) }}">
-            <div class="card h-100 border-0 shadow-sm {% if lead.lead_type in ['commercial_request', 'residential_request'] %}border-warning{% endif %}">
-                <div class="card-header bg-transparent border-0 pb-1 pt-2 px-2">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap">
-                        <div class="mb-1">
-                            {% if lead.category %}
-                                <span class="badge bg-secondary me-1" style="font-size: 0.65rem;">{{ lead.category }}</span>
-                            {% endif %}
+            <div class="card h-100">
+                <div class="card-header pt-3 px-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
                             {% if lead.lead_type == 'government' %}
-                                <span class="badge bg-success" style="font-size: 0.7rem;">Government</span>
+                                <span class="badge rounded-pill bg-success bg-opacity-10 text-success mb-2">Government</span>
                             {% elif lead.lead_type == 'commercial' %}
-                                <span class="badge bg-info" style="font-size: 0.7rem;">Commercial</span>
+                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info mb-2">Commercial</span>
                             {% elif lead.lead_type == 'commercial_request' %}
-                                <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">🔥 Business Needs Cleaner</span>
+                                <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning mb-2">🔥 Direct Lead</span>
                             {% elif lead.lead_type == 'residential_request' %}
-                                <span class="badge bg-primary" style="font-size: 0.7rem;">🏠 Homeowner Needs Cleaner</span>
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary mb-2">🏠 Residential</span>
                             {% endif %}
                         </div>
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-link p-0 me-2 save-btn" 
-                                    data-lead-type="{{ lead.lead_type }}" 
-                                    data-lead-id="{{ lead.id }}"
-                                    data-lead-title="{{ lead.title }}"
-                                    onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
-                                    title="Save lead">
-                                <i class="far fa-bookmark text-warning" style="font-size: 1.1rem;"></i>
-                            </button>
-                        </div>
+                        <button class="btn btn-link p-0 save-btn" 
+                                data-lead-type="{{ lead.lead_type }}" 
+                                data-lead-id="{{ lead.id }}"
+                                data-lead-title="{{ lead.title }}"
+                                onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
+                                title="Save lead">
+                            <i class="far fa-bookmark text-muted" style="font-size: 1.2rem;"></i>
+                        </button>
                     </div>
+                    <h6 class="card-title mb-1">{{ lead.title[:70] }}{% if lead.title|length > 70 %}...{% endif %}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
                 </div>
                 
-                <div class="card-body p-2">
-                    <h6 class="card-title mb-1" style="font-size: 0.9rem; line-height: 1.2;">{{ lead.title[:80] }}{% if lead.title|length > 80 %}...{% endif %}</h6>
-                    <p class="text-muted mb-1" style="font-size: 0.75rem;">{{ lead.agency }}</p>
-                    <p class="card-text mb-2" style="font-size: 0.75rem; line-height: 1.3;">
-                        {{ lead.description[:120] }}{% if lead.description|length > 120 %}...{% endif %}
+                <div class="card-body pt-2 p-3">
+                    <p class="card-text small" style="height: 50px; overflow: hidden;">
+                        {{ lead.description[:100] }}{% if lead.description|length > 100 %}...{% endif %}
                     </p>
                     
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 small my-3">
                         <div class="col-6">
-                            <small class="text-muted d-block" style="font-size: 0.65rem;">Value:</small>
-                            <strong class="text-success" style="font-size: 0.75rem;">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong>
+                            <div class="text-muted"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
+                            <strong class="text-success">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted d-block" style="font-size: 0.65rem;">Location:</small>
-                            <strong style="font-size: 0.75rem;">{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong>
+                            <div class="text-muted"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
+                            <strong>{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong>
                         </div>
                     </div>
                     
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 small">
                         <div class="col-6">
-                            <small class="text-muted d-block" style="font-size: 0.65rem;">Deadline:</small>
-                            <strong class="text-{{ 'danger' if lead.days_left <= 7 else 'warning' if lead.days_left <= 14 else 'info' }}" style="font-size: 0.75rem;">
-                                {{ lead.deadline[:15] }}
+                            <div class="text-muted"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
+                            <strong class="text-danger">
+                                {{ lead.deadline[:15] if lead.deadline else 'N/A' }}
                             </strong>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted d-block" style="font-size: 0.65rem;">Services:</small>
-                            <small style="font-size: 0.7rem;">{{ lead.services_needed[:25] }}</small>
+                            <div class="text-muted"><i class="fas fa-tools me-1 text-info"></i>Services</div>
+                            <strong class="text-info">{{ lead.services_needed[:25] if lead.services_needed else 'N/A' }}</strong>
                         </div>
-                    </div>
-                    
-                    {% if lead.lead_type in ['commercial_request', 'residential_request'] %}
-                    <div class="alert alert-warning p-2 mb-2" style="font-size: 0.7rem;">
-                        <strong><i class="fas fa-star"></i> Direct Client Lead!</strong><br>
-                        Contact info included when you access this lead.
-                    </div>
-                    {% endif %}
-                    
-                    <div class="mb-1">
-                        <small class="text-muted" style="font-size: 0.65rem;">Requirements:</small><br>
-                        <small class="text-info" style="font-size: 0.7rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ lead.requirements[:100] }}
-                        </small>
                     </div>
                 </div>
                 
-                <div class="card-footer bg-transparent border-0 p-2">
-                    <div class="d-grid gap-1">
+                <div class="card-footer p-3">
+                    <div class="d-grid">
                         {% if lead.lead_type in ['commercial_request', 'residential_request'] %}
-                            <button class="btn btn-warning btn-sm" 
-                                    onclick="showContactInfo('{{ lead.id }}', '{{ lead.contact_name }}', '{{ lead.contact_email }}', '{{ lead.contact_phone }}', '{{ lead.address }}')"
-                                    style="font-size: 0.8rem; padding: 0.4rem;">
-                                <i class="fas fa-phone"></i> Get Contact Info
+                            <button class="btn btn-warning" 
+                                    onclick="showContactInfo('{{ lead.id }}', '{{ lead.contact_name }}', '{{ lead.contact_email }}', '{{ lead.contact_phone }}', '{{ lead.address }}')">
+                                <i class="fas fa-phone me-1"></i> Get Contact Info
                             </button>
                         {% elif lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
                             <a href="{{ lead.application_url }}" target="_blank" 
-                               class="btn btn-success btn-sm"
-                               style="font-size: 0.8rem; padding: 0.4rem;"
-                               onerror="this.href='{{ lead.website_url or lead.application_url }}'; return true;">
-                                <i class="fas fa-external-link-alt"></i> {% if lead.lead_type == 'government' %}Apply{% else %}Visit{% endif %}
+                               class="btn btn-primary">
+                                <i class="fas fa-external-link-alt me-1"></i> View & Apply
                             </a>
-                            <small class="text-muted d-block mt-1" style="font-size: 0.65rem;">
-                                <i class="fas fa-info-circle"></i> Link opens agency procurement page
-                            </small>
-                        {% elif lead.lead_type == 'commercial' %}
-                            <button class="btn btn-primary btn-sm" 
-                                    onclick="accessContactInfo('{{ lead.id }}', '{{ lead.title }}', '{{ lead.lead_type }}')"
-                                    style="font-size: 0.8rem; padding: 0.4rem;">
-                                <i class="fas fa-envelope"></i> Get Contact
-                            </button>
                         {% else %}
-                            <button class="btn btn-secondary btn-sm" disabled
-                                    style="font-size: 0.8rem; padding: 0.4rem;">
-                                <i class="fas fa-info-circle"></i> Details Only
+                            <button class="btn btn-primary" 
+                                    onclick="viewLeadDetails('{{ lead.id }}', '{{ lead.lead_type }}')">
+                                <i class="fas fa-info-circle me-1"></i> View Details
                             </button>
                         {% endif %}
-                        
-                        <div class="btn-group btn-group-sm" role="group" style="font-size: 0.75rem;">
-                            <button class="btn btn-outline-info btn-sm" 
-                                    onclick="requestProposalHelp('{{ lead.id }}', '{{ lead.title }}')"
-                                    style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">
-                                <i class="fas fa-hands-helping"></i> Help
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm" 
-                                    onclick="shareLead('{{ lead.title }}', '{{ lead.description[:150] }}', '{{ lead.location }}')"
-                                    style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card text-center p-5">
+                <div class="card-body">
+                    <i class="fas fa-search-dollar fa-3x text-muted mb-3"></i>
+                    <h5 class="card-title">No Leads Found</h5>
+                    <p class="card-text text-muted">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
+                    <button class="btn btn-primary" onclick="clearAllFilters()">
+                        <i class="fas fa-undo me-1"></i> Clear Filters
+                    </button>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Results Summary Footer -->
+    <!-- Pagination -->
     <div class="row mt-4">
-        <div class="col-12 text-center">
-            <p class="text-muted">
-                Showing <span id="visibleCount">{{ all_leads|length }}</span> of <span id="totalCount">{{ all_leads|length }}</span> leads
-            </p>
-            <small class="text-muted">All leads loaded. Use filters above to refine results.</small>
+        <div class="col-12 d-flex justify-content-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination" id="paginationContainer">
+                    <!-- Pagination links will be injected here by JavaScript -->
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -1586,9 +1701,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-    }
-});
-
 // Reset function (for testing or admin purposes)
 function resetApplyClickCount() {
     localStorage.removeItem('applyClickCount');
@@ -1599,325 +1711,6 @@ function resetApplyClickCount() {
 }
 </script>
 
-<style>
-.sidebar-sticky {
-    position: sticky;
-    top: 20px;
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    padding: 1rem;
-}
-
-.sidebar-heading {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
-    color: #1a252f !important;
-}
-
-.nav-link {
-    padding: 0.75rem 1rem;
-    color: white;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    margin-bottom: 0.25rem;
-    transition: all 0.2s;
-    font-weight: 600;
-    opacity: 0.85;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.nav-link:hover {
-    background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
-    color: white;
-    transform: translateX(4px);
-    opacity: 1;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.nav-link.active {
-    background: linear-gradient(135deg, #4a56b8 0%, #5d3679 100%);
-    color: white !important;
-    opacity: 1;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.nav-link i {
-    width: 20px;
-    text-align: center;
-}
-
-.nav-link .badge {
-    font-size: 0.65rem;
-}
-
-@media (max-width: 991px) {
-    .sidebar-sticky {
-        position: relative;
-    }
-}
-
-/* Gamification & Engagement Styles */
-.hover-lift {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
-}
-
-.pulse-badge {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-}
-
-.blink-badge {
-    animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0.4; }
-}
-
-.pulse-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    position: relative;
-    animation: pulse-ring 2s infinite;
-}
-
-@keyframes pulse-ring {
-    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-}
-
-.activity-ticker-container {
-    overflow: hidden;
-    width: 100%;
-    position: relative;
-}
-
-.activity-ticker {
-    display: flex;
-    animation: scroll-left 40s linear infinite;
-    white-space: nowrap;
-    will-change: transform;
-}
-
-@keyframes scroll-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-.activity-item {
-    padding-right: 60px;
-    display: inline-block;
-    font-size: 0.9rem;
-}
-
-@media (max-width: 768px) {
-    .activity-item {
-        font-size: 0.8rem;
-        padding-right: 40px;
-    }
-}
-
-.achievement-toast {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 9999;
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    animation: slideInRight 0.5s ease-out, slideOutRight 0.5s ease-in 3s;
-    animation-fill-mode: forwards;
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(400px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideOutRight {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(400px); opacity: 0; }
-}
-
-.achievement-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.achievement-icon {
-    font-size: 3rem;
-    animation: bounce 0.5s infinite alternate;
-}
-
-@keyframes bounce {
-    from { transform: translateY(0); }
-    to { transform: translateY(-10px); }
-}
-
-.achievement-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.achievement-desc {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-
-.filter-pill {
-    padding: 8px 16px;
-    border: 2px solid #e9ecef;
-    background: white;
-    border-radius: 50px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #495057;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.filter-pill:hover {
-    border-color: #667eea;
-    background: #f8f9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-}
-
-.filter-pill.active {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: bold;
-}
-
-/* Clickable Badge */
-.clickable-badge {
-    transition: all 0.2s;
-    position: relative;
-}
-
-.clickable-badge:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
-    animation: pulse-glow 1.5s infinite;
-}
-
-@keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5); }
-    50% { box-shadow: 0 6px 24px rgba(102, 126, 234, 0.8); }
-}
-
-.clickable-badge::after {
-    content: ' 👆';
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.clickable-badge:hover::after {
-    opacity: 1;
-}
-
-/* Enhanced Lead Cards */
-.lead-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.lead-card:hover {
-    transform: translateY(-8px) scale(1.02);
-}
-
-.lead-card .card {
-    transition: all 0.3s;
-    border: 2px solid transparent !important;
-}
-
-.lead-card:hover .card {
-    border-color: #667eea !important;
-    box-shadow: 0 16px 48px rgba(102, 126, 234, 0.25) !important;
-}
-
-.lead-card .save-btn {
-    transition: all 0.2s;
-}
-
-.lead-card .save-btn:hover i {
-    transform: scale(1.3) rotate(10deg);
-    color: #FFD700 !important;
-}
-
-.lead-card .btn {
-    transition: all 0.2s;
-}
-
-.lead-card .btn:hover {
-    transform: scale(1.05);
-}
-
-/* Progress bars with gradient */
-.progress-bar {
-    transition: width 0.6s ease;
-}
-
-/* Streak card animation */
-.streak-card {
-    animation: glow 3s infinite alternate;
-}
-
-@keyframes glow {
-    from { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-    to { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6); }
-}
-
-/* View toggle buttons */
-.btn-group .btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: #667eea;
-}
-
-/* Smooth scroll behavior */
-html {
-    scroll-behavior: smooth;
-}
-
-/* Loading animation for dynamic content */
-@keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-}
-
-.skeleton-loader {
-    animation: shimmer 2s infinite;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 1000px 100%;
-}
-
-</style>
-
 <!-- Mobile Sidebar Offcanvas -->
 <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas">
     <div class="offcanvas-header">
@@ -1925,8 +1718,8 @@ html {
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body">
-        <h6 class="sidebar-heading px-3 mt-2 mb-3 text-muted">
-            <i class="fas fa-layer-group me-2"></i>RESOURCES
+        <h6 class="sidebar-heading px-3 mt-2 mb-3">
+            <i class="fas fa-layer-group me-2"></i>Resources
         </h6>
         
         <div class="nav flex-column">
@@ -1940,8 +1733,8 @@ html {
         
         <!-- Education Leads Section (Paid Subscribers Only) -->
         {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
-        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-            <i class="fas fa-graduation-cap me-2"></i>EDUCATION LEADS
+        <h6 class="sidebar-heading px-3 mt-4 mb-3">
+            <i class="fas fa-graduation-cap me-2"></i>Education Leads
         </h6>
         
         <div class="nav flex-column">
@@ -1956,8 +1749,8 @@ html {
         </div>
         {% endif %}
         
-        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-            <i class="fas fa-tools me-2"></i>PROPOSAL TOOLS
+        <h6 class="sidebar-heading px-3 mt-4 mb-3">
+            <i class="fas fa-tools me-2"></i>Proposal Tools
         </h6>
         
         <div class="nav flex-column">
@@ -1969,8 +1762,8 @@ html {
             </a>
         </div>
         
-        <h6 class="sidebar-heading px-3 mt-4 mb-3 text-muted">
-            <i class="fas fa-user-graduate me-2"></i>SUPPORT
+        <h6 class="sidebar-heading px-3 mt-4 mb-3">
+            <i class="fas fa-user-graduate me-2"></i>Support
         </h6>
         
         <div class="nav flex-column">
@@ -1987,408 +1780,1398 @@ html {
     </div>
 </div>
 
-        </div><!-- Close Main Content col -->
-    </div><!-- Close row -->
-</div><!-- Close container-fluid -->
+        <!-- Main Content -->
+        <div class="col-lg-9 col-xl-10">
+            <!-- Gamified Progress Dashboard -->
+            <div class="row mb-4 g-4">
+                <!-- Daily Streak Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0"><i class="fas fa-fire me-1"></i> Daily Streak</h6>
+                                <span class="badge bg-white text-dark pulse-badge">🔥</span>
+                            </div>
+                            <div class="display-4 fw-bold mb-1" id="streakCount">3</div>
+                            <small class="opacity-75">days active this week</small>
+                            <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 43%"></div>
+                            </div>
+                            <small class="opacity-75 mt-1 d-block">Next milestone: 7 days 🎯</small>
+                        </div>
+                    </div>
+                </div>
 
-<!-- Proposal Writer Modal -->
-<div class="modal fade" id="proposalHelperModal" tabindex="-1" aria-labelledby="proposalHelperModalLabel" aria-hidden="true">
+                <!-- Quick Actions Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-success"><i class="fas fa-bolt me-1"></i> Hot Opportunities</h6>
+                                <span class="badge bg-danger blink-badge">{{ emergency_count|default(0) }} NEW</span>
+                            </div>
+                            <div class="d-flex align-items-end mb-2">
+                                <span class="display-6 fw-bold text-success me-2">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+                                <span class="text-muted mb-1">urgent leads</span>
+                            </div>
+                            <a href="#" onclick="filterUrgent(); return false;" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-rocket me-1"></i> View Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Score Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-primary"><i class="fas fa-chart-line me-1"></i> Your Score</h6>
+                                <span class="badge bg-primary">Level 2</span>
+                            </div>
+                            <div class="d-flex align-items-end mb-2">
+                                <span class="display-6 fw-bold text-primary me-2" id="activityScore">850</span>
+                                <span class="text-success mb-1">+50 today</span>
+                            </div>
+                            <div class="progress mb-1" style="height: 8px;">
+                                <div class="progress-bar" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                            </div>
+                            <small class="text-muted">150 pts to Level 3 🏆</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-warning"><i class="fas fa-star me-1"></i> Today's Actions</h6>
+                                <span class="badge bg-warning text-dark" id="todayActionsCount">7</span>
+                            </div>
+                            <ul class="list-unstyled small mb-0">
+                                <li class="d-flex justify-content-between mb-1">
+                                    <span>✓ Leads viewed:</span>
+                                    <strong id="viewedCount">4</strong>
+                                </li>
+                                <li class="d-flex justify-content-between mb-1">
+                                    <span>★ Leads saved:</span>
+                                    <strong id="savedCount">2</strong>
+                                </li>
+                                <li class="d-flex justify-content-between">
+                                    <span>✉ Inquiries sent:</span>
+                                    <strong id="inquiriesCount">1</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Activity Feed -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 flex-shrink-0">
+                                    <div class="pulse-dot bg-success"></div>
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="activity-ticker-container">
+                                        <div class="activity-ticker">
+                                            <span class="activity-item">🎯 <strong>Sarah M.</strong> saved $250K hospital contract...</span>
+                                            <span class="activity-item">⚡ <strong>Mike T.</strong> accessed Hampton Schools RFP...</span>
+                                            <span class="activity-item">🔥 <strong>Lisa K.</strong> requested proposal help...</span>
+                                            <span class="activity-item">✨ <strong>John D.</strong> reached Level 3!</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary flex-shrink-0 ms-3" onclick="showActivityFeed()">
+                                    <i class="fas fa-users me-1"></i> <span class="d-none d-md-inline">See All</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievement Unlocked Notification (Hidden by default) -->
+            <div class="achievement-toast" id="achievementToast" style="display: none;">
+                <div class="achievement-content">
+                    <div class="achievement-icon">🏆</div>
+                    <div>
+                        <div class="achievement-title">Achievement Unlocked!</div>
+                        <div class="achievement-desc">Early Bird - Logged in before 9 AM</div>
+                    </div>
+                </div>
+            </div>
+
+    <!-- Smart Filters with Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-4">
+                    <!-- Quick Filter Pills -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex gap-2 flex-wrap flex-grow-1">
+                            <button class="filter-pill active" data-filter="all" onclick="quickFilter(this, 'all')">
+                                <i class="fas fa-th me-1"></i> All Leads <span class="badge bg-white text-primary ms-1">{{ all_leads|length }}</span>
+                            </button>
+                            <button class="filter-pill" data-filter="urgent" onclick="quickFilter(this, 'urgent')">
+                                <i class="fas fa-fire text-danger me-1"></i> Urgent <span class="badge bg-danger ms-1">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+                            </button>
+                            <button class="filter-pill" data-filter="government" onclick="quickFilter(this, 'government')">
+                                <i class="fas fa-landmark text-success me-1"></i> Government
+                            </button>
+                            <button class="filter-pill" data-filter="commercial" onclick="quickFilter(this, 'commercial')">
+                                <i class="fas fa-building text-info me-1"></i> Commercial
+                            </button>
+                            <button class="filter-pill" data-filter="high-value" onclick="quickFilter(this, 'high-value')">
+                                <i class="fas fa-gem text-warning me-1"></i> High Value ($250K+)
+                            </button>
+                            <button class="filter-pill" data-filter="closing-soon" onclick="quickFilter(this, 'closing-soon')">
+                                <i class="fas fa-clock text-danger me-1"></i> Closing Soon
+                            </button>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm ms-3" onclick="toggleAdvancedFilters()">
+                            <i class="fas fa-sliders-h me-1"></i> <span id="advFilterText">More Filters</span>
+                        </button>
+                    </div>
+
+                    <!-- Advanced Filters (Collapsible) -->
+                    <div id="advancedFilters" style="display: none;">
+                        <hr class="my-3">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Category:</label>
+                                <select class="form-select form-select-sm" id="categoryFilter" onchange="applyFilters()">
+                                    <option value="">All Categories</option>
+                                    <optgroup label="🎓 Education">
+                                        <option value="Higher Education">Universities</option>
+                                        <option value="Community College">Community Colleges</option>
+                                        <option value="School District">School Districts</option>
+                                    </optgroup>
+                                    <optgroup label="🏛️ Government">
+                                        <option value="Municipal Government">City/Municipal</option>
+                                        <option value="Transit Authority">Transit</option>
+                                        <option value="Airport Authority">Airports</option>
+                                        <option value="Military Base">Military</option>
+                                    </optgroup>
+                                    <optgroup label="🏥 Healthcare">
+                                        <option value="Hospital">Hospitals</option>
+                                        <option value="Private Healthcare">Healthcare Facilities</option>
+                                    </optgroup>
+                                    <optgroup label="🏨 Commercial">
+                                        <option value="Hotel">Hotels</option>
+                                        <option value="Shopping Mall">Shopping Centers</option>
+                                        <option value="Class A Office Building">Office Buildings</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">City:</label>
+                                <select class="form-select form-select-sm" id="locationFilter" onchange="applyFilters()">
+                                    <option value="">All Cities</option>
+                                    <option value="Hampton">📍 Hampton</option>
+                                    <option value="Norfolk">📍 Norfolk</option>
+                                    <option value="Virginia Beach">📍 Virginia Beach</option>
+                                    <option value="Newport News">📍 Newport News</option>
+                                    <option value="Williamsburg">📍 Williamsburg</option>
+                                    <option value="Suffolk">📍 Suffolk</option>
+                                    <option value="Chesapeake">📍 Chesapeake</option>
+                                    <option value="Portsmouth">📍 Portsmouth</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">Value Range:</label>
+                                <select class="form-select form-select-sm" id="valueFilter" onchange="applyFilters()">
+                                    <option value="">All Values</option>
+                                    <option value="under-50k">💰 Under $50K</option>
+                                    <option value="50k-100k">💵 $50K - $100K</option>
+                                    <option value="100k-250k">💸 $100K - $250K</option>
+                                    <option value="250k-500k">💲 $250K - $500K</option>
+                                    <option value="500k-1m">🤑 $500K - $1M</option>
+                                    <option value="1m-3m">💎 $1M - $3M</option>
+                                    <option value="over-3m">👑 Over $3M</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small">Deadline:</label>
+                                <select class="form-select form-select-sm" id="deadlineFilter" onchange="applyFilters()">
+                                    <option value="">Any Time</option>
+                                    <option value="3-days">⚡ Next 3 days</option>
+                                    <option value="7-days">🔥 Next 7 days</option>
+                                    <option value="14-days">📅 Next 2 weeks</option>
+                                    <option value="30-days">📆 Next month</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Search Keywords:</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search..." onkeyup="applyFilters()">
+                                    <button class="btn btn-primary" type="button" onclick="applyFilters()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
+                                <i class="fas fa-undo me-1"></i> Reset All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Summary with Sort Options -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <span class="badge bg-gradient-primary me-2" style="font-size: 1.1rem; padding: 0.5em 0.8em;">
+                            {{ all_leads|length }}
+                        </span>
+                        <span>Active Opportunities</span>
+                    </h5>
+                    <small class="text-muted">
+                        <i class="fas fa-sync-alt fa-spin me-1"></i> Updated <span id="lastUpdate">just now</span>
+                    </small>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <label class="small mb-0 me-2">Sort by:</label>
+                    <select class="form-select form-select-sm" id="sortBy" style="width: auto;" onchange="sortLeads()">
+                        <option value="newest">🆕 Newest First</option>
+                        <option value="value-high">💎 Highest Value</option>
+                        <option value="value-low">💰 Lowest Value</option>
+                        <option value="deadline">⏰ Deadline Soon</option>
+                        <option value="popular">🔥 Most Saved</option>
+                    </select>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary active" onclick="setView('grid')" id="gridViewBtn">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="setView('list')" id="listViewBtn">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leads Grid -->
+    <div class="row" id="leadsContainer">
+        {% for lead in all_leads %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4 lead-card" 
+             data-type="{{ lead.lead_type }}" 
+             data-location="{{ lead.location }}" 
+             data-value="{{ lead.contract_value }}"
+             data-category="{{ lead.category|default('') }}"
+             data-services="{{ lead.services_needed }}"
+             data-status="{{ lead.status }}"
+             data-days-left="{{ lead.days_left|default(999) }}">
+            <div class="card h-100">
+                <div class="card-header pt-3 px-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            {% if lead.lead_type == 'government' %}
+                                <span class="badge rounded-pill bg-success bg-opacity-10 text-success mb-2">Government</span>
+                            {% elif lead.lead_type == 'commercial' %}
+                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info mb-2">Commercial</span>
+                            {% elif lead.lead_type == 'commercial_request' %}
+                                <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning mb-2">🔥 Direct Lead</span>
+                            {% elif lead.lead_type == 'residential_request' %}
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary mb-2">🏠 Residential</span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-link p-0 save-btn" 
+                                data-lead-type="{{ lead.lead_type }}" 
+                                data-lead-id="{{ lead.id }}"
+                                data-lead-title="{{ lead.title }}"
+                                onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
+                                title="Save lead">
+                            <i class="far fa-bookmark text-muted" style="font-size: 1.2rem;"></i>
+                        </button>
+                    </div>
+                    <h6 class="card-title mb-1">{{ lead.title[:70] }}{% if lead.title|length > 70 %}...{% endif %}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
+                </div>
+                
+                <div class="card-body pt-2 p-3">
+                    <p class="card-text small" style="height: 50px; overflow: hidden;">
+                        {{ lead.description[:100] }}{% if lead.description|length > 100 %}...{% endif %}
+                    </p>
+                    
+                    <div class="row g-2 small my-3">
+                        <div class="col-6">
+                            <div class="text-muted"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
+                            <strong class="text-success">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
+                            <strong>{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 small">
+                        <div class="col-6">
+                            <div class="text-muted"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
+                            <strong class="text-danger">
+                                {{ lead.deadline[:15] if lead.deadline else 'N/A' }}
+                            </strong>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted"><i class="fas fa-tools me-1 text-info"></i>Services</div>
+                            <strong class="text-info">{{ lead.services_needed[:25] if lead.services_needed else 'N/A' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer p-3">
+                    <div class="d-grid">
+                        {% if lead.lead_type in ['commercial_request', 'residential_request'] %}
+                            <button class="btn btn-warning" 
+                                    onclick="showContactInfo('{{ lead.id }}', '{{ lead.contact_name }}', '{{ lead.contact_email }}', '{{ lead.contact_phone }}', '{{ lead.address }}')">
+                                <i class="fas fa-phone me-1"></i> Get Contact Info
+                            </button>
+                        {% elif lead.application_url and lead.application_url.startswith(('http://', 'https://')) %}
+                            <a href="{{ lead.application_url }}" target="_blank" 
+                               class="btn btn-primary">
+                                <i class="fas fa-external-link-alt me-1"></i> View & Apply
+                            </a>
+                        {% else %}
+                            <button class="btn btn-primary" 
+                                    onclick="viewLeadDetails('{{ lead.id }}', '{{ lead.lead_type }}')">
+                                <i class="fas fa-info-circle me-1"></i> View Details
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card text-center p-5">
+                <div class="card-body">
+                    <i class="fas fa-search-dollar fa-3x text-muted mb-3"></i>
+                    <h5 class="card-title">No Leads Found</h5>
+                    <p class="card-text text-muted">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
+                    <button class="btn btn-primary" onclick="clearAllFilters()">
+                        <i class="fas fa-undo me-1"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="row mt-4">
+        <div class="col-12 d-flex justify-content-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination" id="paginationContainer">
+                    <!-- Pagination links will be injected here by JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Prompt Modal -->
+<div class="modal fade" id="subscriptionPromptModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #0066cc, #004499);">
+                <h4 class="modal-title">
+                    <i class="fas fa-star"></i> Unlock Unlimited Access!
+                </h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="display-1 mb-3">🎉</div>
+                    <h3 class="text-primary">You've Used Your 3 Free Lead Views!</h3>
+                    <p class="lead">Ready to scale your business? Get unlimited access to all opportunities.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <h5 class="text-success">✅ What You Get</h5>
+                                <ul class="list-unstyled text-start">
+                                    <li>✓ <strong>Full Access to All Leads</strong></li>
+                                    <li>✓ <strong>Unlimited Browsing</strong></li>
+                                    <li>✓ <strong>150+ Active Leads</strong></li>
+                                    <li>✓ <strong>Daily Updates</strong></li>
+                                    <li>✓ <strong>Proposal Help</strong></li>
+                                    <li>✓ <strong>Email Alerts</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-warning">
+                            <div class="card-body text-center">
+                                <h5 class="text-warning">💰 Amazing Value</h5>
+                                <div class="display-4 text-primary my-3">$99<small class="fs-5 text-muted">/month</small></div>
+                                <p class="text-success mb-3"><strong>Or $950/year (Save $238)</strong></p>
+                                <p class="mb-2"><strong>Just $0.83/day</strong></p>
+                                <p class="text-muted">Less than a cup of coffee!</p>
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <strong>Typical ROI:</strong> 6,000%<br>
+                                    <small>Average contract: $150K</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i> <strong>Cancel Anytime</strong> - No long-term commitment. Full access until the end of your billing period.
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('payment') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-rocket"></i> Subscribe Now - $99/month
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Maybe Later
+                    </button>
+                </div>
+
+                <p class="text-center text-muted small mt-3 mb-0">
+                    By subscribing, you agree to our <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Proposal Help Modal -->
+<div class="modal fade" id="proposalHelpModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="proposalHelperModalLabel">
-                    <i class="fas fa-edit me-2"></i>AI Proposal Writer
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-hands-helping text-primary"></i> Request Proposal Help
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="proposalForm">
-                    <div class="mb-3">
-                        <label for="contractTitle" class="form-label">Contract Title</label>
-                        <input type="text" class="form-control" id="contractTitle" required>
+                <form id="proposalHelpForm">
+                    <input type="hidden" id="helpLeadId" name="lead_id">
+                    <input type="hidden" id="helpLeadTitle" name="lead_title">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Our proposal experts will contact you within 24 hours to help you create a winning bid.
                     </div>
-                    <div class="mb-3">
-                        <label for="contractNumber" class="form-label">Contract Number (Optional)</label>
-                        <input type="text" class="form-control" id="contractNumber">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Your Name *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Name *</label>
+                            <input type="text" class="form-control" name="company" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="agency" class="form-label">Agency/Department</label>
-                        <input type="text" class="form-control" id="agency" required>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            <input type="tel" class="form-control" name="phone" required>
+                        </div>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="projectScope" class="form-label">Project Scope & Requirements</label>
-                        <textarea class="form-control" id="projectScope" rows="4" required placeholder="Describe the project requirements, deliverables, and scope of work..."></textarea>
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-select" name="experience">
+                            <option value="beginner">New to government contracts</option>
+                            <option value="intermediate">Some experience (1-5 contracts)</option>
+                            <option value="experienced">Experienced (5+ contracts)</option>
+                        </select>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="companyExperience" class="form-label">Your Company's Relevant Experience</label>
-                        <textarea class="form-control" id="companyExperience" rows="3" required placeholder="Describe your company's experience, qualifications, and relevant past projects..."></textarea>
+                        <label class="form-label">Specific Help Needed</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="pricing">
+                                    <label class="form-check-label">Pricing Strategy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="technical">
+                                    <label class="form-check-label">Technical Requirements</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="compliance">
+                                    <label class="form-check-label">Compliance & Certifications</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="writing">
+                                    <label class="form-check-label">Proposal Writing</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="documents">
+                                    <label class="form-check-label">Required Documents</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="help_needed" value="review">
+                                    <label class="form-check-label">Proposal Review</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="proposalType" class="form-label">Proposal Type</label>
-                        <select class="form-select" id="proposalType" required>
-                            <option value="">Select Type</option>
-                            <option value="technical">Technical Proposal</option>
-                            <option value="pricing">Pricing Proposal</option>
-                            <option value="combined">Combined Technical & Pricing</option>
-                            <option value="capability">Capability Statement</option>
+                        <label class="form-label">Additional Notes</label>
+                        <textarea class="form-control" name="notes" rows="3" 
+                                  placeholder="Any specific questions or areas where you need help..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Preferred Contact Method</label>
+                        <select class="form-select" name="contact_method">
+                            <option value="phone">Phone Call</option>
+                            <option value="email">Email</option>
+                            <option value="video">Video Call</option>
                         </select>
                     </div>
                 </form>
-                <div id="proposalOutput" class="mt-4" style="display: none;">
-                    <div class="alert alert-success">
-                        <h6><i class="fas fa-check-circle me-2"></i>Proposal Generated!</h6>
-                        <div id="proposalContent" class="mt-3 p-3 bg-white border rounded" style="max-height: 400px; overflow-y: auto;"></div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-success" onclick="downloadProposal()">
-                            <i class="fas fa-download me-2"></i>Download as PDF
-                        </button>
-                        <button class="btn btn-outline-primary" onclick="copyProposal()">
-                            <i class="fas fa-copy me-2"></i>Copy to Clipboard
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="emailProposal()">
-                            <i class="fas fa-envelope me-2"></i>Email to Me
-                        </button>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="generateProposal()">
-                    <i class="fas fa-magic me-2"></i>Generate Proposal
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitProposalHelp()">
+                    <i class="fas fa-paper-plane"></i> Request Help
                 </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activity Modal -->
-<div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="activityModalLabel">
-                    <i class="fas fa-history me-2"></i>Recent Activity
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="activityList">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-outline-danger" onclick="clearActivity()">
-                    <i class="fas fa-trash me-2"></i>Clear History
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- My Notes Modal -->
-<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="notesModalLabel">
-                    <i class="fas fa-sticky-note me-2"></i>My Notes
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <button class="btn btn-primary btn-sm" onclick="showNoteForm()">
-                        <i class="fas fa-plus me-2"></i>New Note
-                    </button>
-                </div>
-                
-                <div id="noteForm" style="display: none;" class="mb-4 p-3 border rounded bg-light">
-                    <input type="hidden" id="noteId">
-                    <div class="mb-2">
-                        <input type="text" class="form-control" id="noteTitle" placeholder="Note Title">
-                    </div>
-                    <div class="mb-2">
-                        <textarea class="form-control" id="noteContent" rows="4" placeholder="Write your note here..."></textarea>
-                    </div>
-                    <div class="mb-2">
-                        <input type="text" class="form-control" id="noteTags" placeholder="Tags (comma-separated)">
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-success btn-sm" onclick="saveNote()">
-                            <i class="fas fa-save me-2"></i>Save Note
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="cancelNote()">Cancel</button>
-                    </div>
-                </div>
-                
-                <div id="notesList">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Proposal Writer Functions
-function generateProposal() {
-    const contractTitle = document.getElementById('contractTitle').value;
-    const contractNumber = document.getElementById('contractNumber').value;
-    const agency = document.getElementById('agency').value;
-    const projectScope = document.getElementById('projectScope').value;
-    const companyExperience = document.getElementById('companyExperience').value;
-    const proposalType = document.getElementById('proposalType').value;
+let currentView = 'grid';
+let leadsData = {{ all_leads|tojson|safe }};
+let activityScore = 850;
+let todayActions = { viewed: 4, saved: 2, inquiries: 1 };
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadCustomerCredits();
+    bindFilterEvents();
+    updateResultsCount();
+    initGamification();
+    startActivityTicker();
+    checkAndShowAchievement();
+    simulateRealTimeUpdates();
+});
+
+// Gamification Functions
+function initGamification() {
+    // Load user stats from localStorage or initialize
+    const stats = JSON.parse(localStorage.getItem('userStats') || '{"streak": 3, "level": 2, "score": 850}');
+    document.getElementById('streakCount').textContent = stats.streak;
+    document.getElementById('activityScore').textContent = stats.score;
     
-    if (!contractTitle || !agency || !projectScope || !companyExperience || !proposalType) {
-        alert('Please fill in all required fields');
-        return;
+    // Increment streak if user visits daily
+    const lastVisit = localStorage.getItem('lastVisit');
+    const today = new Date().toDateString();
+    if (lastVisit !== today) {
+        stats.streak++;
+        localStorage.setItem('lastVisit', today);
+        localStorage.setItem('userStats', JSON.stringify(stats));
+    }
+}
+
+function updateActivityScore(points, action) {
+    activityScore += points;
+    document.getElementById('activityScore').textContent = activityScore;
+    
+    // Animate score change
+    const scoreEl = document.getElementById('activityScore');
+    scoreEl.style.transform = 'scale(1.2)';
+    scoreEl.style.color = '#28a745';
+    setTimeout(() => {
+        scoreEl.style.transform = 'scale(1)';
+        scoreEl.style.color = '';
+    }, 300);
+    
+    // Update today's actions
+    if (action === 'view') todayActions.viewed++;
+    if (action === 'save') todayActions.saved++;
+    if (action === 'inquiry') todayActions.inquiries++;
+    
+    document.getElementById('viewedCount').textContent = todayActions.viewed;
+    document.getElementById('savedCount').textContent = todayActions.saved;
+    document.getElementById('inquiriesCount').textContent = todayActions.inquiries;
+    document.getElementById('todayActionsCount').textContent = 
+        todayActions.viewed + todayActions.saved + todayActions.inquiries;
+    
+    // Save to localStorage
+    const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
+    stats.score = activityScore;
+    localStorage.setItem('userStats', JSON.stringify(stats));
+}
+
+function checkAndShowAchievement() {
+    const hour = new Date().getHours();
+    if (hour < 9 && !sessionStorage.getItem('earlyBirdShown')) {
+        setTimeout(() => showAchievement('Early Bird', 'Logged in before 9 AM', '🌅'), 2000);
+        sessionStorage.setItem('earlyBirdShown', 'true');
+    }
+}
+
+function showAchievement(title, description, icon) {
+    const toast = document.getElementById('achievementToast');
+    toast.querySelector('.achievement-title').textContent = title;
+    toast.querySelector('.achievement-desc').textContent = description;
+    toast.querySelector('.achievement-icon').textContent = icon;
+    toast.style.display = 'block';
+    
+    updateActivityScore(100, 'achievement');
+    
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3500);
+}
+
+function startActivityTicker() {
+    // Duplicate activities for seamless loop
+    const ticker = document.querySelector('.activity-ticker');
+    if (ticker) {
+        ticker.innerHTML = ticker.innerHTML + ticker.innerHTML;
+    }
+}
+
+function simulateRealTimeUpdates() {
+    // Update "last update" time
+    setInterval(() => {
+        const updateEl = document.getElementById('lastUpdate');
+        const randomMinutes = Math.floor(Math.random() * 5) + 1;
+        if (updateEl) updateEl.textContent = `${randomMinutes} minutes ago`;
+    }, 60000);
+}
+
+// Quick Filter Functions
+function quickFilter(button, filter) {
+    // Remove active class from all pills
+    document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+    button.classList.add('active');
+    
+    const cards = document.querySelectorAll('.lead-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        let show = true;
+        
+        if (filter === 'all') {
+            show = true;
+        } else if (filter === 'urgent') {
+            // Show cards with emergency or urgent status
+            show = card.querySelector('.badge.bg-danger') || card.querySelector('.badge.bg-warning');
+        } else if (filter === 'government') {
+            show = card.getAttribute('data-type') === 'government';
+        } else if (filter === 'commercial') {
+            show = card.getAttribute('data-type') === 'commercial';
+        } else if (filter === 'high-value') {
+            const value = card.getAttribute('data-value');
+            show = value && (value.includes('250,000') || value.includes('500,000') || 
+                           value.includes('$1M') || value.includes('$2M') || value.includes('$3M'));
+        } else if (filter === 'closing-soon') {
+            const deadline = card.querySelector('.text-danger');
+            show = deadline !== null;
+        }
+        
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('resultsCount').textContent = visibleCount;
+    document.getElementById('visibleCount').textContent = visibleCount;
+    
+    // Add activity points
+    updateActivityScore(5, 'filter');
+}
+
+function filterUrgent() {
+    const urgentBtn = document.querySelector('[data-filter="urgent"]');
+    if (urgentBtn) quickFilter(urgentBtn, 'urgent');
+}
+
+function toggleAdvancedFilters() {
+    const filters = document.getElementById('advancedFilters');
+    const text = document.getElementById('advFilterText');
+    if (filters.style.display === 'none' || !filters.style.display) {
+        filters.style.display = 'block';
+        text.textContent = 'Hide Filters';
+    } else {
+        filters.style.display = 'none';
+        text.textContent = 'More Filters';
+    }
+}
+
+function setView(view) {
+    currentView = view;
+    const container = document.getElementById('leadsContainer');
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    
+    if (view === 'grid') {
+        container.classList.remove('list-view');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        container.classList.add('list-view');
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
     }
     
-    // Show loading
-    document.getElementById('proposalOutput').style.display = 'block';
-    document.getElementById('proposalContent').innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Generating proposal...</p></div>';
+    updateActivityScore(5, 'view-change');
+}
+
+function showAllLeads() {
+    // Clear all filters and show all leads
+    clearAllFilters();
     
-    fetch('/generate-proposal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contract_title: contractTitle,
-            contract_number: contractNumber,
-            agency: agency,
-            project_scope: projectScope,
-            company_experience: companyExperience,
-            proposal_type: proposalType
+    // Highlight all cards briefly
+    const cards = document.querySelectorAll('.lead-card');
+    cards.forEach(card => {
+        card.style.transition = 'all 0.3s';
+        card.style.transform = 'scale(1.02)';
+        card.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.3)';
+        setTimeout(() => {
+            card.style.transform = '';
+            card.style.boxShadow = '';
+        }, 500);
+    });
+    
+    // Scroll to leads section
+    const leadsContainer = document.getElementById('leadsContainer');
+    if (leadsContainer) {
+        leadsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    updateActivityScore(5, 'show-all');
+}
+
+function sortLeads() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.getElementById('leadsContainer');
+    const cards = Array.from(container.querySelectorAll('.lead-card'));
+    
+    cards.sort((a, b) => {
+        if (sortBy === 'newest') {
+            return 0; // Keep original order
+        } else if (sortBy === 'value-high' || sortBy === 'value-low') {
+            const valueA = parseFloat(a.getAttribute('data-value').replace(/[^0-9.]/g, '')) || 0;
+            const valueB = parseFloat(b.getAttribute('data-value').replace(/[^0-9.]/g, '')) || 0;
+            return sortBy === 'value-high' ? valueB - valueA : valueA - valueB;
+        }
+        return 0;
+    });
+    
+    cards.forEach(card => container.appendChild(card));
+    updateActivityScore(5, 'sort');
+}
+
+function showActivityFeed() {
+    alert('Live activity feed coming soon! See what other users are doing in real-time.');
+    updateActivityScore(10, 'explore');
+}
+
+function loadCustomerCredits() {
+    fetch('/get-credits-balance?email=demo@example.com')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('customer-credits').textContent = data.credits_balance;
+                document.getElementById('customer-free-leads').textContent = data.free_leads_remaining;
+                const dollarValue = (data.credits_balance * 0.50).toFixed(2);
+                document.querySelector('.credits-display .text-success').textContent = `($${dollarValue})`;
+            }
         })
+        .catch(error => console.error('Error loading credits:', error));
+}
+
+function bindFilterEvents() {
+    const filters = ['locationFilter', 'valueFilter', 'categoryFilter', 'deadlineFilter'];
+    filters.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element) {
+            element.addEventListener('change', applyFilters);
+        }
+    });
+    
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+    
+    const sortBy = document.getElementById('sortBy');
+    if (sortBy) {
+        sortBy.addEventListener('change', applySorting);
+    }
+}
+
+function applyFilters() {
+    const location = document.getElementById('locationFilter')?.value || '';
+    const value = document.getElementById('valueFilter')?.value || '';
+    const category = document.getElementById('categoryFilter')?.value || '';
+    const deadline = document.getElementById('deadlineFilter')?.value || '';
+    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    
+    const cards = document.querySelectorAll('.lead-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        let show = true;
+        
+        // Location filter
+        if (location && !card.dataset.location.includes(location)) show = false;
+        
+        // Category filter
+        if (category && card.dataset.category !== category) show = false;
+        
+        // Search filter
+        if (search) {
+            const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+            const description = card.querySelector('.card-text')?.textContent.toLowerCase() || '';
+            const agency = card.querySelector('.text-muted')?.textContent.toLowerCase() || '';
+            if (!title.includes(search) && !description.includes(search) && !agency.includes(search)) show = false;
+        }
+        
+        // Value filter
+        if (value) {
+            const cardValue = parseContractValue(card.dataset.value || '0');
+            if (!isInValueRange(cardValue, value)) show = false;
+        }
+        
+        // Deadline filter
+        if (deadline) {
+            const daysLeft = parseInt(card.dataset.daysLeft || '999');
+            let showByDeadline = false;
+            switch(deadline) {
+                case '3-days': showByDeadline = daysLeft <= 3; break;
+                case '7-days': showByDeadline = daysLeft <= 7; break;
+                case '14-days': showByDeadline = daysLeft <= 14; break;
+                case '30-days': showByDeadline = daysLeft <= 30; break;
+                default: showByDeadline = true;
+            }
+            if (!showByDeadline) show = false;
+        }
+        
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Update both result counters
+    document.getElementById('resultsCount').textContent = visibleCount;
+    const visibleCountEl = document.getElementById('visibleCount');
+    if (visibleCountEl) {
+        visibleCountEl.textContent = visibleCount;
+    }
+    
+    // Reset to "all" pill if using advanced filters
+    const allPill = document.querySelector('[data-filter="all"]');
+    if (allPill && (location || value || category || deadline || search)) {
+        document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+        allPill.classList.add('active');
+    }
+    
+    updateActivityScore(5, 'filter');
+}
+
+function parseContractValue(valueStr) {
+    // Extract numbers from strings like "$50,000 - $150,000" or "$35,000/month"
+    const numbers = valueStr.match(/[\d,]+/g);
+    if (!numbers) return 0;
+    const cleanValue = numbers[0].replace(/,/g, '');
+    return parseFloat(cleanValue) || 0;
+}
+
+function isInValueRange(value, range) {
+    switch(range) {
+        case 'under-50k': return value < 50000;
+        case '50k-100k': return value >= 50000 && value <= 100000;
+        case '100k-250k': return value >= 100000 && value <= 250000;
+        case '250k-500k': return value >= 250000 && value <= 500000;
+        case '500k-1m': return value >= 500000 && value <= 1000000;
+        case '1m-3m': return value >= 1000000 && value <= 3000000;
+        case 'over-3m': return value > 3000000;
+        default: return true;
+    }
+}
+
+function clearAllFilters() {
+    // Clear all filter dropdowns
+    const locationFilter = document.getElementById('locationFilter');
+    const valueFilter = document.getElementById('valueFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const deadlineFilter = document.getElementById('deadlineFilter');
+    const searchInput = document.getElementById('searchInput');
+    
+    if (locationFilter) locationFilter.value = '';
+    if (valueFilter) valueFilter.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (deadlineFilter) deadlineFilter.value = '';
+    if (searchInput) searchInput.value = '';
+    
+    // Reset to "all" pill
+    document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+    const allPill = document.querySelector('[data-filter="all"]');
+    if (allPill) allPill.classList.add('active');
+    
+    applyFilters();
+}
+
+function applySorting() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.getElementById('leadsContainer');
+    const cards = Array.from(container.querySelectorAll('.lead-card'));
+    
+    cards.sort((a, b) => {
+        switch(sortBy) {
+            case 'newest':
+                return 0; // Keep original order (already newest first from backend)
+            case 'value-high':
+                return parseContractValue(b.dataset.value) - parseContractValue(a.dataset.value);
+            case 'value-low':
+                return parseContractValue(a.dataset.value) - parseContractValue(b.dataset.value);
+            case 'deadline':
+                // Sort by deadline (if available in dataset)
+                return 0; // TODO: implement if deadline data is available
+            case 'location':
+                return (a.dataset.location || '').localeCompare(b.dataset.location || '');
+            default:
+                return 0;
+        }
+    });
+    
+    // Re-append sorted cards
+    cards.forEach(card => container.appendChild(card));
+}
+
+function filterByCategory(category) {
+    document.getElementById('categoryFilter').value = category;
+    applyFilters();
+}
+
+function filterByCity(city) {
+    document.getElementById('locationFilter').value = city;
+    applyFilters();
+}
+
+function toggleView() {
+    const container = document.getElementById('leadsContainer');
+    const icon = document.getElementById('viewIcon');
+    const text = document.getElementById('viewText');
+    
+    if (currentView === 'grid') {
+        container.className = 'row';
+        container.querySelectorAll('.lead-card').forEach(card => {
+            card.className = 'col-12 mb-3 lead-card';
+        });
+        icon.className = 'fas fa-th-large';
+        text.textContent = 'List';
+        currentView = 'list';
+    } else {
+        container.className = 'row';
+        container.querySelectorAll('.lead-card').forEach(card => {
+            card.className = 'col-lg-4 col-md-6 mb-4 lead-card';
+        });
+        icon.className = 'fas fa-th';
+        text.textContent = 'Grid';
+        currentView = 'grid';
+    }
+}
+
+function accessContactInfo(leadId, leadTitle, leadType) {
+    if (!checkCreditsBeforeRequest()) {
+        return;
+    }
+
+    const confirmMessage = `Access contact information for "${leadTitle}"?\n\nAccess is included with your subscription.`;
+    
+    if (confirm(confirmMessage)) {
+        fetch('/request-commercial-contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                opportunity_id: leadId,
+                business_name: leadTitle,
+                user_email: 'demo@example.com',
+                lead_type: leadType
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast('Contact information sent to your email!', 'success');
+                updateCreditsAfterRequest(5);
+                loadCustomerCredits();
+            } else {
+                showToast(result.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error accessing contact information', 'error');
+        });
+    }
+}
+
+function showContactInfo(leadId, contactName, contactEmail, contactPhone, address) {
+    // Show modal with contact info
+    const modalHtml = `
+        <div class="modal fade" id="contactInfoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title"><i class="fas fa-star"></i> Direct Client Contact Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-check-circle"></i> Contact Info Revealed!</strong><br>
+                            This client is actively seeking cleaning services.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contact Name:</label>
+                            <p class="form-control-plaintext">${contactName}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email:</label>
+                            <p class="form-control-plaintext">
+                                <a href="mailto:${contactEmail}">${contactEmail}</a>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Phone:</label>
+                            <p class="form-control-plaintext">
+                                <a href="tel:${contactPhone}">${contactPhone}</a>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Address:</label>
+                            <p class="form-control-plaintext">${address}</p>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong><i class="fas fa-lightbulb"></i> Tip:</strong> Contact them promptly! Clients who submit requests are ready to hire.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="mailto:${contactEmail}" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> Send Email
+                        </a>
+                        <a href="tel:${contactPhone}" class="btn btn-success">
+                            <i class="fas fa-phone"></i> Call Now
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('contactInfoModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('contactInfoModal'));
+    modal.show();
+    
+    // Deduct credits (5 credits for contact info)
+    updateCreditsAfterRequest(5);
+    loadCustomerCredits();
+}
+
+function requestProposalHelp(leadId, leadTitle) {
+    document.getElementById('helpLeadId').value = leadId;
+    document.getElementById('helpLeadTitle').value = leadTitle;
+    
+    const modal = new bootstrap.Modal(document.getElementById('proposalHelpModal'));
+    modal.show();
+}
+
+function submitProposalHelp() {
+    const form = document.getElementById('proposalHelpForm');
+    const formData = new FormData(form);
+    const helpNeeded = [];
+    
+    form.querySelectorAll('input[name="help_needed"]:checked').forEach(checkbox => {
+        helpNeeded.push(checkbox.value);
+    });
+    
+    const data = {
+        lead_id: formData.get('lead_id'),
+        lead_title: formData.get('lead_title'),
+        name: formData.get('name'),
+        company: formData.get('company'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        experience: formData.get('experience'),
+        help_needed: helpNeeded,
+        notes: formData.get('notes'),
+        contact_method: formData.get('contact_method')
+    };
+    
+    fetch('/request-proposal-help', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('proposalContent').innerHTML = data.proposal;
+    .then(result => {
+        if (result.success) {
+            showToast('Proposal help request submitted! We\'ll contact you within 24 hours.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('proposalHelpModal')).hide();
+            form.reset();
         } else {
-            document.getElementById('proposalContent').innerHTML = '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+            showToast(result.message, 'error');
         }
     })
     .catch(error => {
-        document.getElementById('proposalContent').innerHTML = '<div class="alert alert-danger">Error generating proposal</div>';
+        console.error('Error:', error);
+        showToast('Error submitting proposal help request', 'error');
     });
 }
 
-function downloadProposal() {
-    const content = document.getElementById('proposalContent').innerText;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'proposal_' + Date.now() + '.txt';
-    a.click();
-}
-
-function copyProposal() {
-    const content = document.getElementById('proposalContent').innerText;
-    navigator.clipboard.writeText(content).then(() => {
-        alert('✅ Proposal copied to clipboard!');
-    });
-}
-
-function emailProposal() {
-    const content = document.getElementById('proposalContent').innerText;
-    fetch('/email-proposal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proposal: content })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ Proposal emailed successfully!');
-        } else {
-            alert('❌ Error sending email');
-        }
-    });
-}
-
-// Recent Activity Functions
-document.getElementById('activityModal').addEventListener('show.bs.modal', function () {
-    loadActivity();
-});
-
-function loadActivity() {
-    fetch('/get-activity')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const activityList = document.getElementById('activityList');
-            if (data.activities.length === 0) {
-                activityList.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
-            } else {
-                let html = '<div class="list-group">';
-                data.activities.forEach(activity => {
-                    const icon = getActivityIcon(activity.action_type);
-                    html += `
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">
-                                    <i class="${icon} me-2"></i>${activity.action_type}
-                                </h6>
-                                <small class="text-muted">${activity.created_at}</small>
-                            </div>
-                            <p class="mb-1">${activity.description}</p>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                activityList.innerHTML = html;
-            }
-        }
-    });
-}
-
-function getActivityIcon(actionType) {
-    const icons = {
-        'viewed_lead': 'fas fa-eye text-info',
-        'saved_lead': 'fas fa-bookmark text-warning',
-        'applied': 'fas fa-paper-plane text-success',
-        'generated_proposal': 'fas fa-file-alt text-primary',
-        'created_note': 'fas fa-sticky-note text-warning'
-    };
-    return icons[actionType] || 'fas fa-circle text-muted';
-}
-
-function clearActivity() {
-    if (confirm('Clear all activity history?')) {
-        fetch('/clear-activity', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadActivity();
-            }
-        });
-    }
-}
-
-// Notes Functions
-document.getElementById('notesModal').addEventListener('show.bs.modal', function () {
-    loadNotes();
-});
-
-function showNoteForm() {
-    document.getElementById('noteForm').style.display = 'block';
-    document.getElementById('noteId').value = '';
-    document.getElementById('noteTitle').value = '';
-    document.getElementById('noteContent').value = '';
-    document.getElementById('noteTags').value = '';
-}
-
-function cancelNote() {
-    document.getElementById('noteForm').style.display = 'none';
-}
-
-function saveNote() {
-    const noteId = document.getElementById('noteId').value;
-    const title = document.getElementById('noteTitle').value;
-    const content = document.getElementById('noteContent').value;
-    const tags = document.getElementById('noteTags').value;
+function toggleSaveLead(button, leadType, leadId, leadTitle) {
+    const icon = button.querySelector('i');
+    const isSaved = icon.classList.contains('fas');
     
-    if (!title || !content) {
-        alert('Please fill in title and content');
-        return;
-    }
-    
-    fetch('/save-note', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            note_id: noteId,
-            title: title,
-            content: content,
-            tags: tags
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            cancelNote();
-            loadNotes();
-        }
-    });
-}
-
-function loadNotes() {
-    fetch('/get-notes')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const notesList = document.getElementById('notesList');
-            if (data.notes.length === 0) {
-                notesList.innerHTML = '<p class="text-muted text-center">No notes yet. Create your first note!</p>';
-            } else {
-                let html = '';
-                data.notes.forEach(note => {
-                    html += `
-                        <div class="card mb-2">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="card-title">${note.title}</h6>
-                                        <p class="card-text">${note.content}</p>
-                                        ${note.tags ? `<p class="mb-0"><small class="text-muted"><i class="fas fa-tags me-1"></i>${note.tags}</small></p>` : ''}
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" onclick="editNote(${note.id}, '${note.title.replace(/'/g, "\\'")}', '${note.content.replace(/'/g, "\\'")}', '${note.tags || ''}')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger" onclick="deleteNote(${note.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <small class="text-muted">${note.created_at}</small>
-                            </div>
-                        </div>
-                    `;
-                });
-                notesList.innerHTML = html;
-            }
-        }
-    });
-}
-
-function editNote(id, title, content, tags) {
-    showNoteForm();
-    document.getElementById('noteId').value = id;
-    document.getElementById('noteTitle').value = title;
-    document.getElementById('noteContent').value = content;
-    document.getElementById('noteTags').value = tags;
-}
-
-function deleteNote(id) {
-    if (confirm('Delete this note?')) {
-        fetch('/delete-note', {
+    if (isSaved) {
+        // Unsave the lead
+        fetch('/unsave-lead', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ note_id: id })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lead_type: leadType,
+                lead_id: leadId
+            })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                loadNotes();
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                showToast('Lead removed from saved', 'success');
+                updateActivityScore(-10, 'unsave'); // Deduct points
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to unsave lead'), 'error');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to unsave lead. Please try again.', 'error');
+        });
+    } else {
+        // Save the lead - collect lead data from card
+        const card = button.closest('.lead-card');
+        const leadData = {
+            agency: card.dataset.agency || '',
+            contract_value: card.dataset.value || '',
+            location: card.dataset.location || '',
+            deadline: card.dataset.deadline || '',
+            services_needed: card.dataset.services || '',
+            status: card.dataset.status || ''
+        };
+        
+        fetch('/save-lead', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lead_type: leadType,
+                lead_id: leadId,
+                lead_title: leadTitle,
+                lead_data: leadData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                showToast('Lead saved successfully! +25 points', 'success');
+                updateActivityScore(25, 'save'); // Award points for saving
+                
+                // Check if milestone reached
+                if (todayActions.saved >= 5 && !sessionStorage.getItem('saveMasterShown')) {
+                    showAchievement('Save Master', 'Saved 5+ leads today', '📌');
+                    sessionStorage.setItem('saveMasterShown', 'true');
+                }
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to save lead'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to save lead. Please try again.', 'error');
         });
     }
 }
-</script>
 
-{% endblock %}
+function shareLead(title, description, location) {
+    const shareData = {
+        title: `${title} - VA Contract Opportunity`,
+        text: `${description}\n\nLocation: ${location}\n\nVia ContractLink.ai`,
+        url: window.location.href
+    };
+    
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        navigator.share(shareData);
+    } else {
+        // Fallback to copy to clipboard
+        const shareText = `${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`;
+        navigator.clipboard.writeText(shareText).then(() => {
+            showToast('Share text copied to clipboard!', 'success');
+        });
+    }
+}
+
+function loadMoreLeads() {
+    // Simulate loading more leads (in real app, this would fetch from server)
+    showToast('All available leads are currently displayed', 'info');
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+
+// CSS for text truncation
+const style = document.createElement('style');
+style.textContent = `
+    .text-truncate-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Responsive card sizing */
+    @media (max-width: 1400px) {
+        .card-title {
+            font-size: 0.85rem !important;
+        }
+        .card-body {
+            padding: 0.75rem !important;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .lead-card {
+            margin-bottom: 1rem !important;
+        }
+        .col-xl-3, .col-lg-4 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .col-xl-3, .col-lg-4, .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .card-title {
+            font-size: 0.95rem !important;
+        }
+    }
+    
+    /* Compact card styling */
+    .card {
+        overflow: hidden;
+    }
+    
+    .card-title, .card-text, .card-body p, .card-body small {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Badge styling for cleaning requests */
+    .border-warning {
+        border-left: 4px solid #ffc107 !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Track Apply/Visit clicks and show subscription prompt after 3 clicks
+function trackApplyClick(event, url, title) {
+    // Get current click count from localStorage
+    let clickCount = parseInt(localStorage.getItem('applyClickCount') || '0');
+    
+    // Increment click count
+    clickCount++;
+    localStorage.setItem('applyClickCount', clickCount.toString());
+    
+    console.log(`Apply click tracked. Total clicks: ${clickCount}`);
+    
+    // If this is the 3rd click, prevent default and show subscription modal
+    if (clickCount >= 3) {
+        event.preventDefault();
+        
+        // Store the URL they wanted to visit
+        localStorage.setItem('pendingLeadUrl', url);
+        localStorage.setItem('pendingLeadTitle', title);
+        
+        // Show subscription prompt modal
+        const subscriptionModal = new bootstrap.Modal(document.getElementById('subscriptionPromptModal'));
+        subscriptionModal.show();
+        
+        // Show message
+        showToast('Subscribe to continue accessing more leads!', 'info');
+        
+        return false;
+    }
+    
+    // Track which lead was clicked
