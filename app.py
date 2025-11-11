@@ -16976,6 +16976,8 @@ def mailbox():
             "LIMIT :limit OFFSET :offset"
         )
         count_query = "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id"
+        count_params = {'user_id': user_id}
+        exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
     elif folder == 'sent':
         query = (
             "SELECT m.*, "
@@ -16989,6 +16991,8 @@ def mailbox():
             "LIMIT :limit OFFSET :offset"
         )
         count_query = "SELECT COUNT(*) FROM messages WHERE sender_id = :user_id"
+        count_params = {'user_id': user_id}
+        exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
     elif folder == 'admin' and is_admin:
         query = (
             "SELECT m.*, "
@@ -17002,17 +17006,15 @@ def mailbox():
             "LIMIT :limit OFFSET :offset"
         )
         count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = 1"
+        count_params = {}
+        exec_params = {'limit': per_page, 'offset': offset}
     else:
         return redirect(url_for('mailbox'))
     
-    total_count = db.session.execute(text(count_query), {'user_id': user_id}).scalar() or 0
+    total_count = db.session.execute(text(count_query), count_params).scalar() or 0
     total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
     
-    messages = db.session.execute(text(query), {
-        'user_id': user_id,
-        'limit': per_page,
-        'offset': offset
-    }).fetchall()
+    messages = db.session.execute(text(query), exec_params).fetchall()
     
     # Get all users for admin compose
     all_users = []
