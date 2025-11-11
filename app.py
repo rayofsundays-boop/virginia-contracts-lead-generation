@@ -4756,19 +4756,20 @@ def contracts():
     offset = (page - 1) * per_page
     try:
         # Count total with optional filter - using LOCAL contracts table
+        # Fixed: Remove invalid CAST(deadline AS DATE) - use date() function for SQLite
         if location_filter:
             total = db.session.execute(text('''
                 SELECT COUNT(*) FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc)
                   AND title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
+                  AND (deadline IS NULL OR date(deadline) >= date('now'))
             '''), {'loc': f"%{location_filter}%"}).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE LOWER(location) LIKE LOWER(:loc) 
                   AND title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
+                  AND (deadline IS NULL OR date(deadline) >= date('now'))
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset}).fetchall()
@@ -4776,20 +4777,20 @@ def contracts():
             total = db.session.execute(text('''
                 SELECT COUNT(*) FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
+                  AND (deadline IS NULL OR date(deadline) >= date('now'))
             ''')).scalar() or 0
             rows = db.session.execute(text('''
                 SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
                 FROM contracts 
                 WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR deadline = '' OR CAST(deadline AS DATE) >= CURRENT_DATE)
+                  AND (deadline IS NULL OR date(deadline) >= date('now'))
                 ORDER BY created_at DESC
                 LIMIT :limit OFFSET :offset
             '''), {'limit': per_page, 'offset': offset}).fetchall()
 
         # For filter dropdown - using LOCAL contracts table
         locations = [r[0] for r in db.session.execute(text('''
-            SELECT DISTINCT location FROM contracts WHERE location IS NOT NULL ORDER BY location
+            SELECT DISTINCT location FROM contracts WHERE location IS NOT NULL AND location != '' ORDER BY location
         ''')).fetchall()]
 
         pages = max(math.ceil(total / per_page), 1)
