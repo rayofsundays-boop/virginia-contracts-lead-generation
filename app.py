@@ -7046,7 +7046,7 @@ def customer_leads():
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
                 AND (
-                    (fc.deadline IS NOT NULL AND fc.deadline != '' AND CAST(SUBSTRING(fc.deadline, 1, 10) AS DATE) >= :current_date)
+                    (fc.deadline IS NOT NULL AND fc.deadline != '' AND date(substr(fc.deadline, 1, 10)) >= :current_date)
                     OR fc.deadline IS NULL
                 )
                 ORDER BY COALESCE(fc.posted_date, fc.created_at) DESC
@@ -7078,7 +7078,7 @@ def customer_leads():
                     supply_contracts.requirements
                 FROM supply_contracts 
                 WHERE (
-                    (supply_contracts.bid_deadline IS NOT NULL AND supply_contracts.bid_deadline != '' AND CAST(SUBSTRING(supply_contracts.bid_deadline, 1, 10) AS DATE) >= :current_date)
+                    (supply_contracts.bid_deadline IS NOT NULL AND supply_contracts.bid_deadline != '' AND date(substr(supply_contracts.bid_deadline, 1, 10)) >= :current_date)
                     OR supply_contracts.bid_deadline IS NULL
                 )
                 ORDER BY supply_contracts.posted_date DESC
@@ -12832,33 +12832,66 @@ def toggle_admin_privilege():
 def industry_days_events():
     """Display networking and bidding events for contractors - All 50 States"""
     try:
-        # Query real events from database (schema may vary between environments)
+        # Collect filter params
+        state_filter = (request.args.get('state') or '').strip()
+        city_filter = (request.args.get('city') or '').strip()
+        type_filter = (request.args.get('event_type') or '').strip()
+        keyword = (request.args.get('q') or '').strip().lower()
+        from_date = (request.args.get('from') or '').strip()
+        to_date = (request.args.get('to') or '').strip()
+        virtual_only = (request.args.get('virtual') or '').strip().lower() in ['1', 'true', 'yes']
+
         current_date = datetime.utcnow().date()
         events_result = []
         events = []
+
+        where_clauses = ["(status = 'upcoming' OR status IS NULL)", "date(event_date) >= :current_date"]
+        params = {'current_date': current_date}
+
+        if state_filter:
+            where_clauses.append("LOWER(state) = LOWER(:state)")
+            params['state'] = state_filter
+        if city_filter:
+            where_clauses.append("LOWER(city) = LOWER(:city)")
+            params['city'] = city_filter
+        if type_filter:
+            where_clauses.append("LOWER(event_type) = LOWER(:event_type)")
+            params['event_type'] = type_filter
+        if from_date:
+            where_clauses.append("date(event_date) >= :from_date")
+            params['from_date'] = from_date
+        if to_date:
+            where_clauses.append("date(event_date) <= :to_date")
+            params['to_date'] = to_date
+        if virtual_only:
+            where_clauses.append("is_virtual = 1")
+        if keyword:
+            # Keyword search across multiple text columns
+            where_clauses.append("(LOWER(event_title) LIKE :kw OR LOWER(organizer) LIKE :kw OR LOWER(description) LIKE :kw OR LOWER(topics) LIKE :kw)")
+            params['kw'] = f"%{keyword}%"
+
+        final_where = ' AND '.join(where_clauses)
+
+        query = f'''SELECT id, event_title, organizer, event_date, event_time, city, state, venue_name, event_type,
+                           description, topics, registration_link, status, is_virtual
+                    FROM industry_days
+                    WHERE {final_where}
+                    ORDER BY date(event_date) ASC, state ASC
+                    LIMIT 300'''  # Slightly higher limit due to nationwide scope
         try:
-            # First attempt: new schema (event_title, venue_name, registration_link, etc.)
-            events_result = db.session.execute(text('''
-                SELECT id, event_title, organizer, event_date, event_time, city, state, venue_name, event_type, description,
-                       topics, registration_link, status
-                FROM industry_days
-                WHERE (status = 'upcoming' OR status IS NULL) AND date(event_date) >= :current_date
-                ORDER BY date(event_date) ASC, state ASC
-                LIMIT 150
-            '''), {'current_date': current_date}).fetchall()
+            events_result = db.session.execute(text(query), params).fetchall()
             schema_version = 'new'
         except Exception as inner_e:
-            # Fallback: legacy schema attempt (title / venue / registration_url naming)
+            # Fallback legacy contracts if industry_days unavailable
             try:
-                events_result = db.session.execute(text('''
-                    SELECT id, title AS event_title, agency AS organizer, deadline AS event_date, NULL AS event_time,
-                           location AS city, '' AS state, NULL AS venue_name, 'Industry Day' AS event_type, description,
-                           NULL AS topics, website_url AS registration_link, 'upcoming' AS status
-                    FROM contracts
-                    WHERE deadline IS NOT NULL AND date(deadline) >= :current_date
-                    ORDER BY date(deadline) ASC
-                    LIMIT 50
-                '''), {'current_date': current_date}).fetchall()
+                legacy_query = '''SELECT id, title AS event_title, agency AS organizer, deadline AS event_date, NULL AS event_time,
+                                          location AS city, '' AS state, NULL AS venue_name, 'Industry Day' AS event_type, description,
+                                          '' AS topics, website_url AS registration_link, 'upcoming' AS status, 0 as is_virtual
+                                   FROM contracts
+                                   WHERE deadline IS NOT NULL AND date(deadline) >= :current_date
+                                   ORDER BY date(deadline) ASC
+                                   LIMIT 50'''
+                events_result = db.session.execute(text(legacy_query), {'current_date': current_date}).fetchall()
                 schema_version = 'legacy-contracts'
             except Exception as legacy_e:
                 print(f"Industry days events query error: {inner_e} / {legacy_e}")
@@ -12917,15 +12950,27 @@ def industry_days_events():
                 'description': getattr(row, 'description', None) or 'Contact organizer for details',
                 'type': event_type,
                 'topics': topics_list,
-                'cost': 'Free (Registration Required)',  # cost not stored yet
-                'url': reg_link
+                'cost': 'Free (Registration Required)',  # Placeholder
+                'url': reg_link,
+                'virtual': getattr(row, 'is_virtual', 0) == 1
             })
         
         # If no events found, show clean empty state
         if not events:
             return render_template('industry_days_events.html', events=[], no_events=True, schema_version=schema_version)
 
-        return render_template('industry_days_events.html', events=events, schema_version=schema_version)
+        # Preserve filter selections in template context
+        filter_state = {
+            'state': state_filter,
+            'city': city_filter,
+            'event_type': type_filter,
+            'q': keyword,
+            'from': from_date,
+            'to': to_date,
+            'virtual': virtual_only
+        }
+
+        return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
@@ -16349,8 +16394,9 @@ def mailbox():
     is_admin = session.get('is_admin', False)
     
     # Get unread count
+    # SQLite portability: use = 1 instead of = TRUE
     unread_count = db.session.execute(text(
-        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = FALSE"
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = 1"
     ), {'user_id': user_id}).scalar() or 0
     
     # Get messages based on folder
@@ -16388,11 +16434,11 @@ def mailbox():
             "FROM messages m "
             "JOIN leads sender ON m.sender_id = sender.id "
             "JOIN leads recipient ON m.recipient_id = recipient.id "
-            "WHERE m.is_admin_message = TRUE "
+            "WHERE m.is_admin_message = 1 "
             "ORDER BY m.created_at DESC "
             "LIMIT :limit OFFSET :offset"
         )
-        count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = TRUE"
+        count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = 1"
     else:
         return redirect(url_for('mailbox'))
     

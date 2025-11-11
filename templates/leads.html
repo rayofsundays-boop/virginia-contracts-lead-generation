@@ -13,7 +13,7 @@
                     data-bs-target="#post-construction" type="button" role="tab" 
                     aria-controls="post-construction" aria-selected="true">
                 🏗️ Post Construction Cleanup
-                <span class="badge bg-success ms-2">{{ post_construction_leads|length }}</span>
+                <span class="badge bg-success text-dark ms-2" style="background-color:#a3e635 !important;">{{ post_construction_leads|length }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -21,7 +21,7 @@
                     data-bs-target="#office-cleaning" type="button" role="tab" 
                     aria-controls="office-cleaning" aria-selected="false">
                 🏢 Office Cleaning
-                <span class="badge bg-info ms-2">{{ office_cleaning_leads|length }}</span>
+                <span class="badge bg-info text-dark ms-2" style="background-color:#7dd3fc !important;">{{ office_cleaning_leads|length }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -29,7 +29,7 @@
                     data-bs-target="#all-leads" type="button" role="tab" 
                     aria-controls="all-leads" aria-selected="false">
                 📋 All Supply Contracts
-                <span class="badge bg-warning ms-2">{{ all_supply_leads|length }}</span>
+                <span class="badge bg-warning text-dark ms-2">{{ all_supply_leads|length }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -37,7 +37,7 @@
                     data-bs-target="#companies" type="button" role="tab" 
                     aria-controls="companies" aria-selected="false">
                 🏭 Registered Companies
-                <span class="badge bg-primary ms-2">{{ leads|length }}</span>
+                <span class="badge bg-primary ms-2" style="background-color:#1d4ed8 !important;">{{ leads|length }}</span>
             </button>
         </li>
     </ul>
