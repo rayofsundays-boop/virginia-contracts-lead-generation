@@ -522,7 +522,10 @@
         }
     </style>
 </head>
-<body>
+<body class="{% if session.get('user_email') %}portal-enabled{% endif %}">
+    {% if session.get('user_email') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+    {% endif %}
     <!-- Cookie Consent Banner -->
     <div class="cookie-consent-banner" id="cookieConsent">
         <div class="container">

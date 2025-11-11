@@ -69,25 +69,37 @@
     </div>
     {% endif %}
 
-    <!-- Welcome Header -->
-    <div class="row mb-4">
+    <!-- Welcome Header (Sleek Portal Style) -->
+    <div class="row mb-3">
         <div class="col-12">
-            <div class="card shadow-sm bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <div class="card-body py-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="mb-2">
-                                <i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ session.get('user_email').split('@')[0].title() }}!
-                            </h2>
-                            <p class="mb-0 opacity-75">Here's your lead generation command center</p>
+            <div class="portal-header-band">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1"><i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ session.get('user_email').split('@')[0].title() }}!</h2>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="stat-pill"><i class="fas fa-flag text-white-50"></i> {{ stats.government_contracts or 0 }} Gov</span>
+                            <span class="stat-pill"><i class="fas fa-bolt text-white-50"></i> {{ stats.quick_wins or 0 }} Quick Wins</span>
+                            <span class="stat-pill"><i class="fas fa-building text-white-50"></i> {{ stats.commercial_leads or 0 }} Commercial</span>
                         </div>
-                        <div class="text-end">
-                            <div class="display-6 mb-0">{{ stats.total_leads or 0 }}</div>
-                            <small>Total Opportunities</small>
-                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="display-6 mb-0">{{ stats.total_leads or 0 }}</div>
+                        <small>Total Opportunities</small>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Portal Subnav -->
+    <div class="container px-0 mb-3">
+        <div class="portal-subnav">
+            <a href="{{ url_for('customer_dashboard') }}" class="{% if request.endpoint == 'customer_dashboard' %}active{% endif %}"><i class="fas fa-gauge"></i> Dashboard</a>
+            <a href="{{ url_for('customer_leads') }}" class="{% if request.endpoint == 'customer_leads' %}active{% endif %}"><i class="fas fa-briefcase"></i> Leads</a>
+            <a href="{{ url_for('my_messages') }}" class="{% if request.endpoint == 'my_messages' %}active{% endif %}"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="{{ url_for('pricing_calculator') }}" class="{% if request.endpoint == 'pricing_calculator' %}active{% endif %}"><i class="fas fa-calculator"></i> Calculator</a>
+            <a href="{{ url_for('resource_toolbox') }}" class="{% if request.endpoint == 'resource_toolbox' %}active{% endif %}"><i class="fas fa-toolbox"></i> Toolbox</a>
+            <a href="{{ url_for('state_procurement_portals') }}" class="{% if request.endpoint == 'state_procurement_portals' %}active{% endif %}"><i class="fas fa-building"></i> Portals</a>
         </div>
     </div>
 
@@ -116,7 +128,7 @@
                                 {% endif %}
                                 <div class="d-flex gap-2">
                                     <a href="{{ rec.url }}" class="btn btn-sm btn-primary">View Details</a>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="saveLead('{{ rec.type }}', {{ rec.id }})">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="saveLead('{{ rec.type }}', '{{ rec.id }}')">
                                         <i class="fas fa-bookmark"></i>
                                     </button>
                                 </div>
@@ -190,35 +202,38 @@
     <div class="row g-4">
         <!-- Quick Actions -->
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100 portal-card hoverable">
                 <div class="card-header bg-white border-0 pt-4">
                     <h5 class="mb-0 fw-bold">
                         <i class="fas fa-rocket me-2 text-primary"></i>Quick Actions
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="{{ url_for('customer_leads') }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-list me-2"></i>View All Leads
+                    <div class="quick-actions-grid">
+                        <a href="{{ url_for('customer_leads') }}" class="quick-action">
+                            <span class="label">Leads</span>
+                            <strong><i class="fas fa-list me-2"></i>View All Leads</strong>
                         </a>
-                        <a href="{{ url_for('quick_wins') }}" class="btn btn-danger btn-lg">
-                            <i class="fas fa-bolt me-2"></i>Quick Wins
+                        <a href="{{ url_for('quick_wins') }}" class="quick-action">
+                            <span class="label">Opportunities</span>
+                            <strong><i class="fas fa-bolt me-2"></i>Quick Wins</strong>
                         </a>
-                        <a href="{{ url_for('saved_leads') }}" class="btn btn-warning btn-lg">
-                            <i class="fas fa-bookmark me-2"></i>Saved Leads
-                            {% if saved_leads_count > 0 %}
-                            <span class="badge bg-white text-warning">{{ saved_leads_count }}</span>
-                            {% endif %}
+                        <a href="{{ url_for('saved_leads') }}" class="quick-action">
+                            <span class="label">Bookmarks</span>
+                            <strong><i class="fas fa-bookmark me-2"></i>Saved Leads {% if saved_leads_count > 0 %}<span class="badge bg-primary ms-1">{{ saved_leads_count }}</span>{% endif %}</strong>
                         </a>
-                        <a href="{{ url_for('customer_dashboard') }}#opportunities" class="btn btn-info btn-lg text-white">
-                            <i class="fas fa-fire me-2"></i>All Opportunities
+                        <a href="{{ url_for('customer_dashboard') }}#opportunities" class="quick-action">
+                            <span class="label">Explore</span>
+                            <strong><i class="fas fa-fire me-2"></i>All Opportunities</strong>
                         </a>
-                        <a href="{{ url_for('mailbox') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-envelope me-2"></i>Mailbox
+                        <a href="{{ url_for('mailbox') }}" class="quick-action">
+                            <span class="label">Messages</span>
+                            <strong><i class="fas fa-envelope me-2"></i>Mailbox</strong>
                         </a>
-                        <button onclick="showInvoiceManager()" class="btn btn-outline-success btn-lg">
-                            <i class="fas fa-file-invoice me-2"></i>Manage Invoices
-                        </button>
+                        <a href="#" onclick="showInvoiceManager()" class="quick-action">
+                            <span class="label">Billing</span>
+                            <strong><i class="fas fa-file-invoice me-2"></i>Manage Invoices</strong>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -386,7 +401,7 @@
                                     <h6 class="mb-1">Kabbage</h6>
                                     <small class="text-muted">Fast business lines of credit for contractors</small>
                                 </div>
-                                <i class="fas fa="external-link-alt text-muted"></i>
+                                <i class="fas fa-external-link-alt text-muted"></i>
                             </div>
                         </a>
                         <a href="https://www.fundbox.com" target="_blank" class="list-group-item list-group-item-action border-0 px-0">
