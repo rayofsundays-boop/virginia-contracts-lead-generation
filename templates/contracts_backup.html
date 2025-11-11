@@ -18,7 +18,7 @@
                 {% endfor %}
             </select>
             {% if current_filter %}
-                <a href="{{ url_for('contracts') }}" class="btn btn-outline-secondary">Clear</a>
+                <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-secondary">Federal</a>
             {% endif %}
         </form>
     </div>
@@ -100,7 +100,7 @@
         <div class="alert alert-warning">
             <h4>No contracts found</h4>
             {% if current_filter %}
-                <p>No contracts found for {{ current_filter }}. <a href="{{ url_for('contracts') }}">View all contracts</a></p>
+                <p>No contracts found for {{ current_filter }}. <a href="{{ url_for('federal_contracts') }}">View federal opportunities</a></p>
             {% else %}
                 <p>No contract opportunities are currently available. Check back soon for updates.</p>
             {% endif %}

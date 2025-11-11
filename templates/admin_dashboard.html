@@ -818,7 +818,8 @@ function rejectRequest(type, id, name) {
 
 // Lead management functions
 function viewLeadDetails(leadId) {
-    window.open(`/contracts?id=${leadId}`, '_blank');
+    // Local contracts page retired; open federal contracts base instead
+    window.open(`/federal-contracts`, '_blank');
 }
 
 function copyLeadInfo(leadId) {

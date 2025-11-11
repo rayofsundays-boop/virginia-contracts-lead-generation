@@ -194,7 +194,8 @@ function handleSignIn() {
                 if (data.user_type === 'premium') {
                     window.location.href = '/dashboard';
                 } else {
-                    window.location.href = '/contracts?welcome=true';
+                    // Redirect non-premium users to federal contracts (local/state retired)
+                    window.location.href = '/federal-contracts?welcome=true';
                 }
             }, 1500);
         } else {

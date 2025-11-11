@@ -9,7 +9,7 @@
                 <h1 class="display-4">Virginia Government Contracts</h1>
                 <p class="lead">Discover cleaning and maintenance contract opportunities across Hampton, Suffolk, Virginia Beach, Newport News, and Williamsburg.</p>
                 <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
-                <a href="{{ url_for('contracts') }}" class="btn btn-outline-light btn-lg ms-2">View All Contracts</a>
+                <a href="{{ url_for('federal_contracts') }}" class="btn btn-outline-light btn-lg ms-2">View Federal Contracts</a>
             </div>
         </div>
     </div>
@@ -77,7 +77,7 @@
         </div>
         
         <div class="text-center mt-4">
-            <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg">View All Contracts</a>
+            <a href="{{ url_for('federal_contracts') }}" class="btn btn-primary btn-lg">View Federal Contracts</a>
         </div>
     {% else %}
         <div class="alert alert-info">
