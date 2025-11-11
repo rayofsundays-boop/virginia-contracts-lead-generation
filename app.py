@@ -18617,6 +18617,8 @@ try:
             # AUTOINCREMENT is unnecessary and can trigger errors if table previously defined differently.
             id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
             bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
+            reg_default = 'TRUE' if is_postgres else '1'
+            virt_default = 'FALSE' if is_postgres else '0'
             # Use a portable default timestamp expression
             created_default = 'CURRENT_TIMESTAMP'
 
@@ -18635,14 +18637,14 @@ try:
                     event_type TEXT DEFAULT 'Industry Day',
                     description TEXT,
                     target_audience TEXT,
-                    registration_required {bool_type} DEFAULT 1,
+                    registration_required {bool_type} DEFAULT {reg_default},
                     registration_deadline DATE,
                     registration_link TEXT,
                     contact_name TEXT,
                     contact_email TEXT,
                     contact_phone TEXT,
                     topics TEXT,
-                    is_virtual {bool_type} DEFAULT 0,
+                    is_virtual {bool_type} DEFAULT {virt_default},
                     virtual_link TEXT,
                     attachments TEXT,
                     status TEXT DEFAULT 'upcoming',
