@@ -13139,6 +13139,49 @@ def toggle_admin_privilege():
 def industry_days_events():
     """Display networking and bidding events for contractors - All 50 States"""
     try:
+        # Ensure industry_days table exists (portable across SQLite/Postgres)
+        try:
+            is_postgres = 'postgresql' in str(db.engine.url)
+            id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
+            bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
+            reg_default = 'TRUE' if is_postgres else '1'
+            virt_default = 'FALSE' if is_postgres else '0'
+            created_default = 'CURRENT_TIMESTAMP'
+
+            ddl = f'''CREATE TABLE IF NOT EXISTS industry_days (
+                id {id_type},
+                event_title TEXT NOT NULL,
+                organizer TEXT NOT NULL,
+                organizer_type TEXT,
+                event_date DATE NOT NULL,
+                event_time TEXT,
+                location TEXT,
+                city TEXT,
+                state TEXT,
+                venue_name TEXT,
+                event_type TEXT DEFAULT 'Industry Day',
+                description TEXT,
+                target_audience TEXT,
+                registration_required {bool_type} DEFAULT {reg_default},
+                registration_deadline DATE,
+                registration_link TEXT,
+                contact_name TEXT,
+                contact_email TEXT,
+                contact_phone TEXT,
+                topics TEXT,
+                is_virtual {bool_type} DEFAULT {virt_default},
+                virtual_link TEXT,
+                attachments TEXT,
+                status TEXT DEFAULT 'upcoming',
+                created_at TIMESTAMP DEFAULT {created_default}
+            )'''
+            db.session.execute(text(ddl))
+            db.session.commit()
+        except Exception:
+            # Non-fatal: fall through; legacy fallback below will handle if needed
+            db.session.rollback()
+            pass
+
         # Determine SQL dialect for portable date/boolean expressions
         is_postgres = 'postgresql' in str(db.engine.url)
         date_expr = 'event_date' if is_postgres else 'date(event_date)'
@@ -13196,6 +13239,77 @@ def industry_days_events():
             schema_version = 'new'
             # If table exists but has no rows, attempt one-time seed and retry
             if not events_result:
+                # Secondary dynamic extraction from federal_contracts for implicit industry-related events
+                # This supplements static seeding and reduces "No Events" occurrences when table is empty.
+                try:
+                    fc_keywords = ['industry day', 'pre-bid', 'pre bid', 'site visit', 'conference', 'vendor outreach', 'supplier outreach']
+                    fc_query = text('''SELECT id, title, agency, posted_date, location, description, website_url
+                                        FROM federal_contracts
+                                        WHERE posted_date IS NOT NULL AND posted_date >= :cutoff
+                                        ORDER BY posted_date DESC LIMIT 150''')
+                    fc_rows = db.session.execute(fc_query, {'cutoff': datetime.utcnow().date() - timedelta(days=45)}).fetchall()
+                    dynamic_events = []
+                    for r in fc_rows:
+                        title_lower = (r.title or '').lower()
+                        if any(k in title_lower for k in fc_keywords):
+                            # Attempt simple date inference: use posted_date + 14 days as placeholder if no explicit date in title
+                            evt_date = getattr(r, 'posted_date', None)
+                            if not evt_date:
+                                evt_date = datetime.utcnow().date() + timedelta(days=14)
+                            # Compose location breakdown
+                            loc = (r.location or '')
+                            city = ''
+                            state = ''
+                            if loc:
+                                parts = [p.strip() for p in loc.split(',')]
+                                if len(parts) >= 2:
+                                    city = parts[-2]
+                                    state = parts[-1][:2].upper() if len(parts[-1]) >=2 else parts[-1]
+                            dynamic_events.append({
+                                'event_title': r.title or 'Industry Engagement',
+                                'organizer': r.agency or 'Federal Agency',
+                                'organizer_type': 'Federal Opportunity',
+                                'event_date': evt_date.strftime('%Y-%m-%d') if hasattr(evt_date, 'strftime') else str(evt_date),
+                                'event_time': None,
+                                'location': loc,
+                                'city': city,
+                                'state': state,
+                                'venue_name': None,
+                                'event_type': 'Industry Day' if 'industry day' in title_lower else 'Procurement Event',
+                                'description': r.description or 'See solicitation details for engagement information.',
+                                'target_audience': 'Contractors',
+                                'registration_required': False,
+                                'registration_deadline': None,
+                                'registration_link': r.website_url or '#',
+                                'contact_name': None,
+                                'contact_email': None,
+                                'contact_phone': None,
+                                'topics': 'Federal contracting,janitorial services,market research',
+                                'is_virtual': False,
+                                'virtual_link': None,
+                                'attachments': None,
+                                'status': 'upcoming'
+                            })
+                    if dynamic_events:
+                        insert_sql_dyn = text('''INSERT INTO industry_days (
+                            event_title, organizer, organizer_type, event_date, event_time, location, city, state, venue_name,
+                            event_type, description, target_audience, registration_required, registration_deadline, registration_link,
+                            contact_name, contact_email, contact_phone, topics, is_virtual, virtual_link, attachments, status
+                        ) VALUES (
+                            :event_title, :organizer, :organizer_type, :event_date, :event_time, :location, :city, :state, :venue_name,
+                            :event_type, :description, :target_audience, :registration_required, :registration_deadline, :registration_link,
+                            :contact_name, :contact_email, :contact_phone, :topics, :is_virtual, :virtual_link, :attachments, :status
+                        )''')
+                        for evd in dynamic_events[:25]:  # limit initial auto-import to 25
+                            try:
+                                db.session.execute(insert_sql_dyn, evd)
+                            except Exception:
+                                db.session.rollback()
+                        db.session.commit()
+                        events_result = db.session.execute(text(query), params).fetchall()
+                except Exception as fed_extract_err:
+                    # Non-fatal; proceed to seeding logic below
+                    print(f"Industry days dynamic extraction error: {fed_extract_err}")
                 try:
                     total_events = db.session.execute(text('SELECT COUNT(*) FROM industry_days')).scalar() or 0
                 except Exception:
