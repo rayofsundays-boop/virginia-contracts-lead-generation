@@ -18613,9 +18613,12 @@ try:
         with app.app_context():
             # Portable table creation (SQLite/PostgreSQL)
             is_postgres = 'postgresql' in str(db.engine.url)
-            id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY AUTOINCREMENT'
+            # Use INTEGER PRIMARY KEY (without AUTOINCREMENT) for SQLite to avoid syntax edge cases
+            # AUTOINCREMENT is unnecessary and can trigger errors if table previously defined differently.
+            id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
             bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
-            created_default = 'CURRENT_TIMESTAMP' if is_postgres else "datetime('now')"
+            # Use a portable default timestamp expression
+            created_default = 'CURRENT_TIMESTAMP'
 
             create_sql = f'''
                 CREATE TABLE IF NOT EXISTS industry_days (
