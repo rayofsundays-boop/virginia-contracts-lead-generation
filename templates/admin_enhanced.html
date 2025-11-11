@@ -4,46 +4,89 @@
 
 {% block content %}
 <style>
+:root {
+    --admin-bg: #f8f9fa;
+    --sidebar-bg: #ffffff;
+    --sidebar-link-color: #555;
+    --sidebar-link-hover-bg: #f0f2f5;
+    --sidebar-link-active-bg: #e9ecef;
+    --sidebar-link-active-color: #007bff;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+}
+
+body {
+    background-color: var(--admin-bg);
+}
+
 .admin-sidebar {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 70px); /* Adjust for navbar height */
     position: sticky;
-    top: 80px;
+    top: 70px;
     overflow-y: auto;
-    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 2px 0 15px var(--shadow-color);
 }
 
 .admin-sidebar .nav-link {
-    color: rgba(255,255,255,0.8);
-    padding: 15px 20px;
+    color: var(--sidebar-link-color);
+    padding: 12px 20px;
     border-left: 3px solid transparent;
     transition: all 0.3s ease;
+    font-weight: 500;
 }
 
-.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link:hover {
+    background-color: var(--sidebar-link-hover-bg);
+    color: var(--sidebar-link-active-color);
+}
+
 .admin-sidebar .nav-link.active {
-    color: white;
-    background: rgba(255,255,255,0.1);
-    border-left-color: #3498db;
+    color: var(--sidebar-link-active-color);
+    background-color: var(--sidebar-link-active-bg);
+    border-left-color: var(--sidebar-link-active-color);
+    font-weight: 600;
 }
 
 .admin-sidebar .nav-link i {
     width: 25px;
-    margin-right: 10px;
+    margin-right: 12px;
+    color: #888;
+    transition: color 0.3s ease;
+}
+
+.admin-sidebar .nav-link.active i,
+.admin-sidebar .nav-link:hover i {
+    color: var(--sidebar-link-active-color);
+}
+
+.sidebar-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    padding: 15px 20px 5px;
 }
 
 .stat-card {
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .badge-status {
-    padding: 5px 10px;
-    border-radius: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 </style>
 
@@ -52,15 +95,15 @@
         <!-- Left Sidebar -->
         <div class="col-md-2 p-0">
             <div class="admin-sidebar">
-                <div class="p-4 text-center border-bottom" style="background: rgba(0,0,0,0.2);">
-                    <i class="fas fa-shield-alt fa-3x text-white mb-2"></i>
-                    <h5 class="text-white mb-1">Admin Panel</h5>
-                    <small class="text-white-50">{{ session.get('user_email') }}</small>
+                <div class="p-4 text-center border-bottom">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-2"></i>
+                    <h5 class="mb-1">Admin Panel</h5>
+                    <small class="text-muted">{{ session.get('user_email') }}</small>
                 </div>
                 
-                <nav class="nav flex-column">
+                <nav class="nav flex-column pt-3">
                     <!-- Overview -->
-                    <div class="px-3 py-2 text-white-50" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <div class="sidebar-heading">
                         Overview
                     </div>
                     <a class="nav-link {% if section == 'dashboard' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='dashboard') }}">
@@ -71,7 +114,7 @@
                     </a>
                     
                     <!-- User Management -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <div class="sidebar-heading mt-2">
                         User Management
                     </div>
                     <a class="nav-link {% if section == 'users' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='users') }}">
@@ -85,7 +128,7 @@
                     </a>
                     
                     <!-- Financial -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <div class="sidebar-heading mt-2">
                         Financial
                     </div>
                     <a class="nav-link {% if section == 'revenue' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='revenue') }}">
@@ -96,112 +139,34 @@
                     </a>
                     
                     <!-- Content & Communication -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <div class="sidebar-heading mt-2">
                         Lead Management
                     </div>
-                    <a class="nav-link {% if section == 'edit-leads' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='edit-leads') }}">
-                        <i class="fas fa-users-cog"></i>Edit Customer Leads
+                    <a class="nav-link {% if section == 'add-commercial' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='add-commercial') }}">
+                        <i class="fas fa-plus-circle"></i>Add Commercial Lead
                     </a>
-                    <a class="nav-link {% if section == 'edit-commercial' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='edit-commercial') }}">
-                        <i class="fas fa-building"></i>Edit Commercial Requests
+                    <a class="nav-link {% if section == 'review-commercial' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='review-commercial') }}">
+                        <i class="fas fa-check-double"></i>Review Commercial
                     </a>
-                    <a class="nav-link {% if section == 'edit-residential' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='edit-residential') }}">
-                        <i class="fas fa-home"></i>Edit Residential Leads
+                     <a class="nav-link {% if section == 'upload-csv' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='upload-csv') }}">
+                        <i class="fas fa-file-csv"></i>Upload Contracts
                     </a>
-                    
-                    <!-- Content & Communication -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        Communication
+
+                    <!-- System -->
+                    <div class="sidebar-heading mt-2">
+                        System & Tools
                     </div>
-                    <a class="nav-link {% if section == 'messages' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='messages') }}">
-                        <i class="fas fa-envelope"></i>Messages
-                        {% if unread_admin_messages > 0 %}
-                        <span class="badge bg-danger">{{ unread_admin_messages }}</span>
-                        {% endif %}
+                    <a class="nav-link {% if section == 'url-automation' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='url-automation') }}">
+                        <i class="fas fa-robot"></i>URL Automation
                     </a>
-                    <a class="nav-link {% if section == 'proposals' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='proposals') }}">
-                        <i class="fas fa-file-alt"></i>Proposal Writer Portal
-                        {% if pending_proposals > 0 %}
-                        <span class="badge bg-warning">{{ pending_proposals }}</span>
-                        {% endif %}
+                     <a class="nav-link {% if section == 'track-all-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='track-all-urls') }}">
+                        <i class="fas fa-link"></i>URL Analytics
                     </a>
-                    
-                    <!-- Branding & Resources -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        Branding & Resources
-                    </div>
-                    <a class="nav-link" href="https://www.canva.com" target="_blank">
-                        <i class="fas fa-palette"></i>Branding Materials <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                    <a class="nav-link {% if section == 'send-email' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='send-email') }}">
+                        <i class="fas fa-envelope"></i>Bulk Email
                     </a>
-                    
-                    <!-- Analytics -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        Analytics
-                    </div>
-                    <a class="nav-link {% if section == 'analytics' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='analytics') }}">
-                        <i class="fas fa-chart-line"></i>Analytics & Metrics
-                    </a>
-                    <a class="nav-link {% if section == 'surveys' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='surveys') }}">
-                        <i class="fas fa-poll"></i>User Surveys
-                    </a>
-                    <a class="nav-link {% if section == 'logs' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='logs') }}">
-                        <i class="fas fa-history"></i>Activity Logs
-                    </a>
-                    
-                    <!-- Settings -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        Settings
-                    </div>
-                    <a class="nav-link {% if section == 'settings' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='settings') }}">
-                        <i class="fas fa-cog"></i>System Settings
-                    </a>
-                    <a class="nav-link {% if section == 'manage-admins' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='manage-admins') }}">
-                        <i class="fas fa-user-shield"></i>Manage Admins
-                    </a>
-                    
-                    <!-- Web Scrapers -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        <i class="fas fa-robot"></i> Web Scrapers
-                    </div>
-                    <a class="nav-link {% if section == 'va-builders-scraper' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='va-builders-scraper') }}">
-                        <i class="fas fa-hammer"></i>VA Builders Summit
-                    </a>
-                    <a class="nav-link {% if section == 'industry-days-scraper' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='industry-days-scraper') }}">
-                        <i class="fas fa-flag-usa"></i>Industry Days (50 States)
-                    </a>
-                    
-                    <!-- System Tools -->
-                    <div class="px-3 py-2 text-white-50 mt-2" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                        System Tools
-                    </div>
-                    <a class="nav-link {% if section == 'all-contracts' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='all-contracts') }}">
-                        <i class="fas fa-file-contract"></i>All Contracts
-                    </a>
-                    <a class="nav-link {% if section == 'upload-csv' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='upload-csv') }}">
-                        <i class="fas fa-file-upload"></i>Upload CSV
-                    </a>
-                    <a class="nav-link {% if section == 'manage-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='manage-urls') }}">
-                        <i class="fas fa-edit"></i>Manage SAM.gov URLs
-                    </a>
-                    <a class="nav-link {% if section == 'link-doctor' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='link-doctor') }}">
-                        <i class="fas fa-stethoscope"></i>Link Doctor
-                    </a>
-                    <a class="nav-link {% if section == 'track-all-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='track-all-urls') }}">
-                        <i class="fas fa-globe"></i>Track All URLs
-                    </a>
-                    <a class="nav-link {% if section == 'populate-urls' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='populate-urls') }}">
-                        <i class="fas fa-magic"></i>Populate Missing URLs
-                    </a>
-                    <a class="nav-link" href="{{ url_for('admin_fix_sam_urls') }}" onclick="return confirm('This will update all SAM.gov URLs for federal contracts. Continue?');">
-                        <i class="fas fa-sync-alt"></i>Auto-Update All URLs
-                    </a>
-                    
-                    <div class="dropdown-divider bg-white-50"></div>
-                    <a class="nav-link" href="{{ url_for('mailbox') }}">
-                        <i class="fas fa-inbox"></i>My Mailbox
-                    </a>
-                    <a class="nav-link" href="{{ url_for('customer_leads') }}">
-                        <i class="fas fa-home"></i>Main Site
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i>Logout
                     </a>
                 </nav>
             </div>
