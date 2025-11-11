@@ -4352,7 +4352,7 @@ def saved_leads():
         # Get saved leads with details
         # Schema uses saved_at (not created_at); select with alias for clarity
         saved_items = db.session.execute(text('''
-            SELECT sl.id, sl.lead_type, sl.lead_id, sl.notes, sl.saved_at AS saved_at
+            SELECT sl.id, sl.lead_type, sl.lead_id, COALESCE(sl.notes, '') AS notes, sl.saved_at AS saved_at
             FROM saved_leads sl
             WHERE sl.user_email = :email
             ORDER BY sl.saved_at DESC
@@ -4361,12 +4361,28 @@ def saved_leads():
         # Fetch full lead details for each saved lead
         leads_with_details = []
         for item in saved_items:
-            lead_details = get_lead_details(item[1], item[2])
+            lead_type = item[1]
+            lead_id = item[2]
+            lead_details = get_lead_details(lead_type, lead_id)
             if lead_details:
                 lead_details['saved_id'] = item[0]
-                lead_details['notes'] = item[3]
-                lead_details['saved_at'] = item[4]  # saved_at alias
+                lead_details['notes'] = item[3] or ''
+                lead_details['saved_at'] = item[4]
                 leads_with_details.append(lead_details)
+            else:
+                # If original lead is missing (deleted), keep minimal record
+                leads_with_details.append({
+                    'saved_id': item[0],
+                    'lead_type': lead_type,
+                    'lead_id': lead_id,
+                    'title': 'Original lead removed',
+                    'description': 'This lead no longer exists in the system.',
+                    'value': 'N/A',
+                    'location': '-',
+                    'saved_at': item[4],
+                    'url': None,
+                    'status': 'Removed'
+                })
         
         return render_template('saved_leads.html', saved_leads=leads_with_details)
     except Exception as e:
