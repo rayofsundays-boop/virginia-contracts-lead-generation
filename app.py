@@ -4749,95 +4749,9 @@ def paypal_webhook():
 
 @app.route('/contracts')
 def contracts():
-    location_filter = request.args.get('location', '')
-    page = max(int(request.args.get('page', 1) or 1), 1)
-    per_page = int(request.args.get('per_page', 12) or 12)
-    per_page = min(max(per_page, 6), 48)  # sane bounds
-    offset = (page - 1) * per_page
-    try:
-        # Count total with optional filter - using LOCAL contracts table
-        # Fixed: Remove invalid CAST(deadline AS DATE) - use date() function for SQLite
-        if location_filter:
-            total = db.session.execute(text('''
-                SELECT COUNT(*) FROM contracts 
-                WHERE LOWER(location) LIKE LOWER(:loc)
-                  AND title IS NOT NULL
-                  AND (deadline IS NULL OR date(deadline) >= date('now'))
-            '''), {'loc': f"%{location_filter}%"}).scalar() or 0
-            rows = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
-                FROM contracts 
-                WHERE LOWER(location) LIKE LOWER(:loc) 
-                  AND title IS NOT NULL
-                  AND (deadline IS NULL OR date(deadline) >= date('now'))
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset
-            '''), {'loc': f"%{location_filter}%", 'limit': per_page, 'offset': offset}).fetchall()
-        else:
-            total = db.session.execute(text('''
-                SELECT COUNT(*) FROM contracts 
-                WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR date(deadline) >= date('now'))
-            ''')).scalar() or 0
-            rows = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, naics_code, website_url, created_at
-                FROM contracts 
-                WHERE title IS NOT NULL
-                  AND (deadline IS NULL OR date(deadline) >= date('now'))
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset
-            '''), {'limit': per_page, 'offset': offset}).fetchall()
-
-        # For filter dropdown - using LOCAL contracts table
-        locations = [r[0] for r in db.session.execute(text('''
-            SELECT DISTINCT location FROM contracts WHERE location IS NOT NULL AND location != '' ORDER BY location
-        ''')).fetchall()]
-
-        pages = max(math.ceil(total / per_page), 1)
-        # Build prev/next URLs preserving filters
-        args_base = dict(request.args)
-        args_base.pop('page', None)
-        args_base.pop('per_page', None)
-        prev_url = url_for('contracts', page=page-1, per_page=per_page, **args_base) if page > 1 else None
-        next_url = url_for('contracts', page=page+1, per_page=per_page, **args_base) if page < pages else None
-        pagination = {
-            'page': page,
-            'per_page': per_page,
-            'total': total,
-            'pages': pages,
-            'has_prev': page > 1,
-            'has_next': page < pages,
-            'prev_url': prev_url,
-            'next_url': next_url
-        }
-        
-        # Check if user is admin or paid subscriber
-        is_admin = session.get('is_admin', False)
-        is_paid_subscriber = session.get('subscription_status') == 'paid'
-        
-        # Admin gets full access automatically
-        if is_admin:
-            is_paid_subscriber = True
-        
-        return render_template('contracts.html', 
-                               contracts=rows, 
-                               locations=locations, 
-                               current_filter=location_filter,
-                               pagination=pagination,
-                               is_paid_subscriber=is_paid_subscriber,
-                               is_admin=is_admin)
-    except Exception as e:
-        print(f"contracts page error: {e}")
-        import traceback
-        traceback.print_exc()
-        # Return empty page instead of error
-        return render_template('contracts.html', 
-                               contracts=[], 
-                               locations=[], 
-                               current_filter='',
-                               pagination={'page': 1, 'per_page': 12, 'total': 0, 'pages': 1, 'has_prev': False, 'has_next': False, 'prev_url': None, 'next_url': None},
-                               is_paid_subscriber=session.get('is_admin', False),
-                               is_admin=session.get('is_admin', False))
+    # Page retired: redirect users to federal contracts (primary government feed)
+    flash('Local & State Contracts page has been retired. Federal contracts are available.', 'success')
+    return redirect(url_for('federal_contracts'))
 
 @app.route('/state-procurement-portals')
 def state_procurement_portals():

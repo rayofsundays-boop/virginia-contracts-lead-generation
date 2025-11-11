@@ -86,7 +86,7 @@
                                         <span class="badge bg-success me-2">✨ QUICK WIN</span>
                                     {% endif %}
                                     {% if lead.source == 'government' %}
-                                        <a href="{{ url_for('contracts') }}#contract-{{ lead.id.split('_')[1] }}" class="text-dark text-decoration-none hover-underline">
+                                        <a href="{{ url_for('federal_contracts') }}" class="text-dark text-decoration-none hover-underline">
                                             {{ lead.title }}
                                         </a>
                                     {% else %}
