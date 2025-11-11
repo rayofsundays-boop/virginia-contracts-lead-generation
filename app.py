@@ -12832,36 +12832,100 @@ def toggle_admin_privilege():
 def industry_days_events():
     """Display networking and bidding events for contractors - All 50 States"""
     try:
-        # Query real events from database for all 50 states
+        # Query real events from database (schema may vary between environments)
         current_date = datetime.utcnow().date()
-        events_result = db.session.execute(text('''
-            SELECT * FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= :current_date
-            ORDER BY event_date ASC, state ASC
-            LIMIT 100
-        '''), {'current_date': current_date}).fetchall()
-        
-        # Convert to list of dicts for template compatibility
+        events_result = []
         events = []
-        for event in events_result:
+        try:
+            # First attempt: new schema (event_title, venue_name, registration_link, etc.)
+            events_result = db.session.execute(text('''
+                SELECT id, event_title, organizer, event_date, event_time, city, state, venue_name, event_type, description,
+                       topics, registration_link, status
+                FROM industry_days
+                WHERE (status = 'upcoming' OR status IS NULL) AND date(event_date) >= :current_date
+                ORDER BY date(event_date) ASC, state ASC
+                LIMIT 150
+            '''), {'current_date': current_date}).fetchall()
+            schema_version = 'new'
+        except Exception as inner_e:
+            # Fallback: legacy schema attempt (title / venue / registration_url naming)
+            try:
+                events_result = db.session.execute(text('''
+                    SELECT id, title AS event_title, agency AS organizer, deadline AS event_date, NULL AS event_time,
+                           location AS city, '' AS state, NULL AS venue_name, 'Industry Day' AS event_type, description,
+                           NULL AS topics, website_url AS registration_link, 'upcoming' AS status
+                    FROM contracts
+                    WHERE deadline IS NOT NULL AND date(deadline) >= :current_date
+                    ORDER BY date(deadline) ASC
+                    LIMIT 50
+                '''), {'current_date': current_date}).fetchall()
+                schema_version = 'legacy-contracts'
+            except Exception as legacy_e:
+                print(f"Industry days events query error: {inner_e} / {legacy_e}")
+                events_result = []
+                schema_version = 'none'
+        
+        # Convert rows to unified event dict list
+        for row in events_result:
+            # Extract topics list robustly
+            raw_topics = ''
+            for key in ('topics', 'target_industries'):
+                if hasattr(row, key):
+                    val = getattr(row, key)
+                    if val:
+                        raw_topics = val
+                        break
+            topics_list = [t.strip() for t in raw_topics.split(',') if t.strip()] if raw_topics else []
+
+            # Determine state/city/venue fields with fallbacks
+            city = getattr(row, 'city', '') or ''
+            state = getattr(row, 'state', '') or ''
+            venue = getattr(row, 'venue_name', '') or getattr(row, 'venue', '') or ''
+
+            # Date formatting
+            event_date_val = getattr(row, 'event_date', None)
+            if not event_date_val:
+                event_date_val = getattr(row, 'deadline', None)
+            if hasattr(event_date_val, 'strftime'):
+                date_display = event_date_val.strftime('%B %d, %Y')
+            else:
+                date_display = str(event_date_val) if event_date_val else 'TBD'
+
+            # Title / organizer naming differences
+            title = getattr(row, 'event_title', None) or getattr(row, 'title', None) or 'Industry Day'
+            event_type = getattr(row, 'event_type', None) or 'Industry Day'
+
+            # Registration link / URL
+            reg_link = getattr(row, 'registration_link', None) or getattr(row, 'registration_url', None) or getattr(row, 'website_url', None) or '#'
+
+            # Compose location string
+            if venue and city and state:
+                location_display = f"{venue}, {city}, {state}"
+            elif city and state:
+                location_display = f"{city}, {state}"
+            elif city:
+                location_display = city
+            else:
+                location_display = state or 'TBD'
+
             events.append({
-                'id': event.id,
-                'title': event.title,
-                'date': event.event_date.strftime('%B %d, %Y') if hasattr(event.event_date, 'strftime') else str(event.event_date),
-                'time': event.event_time or 'TBD',
-                'location': f"{event.venue}, {event.city}, {event.state}" if event.venue else f"{event.city}, {event.state}",
-                'description': event.description or 'Contact organizer for details',
-                'type': event.event_type or 'Industry Day',
-                'topics': event.target_industries.split(', ') if event.target_industries else [],
-                'cost': event.cost or 'Free (Registration Required)',
-                'url': event.registration_url or f'https://www.{event.state.lower()}.gov/procurement'
+                'id': getattr(row, 'id', None),
+                'title': title,
+                'date': date_display,
+                'time': getattr(row, 'event_time', None) or 'TBD',
+                'location': location_display,
+                'description': getattr(row, 'description', None) or 'Contact organizer for details',
+                'type': event_type,
+                'topics': topics_list,
+                'cost': 'Free (Registration Required)',  # cost not stored yet
+                'url': reg_link
             })
         
-        # If no database events, render empty state (no sample/fake events)
+        # If no events found, show clean empty state
         if not events:
-            return render_template('industry_days_events.html', events=[], no_events=True)
+            return render_template('industry_days_events.html', events=[], no_events=True, schema_version=schema_version)
 
-        return render_template('industry_days_events.html', events=events)
+        return render_template('industry_days_events.html', events=events, schema_version=schema_version)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
