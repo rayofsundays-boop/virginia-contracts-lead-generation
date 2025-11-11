@@ -241,7 +241,7 @@ def get_admin_stats_cached(cache_timestamp):
     try:
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         one_day_ago = datetime.utcnow() - timedelta(days=1)
-        
+
         stats_result = db.session.execute(text('''
             SELECT 
                 COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as paid_subscribers,
@@ -3882,7 +3882,7 @@ def customer_dashboard():
                 SELECT title, agency, location, value, posted_date, created_at,
                        'Government Contract' as lead_type, id, sam_gov_url
                 FROM federal_contracts
-                ORDER BY COALESCE(CAST(posted_date AS TIMESTAMP), created_at) DESC
+                ORDER BY created_at DESC
                 LIMIT 10
                 """
             )).fetchall()
@@ -3906,7 +3906,7 @@ def customer_dashboard():
                        'Supply Opportunity' as lead_type, id, website_url
                 FROM supply_contracts
                 WHERE status = 'open'
-                ORDER BY COALESCE(CAST(posted_date AS TIMESTAMP), created_at) DESC
+                ORDER BY created_at DESC
                 LIMIT 10
                 """
             )).fetchall()
@@ -7326,7 +7326,7 @@ def customer_leads():
                     fc.description as requirements
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
-                ORDER BY COALESCE(CAST(fc.posted_date AS TIMESTAMP), fc.created_at) DESC
+                ORDER BY fc.created_at DESC
                 LIMIT 100
             '''), {'current_date': current_date}).fetchall()
             print(f"✅ Found {len(government_leads)} government contracts")
@@ -7354,7 +7354,7 @@ def customer_leads():
                     'Active' as status,
                     supply_contracts.requirements
                 FROM supply_contracts 
-                ORDER BY COALESCE(CAST(supply_contracts.posted_date AS TIMESTAMP), supply_contracts.created_at) DESC
+                ORDER BY supply_contracts.created_at DESC
             '''), {'current_date': current_date}).fetchall()
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
@@ -9785,15 +9785,10 @@ def admin_enhanced():
 
             # Federal contracts counts (treat missing deadline or NULL as expired check safe)
             current_date = datetime.utcnow().date()
-            active_federal = safe_scalar(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= :current_date",
-                {'current_date': current_date}
-            )
+            # Avoid deadline comparisons that may fail if data types vary; compute simple totals
             total_federal = safe_scalar("SELECT COUNT(*) FROM federal_contracts")
-            expired_federal = safe_scalar(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < :current_date",
-                {'current_date': current_date}
-            )
+            active_federal = total_federal  # placeholder until deadline is normalized
+            expired_federal = 0
 
             context['active_federal_count'] = active_federal
             context['total_federal_count'] = total_federal
