@@ -17,7 +17,7 @@ Design:
 """
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Optional
 import re
 
 @dataclass
@@ -140,6 +140,59 @@ _KB: List[KBArticle] = [
             "Apply code WIN50 via banner or on <a href='/subscription'>Subscription</a>. Session tracks usage; backend switches billing plan IDs. Benefits: access to premium leads, proposal support tools, pricing intelligence."),
         followups=["Need help applying code?","Ask about plan differences","Want to know cancellation steps?"]
     ),
+    # --- Role Expansion Articles ---
+    KBArticle(
+        id="role_research_assistant",
+        title="Research Assistant Capabilities",
+        intent_tags=["research","analyst","research assistant","data"],
+        keywords=["market","trend","source","data","benchmark","industry"],
+        answer=(
+            "<strong>Research Assistant Mode:</strong><br>Use for gathering structured market context.<br>"
+            "<em>Supported tasks:</em><br>• Summarize contract notice fields (agency, NAICS, set-aside).<br>"
+            "• Suggest benchmark metrics (sq ft per FTE, cost per sq ft).<br>"
+            "• Identify missing data points to strengthen a bid (e.g., green certifications).<br>"
+            "<em>Limitations:</em> No live web crawling; relies on internal datasets and static KB references.<br>"
+            "Ask: 'Research: average janitorial cost per sq ft in suburban VA' or 'Research: key differentiators for healthcare cleaning.'"),
+        followups=["Ask benchmark labor ratios","Request NAICS explanation","Ask differentiators for sector"]
+    ),
+    KBArticle(
+        id="role_economist",
+        title="Economist / Pricing Intelligence",
+        intent_tags=["economist","economic","rates","cost model"],
+        keywords=["inflation","labor rate","wage","cost driver","margin","economic"],
+        answer=(
+            "<strong>Economist Mode:</strong><br>Focuses on cost structure sensitivity & macro factors.<br>"
+            "Key levers: labor (70–80%), supply inflation (paper/plastics), regulatory compliance (prevailing wage), regional cost-of-living multipliers.<br>"
+            "Scenario guidance: 'What if minimum wage rises 8%?' – adjust labor portion and recompute margin.<br>"
+            "Use with pricing calculator for location multipliers and competition adjustments.<br>"
+            "Provide: break-even analysis, margin range suggestions, impact of frequency changes.<br>"
+            "Ask: 'Economist: effect of +10% labor cost on monthly total for 50K sq ft school 3x/week.'"),
+        followups=["Ask break-even formula","Request margin optimization tips","Inquire inflation impact"]
+    ),
+    KBArticle(
+        id="role_proposal_manager",
+        title="Proposal Manager Guidance",
+        intent_tags=["proposal manager","manager","proposal lead"],
+        keywords=["schedule","timeline","kickoff","review","revision","submission"],
+        answer=(
+            "<strong>Proposal Manager Mode:</strong><br>Helps orchestrate the proposal lifecycle.<br>"
+            "Phases:<br>1. Kickoff (requirements read-through + compliance matrix).<br>2. Drafting (technical, management, QA).<br>3. Review cycles (red team, gold team).<br>4. Final compliance sweep & formatting.<br>5. Submission readiness & backup plan.<br>"
+            "Checklist emphasis: version control, page limits, mandatory forms, signatures, pricing consistency.<br>"
+            "Ask: 'Proposal Manager: create 5-day rush schedule for 20-page RFP.'"),
+        followups=["Ask rush schedule details","Request review cycle tips","Inquire checklist items"]
+    ),
+    KBArticle(
+        id="role_it_support",
+        title="IT / Platform Support",
+        intent_tags=["it","support","technical","bug"],
+        keywords=["login","error","cache","browser","performance","upload"],
+        answer=(
+            "<strong>IT Support Mode:</strong><br>Guides troubleshooting platform issues.<br>"
+            "Common fixes:<br>• Clear browser cache & reload if layout broken.<br>• Ensure pop-ups allowed for payment flows.<br>• Large PDF failing? Reduce size / ensure under configured limit.<br>• Authentication expired? Sign out then back in.<br>"
+            "Security reminder: Never share passwords; system stores minimal session data.<br>"
+            "Ask: 'IT: why does my proposal upload stall?' or 'IT: fix pricing calculator not loading.'"),
+        followups=["Ask file size limits","Request browser compatibility","Inquire session timeout"]
+    ),
 ]
 
 # Build fast lookup indexes
@@ -157,24 +210,31 @@ FALLBACK = (
     "I want to help but need a bit more detail. Please clarify if you're asking about pricing, proposal structure, navigation, templates, compliance, or past performance. You can also try: 'pricing strategy', 'technical approach outline', or 'where do I find templates'."
 )
 
-def get_kb_answer(user_text: str) -> Dict[str, str]:
+def get_kb_answer(user_text: str, role: Optional[str] = None) -> Dict[str, str]:
     """Return best KB answer and suggested follow-ups.
     Scoring: intent tag exact match > keyword match count > fallback.
     """
     cleaned = user_text.lower()
 
-    # Direct intent tag match
+    # Direct intent tag match (allow role prefix shorthand e.g. 'economist:' )
     for tag in _INTENT_MAP:
         if tag in cleaned:
             art = _INTENT_MAP[tag]
             return {"answer": art.answer, "followups": " | ".join(art.followups), "source": art.id}
 
-    # Keyword scoring
+    # Keyword scoring (optionally bias by role)
     scores: Dict[str, int] = {}
     words = _WORD_RE.findall(cleaned)
     for w in words:
         for art in _KEYWORD_MAP.get(w, []):
             scores[art.id] = scores.get(art.id, 0) + 1
+
+    # Role bias: add weight if role matches any intent tag of an article
+    if role:
+        r = role.lower()
+        for art in _KB:
+            if any(r in tag.lower() for tag in art.intent_tags):
+                scores[art.id] = scores.get(art.id, 0) + 2
 
     if scores:
         best_id = max(scores, key=lambda k: scores[k])

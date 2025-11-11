@@ -16499,6 +16499,7 @@ def ai_assistant_reply():
     try:
         data = request.get_json(force=True, silent=True) or {}
         user_message = (data.get('message') or '').strip()
+        role = (data.get('role') or '').strip() or None
         if not user_message:
             return jsonify({'success': False, 'error': 'Empty message'}), 400
 
@@ -16509,7 +16510,7 @@ def ai_assistant_reply():
             print(f"KB import error: {e}")
             return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
 
-        result = get_kb_answer(user_message)
+        result = get_kb_answer(user_message, role=role)
         return jsonify({
             'success': True,
             'answer': result.get('answer', ''),
