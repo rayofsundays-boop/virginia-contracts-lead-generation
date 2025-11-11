@@ -1461,6 +1461,175 @@ def update_contracts_from_usaspending():
     except Exception as e:
         print(f"❌ Error updating from USAspending.gov: {e}")
 
+
+    # NOTE: End of update_contracts_from_usaspending()
+
+# ============================================================================
+# FEDERAL CONTRACTS AUTO-REFRESH AND RELEVANCE CLEANUP (GLOBAL SCOPE)
+# ============================================================================
+
+def _extract_city_from_location(loc: str | None) -> str | None:
+    if not loc:
+        return None
+    try:
+        parts = [p.strip() for p in str(loc).split(',') if p.strip()]
+        return parts[0] if parts else None
+    except Exception:
+        return None
+
+def _matches_cleaning_keywords(text_value: str | None) -> bool:
+    if not text_value:
+        return False
+    t = text_value.lower()
+    keywords = [
+        'janitorial', 'custodial', 'cleaning', 'housekeeping', 'porter',
+        'trash', 'sanitation', 'floor care', 'carpet', 'window cleaning', 'disinfect'
+    ]
+    return any(k in t for k in keywords)
+
+def identify_stale_federal_contracts(limit: int = 200):
+    try:
+        rows = db.session.execute(text('''
+            SELECT id, notice_id, naics_code, description, sam_gov_url, location
+            FROM federal_contracts
+            WHERE (
+                sam_gov_url LIKE '%/search/%index=opp%'
+                OR (description IS NOT NULL AND length(description) < 60)
+                OR (posted_date IS NOT NULL AND posted_date < CURRENT_DATE - INTERVAL '60 days')
+                OR (naics_code IS NULL OR naics_code <> '561720')
+            )
+            AND (deadline IS NULL OR deadline >= CURRENT_DATE)
+            ORDER BY created_at DESC
+            LIMIT :limit
+        '''), {'limit': limit}).fetchall()
+        return rows or []
+    except Exception as e:
+        print(f"[auto-refresh] identify_stale_federal_contracts failed: {e}")
+        db.session.rollback()
+        return []
+
+def auto_refresh_stale_federal_contracts(limit: int = 200):
+    summary = {
+        'refreshed_count': 0,
+        'updated_urls': 0,
+        'updated_naics': 0,
+        'checked': 0
+    }
+    try:
+        try:
+            update_federal_contracts_from_datagov()
+        except Exception as e:
+            print(f"[auto-refresh] Bulk update step failed: {e}")
+
+        rows = identify_stale_federal_contracts(limit=limit)
+        summary['checked'] = len(rows)
+
+        for row in rows:
+            try:
+                row_id = row.id if hasattr(row, 'id') else row[0]
+                naics_code = (row.naics_code if hasattr(row, 'naics_code') else row[2]) or ''
+                description = row.description if hasattr(row, 'description') else row[3]
+                url = row.sam_gov_url if hasattr(row, 'sam_gov_url') else row[4]
+                location = row.location if hasattr(row, 'location') else row[5]
+
+                city = _extract_city_from_location(location)
+                new_url = _build_sam_search_url(naics_code=naics_code or '561720', city=city, state=None)
+
+                did_update_url = 0
+                did_update_naics = 0
+
+                if (not naics_code or naics_code != '561720') and _matches_cleaning_keywords(description):
+                    did_update_naics = 1
+                    db.session.execute(text('''
+                        UPDATE federal_contracts SET naics_code = '561720' WHERE id = :id
+                    '''), {'id': row_id})
+
+                if new_url and new_url != url:
+                    did_update_url = 1
+                    db.session.execute(text('''
+                        UPDATE federal_contracts SET sam_gov_url = :new_url WHERE id = :id
+                    '''), {'new_url': new_url, 'id': row_id})
+
+                if did_update_url or did_update_naics:
+                    summary['refreshed_count'] += 1
+                    summary['updated_urls'] += did_update_url
+                    summary['updated_naics'] += did_update_naics
+            except Exception as e:
+                print(f"[auto-refresh] Error refreshing contract id={getattr(row, 'id', None)}: {e}")
+                db.session.rollback()
+                continue
+
+        db.session.commit()
+        print(f"✅ Auto-refresh complete: {summary}")
+        return summary
+    except Exception as e:
+        print(f"❌ Auto-refresh failed: {e}")
+        db.session.rollback()
+        return summary
+
+def cleanup_federal_relevance(apply: bool = False, limit: int = 1000):
+    try:
+        rows = db.session.execute(text('''
+            SELECT id, naics_code, description FROM federal_contracts
+            WHERE (naics_code IS NULL OR naics_code <> '561720')
+              AND (
+                description IS NULL OR (
+                  lower(description) NOT LIKE '%janitorial%'
+                  AND lower(description) NOT LIKE '%custodial%'
+                  AND lower(description) NOT LIKE '%cleaning%'
+                  AND lower(description) NOT LIKE '%housekeeping%'
+                  AND lower(description) NOT LIKE '%porter%'
+                )
+              )
+            LIMIT :limit
+        '''), {'limit': limit}).fetchall()
+
+        to_remove = [r.id if hasattr(r, 'id') else r[0] for r in rows]
+        count = len(to_remove)
+
+        if apply and count:
+            db.session.execute(text('''
+                DELETE FROM federal_contracts WHERE id = ANY(:ids)
+            '''), {'ids': to_remove})
+            db.session.commit()
+            print(f"🧹 Removed {count} irrelevant federal rows")
+        else:
+            print(f"[dry-run] Would remove {count} irrelevant federal rows")
+
+        return {'to_remove': count, 'applied': bool(apply)}
+    except Exception as e:
+        print(f"❌ cleanup_federal_relevance failed: {e}")
+        db.session.rollback()
+        return {'to_remove': 0, 'applied': False, 'error': str(e)}
+
+@app.route('/admin/federal/refresh-stale')
+@login_required
+@admin_required
+def admin_refresh_stale_federal():
+    try:
+        limit = int(request.args.get('limit', 200))
+        result = auto_refresh_stale_federal_contracts(limit=limit)
+        flash(f"Auto-refresh complete: {result}", 'success')
+    except Exception as e:
+        flash(f"Auto-refresh failed: {e}", 'danger')
+    return redirect(url_for('admin_enhanced', section='dashboard'))
+
+@app.route('/admin/federal/cleanup-relevance')
+@login_required
+@admin_required
+def admin_cleanup_federal_relevance():
+    try:
+        apply = request.args.get('apply') in ('1', 'true', 'yes')
+        limit = int(request.args.get('limit', 1000))
+        result = cleanup_federal_relevance(apply=apply, limit=limit)
+        if result.get('applied'):
+            flash(f"Cleanup applied. Removed {result.get('to_remove', 0)} rows.", 'success')
+        else:
+            flash(f"Dry run: would remove {result.get('to_remove', 0)} rows. Append ?apply=1 to execute.", 'info')
+    except Exception as e:
+        flash(f"Cleanup failed: {e}", 'danger')
+    return redirect(url_for('admin_enhanced', section='dashboard'))
+
 def cleanup_closed_contracts():
     """Remove all closed, cancelled, and awarded contracts from local/state government contracts table"""
     try:
@@ -1645,6 +1814,13 @@ def schedule_local_gov_updates():
 def schedule_datagov_bulk_updates():
     """Run Data.gov bulk updates during off-peak hours (2 AM EST)"""
     schedule.every().day.at("02:00").do(update_federal_contracts_from_datagov)
+    # Light auto-refresh pass to improve URLs/NAICS and reduce stale flags
+    def run_auto_refresh_job():
+        try:
+            auto_refresh_stale_federal_contracts(limit=200)
+        except Exception as e:
+            print(f"[scheduler] auto_refresh_stale_federal_contracts failed: {e}")
+    schedule.every().day.at("03:30").do(run_auto_refresh_job)
     
     print("⏰ Data.gov bulk scheduler started - will update federal contracts from bulk files daily at 2 AM EST (off-peak)")
     
@@ -2578,6 +2754,10 @@ def init_postgres_db():
         db.session.commit()
         
         # Messages table for in-app messaging and notifications
+        # NOTE: Original lightweight schema used sent_at/is_admin. New unified mailbox
+        # logic (and migration file) expects created_at, is_admin_message, parent_message_id.
+        # We create the base table if missing, then run ALTERs to add any missing columns
+        # so production instances with the older schema won't 500 on mailbox queries.
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS messages
                      (id SERIAL PRIMARY KEY,
                       sender_id INTEGER,
@@ -2585,11 +2765,34 @@ def init_postgres_db():
                       subject TEXT NOT NULL,
                       body TEXT NOT NULL,
                       is_read BOOLEAN DEFAULT FALSE,
+                      -- legacy column retained for backward compatibility
                       is_admin BOOLEAN DEFAULT FALSE,
+                      -- preferred timestamp column used by mailbox queries
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      -- legacy name for timestamp kept (may be NULL); optional
                       sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       read_at TIMESTAMP,
+                      is_admin_message BOOLEAN DEFAULT FALSE,
+                      parent_message_id INTEGER,
+                      FOREIGN KEY (parent_message_id) REFERENCES messages(id) ON DELETE SET NULL,
                       FOREIGN KEY (sender_id) REFERENCES leads(id),
                       FOREIGN KEY (recipient_id) REFERENCES leads(id))'''))
+
+        # Backward-compatible migrations (SQLite/Postgres): add columns if they do not exist
+        # SQLite (prior to 3.35) doesn't support IF NOT EXISTS for ADD COLUMN, so we try/catch.
+        for alter_stmt in [
+            "ALTER TABLE messages ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE messages ADD COLUMN is_admin_message BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE messages ADD COLUMN parent_message_id INTEGER",
+            "ALTER TABLE messages ADD COLUMN sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        ]:
+            try:
+                db.session.execute(text(alter_stmt))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                # Column likely already exists; ignore
+                pass
         
         # Create indexes for better query performance
         db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_messages_recipient 
@@ -3679,7 +3882,7 @@ def customer_dashboard():
                 SELECT title, agency, location, value, posted_date, created_at,
                        'Government Contract' as lead_type, id, sam_gov_url
                 FROM federal_contracts
-                ORDER BY COALESCE(posted_date, created_at) DESC
+                ORDER BY COALESCE(CAST(posted_date AS TIMESTAMP), created_at) DESC
                 LIMIT 10
                 """
             )).fetchall()
@@ -3703,7 +3906,7 @@ def customer_dashboard():
                        'Supply Opportunity' as lead_type, id, website_url
                 FROM supply_contracts
                 WHERE status = 'open'
-                ORDER BY COALESCE(posted_date, created_at) DESC
+                ORDER BY COALESCE(CAST(posted_date AS TIMESTAMP), created_at) DESC
                 LIMIT 10
                 """
             )).fetchall()
@@ -4147,11 +4350,12 @@ def saved_leads():
         user_email = session.get('user_email')
         
         # Get saved leads with details
+        # Schema uses saved_at (not created_at); select with alias for clarity
         saved_items = db.session.execute(text('''
-            SELECT sl.id, sl.lead_type, sl.lead_id, sl.notes, sl.created_at
+            SELECT sl.id, sl.lead_type, sl.lead_id, sl.notes, sl.saved_at AS saved_at
             FROM saved_leads sl
             WHERE sl.user_email = :email
-            ORDER BY sl.created_at DESC
+            ORDER BY sl.saved_at DESC
         '''), {'email': user_email}).fetchall()
         
         # Fetch full lead details for each saved lead
@@ -4161,7 +4365,7 @@ def saved_leads():
             if lead_details:
                 lead_details['saved_id'] = item[0]
                 lead_details['notes'] = item[3]
-                lead_details['saved_at'] = item[4]
+                lead_details['saved_at'] = item[4]  # saved_at alias
                 leads_with_details.append(lead_details)
         
         return render_template('saved_leads.html', saved_leads=leads_with_details)
@@ -6777,13 +6981,25 @@ def k12_school_leads():
         flash('⚠️ K-12 School leads are a premium feature. Please upgrade your subscription to access this content.', 'warning')
         return redirect(url_for('subscription'))
     
-    # K-12 school cleaning contract opportunities
+    # Helper to extract state abbreviation from a location string like "City, ST 12345"
+    def _extract_state_abbrev(loc: str) -> str:
+        try:
+            parts = [p.strip() for p in (loc or '').split(',')]
+            if len(parts) >= 2:
+                st = parts[1].strip().split()[0]
+                return st.upper()
+            return ''
+        except Exception:
+            return ''
+
+    # Existing Virginia-focused K-12 school cleaning contract opportunities
     k12_schools = [
         {
             'id': 'k12_001',
             'school_name': 'Hampton City Schools',
             'school_type': 'Public School Division',
             'location': 'Hampton, VA 23669',
+            'state': 'VA',
             'facilities': '29 schools: 18 elementary, 5 middle, 4 high schools, 2 special centers',
             'square_footage': '2.8M sq ft total',
             'contract_value': '$3.5M - $4.2M annually',
@@ -6803,6 +7019,7 @@ def k12_school_leads():
             'school_name': 'Newport News Public Schools',
             'school_type': 'Public School Division',
             'location': 'Newport News, VA 23607',
+            'state': 'VA',
             'facilities': '41 schools: 25 elementary, 8 middle, 6 high schools, 2 alternative education',
             'square_footage': '4.2M sq ft total',
             'contract_value': '$5.0M - $6.0M annually',
@@ -6822,6 +7039,7 @@ def k12_school_leads():
             'school_name': 'Virginia Beach City Public Schools',
             'school_type': 'Public School Division',
             'location': 'Virginia Beach, VA 23456',
+            'state': 'VA',
             'facilities': '86 schools: 54 elementary, 14 middle, 11 high, 7 special programs',
             'square_footage': '10M+ sq ft (second largest district in VA)',
             'contract_value': '$12M - $15M annually',
@@ -6841,6 +7059,7 @@ def k12_school_leads():
             'school_name': 'Suffolk Public Schools',
             'school_type': 'Public School Division',
             'location': 'Suffolk, VA 23434',
+            'state': 'VA',
             'facilities': '16 schools: 10 elementary, 3 middle, 3 high schools',
             'square_footage': '1.9M sq ft',
             'contract_value': '$2.0M - $2.8M annually',
@@ -6860,6 +7079,7 @@ def k12_school_leads():
             'school_name': 'Williamsburg-James City County Schools',
             'school_type': 'Public School Division',
             'location': 'Williamsburg, VA 23185',
+            'state': 'VA',
             'facilities': '15 schools: 9 elementary, 3 middle, 2 high schools, 1 primary',
             'square_footage': '1.7M sq ft',
             'contract_value': '$2.2M - $2.9M annually',
@@ -6879,6 +7099,7 @@ def k12_school_leads():
             'school_name': 'Chesapeake Public Schools',
             'school_type': 'Public School Division',
             'location': 'Chesapeake, VA 23320',
+            'state': 'VA',
             'facilities': '48 schools: 30 elementary, 10 middle, 7 high, 1 alternative',
             'square_footage': '6.5M sq ft',
             'contract_value': '$7.5M - $9.0M annually',
@@ -6898,6 +7119,7 @@ def k12_school_leads():
             'school_name': 'Norfolk Public Schools',
             'school_type': 'Public School Division',
             'location': 'Norfolk, VA 23510',
+            'state': 'VA',
             'facilities': '35 schools: 23 elementary, 6 middle, 5 high, 1 academy',
             'square_footage': '4.5M sq ft',
             'contract_value': '$5.5M - $7.0M annually',
@@ -6917,6 +7139,7 @@ def k12_school_leads():
             'school_name': 'Portsmouth Public Schools',
             'school_type': 'Public School Division',
             'location': 'Portsmouth, VA 23704',
+            'state': 'VA',
             'facilities': '17 schools: 10 elementary, 4 middle, 2 high, 1 alternative',
             'square_footage': '2.1M sq ft',
             'contract_value': '$2.5M - $3.2M annually',
@@ -6936,6 +7159,7 @@ def k12_school_leads():
             'school_name': 'York County School Division',
             'school_type': 'Public School Division',
             'location': 'Yorktown, VA 23693',
+            'state': 'VA',
             'facilities': '15 schools: 9 elementary, 3 middle, 3 high schools',
             'square_footage': '2.0M sq ft',
             'contract_value': '$2.4M - $3.1M annually',
@@ -6955,6 +7179,7 @@ def k12_school_leads():
             'school_name': 'Peninsula Catholic High School',
             'school_type': 'Private Catholic School',
             'location': 'Newport News, VA 23602',
+            'state': 'VA',
             'facilities': '1 main campus with multiple buildings',
             'square_footage': '120,000 sq ft',
             'contract_value': '$180K - $250K annually',
@@ -6970,14 +7195,64 @@ def k12_school_leads():
             'special_requirements': 'Respectful of religious environment, chapel/sanctuary care experience'
         }
     ]
+
+    # Add a statewide K-12 entry for every US state (50 states)
+    US_STATES = [
+        ('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'), ('CA', 'California'),
+        ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'), ('FL', 'Florida'), ('GA', 'Georgia'),
+        ('HI', 'Hawaii'), ('ID', 'Idaho'), ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'),
+        ('KS', 'Kansas'), ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'), ('MD', 'Maryland'),
+        ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'), ('MS', 'Mississippi'), ('MO', 'Missouri'),
+        ('MT', 'Montana'), ('NE', 'Nebraska'), ('NV', 'Nevada'), ('NH', 'New Hampshire'), ('NJ', 'New Jersey'),
+        ('NM', 'New Mexico'), ('NY', 'New York'), ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'),
+        ('OK', 'Oklahoma'), ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'), ('SC', 'South Carolina'),
+        ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'), ('UT', 'Utah'), ('VT', 'Vermont'),
+        ('VA', 'Virginia'), ('WA', 'Washington'), ('WV', 'West Virginia'), ('WI', 'Wisconsin'), ('WY', 'Wyoming')
+    ]
+
+    nationwide_entries = []
+    for abbr, name in US_STATES:
+        try:
+            portal = _build_sam_search_url(naics_code='561720', state=name)
+        except Exception:
+            portal = f"https://sam.gov/search/?index=opp&keywords=janitorial%20561720%20{name}&sort=-relevance"
+
+        nationwide_entries.append({
+            'id': f'k12_state_{abbr.lower()}',
+            'school_name': f'{name} K-12 School Districts (Statewide)',
+            'school_type': 'Public School Districts',
+            'location': name,
+            'state': abbr,
+            'facilities': 'Multiple districts and campuses statewide',
+            'square_footage': 'Varies by district',
+            'contract_value': 'Varies by district',
+            'services_needed': 'Janitorial and custodial services, cafeteria sanitation, athletic facility cleaning, summer deep clean',
+            'current_contractor': 'Statewide opportunities via district solicitations',
+            'status': 'statewide',
+            'procurement_contact': 'District Procurement Offices',
+            'phone': '',  # not provided for statewide aggregate
+            'email': '',  # not provided for statewide aggregate
+            'vendor_portal': portal,
+            'certifications': 'Background checks, child safety training; district requirements vary',
+            'bid_cycle': 'Varies by district (annual to multi-year)',
+            'special_requirements': 'School facility experience and compliance with district policies'
+        })
+
+    # Merge and ensure state field exists for Virginia-specific entries
+    for s in k12_schools:
+        if 'state' not in s or not s['state']:
+            s['state'] = _extract_state_abbrev(s.get('location', ''))
+
+    combined_schools = nationwide_entries + k12_schools
     
     # Get filter parameters
     search_query = request.args.get('q', '').strip().lower()
     location_filter = request.args.get('location', '').strip().lower()
+    state_filter = request.args.get('state', '').strip().upper()
     school_type = request.args.get('type', '').strip().lower()
     
     # Filter schools based on search
-    filtered_schools = k12_schools
+    filtered_schools = combined_schools
     if search_query:
         filtered_schools = [s for s in filtered_schools if 
                           search_query in s['school_name'].lower() or
@@ -6987,20 +7262,26 @@ def k12_school_leads():
     if location_filter:
         filtered_schools = [s for s in filtered_schools if location_filter in s['location'].lower()]
     
+    if state_filter:
+        filtered_schools = [s for s in filtered_schools if s.get('state', '').upper() == state_filter]
+    
     if school_type and school_type != 'all':
         filtered_schools = [s for s in filtered_schools if school_type in s['school_type'].lower()]
     
     # Get unique values for filters
-    all_locations = sorted(set(s['location'].split(',')[0] for s in k12_schools))
-    all_types = sorted(set(s['school_type'] for s in k12_schools))
+    all_locations = sorted(set(s['location'].split(',')[0] for s in combined_schools))
+    all_types = sorted(set(s['school_type'] for s in combined_schools))
+    all_states = sorted(set(s.get('state', '') for s in combined_schools if s.get('state')))
     
     return render_template('k12_school_leads.html',
                          schools=filtered_schools,
                          total_schools=len(filtered_schools),
                          all_locations=all_locations,
                          all_types=all_types,
+                         all_states=all_states,
                          search_query=search_query,
                          location_filter=location_filter,
+                         state_filter=state_filter,
                          school_type=school_type)
 
 @app.route('/customer-leads')
@@ -7045,11 +7326,8 @@ def customer_leads():
                     fc.description as requirements
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
-                AND (
-                    (fc.deadline IS NOT NULL AND fc.deadline != '' AND date(substr(fc.deadline, 1, 10)) >= :current_date)
-                    OR fc.deadline IS NULL
-                )
-                ORDER BY COALESCE(fc.posted_date, fc.created_at) DESC
+                AND (fc.deadline IS NULL OR fc.deadline >= :current_date)
+                ORDER BY COALESCE(CAST(fc.posted_date AS TIMESTAMP), fc.created_at) DESC
                 LIMIT 100
             '''), {'current_date': current_date}).fetchall()
             print(f"✅ Found {len(government_leads)} government contracts")
@@ -7077,11 +7355,8 @@ def customer_leads():
                     'Active' as status,
                     supply_contracts.requirements
                 FROM supply_contracts 
-                WHERE (
-                    (supply_contracts.bid_deadline IS NOT NULL AND supply_contracts.bid_deadline != '' AND date(substr(supply_contracts.bid_deadline, 1, 10)) >= :current_date)
-                    OR supply_contracts.bid_deadline IS NULL
-                )
-                ORDER BY supply_contracts.posted_date DESC
+                WHERE (supply_contracts.bid_deadline IS NULL OR supply_contracts.bid_deadline >= :current_date)
+                ORDER BY COALESCE(CAST(supply_contracts.posted_date AS TIMESTAMP), supply_contracts.created_at) DESC
             '''), {'current_date': current_date}).fetchall()
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
@@ -7292,15 +7567,35 @@ def customer_leads():
 def calculate_days_left(deadline_str):
     """Calculate days remaining until deadline"""
     try:
-        from datetime import datetime, timedelta
+        from datetime import datetime, date, timedelta
         import re
         
-        # Handle various deadline formats
-        if not deadline_str or deadline_str.lower() in ['ongoing', 'open', 'continuous']:
+        # If it's already a date/datetime, compute directly
+        if isinstance(deadline_str, (date, datetime)):
+            deadline_dt = datetime.combine(deadline_str, datetime.min.time()) if isinstance(deadline_str, date) and not isinstance(deadline_str, datetime) else deadline_str
+            delta = deadline_dt - datetime.now()
+            return max(0, delta.days)
+
+        # Normalize to string for parsing
+        if deadline_str is None:
+            return 30
+        s = str(deadline_str).strip()
+
+        # Handle special tokens
+        if not s or s.lower() in ['ongoing', 'open', 'continuous']:
             return 365  # Ongoing contracts
         
         # Extract date from string if it contains one
-        date_match = re.search(r'\d{1,2}/\d{1,2}/\d{4}', deadline_str)
+        # Try ISO first (YYYY-MM-DD)
+        try:
+            if re.match(r'^\d{4}-\d{2}-\d{2}$', s):
+                deadline_date = datetime.strptime(s, '%Y-%m-%d')
+                delta = deadline_date - datetime.now()
+                return max(0, delta.days)
+        except Exception:
+            pass
+
+        date_match = re.search(r'\d{1,2}/\d{1,2}/\d{4}', s)
         if date_match:
             deadline_date = datetime.strptime(date_match.group(), '%m/%d/%Y')
             today = datetime.now()
@@ -9434,49 +9729,44 @@ def admin_enhanced():
                 'total_users': 0,
             }
         
+        # Helper to safely run a scalar query and avoid aborting the whole transaction chain
+        def safe_scalar(query, params=None, default=0):
+            try:
+                return db.session.execute(text(query), params or {}).scalar() or default
+            except Exception as e:
+                print(f"[admin_enhanced] Query failed: {query} | Error: {e}")
+                try:
+                    db.session.rollback()
+                except Exception as rb_err:
+                    print(f"[admin_enhanced] Rollback failed: {rb_err}")
+                return default
+
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
-        stats['new_users_7d'] = db.session.execute(text(
-            "SELECT COUNT(*) FROM leads WHERE created_at > :seven_days_ago"
-        ), {'seven_days_ago': seven_days_ago}).scalar() or 0
+        stats['new_users_7d'] = safe_scalar(
+            "SELECT COUNT(*) FROM leads WHERE created_at > :seven_days_ago",
+            {'seven_days_ago': seven_days_ago}
+        )
         
         # Get unread admin messages count (with error handling) - includes all request types
         try:
-            # Count unread customer messages
-            customer_messages = db.session.execute(text(
+            # Use safe_scalar for each metric to isolate failures
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            customer_messages = safe_scalar(
                 "SELECT COUNT(*) FROM messages WHERE recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) AND is_read = FALSE"
-            )).scalar() or 0
-            
-            # Count recent contact form submissions (last 30 days)
-            try:
-                thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-                contact_forms = db.session.execute(text(
-                    "SELECT COUNT(*) FROM contact_messages WHERE created_at > :thirty_days_ago"
-                ), {'thirty_days_ago': thirty_days_ago}).scalar() or 0
-            except:
-                contact_forms = 0
-            
-            # Count pending proposal reviews
-            try:
-                pending_proposals = db.session.execute(text(
-                    "SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'"
-                )).scalar() or 0
-            except:
-                pending_proposals = 0
-            
-            # Count open commercial leads
-            try:
-                commercial_leads = db.session.execute(text(
-                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
-                )).scalar() or 0
-            except:
-                commercial_leads = 0
-            
-            # Total unread messages and requests
+            )
+            contact_forms = safe_scalar(
+                "SELECT COUNT(*) FROM contact_messages WHERE created_at > :thirty_days_ago",
+                {'thirty_days_ago': thirty_days_ago}
+            )
+            pending_proposals = safe_scalar(
+                "SELECT COUNT(*) FROM proposal_reviews WHERE status = 'pending'"
+            )
+            commercial_leads = safe_scalar(
+                "SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"
+            )
             unread_admin_messages = customer_messages + contact_forms + pending_proposals + commercial_leads
-            
         except Exception as e:
-            print(f"Warning: Could not fetch admin messages: {e}")
-            db.session.rollback()
+            print(f"Warning: Unexpected error in admin metrics aggregation: {e}")
             unread_admin_messages = 0
             pending_proposals = 0
         
@@ -9490,44 +9780,52 @@ def admin_enhanced():
         
         # Section-specific data
         if section == 'dashboard':
-            # Get supply contracts count
-            supply_count = db.session.execute(text(
-                "SELECT COUNT(*) FROM supply_contracts"
-            )).scalar() or 0
+            # Get supply contracts count (safe)
+            supply_count = safe_scalar("SELECT COUNT(*) FROM supply_contracts")
             context['supply_contracts_count'] = supply_count
             print(f"📊 Total supply contracts in database: {supply_count}")
-            
-            # Get federal contracts counts
+
+            # Federal contracts counts (treat missing deadline or NULL as expired check safe)
             current_date = datetime.utcnow().date()
-            active_federal = db.session.execute(text(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= :current_date"
-            ), {'current_date': current_date}).scalar() or 0
-            total_federal = db.session.execute(text(
-                "SELECT COUNT(*) FROM federal_contracts"
-            )).scalar() or 0
-            expired_federal = db.session.execute(text(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < :current_date"
-            ), {'current_date': current_date}).scalar() or 0
-            
+            active_federal = safe_scalar(
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= :current_date",
+                {'current_date': current_date}
+            )
+            total_federal = safe_scalar("SELECT COUNT(*) FROM federal_contracts")
+            expired_federal = safe_scalar(
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < :current_date",
+                {'current_date': current_date}
+            )
+
             context['active_federal_count'] = active_federal
             context['total_federal_count'] = total_federal
             context['expired_federal_count'] = expired_federal
             print(f"📊 Federal contracts: {active_federal} active, {total_federal} total, {expired_federal} expired")
-            
-            # Recent users
-            context['recent_users'] = db.session.execute(text(
-                "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT 10"
-            )).fetchall()
-            
-            # Growth data for chart (last 30 days)
+
+            # Recent users (fallback to empty list if failure)
+            try:
+                context['recent_users'] = db.session.execute(text(
+                    "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT 10"
+                )).fetchall()
+            except Exception as e:
+                print(f"[admin_enhanced] recent_users failed: {e}")
+                db.session.rollback()
+                context['recent_users'] = []
+
+            # Growth data for chart (last 30 days) using safe pattern
             thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-            growth_data = db.session.execute(text(
-                "SELECT DATE(created_at) as date, COUNT(*) as count FROM leads "
-                "WHERE created_at > :thirty_days_ago "
-                "GROUP BY DATE(created_at) ORDER BY date"
-            ), {'thirty_days_ago': thirty_days_ago}).fetchall()
-            
-            # Handle datetime objects properly
+            growth_data = []
+            try:
+                growth_data = db.session.execute(text(
+                    "SELECT DATE(created_at) as date, COUNT(*) as count FROM leads "
+                    "WHERE created_at > :thirty_days_ago "
+                    "GROUP BY DATE(created_at) ORDER BY date"
+                ), {'thirty_days_ago': thirty_days_ago}).fetchall()
+            except Exception as e:
+                print(f"[admin_enhanced] growth_data query failed: {e}")
+                db.session.rollback()
+                growth_data = []
+
             context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
             context['growth_data'] = [row.count for row in growth_data]
         

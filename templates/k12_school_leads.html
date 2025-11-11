@@ -3,7 +3,7 @@
 {% block title %}K-12 School Cleaning Leads - Premium Feature{% endblock %}
 
 {% block og_title %}K-12 School Cleaning Contract Opportunities{% endblock %}
-{% block og_description %}Exclusive K-12 school cleaning contract opportunities in Virginia - Available to premium subscribers only.{% endblock %}
+{% block og_description %}Nationwide K-12 school cleaning contract opportunities across all 50 states — premium subscribers only.{% endblock %}
 
 {% block content %}
 
@@ -58,6 +58,15 @@
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <label for="state" class="form-label">State</label>
+                        <select name="state" id="state" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All States</option>
+                            {% for st in all_states %}
+                            <option value="{{ st }}" {% if state_filter == st %}selected{% endif %}>{{ st }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label for="type" class="form-label">School Type</label>
                         <select name="type" id="type" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="all">All Types</option>
@@ -86,6 +95,9 @@
                     {% if location_filter %}
                     <span class="badge bg-info ms-2">Location: {{ location_filter }}</span>
                     {% endif %}
+                    {% if state_filter %}
+                    <span class="badge bg-info ms-2">State: {{ state_filter }}</span>
+                    {% endif %}
                     {% if school_type and school_type != 'all' %}
                     <span class="badge bg-info ms-2">Type: {{ school_type }}</span>
                     {% endif %}
@@ -109,7 +121,7 @@
                 <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #ef4444 0%, #fb923c 100%);">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h5 class="mb-0 fw-bold" style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><i class="fas fa-school me-2"></i>{{ school.school_name }}</h5>
+                            <h5 class="mb-0 fw-bold" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);"><i class="fas fa-school me-2"></i><span class="school-name-chip">{{ school.school_name }}</span></h5>
                             <small style="opacity: 0.95;">{{ school.school_type }}</small>
                         </div>
                         <div class="d-flex gap-2">
@@ -118,13 +130,16 @@
                                 <i class="fas fa-clock me-1"></i>Upcoming
                             </span>
                             {% endif %}
+                            {% if school.state %}
+                            <span class="badge bg-light text-dark border">{{ school.state }}</span>
+                            {% endif %}
                             <span class="badge bg-white text-dark">ID: {{ school.id }}</span>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>Location:</strong> {{ school.location }}</p>
+                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>Location:</strong> {{ school.location }} {% if school.state %}<span class="badge bg-secondary ms-2">{{ school.state }}</span>{% endif %}</p>
                         <p class="mb-2"><i class="fas fa-school text-primary me-2"></i><strong>Facilities:</strong> {{ school.facilities }}</p>
                         <p class="mb-2"><i class="fas fa-ruler-combined text-info me-2"></i><strong>Square Footage:</strong> {{ school.square_footage }}</p>
                     </div>
@@ -158,22 +173,32 @@
                     
                     <div class="mb-3">
                         <h6 class="fw-bold"><i class="fas fa-phone-alt me-2"></i>Procurement Contact:</h6>
+                        {% if school.procurement_contact %}
                         <p class="mb-1"><strong>{{ school.procurement_contact }}</strong></p>
+                        {% endif %}
+                        {% if school.phone %}
                         <p class="mb-1"><i class="fas fa-phone text-success me-2"></i>{{ school.phone }}</p>
+                        {% endif %}
+                        {% if school.email %}
                         <p class="mb-1"><i class="fas fa-envelope text-primary me-2"></i>{{ school.email }}</p>
+                        {% endif %}
                     </div>
                     
                     <div class="d-grid gap-2">
+                        {% if school.email %}
                         <a href="mailto:{{ school.email }}?subject=Cleaning Services Inquiry - {{ school.school_name }}&body=Dear {{ school.procurement_contact }},%0D%0A%0D%0AI am interested in providing professional cleaning services for {{ school.school_name }}.%0D%0A%0D%0APlease let me know how I can submit a proposal or get more information about upcoming opportunities.%0D%0A%0D%0AThank you!" 
                            class="btn btn-danger view-details-btn" 
                            data-lead-id="{{ school.school_name | urlencode }}" 
                            data-lead-type="k12">
                             <i class="fas fa-envelope me-2"></i>Contact Procurement Team
                         </a>
+                        {% endif %}
+                        {% if school.phone %}
                         <a href="tel:{{ school.phone }}" 
                            class="btn btn-outline-primary">
                             <i class="fas fa-phone me-2"></i>Call {{ school.phone }}
                         </a>
+                        {% endif %}
                         {% if school.vendor_portal %}
                         <button class="btn btn-outline-secondary btn-sm" 
                                 onclick="navigator.clipboard.writeText('{{ school.vendor_portal }}'); alert('Vendor portal URL copied to clipboard!')">
@@ -259,6 +284,14 @@
 .hover-shadow:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* High-contrast chip for school names for better accessibility */
+.school-name-chip {
+    background: #0f172a; /* slate-900 */
+    color: #ffffff;      /* white */
+    padding: 2px 8px;
+    border-radius: 6px;
 }
 </style>
 
