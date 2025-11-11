@@ -7368,7 +7368,7 @@ def customer_leads():
                     commercial_opportunities.business_type as agency,
                     commercial_opportunities.location,
                     commercial_opportunities.description,
-                    '$' || commercial_opportunities.monthly_value || '/month' as contract_value,
+                    CONCAT('$', commercial_opportunities.monthly_value, '/month') as contract_value,
                     'Ongoing' as deadline,
                     '' as naics_code,
                     'Recent' as date_posted,
