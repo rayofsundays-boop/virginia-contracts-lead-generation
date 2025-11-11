@@ -19,7 +19,7 @@
     </div>
     
     <div class="container hero-content">
-        <h1 class="hero-headline" data-aos="fade-up">
+        <h1 class="hero-headline">
             The Future of <span class="text-gradient">Contract Opportunities</span>
         </h1>
         <p class="hero-subtext" data-aos="fade-up" data-aos-delay="200">
@@ -583,6 +583,8 @@ section, .container, .row {
     color: var(--color-white);
     margin-bottom: 1.5rem;
     line-height: 1.1;
+    transform: none !important; /* Prevent any scroll-based transforms */
+    will-change: auto; /* Disable GPU optimization that might cause scrolling */
 }
 
 .text-gradient {
