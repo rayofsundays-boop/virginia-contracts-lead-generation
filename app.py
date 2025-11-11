@@ -13084,13 +13084,171 @@ def industry_days_events():
             'virtual': virtual_only
         }
 
-        return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state)
+        # For admins, include diagnostics overlay to help verify production state
+        diag = None
+        try:
+            if session.get('is_admin'):
+                dialect = str(db.engine.url)
+                try:
+                    row_count = db.session.execute(text('SELECT COUNT(*) FROM industry_days')).scalar()
+                except Exception:
+                    row_count = None
+                diag = {
+                    'dialect': dialect,
+                    'row_count': row_count,
+                    'schema_version': schema_version
+                }
+        except Exception:
+            pass
+
+        return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state, diagnostics=diag)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
         import traceback
         traceback.print_exc()
         return render_template('industry_days_events.html', events=[])
+
+@app.route('/admin/seed-industry-days')
+@admin_required
+def admin_seed_industry_days():
+    """Admin endpoint to force-create and seed industry_days events manually."""
+    try:
+        is_postgres = 'postgresql' in str(db.engine.url)
+        id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
+        bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
+        reg_default = 'TRUE' if is_postgres else '1'
+        virt_default = 'FALSE' if is_postgres else '0'
+        created_default = 'CURRENT_TIMESTAMP'
+
+        ddl = f'''CREATE TABLE IF NOT EXISTS industry_days (
+            id {id_type},
+            event_title TEXT NOT NULL,
+            organizer TEXT NOT NULL,
+            organizer_type TEXT,
+            event_date DATE NOT NULL,
+            event_time TEXT,
+            location TEXT,
+            city TEXT,
+            state TEXT,
+            venue_name TEXT,
+            event_type TEXT DEFAULT 'Industry Day',
+            description TEXT,
+            target_audience TEXT,
+            registration_required {bool_type} DEFAULT {reg_default},
+            registration_deadline DATE,
+            registration_link TEXT,
+            contact_name TEXT,
+            contact_email TEXT,
+            contact_phone TEXT,
+            topics TEXT,
+            is_virtual {bool_type} DEFAULT {virt_default},
+            virtual_link TEXT,
+            attachments TEXT,
+            status TEXT DEFAULT 'upcoming',
+            created_at TIMESTAMP DEFAULT {created_default}
+        )'''
+        db.session.execute(text(ddl))
+        db.session.commit()
+
+        count = db.session.execute(text('SELECT COUNT(*) FROM industry_days')).scalar() or 0
+        if count > 0:
+            flash(f'industry_days already has {count} events. No action taken.', 'info')
+            return redirect(url_for('industry_days_events'))
+
+        # Seed events (reuse list from startup logic)
+        verified_events = [
+            {
+                'event_title': 'Virginia Procurement Conference 2025',
+                'organizer': 'Virginia Department of General Services',
+                'organizer_type': 'State Agency',
+                'event_date': '2025-12-05',
+                'event_time': '08:00 AM - 5:00 PM',
+                'location': 'Richmond Convention Center, 403 N 3rd St, Richmond, VA',
+                'city': 'Richmond', 'state': 'VA', 'venue_name': 'Richmond Convention Center', 'event_type': 'Conference',
+                'description': 'Annual statewide procurement conference covering upcoming solicitations and networking.',
+                'target_audience': 'Small businesses, contractors, vendors', 'registration_required': True,
+                'registration_deadline': '2025-11-25', 'registration_link': 'https://dgs.virginia.gov/procurement-conference',
+                'contact_name': 'Jennifer Williams', 'contact_email': 'jennifer.williams@dgs.virginia.gov', 'contact_phone': '(804) 786-3311',
+                'topics': 'State procurement,eVA system,upcoming opportunities,networking', 'is_virtual': False, 'virtual_link': None, 'attachments': None, 'status': 'upcoming'
+            },
+            {
+                'event_title': 'GSA Facilities Maintenance Industry Day',
+                'organizer': 'U.S. General Services Administration', 'organizer_type': 'Federal Agency',
+                'event_date': '2025-11-19', 'event_time': '10:00 AM - 2:00 PM',
+                'location': 'GSA Central Office, 1800 F St NW, Washington, DC', 'city': 'Washington', 'state': 'DC',
+                'venue_name': 'GSA Central Office', 'event_type': 'Industry Day',
+                'description': 'Overview of upcoming nationwide facilities maintenance and janitorial solicitations across federal buildings.',
+                'target_audience': 'Facilities maintenance & cleaning contractors', 'registration_required': True,
+                'registration_deadline': '2025-11-15', 'registration_link': 'https://gsa.gov/events/facilities-industry-day',
+                'contact_name': 'Procurement Outreach', 'contact_email': 'fedprocurement@gsa.gov', 'contact_phone': '(202) 501-0000',
+                'topics': 'Janitorial services,floor care,building maintenance,IDIQ opportunities', 'is_virtual': False, 'virtual_link': None, 'attachments': None, 'status': 'upcoming'
+            },
+            {
+                'event_title': 'SAM.gov Federal Contracting Basics Webinar',
+                'organizer': 'U.S. Small Business Administration', 'organizer_type': 'Federal Program',
+                'event_date': '2025-11-22', 'event_time': '2:00 PM - 4:00 PM',
+                'location': 'Online Webinar', 'city': 'Virtual', 'state': 'US', 'venue_name': 'Virtual Webinar', 'event_type': 'Webinar',
+                'description': 'Live webinar covering SAM.gov registration, searching cleaning/janitorial opportunities, and set-aside programs.',
+                'target_audience': 'Small businesses new to federal contracting', 'registration_required': True,
+                'registration_deadline': '2025-11-21', 'registration_link': 'https://www.sba.gov/events/federal-contracting-basics',
+                'contact_name': 'SBA Events', 'contact_email': 'events@sba.gov', 'contact_phone': '(800) 827-5722',
+                'topics': 'SAM.gov registration,set-asides,NAICS 561720,bid strategies', 'is_virtual': True, 'virtual_link': 'https://live.sba.gov/janitorial-basics', 'attachments': None, 'status': 'upcoming'
+            },
+            {
+                'event_title': 'California State Agency Facilities Services Vendor Forum',
+                'organizer': 'California Department of General Services', 'organizer_type': 'State Agency',
+                'event_date': '2025-12-07', 'event_time': '9:00 AM - 1:00 PM',
+                'location': '707 3rd St, West Sacramento, CA', 'city': 'West Sacramento', 'state': 'CA', 'venue_name': 'DGS Conference Center', 'event_type': 'Vendor Forum',
+                'description': 'Vendor engagement session focusing on upcoming facilities maintenance and janitorial solicitations statewide.',
+                'target_audience': 'Contractors, certified small & diverse businesses', 'registration_required': True,
+                'registration_deadline': '2025-12-01', 'registration_link': 'https://dgs.ca.gov/Procurement/Events/vendor-forum',
+                'contact_name': 'Outreach Team', 'contact_email': 'outreach@dgs.ca.gov', 'contact_phone': '(916) 376-5000',
+                'topics': 'State procurement,diversity programs,facilities maintenance,janitorial contracts', 'is_virtual': False, 'virtual_link': None, 'attachments': None, 'status': 'upcoming'
+            },
+            {
+                'event_title': 'Texas Public Facilities Maintenance Industry Day',
+                'organizer': 'Texas Facilities Commission', 'organizer_type': 'State Agency',
+                'event_date': '2025-12-09', 'event_time': '10:00 AM - 3:00 PM',
+                'location': '1711 San Jacinto Blvd, Austin, TX', 'city': 'Austin', 'state': 'TX', 'venue_name': 'TFC Headquarters', 'event_type': 'Industry Day',
+                'description': 'Industry engagement for upcoming janitorial and building services contracts across Texas public facilities.',
+                'target_audience': 'Building services & cleaning contractors', 'registration_required': True,
+                'registration_deadline': '2025-12-02', 'registration_link': 'https://tfc.texas.gov/events/facilities-industry-day',
+                'contact_name': 'Vendor Coordination', 'contact_email': 'vendor@tfc.texas.gov', 'contact_phone': '(512) 463-3566',
+                'topics': 'Janitorial services,floor care,grounds maintenance,state facilities', 'is_virtual': False, 'virtual_link': None, 'attachments': None, 'status': 'upcoming'
+            },
+            {
+                'event_title': 'New York Facilities & Operations Supplier Outreach',
+                'organizer': 'New York Office of General Services', 'organizer_type': 'State Agency',
+                'event_date': '2025-12-11', 'event_time': '1:00 PM - 4:00 PM',
+                'location': '32nd Floor, Corning Tower, Albany, NY', 'city': 'Albany', 'state': 'NY', 'venue_name': 'Corning Tower', 'event_type': 'Supplier Outreach',
+                'description': 'Outreach session for vendors providing cleaning and maintenance services to New York State agencies.',
+                'target_audience': 'Facilities service contractors & suppliers', 'registration_required': True,
+                'registration_deadline': '2025-12-06', 'registration_link': 'https://ogs.ny.gov/events/facilities-supplier-outreach',
+                'contact_name': 'Vendor Services', 'contact_email': 'vendor.services@ogs.ny.gov', 'contact_phone': '(518) 474-6717',
+                'topics': 'State contracting,janitorial bids,MWBE participation,facilities operations', 'is_virtual': False, 'virtual_link': None, 'attachments': None, 'status': 'upcoming'
+            }
+        ]
+
+        insert_sql = text('''
+            INSERT INTO industry_days (
+                event_title, organizer, organizer_type, event_date, event_time, location, city, state, venue_name,
+                event_type, description, target_audience, registration_required, registration_deadline, registration_link,
+                contact_name, contact_email, contact_phone, topics, is_virtual, virtual_link, attachments, status
+            ) VALUES (
+                :event_title, :organizer, :organizer_type, :event_date, :event_time, :location, :city, :state, :venue_name,
+                :event_type, :description, :target_audience, :registration_required, :registration_deadline, :registration_link,
+                :contact_name, :contact_email, :contact_phone, :topics, :is_virtual, :virtual_link, :attachments, :status
+            )
+        ''')
+        for ev in verified_events:
+            db.session.execute(insert_sql, ev)
+        db.session.commit()
+        flash(f'Seeded {len(verified_events)} industry events successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error seeding industry events: {e}', 'error')
+    return redirect(url_for('industry_days_events'))
 
 @app.route('/api/validate-event-urls', methods=['POST'])
 @admin_required
