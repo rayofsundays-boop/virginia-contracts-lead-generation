@@ -1353,5 +1353,6 @@
     {% if session.get('subscription_status') == 'paid' or session.get('is_admin') %}
     <script src="{{ url_for('static', filename='js/search-system.js') }}"></script>
     {% endif %}
+    {{ build_comment|safe }}
 </body>
 </html>

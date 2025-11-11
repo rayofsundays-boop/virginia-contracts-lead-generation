@@ -64,6 +64,20 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
 
+# Build/version marker injection for deployment verification.
+# Adds a timestamp comment to the rendered HTML so external scripts (check_deployment.sh)
+# can detect current deployed build without exposing sensitive data.
+@app.context_processor
+def inject_build_meta():
+    try:
+        # Use UTC for consistency across environments
+        ts = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        return {
+            'build_comment': f'<!-- Built: {ts} -->'
+        }
+    except Exception:
+        return {'build_comment': '<!-- Built: unknown -->'}
+
 # Session configuration
 # Regular users: 20 minutes
 # Admin users: 8 hours (extended for admin workflow)
@@ -5179,6 +5193,21 @@ def contracts():
 def state_procurement_portals():
     """State procurement portals guide for all 50 states"""
     return render_template('state_procurement_portals.html')
+
+# Backwards-compatible route so monitoring tools and older links don't 404
+@app.route('/local-procurement')
+def local_procurement():
+    """Local/State procurement landing page.
+
+    Historically referenced by monitoring scripts. Provide a simple landing page
+    with links to eVA and the full 50-state portals instead of returning 404.
+    """
+    try:
+        return render_template('local_procurement.html')
+    except Exception as e:
+        # Fallback to the 50-state portals page
+        print(f"/local-procurement render error: {e}")
+        return redirect(url_for('state_procurement_portals'))
 
 # Convenience redirectors so any internal "View Active Bids" links resolve
 @app.route('/active-bids/<city_slug>')
