@@ -1,0 +1,106 @@
+:root {
+  /* High-contrast accessible palette */
+  --color-bg: #ffffff;
+  --color-surface: #f5f7fa;
+  --color-border: #d0d7e2;
+  --color-text: #1b2430; /* ~14.5:1 on white */
+  --color-text-muted: #4a5565; /* ~7:1 on white */
+  --color-text-subtle: #5c6675; /* for secondary labels */
+  --color-primary-accent: #3749a6; /* Darker than #667eea for contrast */
+  --color-primary-accent-hover: #2d3c89;
+  --color-secondary-accent: #5a2f7d; /* Darkened from #764ba2 */
+  --color-danger-accent: #b4231e; /* Darkened red */
+  --color-warning-accent: #875a00; /* Dark gold for text on light */
+  --color-success-accent: #126f43; /* Darkened green */
+  --focus-ring: 3px solid #ffbf47; /* Highly visible amber */
+}
+
+/* Text & Muted Adjustments */
+body, p, li, td, th { color: var(--color-text); }
+.text-muted, .small, small { color: var(--color-text-muted) !important; }
+
+/* Buttons */
+.btn-primary, .btn.btn-primary {
+  background: var(--color-primary-accent) !important;
+  border-color: var(--color-primary-accent) !important;
+  color: #ffffff !important;
+}
+.btn-primary:hover, .btn.btn-primary:hover {
+  background: var(--color-primary-accent-hover) !important;
+  border-color: var(--color-primary-accent-hover) !important;
+}
+.btn-success { background: var(--color-success-accent) !important; border-color: var(--color-success-accent) !important; }
+.btn-danger { background: var(--color-danger-accent) !important; border-color: var(--color-danger-accent) !important; }
+.btn-warning { background: #e49b00 !important; border-color: #e49b00 !important; color:#1b2430 !important; }
+.btn-info { background: #1b5f99 !important; border-color:#1b5f99 !important; }
+
+/* Links */
+a { color: var(--color-primary-accent); }
+a:hover, a:focus { color: var(--color-primary-accent-hover); }
+
+/* Nav & gradients override to ensure sufficient contrast for white text */
+.navbar, .hero-section, .bg-primary, .quick-wins-link, .sales-banner, .card-header.bg-gradient,
+[class*='gradient'][class*='primary'] {
+  background: linear-gradient(135deg, var(--color-primary-accent) 0%, var(--color-secondary-accent) 100%) !important;
+}
+
+/* Badges & labels */
+.badge.bg-warning, .badge.bg-warning.text-dark { background:#ffbf47 !important; color:#1b2430 !important; }
+.badge.bg-success { background: var(--color-success-accent) !important; }
+.badge.bg-danger { background: var(--color-danger-accent) !important; }
+.badge.bg-info { background:#1b5f99 !important; }
+
+/* Alert adjustments for readability */
+.alert { color: var(--color-text); }
+.alert-warning { background:#fff6e0; border:1px solid #ffbf47; color:#5a4500; }
+.alert-info { background:#e6f2fb; border:1px solid #1b5f99; color:#133d60; }
+.alert-success { background:#e4f5ef; border:1px solid var(--color-success-accent); color: var(--color-success-accent); }
+.alert-danger { background:#fbe9e8; border:1px solid var(--color-danger-accent); color: var(--color-danger-accent); }
+
+/* Form elements */
+input, select, textarea { color: var(--color-text); border-color: var(--color-border); }
+input:focus, select:focus, textarea:focus, .btn:focus, a:focus { outline: var(--focus-ring); outline-offset:2px; box-shadow:none !important; }
+
+/* Cards */
+.card { background: var(--color-surface); border:1px solid var(--color-border); }
+.card h1, .card h2, .card h3, .card h4, .card h5 { color: var(--color-text); }
+
+/* Tables */
+.table { color: var(--color-text); }
+.table thead th { background:#eef1f5; color: var(--color-text); }
+
+/* Progress & indicators */
+.progress-bar { background: var(--color-primary-accent) !important; }
+
+/* Focus utilities */
+:focus-visible { outline: var(--focus-ring); outline-offset:2px; }
+
+/* Link focus ring for keyboard users */
+a:focus-visible { box-shadow: 0 0 0 3px rgba(255,191,71,0.6); border-radius:3px; }
+
+/* Ensure sufficient contrast for footer */
+footer.bg-dark { background:#11161d !important; }
+footer a.text-white-50 { color:#b0bcc9 !important; }
+footer a.text-white-50:hover { color:#ffffff !important; }
+
+/* Sales banner adjustments */
+.sales-banner { background: linear-gradient(90deg, #b4231e 0%, #8d1b17 100%) !important; }
+.sales-banner-cta { background:#ffffff !important; color: var(--color-danger-accent) !important; }
+.sales-banner-cta:hover { background:#f2f2f5 !important; }
+
+/* Avatar ring ensure contrast */
+.user-avatar { border:2px solid #ffffff !important; }
+
+/* Improve contrast on subtle text inside gradients */
+.text-white-50 { color:#d2dae2 !important; }
+
+/* Override inline styles for gradients using important where needed */
+[class*='hero-section'] { text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+
+/* High contrast utility classes */
+.hc-border { border-color: var(--color-text) !important; }
+.hc-text-muted { color: var(--color-text-muted) !important; }
+
+/* Ensure primary buttons in nav are legible */
+.navbar .btn-primary { background:#ffffff !important; color: var(--color-primary-accent) !important; }
+.navbar .btn-primary:hover { background:#e5e7eb !important; }
