@@ -239,17 +239,20 @@ def get_admin_stats_cached(cache_timestamp):
         Tuple of admin dashboard statistics
     """
     try:
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        one_day_ago = datetime.utcnow() - timedelta(days=1)
+        
         stats_result = db.session.execute(text('''
             SELECT 
                 COUNT(CASE WHEN subscription_status = 'paid' THEN 1 END) as paid_subscribers,
                 COUNT(CASE WHEN subscription_status = 'free' THEN 1 END) as free_users,
-                COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
-                COALESCE(SUM(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 97 ELSE 0 END), 0) as revenue_30d,
+                COUNT(CASE WHEN created_at > :thirty_days_ago THEN 1 END) as new_users_30d,
+                COALESCE(SUM(CASE WHEN created_at > :thirty_days_ago THEN 97 ELSE 0 END), 0) as revenue_30d,
                 0 as page_views_24h,
-                COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 day' THEN 1 END) as active_users_24h
+                COUNT(CASE WHEN created_at > :one_day_ago THEN 1 END) as active_users_24h
             FROM leads 
             WHERE is_admin = FALSE
-        ''')).fetchone()
+        '''), {'thirty_days_ago': thirty_days_ago, 'one_day_ago': one_day_ago}).fetchone()
         return stats_result
     except Exception as e:
         print(f"Error fetching cached admin stats: {e}")
@@ -9437,9 +9440,10 @@ def admin_enhanced():
                 'total_users': 0,
             }
         
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
         stats['new_users_7d'] = db.session.execute(text(
-            "SELECT COUNT(*) FROM leads WHERE created_at > NOW() - INTERVAL '7 days'"
-        )).scalar() or 0
+            "SELECT COUNT(*) FROM leads WHERE created_at > :seven_days_ago"
+        ), {'seven_days_ago': seven_days_ago}).scalar() or 0
         
         # Get unread admin messages count (with error handling) - includes all request types
         try:
@@ -9450,9 +9454,10 @@ def admin_enhanced():
             
             # Count recent contact form submissions (last 30 days)
             try:
+                thirty_days_ago = datetime.utcnow() - timedelta(days=30)
                 contact_forms = db.session.execute(text(
-                    "SELECT COUNT(*) FROM contact_messages WHERE created_at > NOW() - INTERVAL '30 days'"
-                )).scalar() or 0
+                    "SELECT COUNT(*) FROM contact_messages WHERE created_at > :thirty_days_ago"
+                ), {'thirty_days_ago': thirty_days_ago}).scalar() or 0
             except:
                 contact_forms = 0
             
@@ -9499,15 +9504,16 @@ def admin_enhanced():
             print(f"📊 Total supply contracts in database: {supply_count}")
             
             # Get federal contracts counts
+            current_date = datetime.utcnow().date()
             active_federal = db.session.execute(text(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= CURRENT_DATE"
-            )).scalar() or 0
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline >= :current_date"
+            ), {'current_date': current_date}).scalar() or 0
             total_federal = db.session.execute(text(
                 "SELECT COUNT(*) FROM federal_contracts"
             )).scalar() or 0
             expired_federal = db.session.execute(text(
-                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < CURRENT_DATE"
-            )).scalar() or 0
+                "SELECT COUNT(*) FROM federal_contracts WHERE deadline < :current_date"
+            ), {'current_date': current_date}).scalar() or 0
             
             context['active_federal_count'] = active_federal
             context['total_federal_count'] = total_federal
@@ -9520,11 +9526,12 @@ def admin_enhanced():
             )).fetchall()
             
             # Growth data for chart (last 30 days)
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
             growth_data = db.session.execute(text(
                 "SELECT DATE(created_at) as date, COUNT(*) as count FROM leads "
-                "WHERE created_at > NOW() - INTERVAL '30 days' "
+                "WHERE created_at > :thirty_days_ago "
                 "GROUP BY DATE(created_at) ORDER BY date"
-            )).fetchall()
+            ), {'thirty_days_ago': thirty_days_ago}).fetchall()
             
             # Handle datetime objects properly
             context['growth_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in growth_data]
@@ -9612,7 +9619,9 @@ def admin_enhanced():
             if filter_type == 'broken':
                 where_conditions.append("(sam_gov_url LIKE '%opportunity-detail%' OR sam_gov_url LIKE '%award-detail%')")
             elif filter_type == 'recent':
-                where_conditions.append("created_at > NOW() - INTERVAL '7 days'")
+                seven_days_ago = datetime.utcnow() - timedelta(days=7)
+                where_conditions.append("created_at > :seven_days_ago")
+                params['seven_days_ago'] = seven_days_ago
             
             where_clause = " AND ".join(where_conditions)
             
@@ -9727,8 +9736,8 @@ def admin_enhanced():
             # Count by state
             context['events_by_state'] = db.session.execute(text(
                 "SELECT state, COUNT(*) as count FROM government_contracts "
-                "WHERE data_source LIKE '%Industry Days%' OR data_source LIKE '%SBA Events%' "
-                "   OR contract_type LIKE '%Industry Day%' OR contract_type LIKE '%Event%' "
+                "WHERE (data_source LIKE '%Industry Days%' OR data_source LIKE '%SBA Events%' "
+                "   OR contract_type LIKE '%Industry Day%' OR contract_type LIKE '%Event%') AND state IS NOT NULL "
                 "GROUP BY state ORDER BY count DESC LIMIT 20"
             )).fetchall()
         
