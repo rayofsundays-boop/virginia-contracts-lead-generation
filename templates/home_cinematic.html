@@ -1762,10 +1762,11 @@ section, .container, .row {
 html { scroll-padding-top: var(--top-offset, 0px); }
 
 /* Add dynamic top padding to hero when the sales banner is visible */
-.hero-cinematic { padding-top: calc(8rem + var(--top-offset, 0px)); }
+/* Increased from 8rem to 12rem to prevent headline cutoff */
+.hero-cinematic { padding-top: calc(12rem + var(--top-offset, 0px)); }
 
 @media (max-width: 768px) {
-    .hero-cinematic { padding-top: calc(6rem + var(--top-offset, 0px)); }
+    .hero-cinematic { padding-top: calc(10rem + var(--top-offset, 0px)); }
 }
 </style>
 
