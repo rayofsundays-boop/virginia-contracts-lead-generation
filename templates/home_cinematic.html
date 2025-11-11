@@ -1756,6 +1756,19 @@ section, .container, .row {
 }
 </style>
 
+<!-- Offset adjustments to ensure hero is never clipped by top banners -->
+<style>
+/* Ensure in-page anchor scroll accounts for any top UI */
+html { scroll-padding-top: var(--top-offset, 0px); }
+
+/* Add dynamic top padding to hero when the sales banner is visible */
+.hero-cinematic { padding-top: calc(8rem + var(--top-offset, 0px)); }
+
+@media (max-width: 768px) {
+    .hero-cinematic { padding-top: calc(6rem + var(--top-offset, 0px)); }
+}
+</style>
+
 <!-- AOS Animation Library -->
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -1876,6 +1889,26 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// Dynamic top offset: accounts for the WIN50 sales banner height if visible
+(function() {
+    function updateTopOffset() {
+        const banner = document.getElementById('salesBanner');
+        const bannerVisible = banner && !banner.classList.contains('hidden') && banner.offsetParent !== null;
+        const bannerHeight = bannerVisible ? banner.offsetHeight : 0;
+        document.documentElement.style.setProperty('--top-offset', bannerHeight + 'px');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTopOffset();
+        const banner = document.getElementById('salesBanner');
+        if (banner) {
+            const observer = new MutationObserver(updateTopOffset);
+            observer.observe(banner, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+        window.addEventListener('resize', updateTopOffset);
+    });
+})();
 </script>
 
 {% endblock %}
