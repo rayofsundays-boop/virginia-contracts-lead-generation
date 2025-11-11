@@ -12832,6 +12832,12 @@ def toggle_admin_privilege():
 def industry_days_events():
     """Display networking and bidding events for contractors - All 50 States"""
     try:
+        # Determine SQL dialect for portable date/boolean expressions
+        is_postgres = 'postgresql' in str(db.engine.url)
+        date_expr = 'event_date' if is_postgres else 'date(event_date)'
+        deadline_expr = 'deadline' if is_postgres else 'date(deadline)'
+        virt_true = 'TRUE' if is_postgres else '1'
+
         # Collect filter params
         state_filter = (request.args.get('state') or '').strip()
         city_filter = (request.args.get('city') or '').strip()
@@ -12845,7 +12851,7 @@ def industry_days_events():
         events_result = []
         events = []
 
-        where_clauses = ["(status = 'upcoming' OR status IS NULL)", "date(event_date) >= :current_date"]
+        where_clauses = ["(status = 'upcoming' OR status IS NULL)", f"{date_expr} >= :current_date"]
         params = {'current_date': current_date}
 
         if state_filter:
@@ -12858,13 +12864,13 @@ def industry_days_events():
             where_clauses.append("LOWER(event_type) = LOWER(:event_type)")
             params['event_type'] = type_filter
         if from_date:
-            where_clauses.append("date(event_date) >= :from_date")
+            where_clauses.append(f"{date_expr} >= :from_date")
             params['from_date'] = from_date
         if to_date:
-            where_clauses.append("date(event_date) <= :to_date")
+            where_clauses.append(f"{date_expr} <= :to_date")
             params['to_date'] = to_date
         if virtual_only:
-            where_clauses.append("is_virtual = 1")
+            where_clauses.append(f"is_virtual = {virt_true}")
         if keyword:
             # Keyword search across multiple text columns
             where_clauses.append("(LOWER(event_title) LIKE :kw OR LOWER(organizer) LIKE :kw OR LOWER(description) LIKE :kw OR LOWER(topics) LIKE :kw)")
@@ -12876,7 +12882,7 @@ def industry_days_events():
                            description, topics, registration_link, status, is_virtual
                     FROM industry_days
                     WHERE {final_where}
-                    ORDER BY date(event_date) ASC, state ASC
+                    ORDER BY {date_expr} ASC, state ASC
                     LIMIT 300'''  # Slightly higher limit due to nationwide scope
         try:
             events_result = db.session.execute(text(query), params).fetchall()
@@ -12884,12 +12890,12 @@ def industry_days_events():
         except Exception as inner_e:
             # Fallback legacy contracts if industry_days unavailable
             try:
-                legacy_query = '''SELECT id, title AS event_title, agency AS organizer, deadline AS event_date, NULL AS event_time,
+                legacy_query = f'''SELECT id, title AS event_title, agency AS organizer, deadline AS event_date, NULL AS event_time,
                                           location AS city, '' AS state, NULL AS venue_name, 'Industry Day' AS event_type, description,
                                           '' AS topics, website_url AS registration_link, 'upcoming' AS status, 0 as is_virtual
                                    FROM contracts
-                                   WHERE deadline IS NOT NULL AND date(deadline) >= :current_date
-                                   ORDER BY date(deadline) ASC
+                                   WHERE deadline IS NOT NULL AND {deadline_expr} >= :current_date
+                                   ORDER BY {deadline_expr} ASC
                                    LIMIT 50'''
                 events_result = db.session.execute(text(legacy_query), {'current_date': current_date}).fetchall()
                 schema_version = 'legacy-contracts'
@@ -12941,6 +12947,17 @@ def industry_days_events():
             else:
                 location_display = state or 'TBD'
 
+            # Normalize virtual flag across SQLite (0/1 int) and Postgres (boolean)
+            raw_virtual = getattr(row, 'is_virtual', 0)
+            is_virtual_flag = False
+            if isinstance(raw_virtual, bool):
+                is_virtual_flag = raw_virtual
+            else:
+                try:
+                    is_virtual_flag = int(raw_virtual) == 1
+                except Exception:
+                    is_virtual_flag = str(raw_virtual).strip().lower() in ('true', 't', '1', 'yes')
+
             events.append({
                 'id': getattr(row, 'id', None),
                 'title': title,
@@ -12952,7 +12969,7 @@ def industry_days_events():
                 'topics': topics_list,
                 'cost': 'Free (Registration Required)',  # Placeholder
                 'url': reg_link,
-                'virtual': getattr(row, 'is_virtual', 0) == 1
+                'virtual': is_virtual_flag
             })
         
         # If no events found, show clean empty state
