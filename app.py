@@ -7326,7 +7326,6 @@ def customer_leads():
                     fc.description as requirements
                 FROM federal_contracts fc
                 WHERE fc.title IS NOT NULL
-                AND (fc.deadline IS NULL OR fc.deadline >= :current_date)
                 ORDER BY COALESCE(CAST(fc.posted_date AS TIMESTAMP), fc.created_at) DESC
                 LIMIT 100
             '''), {'current_date': current_date}).fetchall()
@@ -7355,7 +7354,6 @@ def customer_leads():
                     'Active' as status,
                     supply_contracts.requirements
                 FROM supply_contracts 
-                WHERE (supply_contracts.bid_deadline IS NULL OR supply_contracts.bid_deadline >= :current_date)
                 ORDER BY COALESCE(CAST(supply_contracts.posted_date AS TIMESTAMP), supply_contracts.created_at) DESC
             '''), {'current_date': current_date}).fetchall()
         except Exception as e:
