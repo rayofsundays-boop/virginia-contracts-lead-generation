@@ -83,7 +83,7 @@
                                     </h5>
                                     <p><strong>Coverage:</strong> Richmond, Williamsburg, and surrounding areas</p>
                                     <p><strong>Phone:</strong> (804) 771-5150</p>
-                                    <p><strong>Website:</strong> <a href="https://www.virginiaccc.org/ptac" target="_blank">virginiaccc.org/ptac</a></p>
+                                    <p><strong>Website:</strong> <a href="https://virginiaapex.org" target="_blank">virginiaapex.org</a></p>
                                     <p class="mb-0"><strong>Address:</strong> 600 East Main Street, Suite 301, Richmond, VA 23219</p>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
                                     <p class="mb-2"><strong>Address:</strong> 1 West Broad Street, Suite 1400, Richmond, VA 23219</p>
                                     <p class="mb-2"><strong>Phone:</strong> (804) 648-7838</p>
                                     <p class="mb-2"><strong>Email:</strong> rvasbdc@richmondsbdc.com</p>
-                                    <a href="https://richmondsbdc.com" target="_blank" class="btn btn-sm btn-info mt-2">
+                                    <a href="https://www.virginiasbdc.org/locations/" target="_blank" class="btn btn-sm btn-info mt-2">
                                         Visit Website <i class="fas fa-external-link-alt ms-1"></i>
                                     </a>
                                 </div>
@@ -500,7 +500,7 @@
                                             </a>
                                         </li>
                                         <li class="mb-2">
-                                            <a href="https://acquisitiongateway.gov/" target="_blank">
+                                            <a href="https://hallways.cap.gsa.gov/" target="_blank">
                                                 <i class="fas fa-external-link-alt me-2"></i>Acquisition Gateway (Vendor Resources)
                                             </a>
                                         </li>
@@ -709,13 +709,13 @@
                             <h5 class="text-primary">Federal Resources</h5>
                             <ul class="list-unstyled">
                                 <li class="mb-2">
-                                    <a href="https://www.sam.gov" target="_blank">
+                                    <a href="https://sam.gov" target="_blank">
                                         <i class="fas fa-external-link-alt me-2"></i>SAM.gov (Contract Opportunities)
                                     </a>
                                 </li>
                                 <li class="mb-2">
-                                    <a href="https://www.fpds.gov" target="_blank">
-                                        <i class="fas fa-external-link-alt me-2"></i>FPDS (Federal Procurement Data)
+                                    <a href="https://www.usaspending.gov" target="_blank">
+                                        <i class="fas fa-external-link-alt me-2"></i>USAspending (Federal Procurement Data)
                                     </a>
                                 </li>
                                 <li class="mb-2">
@@ -814,4 +814,18 @@
     transition: all 0.3s ease;
 }
 </style>
+<script>
+// Ensure security best practices for external links opened in a new tab
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[target="_blank"]').forEach(function (a) {
+        try {
+            // Preserve any existing rel tokens while adding required ones
+            var existing = (a.getAttribute('rel') || '').split(/\s+/).filter(Boolean);
+            var needed = ['noopener', 'noreferrer'];
+            needed.forEach(function (t) { if (!existing.includes(t)) existing.push(t); });
+            a.setAttribute('rel', existing.join(' ').trim());
+        } catch (e) { /* no-op */ }
+    });
+});
+</script>
 {% endblock %}
