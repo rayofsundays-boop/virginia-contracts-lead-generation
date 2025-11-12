@@ -16202,29 +16202,24 @@ def get_search_suggestions():
 def api_dashboard_stats():
     """Get dashboard statistics for user"""
     try:
-        user_email = request.args.get('email', 'demo@example.com')
+        user_email = request.args.get('email', session.get('email', 'demo@example.com'))
         
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # Get government contracts count
-        c.execute('SELECT COUNT(*) FROM contracts')
-        govt_contracts = c.fetchone()[0]
+        # Get government contracts count (federal_contracts table)
+        govt_contracts_result = db.session.execute(text('SELECT COUNT(*) FROM federal_contracts')).fetchone()
+        govt_contracts = govt_contracts_result[0] if govt_contracts_result else 0
         
         # Get commercial leads count
-        c.execute('SELECT COUNT(*) FROM commercial_opportunities')
-        commercial_leads = c.fetchone()[0]
+        commercial_leads_result = db.session.execute(text('SELECT COUNT(*) FROM commercial_lead_requests')).fetchone()
+        commercial_leads = commercial_leads_result[0] if commercial_leads_result else 0
         
-        # Get user's leads accessed (credits used)
-        c.execute('SELECT COUNT(*) FROM credits_usage WHERE user_email = ?', (user_email,))
-        leads_accessed = c.fetchone()[0]
+        # Get user's leads accessed (from session or database)
+        leads_accessed = session.get('lead_clicks_used', 0)
         
-        # Calculate total contract value
-        c.execute('SELECT SUM(CAST(REPLACE(REPLACE(value, "$", ""), ",", "") AS INTEGER)) FROM contracts')
-        total_value_result = c.fetchone()[0]
-        total_value = total_value_result if total_value_result else 0
-        
-        conn.close()
+        # Calculate total contract value from federal contracts
+        total_value_result = db.session.execute(text(
+            "SELECT SUM(CAST(REGEXP_REPLACE(COALESCE(value, '0'), '[^0-9]', '', 'g') AS BIGINT)) FROM federal_contracts WHERE value IS NOT NULL"
+        )).fetchone()
+        total_value = total_value_result[0] if total_value_result and total_value_result[0] else 0
         
         return jsonify({
             'success': True,
@@ -16236,49 +16231,50 @@ def api_dashboard_stats():
         
     except Exception as e:
         print(f"Dashboard stats error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'message': 'Failed to load stats'}), 500
 
 @app.route('/api/recent-opportunities')
 def api_recent_opportunities():
     """Get recent opportunities for dashboard"""
     try:
-        user_email = request.args.get('email', 'demo@example.com')
-        
-        conn = get_db_connection()
-        c = conn.cursor()
+        user_email = request.args.get('email', session.get('email', 'demo@example.com'))
         
         opportunities = []
         
-        # Get recent government contracts
-        c.execute('SELECT title, agency, location, value, description, website_url FROM contracts ORDER BY created_at DESC LIMIT 3')
-        govt_contracts = c.fetchall()
+        # Get recent government contracts from federal_contracts
+        govt_contracts = db.session.execute(text(
+            'SELECT title, agency, location, value, description, url FROM federal_contracts ORDER BY created_at DESC LIMIT 3'
+        )).fetchall()
         
         for contract in govt_contracts:
+            desc = contract[4] if contract[4] else 'No description available'
             opportunities.append({
-                'id': f'govt_{hash(contract[0])}',
+                'id': f'govt_{abs(hash(contract[0]))}',
                 'type': 'government',
                 'title': contract[0],
-                'description': contract[4][:100] + '...' if len(contract[4]) > 100 else contract[4],
-                'value': contract[3],
-                'location': contract[2],
-                'website_url': contract[5]
+                'description': desc[:100] + '...' if len(desc) > 100 else desc,
+                'value': contract[3] if contract[3] else 'N/A',
+                'location': contract[2] if contract[2] else 'Various',
+                'website_url': contract[5] if contract[5] else '#'
             })
         
         # Get recent commercial opportunities
-        c.execute('SELECT business_name, business_type, location, monthly_value, description FROM commercial_opportunities ORDER BY created_at DESC LIMIT 2')
-        commercial_opps = c.fetchall()
+        commercial_opps = db.session.execute(text(
+            'SELECT business_name, business_type, location, estimated_value, description FROM commercial_lead_requests ORDER BY created_at DESC LIMIT 2'
+        )).fetchall()
         
         for opp in commercial_opps:
+            desc = opp[4] if opp[4] else 'Commercial opportunity'
             opportunities.append({
-                'id': f'comm_{hash(opp[0])}',
+                'id': f'comm_{abs(hash(opp[0]))}',
                 'type': 'commercial',
                 'title': opp[0],
-                'description': opp[4][:100] + '...' if len(opp[4]) > 100 else opp[4],
-                'value': f'${opp[3]}/month',
-                'location': opp[2]
+                'description': desc[:100] + '...' if len(desc) > 100 else desc,
+                'value': opp[3] if opp[3] else 'Contact for quote',
+                'location': opp[2] if opp[2] else 'N/A'
             })
-        
-        conn.close()
         
         return jsonify({
             'success': True,
@@ -16287,6 +16283,8 @@ def api_recent_opportunities():
         
     except Exception as e:
         print(f"Recent opportunities error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'message': 'Failed to load opportunities'}), 500
 
 @app.route('/api/signin', methods=['POST'])
