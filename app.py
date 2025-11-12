@@ -14940,8 +14940,10 @@ def industry_days_events():
             )'''
             db.session.execute(text(ddl))
             db.session.commit()
-        except Exception:
+            print("✅ industry_days table created/verified successfully")
+        except Exception as table_err:
             # Non-fatal: fall through; legacy fallback below will handle if needed
+            print(f"⚠️  Warning creating industry_days table: {table_err}")
             db.session.rollback()
             pass
 
