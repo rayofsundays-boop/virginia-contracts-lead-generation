@@ -22145,36 +22145,36 @@ def admin_mailbox():
         
         # 1. Regular customer messages (with table existence check)
         try:
-            # Check if messages table exists
+            # Check if messages table exists and has data
             table_check = db.session.execute(text(
                 "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'messages')"
             )).scalar()
             
             if table_check:
+                # Simple query without complex joins
                 customer_messages = db.session.execute(
-                    text("SELECT m.*, sender.email as sender_email, "
-                         "sender.first_name || ' ' || sender.last_name as sender_name, "
-                         "sender.company_name FROM messages m "
-                         "LEFT JOIN leads sender ON m.sender_id = sender.id "
-                         "WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) "
-                         "ORDER BY m.is_read ASC, m.sent_at DESC")
+                    text("SELECT id, sender_id, recipient_id, subject, body, sent_at, is_read "
+                         "FROM messages "
+                         "ORDER BY is_read ASC, sent_at DESC LIMIT 50")
                 ).fetchall()
                 
                 for msg in customer_messages:
                     messages_list.append({
-                        'id': msg.id,
+                        'id': msg[0],
                         'type': 'customer_message',
-                        'sender_name': msg.sender_name or 'Unknown',
-                        'sender_email': msg.sender_email or '',
-                        'company': msg.company_name or '',
-                        'subject': msg.subject,
-                        'body': msg.body,
-                        'created_at': msg.sent_at,
-                        'is_read': msg.is_read,
-                        'sender_id': msg.sender_id
+                        'sender_name': 'Customer',
+                        'sender_email': '',
+                        'company': '',
+                        'subject': msg[3] or 'No subject',
+                        'body': msg[4] or 'No message',
+                        'created_at': msg[5],
+                        'is_read': msg[6],
+                        'sender_id': msg[1]
                     })
         except Exception as e:
             print(f"Could not fetch customer messages: {e}")
+            import traceback
+            traceback.print_exc()
         
         # 2. Contact form submissions
         try:
@@ -22227,26 +22227,31 @@ def admin_mailbox():
         # 4. Commercial lead requests
         try:
             commercial_leads = db.session.execute(
-                text("SELECT * FROM commercial_lead_requests "
+                text("SELECT id, business_name, contact_name, email, phone, "
+                     "services_needed, urgency, created_at "
+                     "FROM commercial_lead_requests "
                      "WHERE status = 'open' "
                      "ORDER BY created_at DESC LIMIT 50")
             ).fetchall()
             
             for lead in commercial_leads:
+                urgency_label = lead[6] if lead[6] else 'NORMAL'
                 messages_list.append({
-                    'id': f"commercial_{lead.id}",
+                    'id': f"commercial_{lead[0]}",
                     'type': 'commercial_lead',
-                    'sender_name': lead.contact_name,
-                    'sender_email': lead.contact_email,
-                    'company': lead.business_name,
-                    'subject': f'🏢 Commercial Cleaning Request - {lead.urgency.upper()}',
-                    'body': f"Service Type: {lead.service_type}\nProperty Size: {lead.property_size} sq ft\nBudget: ${lead.budget}\nLocation: {lead.location}",
-                    'created_at': lead.created_at,
+                    'sender_name': lead[2] or 'Unknown',
+                    'sender_email': lead[3] or '',
+                    'company': lead[1] or '',
+                    'subject': f'🏢 Commercial Cleaning Request - {urgency_label.upper()}',
+                    'body': f"Services Needed: {lead[5]}\nContact: {lead[2]}\nEmail: {lead[3]}\nPhone: {lead[4]}",
+                    'created_at': lead[7],
                     'is_read': False,
                     'sender_id': None
                 })
         except Exception as e:
             print(f"Could not fetch commercial leads: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Sort all messages by date (newest first, unread first)
         messages_list.sort(key=lambda x: (x['is_read'], x['created_at']), reverse=True)
