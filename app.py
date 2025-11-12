@@ -15308,6 +15308,8 @@ def industry_days_events():
                     'date': date_display,
                     'time': getattr(row, 'event_time', None) or 'TBD',
                     'location': location_display,
+                    'city': city,
+                    'state': state,
                     'description': getattr(row, 'description', None) or 'Contact organizer for details',
                     'type': event_type,
                     'topics': topics_list,
