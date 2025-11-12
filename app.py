@@ -16613,10 +16613,8 @@ def analyze_proposal_compliance(rfp_path, proposal_path):
 @app.route('/pricing-calculator')
 @login_required
 def pricing_calculator():
-    """Interactive pricing calculator for subscribers"""
-    # For now, show calculator to all logged-in users
-    # TODO: Add proper subscription check when payment system is fully implemented
-    return render_template('pricing_calculator.html')
+    """Redirect to pricing guide with integrated calculator"""
+    return redirect(url_for('pricing_guide'))
 
 @app.route('/ai-assistant')
 @login_required
