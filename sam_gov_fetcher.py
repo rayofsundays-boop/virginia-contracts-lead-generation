@@ -21,13 +21,27 @@ class SAMgovFetcher:
         # Expanded cleaning-related NAICS codes for comprehensive coverage
         self.naics_codes = [
             '561720',  # Janitorial Services (PRIMARY)
-            '561730',  # Landscaping Services
-            '561790',  # Other Services to Buildings and Dwellings
-            '562111',  # Solid Waste Collection (trash removal)
-            '561710',  # Exterminating and Pest Control Services
             '561740',  # Carpet and Upholstery Cleaning Services
+            '561790',  # Other Services to Buildings and Dwellings
+            '561210',  # Facilities Support Services
+            '561110',  # Office Administrative Services
+            '561499',  # All Other Business Support Services
+            '561990',  # All Other Support Services
+            '238910',  # Site Preparation Contractors
             '238990',  # All Other Specialty Trade Contractors (facility maintenance)
             '562910',  # Remediation Services (deep cleaning, mold removal)
+            '561730',  # Landscaping Services
+            '561710',  # Exterminating and Pest Control Services
+            '562111',  # Solid Waste Collection (trash removal)
+            '562119',  # Other Waste Collection
+            '562991',  # Septic Tank and Related Services
+            '562998',  # All Other Miscellaneous Waste Management Services
+            '325612',  # Polish and Other Sanitation Good Manufacturing
+            '811310',  # Commercial and Industrial Machinery Repair and Maintenance
+            '236118',  # Residential Remodelers
+            '236220',  # Commercial and Institutional Building Construction
+            '531312',  # Nonresidential Property Managers
+            '531311',  # Residential Property Managers
         ]
         
         # Default to all 50 US states for nationwide coverage (override with SAM_TARGET_STATES env as CSV)
