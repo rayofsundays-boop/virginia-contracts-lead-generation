@@ -1140,7 +1140,7 @@ section, .container, .row {
 
 /* ==================== FEATURED PARTNER SECTION ==================== */
 .featured-partner-section {
-    padding: 8rem 0;
+    padding: 10rem 0; /* Increased from 8rem to 10rem for more space */
     margin-top: 4rem;
     background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
     position: relative;
@@ -1193,7 +1193,7 @@ section, .container, .row {
 
 .partner-badge {
     position: absolute;
-    top: -15px;
+    top: 15px; /* Moved inside card (was -15px) */
     right: 30px;
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
     color: #000;
@@ -1204,6 +1204,7 @@ section, .container, .row {
     letter-spacing: 1px;
     box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
     animation: badge-pulse 2s ease-in-out infinite;
+    z-index: 10; /* Ensure badge stays visible */
 }
 
 @keyframes badge-pulse {
