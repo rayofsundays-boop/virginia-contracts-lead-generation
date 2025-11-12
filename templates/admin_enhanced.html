@@ -7,10 +7,10 @@
 :root {
     --admin-bg: #f8f9fa;
     --sidebar-bg: #ffffff;
-    --sidebar-link-color: #555;
+    --sidebar-link-color: #212529;
     --sidebar-link-hover-bg: #f0f2f5;
     --sidebar-link-active-bg: #e9ecef;
-    --sidebar-link-active-color: #007bff;
+    --sidebar-link-active-color: #0056b3;
     --border-color: #dee2e6;
     --shadow-color: rgba(0, 0, 0, 0.05);
 }
@@ -52,7 +52,7 @@ body {
 .admin-sidebar .nav-link i {
     width: 25px;
     margin-right: 12px;
-    color: #888;
+    color: #495057;
     transition: color 0.3s ease;
 }
 
@@ -66,7 +66,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #999;
+    color: #6c757d;
     padding: 15px 20px 5px;
 }
 
@@ -98,7 +98,7 @@ body {
                 <div class="p-4 text-center border-bottom">
                     <i class="fas fa-shield-alt fa-3x text-primary mb-2"></i>
                     <h5 class="mb-1">Admin Panel</h5>
-                    <small class="text-muted">{{ session.get('user_email') }}</small>
+                    <small class="text-secondary fw-semibold">{{ session.get('user_email') }}</small>
                 </div>
                 
                 <nav class="nav flex-column pt-3">
