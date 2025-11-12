@@ -11450,6 +11450,29 @@ def admin_dashboard():
     else:
         return redirect(url_for('auth'))
 
+@app.route('/admin-dashboard')
+def admin_dashboard_redirect():
+    """Redirect /admin-dashboard to enhanced admin panel"""
+    if session.get('is_admin'):
+        return redirect(url_for('admin_enhanced'))
+    else:
+        return redirect(url_for('auth'))
+
+@app.route('/admin/my-leads')
+@login_required
+@admin_required
+def admin_my_leads():
+    """Admin view of all leads across the system"""
+    # Redirect to admin enhanced with all_leads section
+    return redirect(url_for('admin_enhanced', section='all-leads'))
+
+@app.route('/admin/commercial-leads')
+@login_required
+@admin_required
+def admin_commercial_leads():
+    """Redirect to commercial leads review page"""
+    return redirect(url_for('admin_review_commercial_leads'))
+
 @app.route('/admin-enhanced')
 @login_required
 @admin_required
@@ -22254,29 +22277,33 @@ def admin_mailbox():
         # 2. Contact form submissions
         try:
             contact_messages = db.session.execute(
-                text("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+                text("SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
             ).fetchall()
             
             for msg in contact_messages:
                 messages_list.append({
-                    'id': f"contact_{msg.id}",
+                    'id': f"contact_{msg[0]}",
                     'type': 'contact_form',
-                    'sender_name': msg.name,
-                    'sender_email': msg.email,
+                    'sender_name': msg[1],
+                    'sender_email': msg[2],
                     'company': '',
-                    'subject': msg.subject or 'Contact Form Submission',
-                    'body': msg.message,
-                    'created_at': msg.created_at,
+                    'subject': msg[3] or 'Contact Form Submission',
+                    'body': msg[4],
+                    'created_at': msg[5],
                     'is_read': False,
                     'sender_id': None
                 })
+            print(f"✅ Found {len(contact_messages)} contact form messages")
         except Exception as e:
             print(f"Could not fetch contact messages: {e}")
+            import traceback
+            traceback.print_exc()
         
         # 3. Proposal review submissions
         try:
             proposal_reviews = db.session.execute(
-                text("SELECT pr.*, l.email, l.company_name, l.contact_name "
+                text("SELECT pr.id, pr.user_id, pr.contract_type, pr.deadline, pr.proposal_value, "
+                     "pr.agency_website, pr.created_at, l.email, l.company_name, l.contact_name "
                      "FROM proposal_reviews pr "
                      "LEFT JOIN leads l ON pr.user_id = l.id "
                      "WHERE pr.status = 'pending' "
@@ -22285,19 +22312,22 @@ def admin_mailbox():
             
             for review in proposal_reviews:
                 messages_list.append({
-                    'id': f"proposal_{review.id}",
+                    'id': f"proposal_{review[0]}",
                     'type': 'proposal_review',
-                    'sender_name': review.contact_name or 'Unknown',
-                    'sender_email': review.email or '',
-                    'company': review.company_name or '',
-                    'subject': f'📋 Proposal Review Request - ${review.proposal_value}',
-                    'body': f"Contract: {review.contract_type}\nDeadline: {review.deadline}\nValue: ${review.proposal_value}\nWebsite: {review.agency_website}",
-                    'created_at': review.created_at,
+                    'sender_name': review[9] or 'Unknown',
+                    'sender_email': review[7] or '',
+                    'company': review[8] or '',
+                    'subject': f'📋 Proposal Review Request - ${review[4]}',
+                    'body': f"Contract: {review[2]}\nDeadline: {review[3]}\nValue: ${review[4]}\nWebsite: {review[5]}",
+                    'created_at': review[6],
                     'is_read': False,
-                    'sender_id': review.user_id
+                    'sender_id': review[1]
                 })
+            print(f"✅ Found {len(proposal_reviews)} proposal review requests")
         except Exception as e:
             print(f"Could not fetch proposal reviews: {e}")
+            import traceback
+            traceback.print_exc()
         
         # 4. Commercial lead requests
         try:
