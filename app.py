@@ -5732,6 +5732,7 @@ def federal_contracts():
         today = date.today().isoformat()
         
         # Build base query - deadline comparison works on both DATE and TEXT columns
+        # Filter out awarded, cancelled, and inactive contracts
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
                    naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at,
@@ -5739,6 +5740,9 @@ def federal_contracts():
             FROM federal_contracts 
             WHERE deadline IS NOT NULL 
             AND deadline >= :today
+            AND LOWER(title) NOT LIKE '%award%'
+            AND LOWER(title) NOT LIKE '%cancel%'
+            AND LOWER(title) NOT LIKE '%inactive%'
         '''
         params = {'today': today}
         
