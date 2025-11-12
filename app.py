@@ -15040,6 +15040,7 @@ def industry_days_events():
                 
                 # Seed if no events OR if all events are in the past
                 if total_events == 0 or future_events == 0:
+                    print(f"🌱 Seeding industry days events (total={total_events}, future={future_events})")
                     # Clear old events before reseeding
                     if future_events == 0 and total_events > 0:
                         try:
@@ -15053,6 +15054,7 @@ def industry_days_events():
                     # Seed a minimal verified set
                     # Generate future dates dynamically (7-29 days from now)
                     today = datetime.utcnow().date()
+                    print(f"📅 Generating events starting from {today}")
                     verified_events = [
                         {
                             'event_title': 'Virginia Procurement Conference 2025',
@@ -15168,8 +15170,10 @@ def industry_days_events():
                     for ev in verified_events:
                         db.session.execute(insert_sql, ev)
                     db.session.commit()
+                    print(f"✅ Seeded {len(verified_events)} industry days events successfully")
                     # Retry the main query after seeding
                     events_result = db.session.execute(text(query), params).fetchall()
+                    print(f"📊 After seeding, found {len(events_result)} events in query")
         except Exception as inner_e:
             # Fallback legacy contracts if industry_days unavailable
             try:
