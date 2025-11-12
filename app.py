@@ -21854,84 +21854,48 @@ def ensure_minimum_schema():
     try:
         with app.app_context():
             dialect = db.engine.dialect.name
-            # 1. Ensure supply_contracts table exists on SQLite (it is created in the
-            # PostgreSQL-specific initialization block, so local dev using SQLite
-            # may miss it and trigger warnings).
-            if dialect == 'sqlite':
-                table_exists = db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='supply_contracts'")).fetchone()
-                if not table_exists:
-                    try:
-                        db.session.execute(text('''CREATE TABLE IF NOT EXISTS supply_contracts (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            title TEXT NOT NULL,
-                            agency TEXT NOT NULL,
-                            location TEXT NOT NULL,
-                            product_category TEXT,
-                            estimated_value TEXT,
-                            bid_deadline TEXT,
-                            description TEXT,
-                            website_url TEXT,
-                            is_small_business_set_aside INTEGER DEFAULT 0,
-                            contact_name TEXT,
-                            contact_email TEXT,
-                            contact_phone TEXT,
-                            is_quick_win INTEGER DEFAULT 0,
-                            status TEXT DEFAULT 'open',
-                            posted_date TEXT,
-                            category TEXT DEFAULT 'General',
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        )'''))
-                        db.session.commit()
-                        print("✅ Created missing supply_contracts table (SQLite)")
-                    except Exception as create_e:
-                        db.session.rollback()
-                        print(f"⚠️  Could not create supply_contracts table: {create_e}")
-            else:
-                # For PostgreSQL we assume earlier initialization created table; if not, create now.
-                res = db.session.execute(text("""
-                    SELECT 1 FROM information_schema.tables WHERE table_name='supply_contracts'
-                """)).fetchone()
-                if not res:
-                    try:
-                        db.session.execute(text('''CREATE TABLE IF NOT EXISTS supply_contracts (
-                            id SERIAL PRIMARY KEY,
-                            title TEXT NOT NULL,
-                            agency TEXT NOT NULL,
-                            location TEXT NOT NULL,
-                            product_category TEXT,
-                            estimated_value TEXT,
-                            bid_deadline TEXT,
-                            description TEXT,
-                            website_url TEXT,
-                            is_small_business_set_aside BOOLEAN DEFAULT FALSE,
-                            contact_name TEXT,
-                            contact_email TEXT,
-                            contact_phone TEXT,
-                            is_quick_win BOOLEAN DEFAULT FALSE,
-                            status TEXT DEFAULT 'open',
-                            posted_date TEXT,
-                            category TEXT DEFAULT 'General',
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        )'''))
-                        db.session.commit()
-                        print("✅ Created missing supply_contracts table (PostgreSQL)")
-                    except Exception as pg_create_e:
-                        db.session.rollback()
-                        print(f"⚠️  Could not create supply_contracts table (PostgreSQL): {pg_create_e}")
+            
+            # Check if table exists first, then check column
+            table_exists = False
+            try:
+                if dialect == 'sqlite':
+                    table_check = db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='supply_contracts'")).fetchone()
+                    table_exists = bool(table_check)
+                else:
+                    table_check = db.session.execute(text("SELECT 1 FROM information_schema.tables WHERE table_name='supply_contracts'")).fetchone()
+                    table_exists = bool(table_check)
+            except Exception as check_e:
+                print(f"⚠️  Could not check for supply_contracts table: {check_e}")
+                return
+            
+            # If table doesn't exist, don't try to alter it - it will be created by init functions
+            if not table_exists:
+                print("ℹ️  supply_contracts table will be created by initialization")
+                return
+            
+            # Table exists, check for posted_date column
             has_posted_date = False
             if dialect == 'sqlite':
-                cols = db.session.execute(text("PRAGMA table_info('supply_contracts')")).fetchall()
-                col_names = {row[1] for row in cols}  # row[1] = name
-                has_posted_date = 'posted_date' in col_names
+                try:
+                    cols = db.session.execute(text("PRAGMA table_info('supply_contracts')")).fetchall()
+                    col_names = {row[1] for row in cols}  # row[1] = name
+                    has_posted_date = 'posted_date' in col_names
+                except Exception as e:
+                    print(f"⚠️  Could not check supply_contracts columns: {e}")
+                    return
             else:
                 # PostgreSQL and others
-                res = db.session.execute(text(
-                    """
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'supply_contracts' AND column_name = 'posted_date'
-                    """
-                )).fetchone()
-                has_posted_date = bool(res)
+                try:
+                    res = db.session.execute(text(
+                        """
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'supply_contracts' AND column_name = 'posted_date'
+                        """
+                    )).fetchone()
+                    has_posted_date = bool(res)
+                except Exception as e:
+                    print(f"⚠️  Could not check supply_contracts columns: {e}")
+                    return
 
             if not has_posted_date:
                 try:
