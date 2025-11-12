@@ -535,8 +535,12 @@ section, .container, .row {
     align-items: center;
     justify-content: center;
     background: var(--gradient-hero);
-    overflow: hidden;
+    overflow: hidden !important; /* Force hide any overflow */
     padding: 8rem 0 4rem;
+}
+
+.hero-cinematic * {
+    overflow: visible; /* Ensure child elements don't create scrollbars */
 }
 
 .hero-gradient-overlay {
