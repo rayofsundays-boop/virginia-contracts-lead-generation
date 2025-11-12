@@ -876,6 +876,27 @@ function showPostConstructionChecklist() {
     document.getElementById('toolModalTitle').textContent = 'Post-Construction Cleanup & Windows';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3" style="max-height: 600px; overflow-y: auto;">
+            <style>
+                .checklist-tabs .nav-link {
+                    background-color: #e8eaf6;
+                    color: #1a1a1a;
+                    border: 2px solid #c5cae9;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    padding: 8px 16px;
+                }
+                .checklist-tabs .nav-link.active {
+                    background-color: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                    font-weight: 700;
+                }
+                .checklist-tabs .nav-link:hover:not(.active) {
+                    background-color: #d1d5e8;
+                    color: #1a1a1a;
+                    border-color: #a5aed9;
+                }
+            </style>
             <ul class="nav nav-tabs mb-3 checklist-tabs" role="tablist" style="border-bottom: 1px solid #dee2e6;">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#postconstChecklist">Checklist</a>
