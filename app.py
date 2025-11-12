@@ -15771,6 +15771,7 @@ def privacy():
     return render_template('privacy.html')
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     """Dashboard for signed-in users"""
     return render_template('dashboard.html')

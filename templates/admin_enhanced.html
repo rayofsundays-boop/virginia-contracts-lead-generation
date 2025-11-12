@@ -7,12 +7,12 @@
 :root {
     --admin-bg: #f8f9fa;
     --sidebar-bg: #ffffff;
-    --sidebar-link-color: #212529;
-    --sidebar-link-hover-bg: #f0f2f5;
-    --sidebar-link-active-bg: #e9ecef;
-    --sidebar-link-active-color: #0056b3;
+    --sidebar-link-color: #1a1a1a;
+    --sidebar-link-hover-bg: #e3f2fd;
+    --sidebar-link-active-bg: #0d47a1;
+    --sidebar-link-active-color: #ffffff;
     --border-color: #dee2e6;
-    --shadow-color: rgba(0, 0, 0, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 body {
@@ -34,40 +34,45 @@ body {
     padding: 12px 20px;
     border-left: 3px solid transparent;
     transition: all 0.3s ease;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 15px;
 }
 
 .admin-sidebar .nav-link:hover {
     background-color: var(--sidebar-link-hover-bg);
-    color: var(--sidebar-link-active-color);
+    color: #0d47a1;
+    border-left-color: #0d47a1;
 }
 
 .admin-sidebar .nav-link.active {
     color: var(--sidebar-link-active-color);
     background-color: var(--sidebar-link-active-bg);
-    border-left-color: var(--sidebar-link-active-color);
-    font-weight: 600;
+    border-left-color: #1976d2;
+    font-weight: 700;
 }
 
 .admin-sidebar .nav-link i {
     width: 25px;
     margin-right: 12px;
-    color: #495057;
+    color: #212529;
     transition: color 0.3s ease;
+    font-size: 16px;
 }
 
 .admin-sidebar .nav-link.active i,
 .admin-sidebar .nav-link:hover i {
-    color: var(--sidebar-link-active-color);
+    color: inherit;
 }
 
 .sidebar-heading {
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #6c757d;
+    color: #212529;
     padding: 15px 20px 5px;
+    background-color: #f8f9fa;
+    margin: 0 -10px;
 }
 
 .stat-card {
