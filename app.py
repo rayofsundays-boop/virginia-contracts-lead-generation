@@ -5536,13 +5536,22 @@ def educational_contracts():
 def industry_days():
     """Industry days and procurement events for subscribers - All 50 States"""
     try:
-        # Check if table exists
-        table_check = db.session.execute(text("""
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'industry_days'
-            )
-        """)).scalar()
+        # Check if table exists (works on both PostgreSQL and SQLite)
+        is_postgres = 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']
+        
+        if is_postgres:
+            table_check = db.session.execute(text("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'industry_days'
+                )
+            """)).scalar()
+        else:
+            # SQLite: Check sqlite_master
+            table_check = db.session.execute(text("""
+                SELECT COUNT(*) FROM sqlite_master 
+                WHERE type='table' AND name='industry_days'
+            """)).scalar()
         
         if not table_check:
             flash('Industry days feature is being set up. Check back soon!', 'info')
@@ -5557,9 +5566,12 @@ def industry_days():
         per_page = 12
         offset = (page - 1) * per_page
         
-        # Build where conditions
-        where_conditions = ["status = 'upcoming'", "event_date >= CURRENT_DATE"]
-        params = {}
+        # Build where conditions (use string comparison for date to work on all DBs)
+        from datetime import date
+        today = date.today().isoformat()
+        
+        where_conditions = ["status = 'upcoming'", "event_date >= :today"]
+        params = {'today': today}
         
         if state_filter:
             where_conditions.append("state = :state")
@@ -5596,29 +5608,31 @@ def industry_days():
         '''), params).fetchall()
         
         # Get filter options (all 50 states)
+        filter_params = {'today': today}
+        
         states = db.session.execute(text('''
             SELECT DISTINCT state FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            WHERE status = 'upcoming' AND event_date >= :today 
             ORDER BY state
-        ''')).fetchall()
+        '''), filter_params).fetchall()
         
         cities = db.session.execute(text('''
             SELECT DISTINCT city FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            WHERE status = 'upcoming' AND event_date >= :today 
             ORDER BY city
-        ''')).fetchall()
+        '''), filter_params).fetchall()
         
         event_types = db.session.execute(text('''
             SELECT DISTINCT event_type FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE 
+            WHERE status = 'upcoming' AND event_date >= :today 
             ORDER BY event_type
-        ''')).fetchall()
+        '''), filter_params).fetchall()
         
         # Get virtual event count
         virtual_count = db.session.execute(text('''
             SELECT COUNT(*) FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= CURRENT_DATE AND is_virtual = 1
-        ''')).scalar() or 0
+            WHERE status = 'upcoming' AND event_date >= :today AND is_virtual = 1
+        '''), filter_params).scalar() or 0
         
         total_pages = math.ceil(total / per_page) if total > 0 else 1
         
