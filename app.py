@@ -3861,11 +3861,22 @@ def signin():
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
         return redirect(url_for('contracts'))
     
-    # Get user from database (including beta tester fields)
-    result = db.session.execute(
-        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
-        {'username': username}
-    ).fetchone()
+    # Get user from database (including beta tester fields if they exist)
+    try:
+        result = db.session.execute(
+            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
+            {'username': username}
+        ).fetchone()
+    except Exception as e:
+        # Fallback if beta tester columns don't exist yet
+        print(f"⚠️ Beta columns not available, using legacy query: {e}")
+        result = db.session.execute(
+            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+            {'username': username}
+        ).fetchone()
+        # Append None values for missing beta columns
+        if result:
+            result = tuple(list(result) + [False, None])
     
     if result and check_password_hash(result[3], password):
         from datetime import datetime
