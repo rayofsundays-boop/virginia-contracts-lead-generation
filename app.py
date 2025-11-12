@@ -11041,6 +11041,39 @@ def admin_run_database_migration():
                 results['errors'].append(f'website_url: {str(e2)}')
                 db.session.rollback()
         
+            # Migration 6: Add posted_date column to supply_contracts
+            try:
+                # Prefer PostgreSQL-safe conditional add
+                db.session.execute(text("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns
+                            WHERE table_name='supply_contracts'
+                            AND column_name='posted_date'
+                        ) THEN
+                            ALTER TABLE supply_contracts ADD COLUMN posted_date TEXT;
+                        END IF;
+                    END $$;
+                """))
+                db.session.commit()
+                results['columns_added'].append('supply_contracts.posted_date')
+                results['messages'].append('✅ Added posted_date column to supply_contracts')
+            except Exception as e:
+                # Fallback for SQLite or environments without DO $$
+                try:
+                    db.session.rollback()
+                    db.session.execute(text("""
+                        ALTER TABLE supply_contracts
+                        ADD COLUMN posted_date TEXT
+                    """))
+                    db.session.commit()
+                    results['columns_added'].append('supply_contracts.posted_date')
+                    results['messages'].append('✅ Added posted_date column to supply_contracts')
+                except Exception as e2:
+                    results['errors'].append(f'posted_date: {str(e2)}')
+                    db.session.rollback()
+        
         # Verification
         try:
             # Count rows in new tables
