@@ -21854,6 +21854,70 @@ def ensure_minimum_schema():
     try:
         with app.app_context():
             dialect = db.engine.dialect.name
+            # 1. Ensure supply_contracts table exists on SQLite (it is created in the
+            # PostgreSQL-specific initialization block, so local dev using SQLite
+            # may miss it and trigger warnings).
+            if dialect == 'sqlite':
+                table_exists = db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='supply_contracts'")).fetchone()
+                if not table_exists:
+                    try:
+                        db.session.execute(text('''CREATE TABLE IF NOT EXISTS supply_contracts (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title TEXT NOT NULL,
+                            agency TEXT NOT NULL,
+                            location TEXT NOT NULL,
+                            product_category TEXT,
+                            estimated_value TEXT,
+                            bid_deadline TEXT,
+                            description TEXT,
+                            website_url TEXT,
+                            is_small_business_set_aside INTEGER DEFAULT 0,
+                            contact_name TEXT,
+                            contact_email TEXT,
+                            contact_phone TEXT,
+                            is_quick_win INTEGER DEFAULT 0,
+                            status TEXT DEFAULT 'open',
+                            posted_date TEXT,
+                            category TEXT DEFAULT 'General',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )'''))
+                        db.session.commit()
+                        print("✅ Created missing supply_contracts table (SQLite)")
+                    except Exception as create_e:
+                        db.session.rollback()
+                        print(f"⚠️  Could not create supply_contracts table: {create_e}")
+            else:
+                # For PostgreSQL we assume earlier initialization created table; if not, create now.
+                res = db.session.execute(text("""
+                    SELECT 1 FROM information_schema.tables WHERE table_name='supply_contracts'
+                """)).fetchone()
+                if not res:
+                    try:
+                        db.session.execute(text('''CREATE TABLE IF NOT EXISTS supply_contracts (
+                            id SERIAL PRIMARY KEY,
+                            title TEXT NOT NULL,
+                            agency TEXT NOT NULL,
+                            location TEXT NOT NULL,
+                            product_category TEXT,
+                            estimated_value TEXT,
+                            bid_deadline TEXT,
+                            description TEXT,
+                            website_url TEXT,
+                            is_small_business_set_aside BOOLEAN DEFAULT FALSE,
+                            contact_name TEXT,
+                            contact_email TEXT,
+                            contact_phone TEXT,
+                            is_quick_win BOOLEAN DEFAULT FALSE,
+                            status TEXT DEFAULT 'open',
+                            posted_date TEXT,
+                            category TEXT DEFAULT 'General',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )'''))
+                        db.session.commit()
+                        print("✅ Created missing supply_contracts table (PostgreSQL)")
+                    except Exception as pg_create_e:
+                        db.session.rollback()
+                        print(f"⚠️  Could not create supply_contracts table (PostgreSQL): {pg_create_e}")
             has_posted_date = False
             if dialect == 'sqlite':
                 cols = db.session.execute(text("PRAGMA table_info('supply_contracts')")).fetchall()
@@ -23290,5 +23354,20 @@ def run_industry_days_scraper():
 
 if __name__ == '__main__':
     init_db()
+    import socket
     port = int(os.environ.get('PORT', 8080))
+    # Attempt to bind to desired port; if unavailable (local dev only), choose a fallback.
+    desired_port = port
+    if 'PORT' not in os.environ:  # only do dynamic fallback when not explicitly set (likely local dev)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.2)
+            if s.connect_ex(('127.0.0.1', desired_port)) == 0:
+                # Port in use; search for a free port in a small range.
+                for alt in range(desired_port + 1, desired_port + 11):
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as test_sock:
+                        test_sock.settimeout(0.2)
+                        if test_sock.connect_ex(('127.0.0.1', alt)) != 0:
+                            port = alt
+                            print(f"⚠️  Port {desired_port} in use. Starting on fallback port {port}.")
+                            break
     app.run(host='0.0.0.0', port=port, debug=False)
