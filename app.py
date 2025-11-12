@@ -22143,29 +22143,38 @@ def admin_mailbox():
         # Get all messages sent to admins
         messages_list = []
         
-        # 1. Regular customer messages
-        customer_messages = db.session.execute(
-            text("SELECT m.*, sender.email as sender_email, "
-                 "sender.first_name || ' ' || sender.last_name as sender_name, "
-                 "sender.company_name FROM messages m "
-                 "LEFT JOIN leads sender ON m.sender_id = sender.id "
-                 "WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) "
-                 "ORDER BY m.is_read ASC, m.sent_at DESC")
-        ).fetchall()
-        
-        for msg in customer_messages:
-            messages_list.append({
-                'id': msg.id,
-                'type': 'customer_message',
-                'sender_name': msg.sender_name or 'Unknown',
-                'sender_email': msg.sender_email or '',
-                'company': msg.company_name or '',
-                'subject': msg.subject,
-                'body': msg.body,
-                'created_at': msg.sent_at,
-                'is_read': msg.is_read,
-                'sender_id': msg.sender_id
-            })
+        # 1. Regular customer messages (with table existence check)
+        try:
+            # Check if messages table exists
+            table_check = db.session.execute(text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'messages')"
+            )).scalar()
+            
+            if table_check:
+                customer_messages = db.session.execute(
+                    text("SELECT m.*, sender.email as sender_email, "
+                         "sender.first_name || ' ' || sender.last_name as sender_name, "
+                         "sender.company_name FROM messages m "
+                         "LEFT JOIN leads sender ON m.sender_id = sender.id "
+                         "WHERE m.recipient_id IN (SELECT id FROM leads WHERE is_admin = TRUE) "
+                         "ORDER BY m.is_read ASC, m.sent_at DESC")
+                ).fetchall()
+                
+                for msg in customer_messages:
+                    messages_list.append({
+                        'id': msg.id,
+                        'type': 'customer_message',
+                        'sender_name': msg.sender_name or 'Unknown',
+                        'sender_email': msg.sender_email or '',
+                        'company': msg.company_name or '',
+                        'subject': msg.subject,
+                        'body': msg.body,
+                        'created_at': msg.sent_at,
+                        'is_read': msg.is_read,
+                        'sender_id': msg.sender_id
+                    })
+        except Exception as e:
+            print(f"Could not fetch customer messages: {e}")
         
         # 2. Contact form submissions
         try:
@@ -22251,8 +22260,13 @@ def admin_mailbox():
         
     except Exception as e:
         print(f"Error loading admin mailbox: {e}")
-        flash('Error loading mailbox', 'error')
-        return redirect(url_for('admin_enhanced'))
+        import traceback
+        traceback.print_exc()
+        flash('Error loading mailbox. Please check the logs.', 'error')
+        return render_template('admin_mailbox.html', 
+                             messages=[], 
+                             unread_count=0,
+                             total_count=0)
 
 @app.route('/admin/reply-message', methods=['POST'])
 @login_required
