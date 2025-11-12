@@ -665,6 +665,15 @@
                                 <li class="dropdown-header">Supply Opportunities</li>
                                 <li>
                                     <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('construction_cleanup_leads') }}"
+                                       data-lead-category="construction"
+                                       data-requires-subscription="true">
+                                        <i class="fas fa-hammer me-2 text-warning"></i>Post-Construction Cleanup
+                                        <small class="text-muted d-block ms-4">Real Builder Projects</small>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
                                        href="{{ url_for('quick_wins') }}"
                                        data-lead-category="supply"
                                        data-requires-subscription="false">

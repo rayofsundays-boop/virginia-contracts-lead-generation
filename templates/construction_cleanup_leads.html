@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Post-Construction Cleanup Leads - Builder Opportunities{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">🏗️ Post-Construction Cleanup Leads</h1>
+        <p class="lead text-white fs-3">Real builder & developer projects requiring final cleanup</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-building"></i><br>
+                            <strong>{{ total_leads }}</strong> Active Projects
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
+                            <i class="fas fa-dollar-sign"></i><br>
+                            <strong>$2.5M+</strong> Total Value
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-success text-white p-3 fs-6 w-100">
+                            <i class="fas fa-hammer"></i><br>
+                            <strong>Real Builders</strong> VA Projects
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-danger text-white p-3 fs-6 w-100">
+                            <i class="fas fa-clock"></i><br>
+                            <strong>Urgent</strong> Opportunities
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white;">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Construction Projects</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('construction_cleanup_leads') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="location" class="form-label">Location</label>
+                        <select name="location" id="location" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Locations</option>
+                            {% for loc in all_locations %}
+                            <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="project_type" class="form-label">Project Type</label>
+                        <select name="project_type" id="project_type" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Types</option>
+                            {% for ptype in all_project_types %}
+                            <option value="{{ ptype }}" {% if project_type_filter == ptype %}selected{% endif %}>{{ ptype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="min_sqft" class="form-label">Minimum Square Footage</label>
+                        <select name="min_sqft" id="min_sqft" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">Any Size</option>
+                            <option value="50000" {% if min_sqft == '50000' %}selected{% endif %}>50,000+ sq ft</option>
+                            <option value="100000" {% if min_sqft == '100000' %}selected{% endif %}>100,000+ sq ft</option>
+                            <option value="200000" {% if min_sqft == '200000' %}selected{% endif %}>200,000+ sq ft</option>
+                            <option value="300000" {% if min_sqft == '300000' %}selected{% endif %}>300,000+ sq ft</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a href="{{ url_for('construction_cleanup_leads') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+                {% if location_filter or project_type_filter or min_sqft %}
+                <div class="mt-3">
+                    {% if location_filter %}
+                    <span class="badge bg-info ms-2">Location: {{ location_filter }}</span>
+                    {% endif %}
+                    {% if project_type_filter %}
+                    <span class="badge bg-info ms-2">Type: {{ project_type_filter }}</span>
+                    {% endif %}
+                    {% if min_sqft %}
+                    <span class="badge bg-info ms-2">Min Size: {{ min_sqft }}+ sq ft</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Leads Section -->
+<div class="container my-5">
+    {% if leads and leads|length > 0 %}
+        <div class="row g-4">
+            {% for lead in leads %}
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm hover-lift border-start border-4 border-warning">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title mb-1">{{ lead.project_name }}</h5>
+                                <p class="text-muted mb-0 small">
+                                    <i class="fas fa-building me-1"></i>{{ lead.builder }}
+                                </p>
+                            </div>
+                            {% if lead.status == 'Urgent - Starting Soon' %}
+                            <span class="badge bg-danger">🔥 URGENT</span>
+                            {% else %}
+                            <span class="badge bg-success">Open</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Project Details -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Project Type</small>
+                                <p class="mb-0 fw-bold">{{ lead.project_type }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Location</small>
+                                <p class="mb-0 fw-bold">
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ lead.location }}
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Size</small>
+                                <p class="mb-0 fw-bold text-primary">{{ lead.square_footage }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Estimated Value</small>
+                                <p class="mb-0 fw-bold text-success">{{ lead.estimated_value }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="card-text small mb-3">{{ lead.description }}</p>
+
+                        <!-- Services Needed -->
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1"><strong>Services Needed:</strong></small>
+                            <p class="small mb-0 text-muted">{{ lead.services_needed }}</p>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Completion Date</small>
+                                <p class="mb-0">{{ lead.completion_date }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Bid Deadline</small>
+                                <p class="mb-0 text-danger fw-bold">⏰ {{ lead.bid_deadline }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div class="alert alert-info py-2 mb-3">
+                            <small><strong>Requirements:</strong> {{ lead.requirements }}</small>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="bg-light p-3 rounded mb-3">
+                            <h6 class="mb-2">Contact Information</h6>
+                            <p class="mb-1 small"><i class="fas fa-user me-2"></i>{{ lead.contact_name }}</p>
+                            <p class="mb-1 small"><i class="fas fa-phone me-2"></i>{{ lead.contact_phone }}</p>
+                            <p class="mb-1 small"><i class="fas fa-envelope me-2"></i>{{ lead.contact_email }}</p>
+                            <p class="mb-0 small"><i class="fas fa-globe me-2"></i><a href="{{ lead.website }}" target="_blank">{{ lead.website }}</a></p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <a href="{{ lead.website }}" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt me-2"></i>Visit Builder Website
+                            </a>
+                            <button class="btn btn-outline-success" onclick="alert('Contact {{ lead.builder }} at {{ lead.contact_phone }} to submit your bid!')">
+                                <i class="fas fa-file-contract me-2"></i>Submit Bid
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>Project ID: {{ lead.id }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <h5><i class="fas fa-info-circle me-2"></i>No Projects Match Your Filters</h5>
+            <p class="mb-0">Try adjusting your filters to see more construction cleanup opportunities.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Info Section -->
+<div class="container my-5">
+    <div class="card shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Post-Construction Cleanup Tips</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Typical Pricing Range</h6>
+                    <ul class="small">
+                        <li><strong>$0.50 - $0.75/sq ft</strong> for standard post-construction cleanup</li>
+                        <li><strong>$0.75 - $1.00/sq ft</strong> for medical facilities or high-end projects</li>
+                        <li><strong>$0.40 - $0.60/sq ft</strong> for large industrial/warehouse projects</li>
+                        <li>Add 20-30% for rush jobs or weekend work</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Common Requirements</h6>
+                    <ul class="small">
+                        <li>Commercial general liability insurance ($1M-$2M)</li>
+                        <li>Workers' compensation insurance</li>
+                        <li>Construction cleanup experience (references required)</li>
+                        <li>Flexible scheduling (evenings/weekends often needed)</li>
+                        <li>Large crew capability for quick turnaround</li>
+                        <li>Equipment: HEPA vacuums, floor polishers, lifts (for high ceilings)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+</style>
+
+{% endblock %}

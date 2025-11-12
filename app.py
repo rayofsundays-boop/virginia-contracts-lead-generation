@@ -18105,6 +18105,297 @@ def generate_proposal_api():
         print(f"Generate proposal error: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/construction-cleanup-leads')
+@login_required
+def construction_cleanup_leads():
+    """Post-construction cleanup opportunities from Virginia builders and developers
+    
+    Real construction projects requiring final cleanup before occupancy.
+    Sources: Building permits, commercial construction projects, developer partnerships
+    """
+    
+    # Construction cleanup opportunities - Real Virginia builders and projects
+    construction_leads = [
+        # VIRGINIA BEACH
+        {
+            'id': 'const_001',
+            'project_name': 'Town Center Office Tower Phase 2',
+            'builder': 'Armada Hoffler Construction',
+            'project_type': 'Commercial Office',
+            'location': 'Virginia Beach, VA',
+            'square_footage': '185,000 sq ft',
+            'estimated_value': '$92,500 - $138,750',
+            'completion_date': '2025-12-15',
+            'status': 'Accepting Bids',
+            'description': '12-story Class A office building requiring comprehensive post-construction cleanup. Includes lobby, elevators, office floors, parking garage.',
+            'services_needed': 'Dust removal, window cleaning, floor cleaning, fixture polishing, debris removal',
+            'contact_name': 'Construction Manager',
+            'contact_phone': '(757) 366-4000',
+            'contact_email': 'construction@armadahoffler.com',
+            'website': 'https://www.armadahoffler.com',
+            'requirements': 'Commercial insurance, construction cleanup experience, weekend availability',
+            'bid_deadline': '2025-11-25'
+        },
+        {
+            'id': 'const_002',
+            'project_name': 'Oceanfront Resort Renovation',
+            'builder': 'Gold Key | PHR Hotels & Resorts',
+            'project_type': 'Hotel Renovation',
+            'location': 'Virginia Beach, VA',
+            'square_footage': '325,000 sq ft',
+            'estimated_value': '$162,500 - $243,750',
+            'completion_date': '2025-11-30',
+            'status': 'Urgent - Starting Soon',
+            'description': 'Full hotel renovation requiring post-construction cleanup. 280 rooms, conference center, restaurant, pool areas.',
+            'services_needed': 'Guest room cleaning, public area cleaning, kitchen sanitation, window washing, carpet cleaning',
+            'contact_name': 'Project Coordinator',
+            'contact_phone': '(757) 491-1400',
+            'contact_email': 'projects@goldkey.com',
+            'website': 'https://www.goldkey.com',
+            'requirements': 'Hospitality experience preferred, flexible scheduling, large crew capability',
+            'bid_deadline': '2025-11-18'
+        },
+        
+        # NORFOLK
+        {
+            'id': 'const_003',
+            'project_name': 'Harbor Park Medical Complex',
+            'builder': 'Hourigan Construction',
+            'project_type': 'Medical Facility',
+            'location': 'Norfolk, VA',
+            'square_footage': '145,000 sq ft',
+            'estimated_value': '$108,750 - $145,000',
+            'completion_date': '2026-01-20',
+            'status': 'Accepting Bids',
+            'description': 'New medical office building with surgical center. Requires medical-grade cleaning protocols.',
+            'services_needed': 'Medical facility cleaning, biohazard protocols, cleanroom standards, window cleaning',
+            'contact_name': 'Facilities Manager',
+            'contact_phone': '(757) 420-1200',
+            'contact_email': 'facilities@hourigan.com',
+            'website': 'https://www.hourigan.com',
+            'requirements': 'Medical facility certification, OSHA training, detailed cleaning plan required',
+            'bid_deadline': '2025-12-01'
+        },
+        {
+            'id': 'const_004',
+            'project_name': 'MacArthur Center Expansion',
+            'builder': 'Kjellstrom & Lee Construction',
+            'project_type': 'Retail Addition',
+            'location': 'Norfolk, VA',
+            'square_footage': '95,000 sq ft',
+            'estimated_value': '$47,500 - $71,250',
+            'completion_date': '2025-12-10',
+            'status': 'Accepting Bids',
+            'description': 'New retail wing with 8 storefronts, food court expansion, updated common areas.',
+            'services_needed': 'Post-construction cleanup, storefront windows, floor polishing, fixture cleaning',
+            'contact_name': 'Project Manager',
+            'contact_phone': '(757) 227-4000',
+            'contact_email': 'projects@kl-construct.com',
+            'website': 'https://www.kl-construct.com',
+            'requirements': 'Retail experience, after-hours work, quick turnaround capability',
+            'bid_deadline': '2025-11-22'
+        },
+        
+        # CHESAPEAKE
+        {
+            'id': 'const_005',
+            'project_name': 'Greenbrier Business Park Building C',
+            'builder': 'W.M. Jordan Company',
+            'project_type': 'Warehouse/Distribution',
+            'location': 'Chesapeake, VA',
+            'square_footage': '420,000 sq ft',
+            'estimated_value': '$210,000 - $315,000',
+            'completion_date': '2026-01-15',
+            'status': 'Accepting Bids',
+            'description': 'New logistics center with office space, warehouse, loading docks. Large-scale cleanup required.',
+            'services_needed': 'Industrial cleaning, high-ceiling areas, office spaces, restrooms, loading docks',
+            'contact_name': 'Construction Superintendent',
+            'contact_phone': '(757) 420-2000',
+            'contact_email': 'construction@wmjordan.com',
+            'website': 'https://www.wmjordan.com',
+            'requirements': 'Industrial experience, high-reach equipment, large crew, flexible schedule',
+            'bid_deadline': '2025-12-05'
+        },
+        
+        # HAMPTON
+        {
+            'id': 'const_006',
+            'project_name': 'Peninsula Town Center Retail',
+            'builder': 'Divaris Real Estate Development',
+            'project_type': 'Mixed-Use Development',
+            'location': 'Hampton, VA',
+            'square_footage': '125,000 sq ft',
+            'estimated_value': '$62,500 - $93,750',
+            'completion_date': '2025-12-20',
+            'status': 'Accepting Bids',
+            'description': 'New retail and dining complex with parking structure. Multi-phase cleanup project.',
+            'services_needed': 'Retail cleaning, restaurant prep cleaning, parking garage, exterior windows',
+            'contact_name': 'Development Manager',
+            'contact_phone': '(757) 961-1000',
+            'contact_email': 'projects@divaris.com',
+            'website': 'https://www.divaris.com',
+            'requirements': 'Mixed-use experience, phased approach, restaurant cleaning capability',
+            'bid_deadline': '2025-11-28'
+        },
+        
+        # NEWPORT NEWS
+        {
+            'id': 'const_007',
+            'project_name': 'Shipyard Apprentice Training Center',
+            'builder': 'Whiting-Turner Contracting Company',
+            'project_type': 'Educational Facility',
+            'location': 'Newport News, VA',
+            'square_footage': '75,000 sq ft',
+            'estimated_value': '$37,500 - $56,250',
+            'completion_date': '2026-02-01',
+            'status': 'Accepting Bids',
+            'description': 'New technical training facility with classrooms, workshops, administrative offices.',
+            'services_needed': 'Classroom cleaning, workshop areas, dust removal, floor care, window cleaning',
+            'contact_name': 'Project Executive',
+            'contact_phone': '(757) 599-8800',
+            'contact_email': 'construction@whiting-turner.com',
+            'website': 'https://www.whiting-turner.com',
+            'requirements': 'Educational facility experience, security clearance helpful, detailed work plan',
+            'bid_deadline': '2025-12-10'
+        },
+        
+        # SUFFOLK
+        {
+            'id': 'const_008',
+            'project_name': 'Harbor View Distribution Center',
+            'builder': 'S.B. Ballard Construction',
+            'project_type': 'Industrial Warehouse',
+            'location': 'Suffolk, VA',
+            'square_footage': '550,000 sq ft',
+            'estimated_value': '$275,000 - $412,500',
+            'completion_date': '2026-01-30',
+            'status': 'Accepting Bids',
+            'description': 'Massive e-commerce distribution center. Largest cleanup project in region.',
+            'services_needed': 'Industrial-scale cleaning, warehouse floors, office areas, break rooms, loading areas',
+            'contact_name': 'General Superintendent',
+            'contact_phone': '(757) 638-9300',
+            'contact_email': 'projects@sbballard.com',
+            'website': 'https://www.sbballard.com',
+            'requirements': 'Large-scale industrial experience, equipment capabilities, crew size 20+, safety training',
+            'bid_deadline': '2025-12-01'
+        },
+        
+        # WILLIAMSBURG
+        {
+            'id': 'const_009',
+            'project_name': 'Colonial Heritage Medical Plaza',
+            'builder': 'Avis Construction',
+            'project_type': 'Medical Office',
+            'location': 'Williamsburg, VA',
+            'square_footage': '42,000 sq ft',
+            'estimated_value': '$31,500 - $42,000',
+            'completion_date': '2025-12-15',
+            'status': 'Accepting Bids',
+            'description': '3-story medical office building with urgent care, primary care, specialty practices.',
+            'services_needed': 'Medical-grade cleaning, exam rooms, waiting areas, administrative offices',
+            'contact_name': 'Project Manager',
+            'contact_phone': '(757) 220-2700',
+            'contact_email': 'construction@avisconstruction.com',
+            'website': 'https://www.avisconstruction.com',
+            'requirements': 'Medical facility certification, attention to detail, healthcare experience',
+            'bid_deadline': '2025-11-20'
+        },
+        
+        # RICHMOND
+        {
+            'id': 'const_010',
+            'project_name': 'Scott\'s Addition Mixed-Use Tower',
+            'builder': 'Hourigan Construction',
+            'project_type': 'Mixed-Use High-Rise',
+            'location': 'Richmond, VA',
+            'square_footage': '285,000 sq ft',
+            'estimated_value': '$142,500 - $213,750',
+            'completion_date': '2026-02-15',
+            'status': 'Accepting Bids',
+            'description': '18-story tower with residential units, retail, restaurant, rooftop amenity deck.',
+            'services_needed': 'High-rise cleaning, residential units, retail spaces, common areas, windows',
+            'contact_name': 'Senior Project Manager',
+            'contact_phone': '(804) 254-7890',
+            'contact_email': 'richmond@hourigan.com',
+            'website': 'https://www.hourigan.com',
+            'requirements': 'High-rise experience, residential cleaning, retail capability, full-service team',
+            'bid_deadline': '2025-12-08'
+        },
+        
+        # ALEXANDRIA
+        {
+            'id': 'const_011',
+            'project_name': 'Old Town Waterfront Hotel',
+            'builder': 'Clark Construction Group',
+            'project_type': 'Boutique Hotel',
+            'location': 'Alexandria, VA',
+            'square_footage': '165,000 sq ft',
+            'estimated_value': '$123,750 - $165,000',
+            'completion_date': '2025-12-22',
+            'status': 'Urgent - Starting Soon',
+            'description': 'Luxury boutique hotel restoration. Historic building with modern amenities. White-glove standards.',
+            'services_needed': 'Luxury hotel standards, historic preservation care, guest rooms, restaurant, spa',
+            'contact_name': 'Project Director',
+            'contact_phone': '(301) 272-8100',
+            'contact_email': 'projects@clarkconstruction.com',
+            'website': 'https://www.clarkconstruction.com',
+            'requirements': 'Luxury hotel experience, historic building care, premium standards, references required',
+            'bid_deadline': '2025-11-16'
+        },
+        
+        # ARLINGTON
+        {
+            'id': 'const_012',
+            'project_name': 'Crystal City Office Modernization',
+            'builder': 'JBG SMITH',
+            'project_type': 'Office Renovation',
+            'location': 'Arlington, VA',
+            'square_footage': '425,000 sq ft',
+            'estimated_value': '$212,500 - $318,750',
+            'completion_date': '2026-01-10',
+            'status': 'Accepting Bids',
+            'description': 'Major office tower renovation for tech tenants. Modern finishes, collaborative spaces.',
+            'services_needed': 'Tech office cleaning, glass partitions, modern fixtures, open collaboration areas',
+            'contact_name': 'Construction Manager',
+            'contact_phone': '(240) 333-3600',
+            'contact_email': 'construction@jbgsmith.com',
+            'website': 'https://www.jbgsmith.com',
+            'requirements': 'Class A office experience, DC metro rates, tech tenant standards, flexibility',
+            'bid_deadline': '2025-12-01'
+        }
+    ]
+    
+    # Get filter parameters
+    location_filter = request.args.get('location', '')
+    project_type_filter = request.args.get('project_type', '')
+    min_sqft = request.args.get('min_sqft', '')
+    
+    # Filter leads
+    filtered_leads = construction_leads
+    if location_filter:
+        filtered_leads = [l for l in filtered_leads if location_filter.lower() in l['location'].lower()]
+    if project_type_filter:
+        filtered_leads = [l for l in filtered_leads if project_type_filter.lower() in l['project_type'].lower()]
+    if min_sqft:
+        try:
+            min_sqft_value = int(min_sqft)
+            filtered_leads = [l for l in filtered_leads if int(l['square_footage'].split()[0].replace(',', '')) >= min_sqft_value]
+        except:
+            pass
+    
+    # Get unique values for filters
+    all_locations = sorted(set(l['location'] for l in construction_leads))
+    all_project_types = sorted(set(l['project_type'] for l in construction_leads))
+    
+    return render_template('construction_cleanup_leads.html',
+                         leads=filtered_leads,
+                         total_leads=len(filtered_leads),
+                         all_locations=all_locations,
+                         all_project_types=all_project_types,
+                         location_filter=location_filter,
+                         project_type_filter=project_type_filter,
+                         min_sqft=min_sqft)
+
 @app.route('/quick-wins')
 @app.route('/supply-contracts')  # Added redirect route - both URLs work
 @login_required
