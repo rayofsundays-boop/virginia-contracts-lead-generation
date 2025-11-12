@@ -47,7 +47,7 @@
                         <i class="fas fa-calculator fa-3x text-primary"></i>
                     </div>
                     <h4 class="card-title">Basic Pricing Calculator</h4>
-                    <p class="card-text text-muted">Simple square footage calculator for cleaning estimates</p>
+                    <p class="card-text text-secondary">Simple square footage calculator for cleaning estimates</p>
                     <button class="btn btn-outline-primary" onclick="showBasicCalculator()">
                         <i class="fas fa-play me-2"></i>Use Tool
                     </button>
@@ -63,7 +63,7 @@
                         <i class="fas fa-tasks fa-3x text-success"></i>
                     </div>
                     <h4 class="card-title">Cleaning Checklist</h4>
-                    <p class="card-text text-muted">Downloadable checklists for different cleaning types</p>
+                    <p class="card-text text-secondary">Downloadable checklists for different cleaning types</p>
                     <button class="btn btn-outline-success" onclick="showChecklists()">
                         <i class="fas fa-download me-2"></i>Download
                     </button>
@@ -79,8 +79,8 @@
                         <i class="fas fa-hammer fa-3x text-warning"></i>
                     </div>
                     <h4 class="card-title">Post-Construction Cleanup</h4>
-                    <p class="card-text text-muted">Checklist with pricing, staffing & timeline</p>
-                    <button class="btn btn-outline-warning" onclick="showPostConstructionChecklist()">
+                    <p class="card-text text-secondary">Checklist with pricing, staffing & timeline</p>
+                    <button class="btn btn-outline-warning text-dark" onclick="showPostConstructionChecklist()">
                         <i class="fas fa-list me-2"></i>View Details
                     </button>
                 </div>
@@ -95,7 +95,7 @@
                         <i class="fas fa-building fa-3x text-info"></i>
                     </div>
                     <h4 class="card-title">Commercial Cleaning</h4>
-                    <p class="card-text text-muted">Complete guide with pricing & staffing</p>
+                    <p class="card-text text-secondary">Complete guide with pricing & staffing</p>
                     <button class="btn btn-outline-info" onclick="showCommercialCleaningChecklist()">
                         <i class="fas fa-list me-2"></i>View Details
                     </button>
@@ -111,7 +111,7 @@
                         <i class="fas fa-home fa-3x text-primary"></i>
                     </div>
                     <h4 class="card-title">Residential Cleaning</h4>
-                    <p class="card-text text-muted">Residential guide with pricing & staffing</p>
+                    <p class="card-text text-secondary">Residential guide with pricing & staffing</p>
                     <button class="btn btn-outline-primary" onclick="showResidentialCleaningChecklist()">
                         <i class="fas fa-list me-2"></i>View Details
                     </button>
@@ -127,7 +127,7 @@
                         <i class="fas fa-book-open fa-3x text-info"></i>
                     </div>
                     <h4 class="card-title">Industry Links</h4>
-                    <p class="card-text text-muted">Quick links to government contracting resources</p>
+                    <p class="card-text text-secondary">Quick links to government contracting resources</p>
                     <button class="btn btn-outline-info" onclick="showResources()">
                         <i class="fas fa-external-link-alt me-2"></i>View Links
                     </button>
@@ -143,8 +143,8 @@
                         <i class="fas fa-calendar-alt fa-3x text-warning"></i>
                     </div>
                     <h4 class="card-title">Bid Timeline</h4>
-                    <p class="card-text text-muted">Basic timeline template for contract submissions</p>
-                    <button class="btn btn-outline-warning" onclick="showTimeline()">
+                    <p class="card-text text-secondary">Basic timeline template for contract submissions</p>
+                    <button class="btn btn-outline-warning text-dark" onclick="showTimeline()">
                         <i class="fas fa-eye me-2"></i>View Template
                     </button>
                 </div>
@@ -159,7 +159,7 @@
                         <i class="fas fa-book fa-3x text-danger"></i>
                     </div>
                     <h4 class="card-title">Contract Glossary</h4>
-                    <p class="card-text text-muted">Common government contracting terms explained</p>
+                    <p class="card-text text-secondary">Common government contracting terms explained</p>
                     <button class="btn btn-outline-danger" onclick="showGlossary()">
                         <i class="fas fa-search me-2"></i>Browse Terms
                     </button>
@@ -175,7 +175,7 @@
                         <i class="fas fa-route fa-3x text-primary"></i>
                     </div>
                     <h4 class="card-title">Procurement Lifecycle</h4>
-                    <p class="card-text text-muted">Complete guide to the procurement process with FAR references</p>
+                    <p class="card-text text-secondary">Complete guide to the procurement process with FAR references</p>
                     <a href="{{ url_for('procurement_lifecycle') }}" class="btn btn-outline-primary">
                         <i class="fas fa-map me-2"></i>View Guide
                     </a>
@@ -188,10 +188,10 @@
             <div class="card h-100 shadow-sm hover-lift">
                 <div class="card-body text-center">
                     <div class="mb-3">
-                        <i class="fas fa-graduation-cap fa-3x text-purple"></i>
+                        <i class="fas fa-graduation-cap fa-3x" style="color: #667eea;"></i>
                     </div>
                     <h4 class="card-title">Getting Started Guide</h4>
-                    <p class="card-text text-muted">Step-by-step guide to government contracting</p>
+                    <p class="card-text text-secondary">Step-by-step guide to government contracting</p>
                     <button class="btn btn-outline-secondary" onclick="showGuide()">
                         <i class="fas fa-play-circle me-2"></i>Start Guide
                     </button>
@@ -207,7 +207,7 @@
                         <i class="fas fa-file-invoice fa-3x text-success"></i>
                     </div>
                     <h4 class="card-title">Invoice Creator</h4>
-                    <p class="card-text text-muted">Create, email, and save invoices to your profile</p>
+                    <p class="card-text text-secondary">Create, email, and save invoices to your profile</p>
                     <button class="btn btn-outline-success" onclick="showInvoiceCreator()">
                         <i class="fas fa-plus me-2"></i>Create Invoice
                     </button>
@@ -223,7 +223,7 @@
                         <i class="fas fa-shopping-cart fa-3x text-info"></i>
                     </div>
                     <h4 class="card-title">Cleaning Supplies</h4>
-                    <p class="card-text text-muted">Find bulk cleaning supplies from trusted vendors</p>
+                    <p class="card-text text-secondary">Find bulk cleaning supplies from trusted vendors</p>
                     <button class="btn btn-outline-info" onclick="showCleaningSupplies()">
                         <i class="fas fa-store me-2"></i>View Vendors
                     </button>
@@ -239,8 +239,8 @@
                         <i class="fas fa-tools fa-3x text-warning"></i>
                     </div>
                     <h4 class="card-title">Cleaning Equipment</h4>
-                    <p class="card-text text-muted">Purchase professional cleaning equipment</p>
-                    <button class="btn btn-outline-warning" onclick="showCleaningEquipment()">
+                    <p class="card-text text-secondary">Purchase professional cleaning equipment</p>
+                    <button class="btn btn-outline-warning text-dark" onclick="showCleaningEquipment()">
                         <i class="fas fa-store me-2"></i>View Vendors
                     </button>
                 </div>
@@ -255,7 +255,7 @@
                         <i class="fas fa-wrench fa-3x text-danger"></i>
                     </div>
                     <h4 class="card-title">Equipment Repair</h4>
-                    <p class="card-text text-muted">Professional equipment repair & maintenance</p>
+                    <p class="card-text text-secondary">Professional equipment repair & maintenance</p>
                     <button class="btn btn-outline-danger" onclick="showEquipmentRepair()">
                         <i class="fas fa-store me-2"></i>View Vendors
                     </button>
@@ -370,7 +370,7 @@ function showBasicCalculator() {
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Additional Services ($)</label>
-                    <small class="d-block text-muted mb-2">
+                    <small class="d-block text-secondary mb-2">
                         <i class="fas fa-info-circle me-1"></i>Add costs for services beyond basic cleaning (e.g., window cleaning $200, carpet cleaning $150, floor waxing $300). Enter total dollar amount for all extra services.
                     </small>
                     <input type="number" class="form-control" id="additional" value="0" step="0.01" min="0" placeholder="0.00">
@@ -383,12 +383,12 @@ function showBasicCalculator() {
             <div id="totalDisplay" class="mb-3" style="display:none;">
                 <div class="card bg-light">
                     <div class="card-body">
-                        <p class="text-muted mb-2">Base Cleaning Cost:</p>
+                        <p class="text-secondary mb-2">Base Cleaning Cost:</p>
                         <p class="mb-2"><strong id="baseCost">$0.00</strong></p>
-                        <p class="text-muted mb-2">Additional Services:</p>
+                        <p class="text-secondary mb-2">Additional Services:</p>
                         <p class="mb-2"><strong id="additionalCost">$0.00</strong></p>
                         <hr>
-                        <p class="text-muted mb-2">Total Estimated Cost:</p>
+                        <p class="text-secondary mb-2">Total Estimated Cost:</p>
                         <h4 class="text-success mb-0" id="totalCost">$0.00</h4>
                     </div>
                 </div>
@@ -1331,14 +1331,14 @@ function showCleaningSupplies() {
     document.getElementById('toolModalTitle').textContent = 'Where to Buy Cleaning Supplies';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
-            <p class="text-muted mb-4">Find quality cleaning supplies from these trusted bulk vendors:</p>
+            <p class="text-secondary mb-4">Find quality cleaning supplies from these trusted bulk vendors:</p>
             
             <div class="list-group">
                 <div class="list-group-item">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-box text-primary me-2"></i>Grainger Industrial</h6>
-                            <p class="mb-2 text-muted small">Comprehensive cleaning supplies and janitorial products. Large volume discounts.</p>
+                            <p class="mb-2 text-secondary small">Comprehensive cleaning supplies and janitorial products. Large volume discounts.</p>
                             <span class="badge bg-info me-2">Business Accounts</span>
                             <span class="badge bg-success">Free Shipping $45+</span>
                         </div>
@@ -1352,7 +1352,7 @@ function showCleaningSupplies() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-box text-success me-2"></i>Alibaba Industrial</h6>
-                            <p class="mb-2 text-muted small">Bulk industrial cleaning supplies from manufacturers worldwide. Wholesale pricing.</p>
+                            <p class="mb-2 text-secondary small">Bulk industrial cleaning supplies from manufacturers worldwide. Wholesale pricing.</p>
                             <span class="badge bg-warning me-2">International</span>
                             <span class="badge bg-success">Bulk Orders</span>
                         </div>
@@ -1366,7 +1366,7 @@ function showCleaningSupplies() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-box text-danger me-2"></i>Bunzl USA</h6>
-                            <p class="mb-2 text-muted small">Cleaning chemicals, paper products, and sanitation supplies. Local delivery available.</p>
+                            <p class="mb-2 text-secondary small">Cleaning chemicals, paper products, and sanitation supplies. Local delivery available.</p>
                             <span class="badge bg-info me-2">Regional Delivery</span>
                             <span class="badge bg-success">Local Warehouses</span>
                         </div>
@@ -1389,16 +1389,16 @@ function showCleaningEquipment() {
     document.getElementById('toolModalTitle').textContent = 'Where to Get Cleaning Equipment';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
-            <p class="text-muted mb-4">Purchase professional cleaning equipment from these suppliers:</p>
+            <p class="text-secondary mb-4">Purchase professional cleaning equipment from these suppliers:</p>
             
             <div class="list-group">
                 <div class="list-group-item">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-cogs text-primary me-2"></i>ProTeam Equipment</h6>
-                            <p class="mb-2 text-muted small">Backpack vacuums, carpet extractors, and electrostatic sprayers. Trusted by professionals.</p>
+                            <p class="mb-2 text-secondary small">Backpack vacuums, carpet extractors, and electrostatic sprayers. Trusted by professionals.</p>
                             <span class="badge bg-success me-2">Professional Grade</span>
-                            <span class="badge bg-warning">Warranty Support</span>
+                            <span class="badge bg-warning text-dark">Warranty Support</span>
                         </div>
                     </div>
                     <a href="https://www.proteamusa.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
@@ -1410,7 +1410,7 @@ function showCleaningEquipment() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-cogs text-info me-2"></i>Kaivac Clean Systems</h6>
-                            <p class="mb-2 text-muted small">Innovative cleaning systems including no-touch restroom cleaning technology. Commercial solutions.</p>
+                            <p class="mb-2 text-secondary small">Innovative cleaning systems including no-touch restroom cleaning technology. Commercial solutions.</p>
                             <span class="badge bg-success me-2">Innovation Leader</span>
                             <span class="badge bg-info">System Rentals</span>
                         </div>
@@ -1424,7 +1424,7 @@ function showCleaningEquipment() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-cogs text-warning me-2"></i>Tornado Equipment</h6>
-                            <p class="mb-2 text-muted small">Commercial floor machines, vacuums, and hard floor cleaning equipment. Industrial strength.</p>
+                            <p class="mb-2 text-secondary small">Commercial floor machines, vacuums, and hard floor cleaning equipment. Industrial strength.</p>
                             <span class="badge bg-danger me-2">Heavy Duty</span>
                             <span class="badge bg-success">Industrial</span>
                         </div>
@@ -1447,14 +1447,14 @@ function showEquipmentRepair() {
     document.getElementById('toolModalTitle').textContent = 'Equipment Repair & Maintenance';
     document.getElementById('toolModalBody').innerHTML = `
         <div class="p-3">
-            <p class="text-muted mb-4">Professional equipment repair and maintenance services:</p>
+            <p class="text-secondary mb-4">Professional equipment repair and maintenance services:</p>
             
             <div class="list-group">
                 <div class="list-group-item">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-tools text-danger me-2"></i>Bissell Commercial Repair</h6>
-                            <p class="mb-2 text-muted small">Factory-authorized repair for Bissell commercial equipment. Maintenance plans and parts available.</p>
+                            <p class="mb-2 text-secondary small">Factory-authorized repair for Bissell commercial equipment. Maintenance plans and parts available.</p>
                             <span class="badge bg-danger me-2">Factory Authorized</span>
                             <span class="badge bg-success">Maintenance Plans</span>
                         </div>
@@ -1468,8 +1468,8 @@ function showEquipmentRepair() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-tools text-success me-2"></i>ProTeam Service Centers</h6>
-                            <p class="mb-2 text-muted small">Certified repair and servicing for backpack vacuums and cleaning equipment. Quick turnaround times.</p>
-                            <span class="badge bg-warning me-2">24-48hr Turnaround</span>
+                            <p class="mb-2 text-secondary small">Certified repair and servicing for backpack vacuums and cleaning equipment. Quick turnaround times.</p>
+                            <span class="badge bg-warning text-dark me-2">24-48hr Turnaround</span>
                             <span class="badge bg-info">National Network</span>
                         </div>
                     </div>
@@ -1482,7 +1482,7 @@ function showEquipmentRepair() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1"><i class="fas fa-tools text-info me-2"></i>Local Appliance & Equipment Repair</h6>
-                            <p class="mb-2 text-muted small">Find local independent repair shops. Preventive maintenance packages available through local providers.</p>
+                            <p class="mb-2 text-secondary small">Find local independent repair shops. Preventive maintenance packages available through local providers.</p>
                             <span class="badge bg-primary me-2">Local Options</span>
                             <span class="badge bg-success">Preventive Care</span>
                         </div>
@@ -1548,7 +1548,7 @@ function showTimeline() {
                     <strong>Day 18:</strong> Submit proposal before deadline
                 </div>
             </div>
-            <p class="text-muted"><small>Adjust timeline based on RFP complexity and deadline</small></p>
+            <p class="text-secondary"><small>Adjust timeline based on RFP complexity and deadline</small></p>
         </div>
     `;
     new bootstrap.Modal(document.getElementById('toolModal')).show();
