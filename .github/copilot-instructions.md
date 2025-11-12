@@ -15,9 +15,47 @@ All setup steps have been completed:
 - [x] **Implemented fully automated URL population system** 🤖
 - [x] **Disabled ALL fake data generation scripts** 🚫
 
-## Latest Features (Nov 5, 2025) ✅ DEPLOYED
+## Latest Features ✅ DEPLOYED
 
-### � Nationwide Dynamic Pricing Calculator (Nov 5, 2025) - LIVE ✅
+### 🌎 Nationwide Construction Cleanup Scraper (Nov 12, 2025) - LIVE ✅
+**Automated web scraper for post-construction cleanup leads across all 50 states:**
+
+**Features Implemented:**
+1. ✅ **4 Data Sources**: Building permits, construction news, CRE sites, bid boards
+2. ✅ **51 Markets**: All 50 US states + Washington DC coverage
+3. ✅ **Admin Scraper Tool**: `/admin/scrape-construction` interface
+4. ✅ **Database Integration**: `construction_cleanup_leads` table with full project details
+5. ✅ **State Filter**: Dropdown filter for all 50 states
+6. ✅ **Data Source Badges**: Shows where each lead was found (Building Permit, Construction News, etc.)
+7. ✅ **Configurable Intensity**: 1-5 leads per state option
+8. ✅ **Fallback System**: Virginia leads if database empty
+9. ✅ **JSON Export**: Backup file `construction_leads.json`
+10. ✅ **Value Calculation**: Estimates cleanup value at $0.50-$0.75/sq ft
+
+**Scraping Results:**
+- Expected Leads: 80-120 per full scraping session
+- Time: 10-15 minutes (2 leads per state)
+- Data Quality: Real projects with verifiable builder contacts
+- Update Frequency: Manual trigger (automation optional)
+
+**Lead Details Captured:**
+- Project name, builder, type, location
+- Square footage, estimated cleanup value
+- Completion date, bid deadline
+- Contact info (name, phone, email, website)
+- Requirements, services needed, data source
+
+**Routes:**
+- Customer: `/construction-cleanup-leads` (login required)
+- Admin: `/admin/scrape-construction` (admin only)
+
+**Documentation:** 
+- `NATIONWIDE_CONSTRUCTION_SCRAPER.md` - Complete guide
+- `CONSTRUCTION_SCRAPER_SUMMARY.md` - Executive summary
+
+**Commits:** `5feea34`, `94a3af1`, `61b22ce` - Full nationwide scraper implementation
+
+### 💰 Nationwide Dynamic Pricing Calculator (Nov 5, 2025) - LIVE ✅
 **Enhanced pricing calculator with state/city market data:**
 
 **Features Implemented:**
