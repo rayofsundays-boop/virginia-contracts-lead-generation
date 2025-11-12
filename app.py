@@ -15240,77 +15240,85 @@ def industry_days_events():
         
         # Convert rows to unified event dict list
         for row in events_result:
-            # Extract topics list robustly
-            raw_topics = ''
-            for key in ('topics', 'target_industries'):
-                if hasattr(row, key):
-                    val = getattr(row, key)
-                    if val:
-                        raw_topics = val
-                        break
-            topics_list = [t.strip() for t in raw_topics.split(',') if t.strip()] if raw_topics else []
+            try:
+                # Extract topics list robustly
+                raw_topics = ''
+                for key in ('topics', 'target_industries'):
+                    if hasattr(row, key):
+                        val = getattr(row, key)
+                        if val:
+                            raw_topics = val
+                            break
+                topics_list = [t.strip() for t in raw_topics.split(',') if t.strip()] if raw_topics else []
 
-            # Determine state/city/venue fields with fallbacks
-            city = getattr(row, 'city', '') or ''
-            state = getattr(row, 'state', '') or ''
-            venue = getattr(row, 'venue_name', '') or getattr(row, 'venue', '') or ''
+                # Determine state/city/venue fields with fallbacks
+                city = getattr(row, 'city', '') or ''
+                state = getattr(row, 'state', '') or ''
+                venue = getattr(row, 'venue_name', '') or getattr(row, 'venue', '') or ''
 
-            # Date formatting
-            event_date_val = getattr(row, 'event_date', None)
-            if not event_date_val:
-                event_date_val = getattr(row, 'deadline', None)
-            if hasattr(event_date_val, 'strftime'):
-                date_display = event_date_val.strftime('%B %d, %Y')
-            else:
-                date_display = str(event_date_val) if event_date_val else 'TBD'
+                # Date formatting
+                event_date_val = getattr(row, 'event_date', None)
+                if not event_date_val:
+                    event_date_val = getattr(row, 'deadline', None)
+                if hasattr(event_date_val, 'strftime'):
+                    date_display = event_date_val.strftime('%B %d, %Y')
+                else:
+                    date_display = str(event_date_val) if event_date_val else 'TBD'
 
-            # Title / organizer naming differences
-            title = getattr(row, 'event_title', None) or getattr(row, 'title', None) or 'Industry Day'
-            event_type = getattr(row, 'event_type', None) or 'Industry Day'
+                # Title / organizer naming differences
+                title = getattr(row, 'event_title', None) or getattr(row, 'title', None) or 'Industry Day'
+                event_type = getattr(row, 'event_type', None) or 'Industry Day'
 
-            # Registration link / URL
-            reg_link = getattr(row, 'registration_link', None) or getattr(row, 'registration_url', None) or getattr(row, 'website_url', None) or '#'
+                # Registration link / URL
+                reg_link = getattr(row, 'registration_link', None) or getattr(row, 'registration_url', None) or getattr(row, 'website_url', None) or '#'
 
-            # Compose location string
-            if venue and city and state:
-                location_display = f"{venue}, {city}, {state}"
-            elif city and state:
-                location_display = f"{city}, {state}"
-            elif city:
-                location_display = city
-            else:
-                location_display = state or 'TBD'
+                # Compose location string
+                if venue and city and state:
+                    location_display = f"{venue}, {city}, {state}"
+                elif city and state:
+                    location_display = f"{city}, {state}"
+                elif city:
+                    location_display = city
+                else:
+                    location_display = state or 'TBD'
 
-            # Normalize virtual flag across SQLite (0/1 int) and Postgres (boolean)
-            raw_virtual = getattr(row, 'is_virtual', 0)
-            is_virtual_flag = False
-            if isinstance(raw_virtual, bool):
-                is_virtual_flag = raw_virtual
-            else:
-                try:
-                    is_virtual_flag = int(raw_virtual) == 1
-                except Exception:
-                    is_virtual_flag = str(raw_virtual).strip().lower() in ('true', 't', '1', 'yes')
+                # Normalize virtual flag across SQLite (0/1 int) and Postgres (boolean)
+                raw_virtual = getattr(row, 'is_virtual', 0)
+                is_virtual_flag = False
+                if isinstance(raw_virtual, bool):
+                    is_virtual_flag = raw_virtual
+                else:
+                    try:
+                        is_virtual_flag = int(raw_virtual) == 1
+                    except Exception:
+                        is_virtual_flag = str(raw_virtual).strip().lower() in ('true', 't', '1', 'yes')
 
-            # Detect platform from URL
-            platform = None
-            if reg_link and 'eventbrite' in reg_link.lower():
-                platform = 'Eventbrite'
-            
-            events.append({
-                'id': getattr(row, 'id', None),
-                'title': title,
-                'date': date_display,
-                'time': getattr(row, 'event_time', None) or 'TBD',
-                'location': location_display,
-                'description': getattr(row, 'description', None) or 'Contact organizer for details',
-                'type': event_type,
-                'topics': topics_list,
-                'cost': 'Free (Registration Required)',  # Placeholder
-                'url': reg_link,
-                'virtual': is_virtual_flag,
-                'platform': platform
-            })
+                # Detect platform from URL
+                platform = None
+                if reg_link and 'eventbrite' in reg_link.lower():
+                    platform = 'Eventbrite'
+                
+                events.append({
+                    'id': getattr(row, 'id', None),
+                    'title': title,
+                    'date': date_display,
+                    'time': getattr(row, 'event_time', None) or 'TBD',
+                    'location': location_display,
+                    'description': getattr(row, 'description', None) or 'Contact organizer for details',
+                    'type': event_type,
+                    'topics': topics_list,
+                    'cost': 'Free (Registration Required)',  # Placeholder
+                    'url': reg_link,
+                    'virtual': is_virtual_flag,
+                    'platform': platform
+                })
+            except Exception as row_error:
+                print(f"Error processing event row: {row_error}")
+                import traceback
+                traceback.print_exc()
+                continue
+        
+        print(f"✅ Processed {len(events)} events successfully from {len(events_result)} rows")
         
         # If no events found, show clean empty state
         if not events:
@@ -15345,13 +15353,14 @@ def industry_days_events():
         except Exception:
             pass
 
+        print(f"🎯 Rendering template with {len(events)} events")
         return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state, diagnostics=diag)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
         import traceback
         traceback.print_exc()
-        return render_template('industry_days_events.html', events=[])
+        return render_template('industry_days_events.html', events=[], no_events=True)
 
 @app.route('/admin/seed-industry-days')
 @admin_required
