@@ -21914,7 +21914,13 @@ def ensure_minimum_schema():
 # Initialize database for both local and production
 try:
     print("🔧 Initializing database...")
-    init_db()
+    # Use PostgreSQL init if DATABASE_URL is set, otherwise use SQLite
+    if DATABASE_URL and 'postgresql' in DATABASE_URL:
+        print("📡 Detected PostgreSQL - using init_postgres_db()")
+        init_postgres_db()
+    else:
+        print("💾 Using SQLite - using init_db()")
+        init_db()
     print("✅ Database initialized")
     
     # Auto-populate supply contracts only if table is empty
