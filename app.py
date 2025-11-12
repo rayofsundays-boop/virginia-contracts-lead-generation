@@ -14960,7 +14960,9 @@ def industry_days_events():
                     ORDER BY {date_expr} ASC, state ASC
                     LIMIT 300'''  # Slightly higher limit due to nationwide scope
         try:
+            print(f"🔍 Executing query with params: {params}")
             events_result = db.session.execute(text(query), params).fetchall()
+            print(f"📊 Query returned {len(events_result)} rows")
             schema_version = 'new'
             # If table exists but has no rows, attempt one-time seed and retry
             if not events_result:
@@ -15272,6 +15274,7 @@ def industry_days_events():
         
         # If no events found, show clean empty state
         if not events:
+            print(f"⚠️  No events found after processing. events_result had {len(events_result) if events_result else 0} rows")
             return render_template('industry_days_events.html', events=[], no_events=True, schema_version=schema_version)
 
         # Preserve filter selections in template context
