@@ -5738,11 +5738,12 @@ def industry_days():
         # Get filter options (all 50 states)
         filter_params = {'today': today}
         
-        states = db.session.execute(text('''
-            SELECT DISTINCT state FROM industry_days 
-            WHERE status = 'upcoming' AND event_date >= :today 
-            ORDER BY state
-        '''), filter_params).fetchall()
+        # Use static list of all 50 US states + DC instead of dynamic extraction
+        states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 
+                  'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 
+                  'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 
+                  'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 
+                  'WV', 'WI', 'WY']
         
         cities = db.session.execute(text('''
             SELECT DISTINCT city FROM industry_days 
@@ -5781,7 +5782,7 @@ def industry_days():
         
         return render_template('industry_days.html',
                              events=events,
-                             states=[s[0] for s in states],
+                             states=states,
                              cities=[c[0] for c in cities],
                              event_types=[et[0] for et in event_types],
                              virtual_count=virtual_count,
@@ -5915,33 +5916,31 @@ def federal_contracts():
         ''')).fetchall()
         departments = [r.department for r in departments_rows]
         
-        # Get unique states from location field (extract state abbreviations)
-        states_rows = db.session.execute(text('''
+        # All 50 US states + DC for filter dropdown (not just what's in database)
+        states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 
+                  'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 
+                  'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 
+                  'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 
+                  'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
+        
+        # Get unique cities from location field for city filter
+        cities_rows = db.session.execute(text('''
             SELECT DISTINCT location
             FROM federal_contracts 
             WHERE location IS NOT NULL AND location != ''
         ''')).fetchall()
         
-        # Extract unique states from location strings (e.g., "City, ST" or "ST")
-        states = set()
+        # Extract unique cities from location strings (e.g., "City, ST" or "ST")
         cities = set()
-        for row in states_rows:
+        for row in cities_rows:
             loc = row.location
-            if loc:
-                # Try to extract state (usually last 2 chars or after comma)
-                if ',' in loc:
-                    parts = [p.strip() for p in loc.split(',')]
-                    if len(parts) >= 2:
-                        state = parts[-1].strip()
-                        city = parts[0].strip()
-                        if len(state) <= 3:  # State abbreviation
-                            states.add(state)
-                        if city:
-                            cities.add(city)
-                elif len(loc) == 2:  # Just state abbreviation
-                    states.add(loc)
+            if loc and ',' in loc:
+                parts = [p.strip() for p in loc.split(',')]
+                if len(parts) >= 2:
+                    city = parts[0].strip()
+                    if city:
+                        cities.add(city)
         
-        states = sorted(states)
         cities = sorted(cities)
         
         # Build pagination
