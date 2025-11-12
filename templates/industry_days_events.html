@@ -14,10 +14,20 @@
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" class="form-control" id="searchInput" placeholder="Search events...">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <select class="form-select" id="stateFilter">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="cityFilter">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <select class="form-select" id="typeFilter">
                         <option value="">All Event Types</option>
                         <option value="Networking">Networking Events</option>
@@ -26,13 +36,37 @@
                         <option value="Industry Summit">Industry Summits</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <select class="form-select" id="costFilter">
                         <option value="">All Price Ranges</option>
                         <option value="free">Free Events</option>
                         <option value="paid">Paid Events</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- Active Filters Display -->
+            <div id="activeFilters" class="mt-3" style="display: none;">
+                <span class="badge bg-secondary me-2">Active Filters:</span>
+                <span id="stateFilterBadge" class="badge bg-primary me-2" style="display: none;">
+                    State: <span class="filter-value"></span>
+                    <i class="fas fa-times ms-1 cursor-pointer" onclick="clearStateFilter()"></i>
+                </span>
+                <span id="cityFilterBadge" class="badge bg-info me-2" style="display: none;">
+                    City: <span class="filter-value"></span>
+                    <i class="fas fa-times ms-1 cursor-pointer" onclick="clearCityFilter()"></i>
+                </span>
+                <span id="typeFilterBadge" class="badge bg-success me-2" style="display: none;">
+                    Type: <span class="filter-value"></span>
+                    <i class="fas fa-times ms-1 cursor-pointer" onclick="clearTypeFilter()"></i>
+                </span>
+                <span id="costFilterBadge" class="badge bg-warning text-dark me-2" style="display: none;">
+                    Cost: <span class="filter-value"></span>
+                    <i class="fas fa-times ms-1 cursor-pointer" onclick="clearCostFilter()"></i>
+                </span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
+                    <i class="fas fa-times me-1"></i>Clear All
+                </button>
             </div>
         </div>
     </div>
@@ -54,7 +88,12 @@
                 </div>
                 {% endif %}
             {% for event in events %}
-            <div class="card event-card shadow-sm mb-4 border-left-primary event-item" data-type="{{ event.type }}" data-cost="{{ event.cost }}" data-title="{{ event.title.lower() }}">
+            <div class="card event-card shadow-sm mb-4 border-left-primary event-item" 
+                 data-type="{{ event.type }}" 
+                 data-cost="{{ event.cost }}" 
+                 data-title="{{ event.title.lower() }}"
+                 data-state="{{ event.state }}"
+                 data-city="{{ event.city }}">
                 <div class="card-body">
                     <div class="row">
                         <!-- Date & Time Column -->
@@ -328,13 +367,65 @@
 </style>
 
 <script>
+    // Populate state and city dropdowns on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        populateStateAndCityFilters();
+    });
+
     // Search and filter functionality
     document.getElementById('searchInput').addEventListener('keyup', filterEvents);
-    document.getElementById('typeFilter').addEventListener('change', filterEvents);
-    document.getElementById('costFilter').addEventListener('change', filterEvents);
+    document.getElementById('stateFilter').addEventListener('change', function() {
+        filterEvents();
+        updateActiveFilters();
+    });
+    document.getElementById('cityFilter').addEventListener('change', function() {
+        filterEvents();
+        updateActiveFilters();
+    });
+    document.getElementById('typeFilter').addEventListener('change', function() {
+        filterEvents();
+        updateActiveFilters();
+    });
+    document.getElementById('costFilter').addEventListener('change', function() {
+        filterEvents();
+        updateActiveFilters();
+    });
+
+    function populateStateAndCityFilters() {
+        const eventItems = document.querySelectorAll('.event-item');
+        const states = new Set();
+        const cities = new Set();
+
+        eventItems.forEach(item => {
+            const state = item.getAttribute('data-state');
+            const city = item.getAttribute('data-city');
+            if (state) states.add(state);
+            if (city) cities.add(city);
+        });
+
+        // Populate state dropdown
+        const stateFilter = document.getElementById('stateFilter');
+        Array.from(states).sort().forEach(state => {
+            const option = document.createElement('option');
+            option.value = state;
+            option.textContent = state;
+            stateFilter.appendChild(option);
+        });
+
+        // Populate city dropdown
+        const cityFilter = document.getElementById('cityFilter');
+        Array.from(cities).sort().forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
+        });
+    }
 
     function filterEvents() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const stateFilter = document.getElementById('stateFilter').value;
+        const cityFilter = document.getElementById('cityFilter').value;
         const typeFilter = document.getElementById('typeFilter').value;
         const costFilter = document.getElementById('costFilter').value;
         
@@ -343,9 +434,13 @@
 
         eventItems.forEach(item => {
             const title = item.getAttribute('data-title');
+            const state = item.getAttribute('data-state');
+            const city = item.getAttribute('data-city');
             const type = item.getAttribute('data-type');
             const cost = item.getAttribute('data-cost');
 
+            let stateMatch = !stateFilter || state === stateFilter;
+            let cityMatch = !cityFilter || city === cityFilter;
             let typeMatch = !typeFilter || type === typeFilter;
             let titleMatch = !searchTerm || title.includes(searchTerm);
             let costMatch = true;
@@ -356,7 +451,7 @@
                 costMatch = !cost.includes('Free');
             }
 
-            if (typeMatch && titleMatch && costMatch) {
+            if (stateMatch && cityMatch && typeMatch && titleMatch && costMatch) {
                 item.classList.remove('hidden');
                 item.style.display = 'block';
                 visibleCount++;
@@ -379,6 +474,90 @@
         } else if (document.getElementById('noResults')) {
             document.getElementById('noResults').remove();
         }
+    }
+
+    function updateActiveFilters() {
+        const stateFilter = document.getElementById('stateFilter').value;
+        const cityFilter = document.getElementById('cityFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        const costFilter = document.getElementById('costFilter').value;
+
+        const activeFiltersDiv = document.getElementById('activeFilters');
+        const stateFilterBadge = document.getElementById('stateFilterBadge');
+        const cityFilterBadge = document.getElementById('cityFilterBadge');
+        const typeFilterBadge = document.getElementById('typeFilterBadge');
+        const costFilterBadge = document.getElementById('costFilterBadge');
+
+        let hasActiveFilters = false;
+
+        if (stateFilter) {
+            stateFilterBadge.querySelector('.filter-value').textContent = stateFilter;
+            stateFilterBadge.style.display = 'inline-block';
+            hasActiveFilters = true;
+        } else {
+            stateFilterBadge.style.display = 'none';
+        }
+
+        if (cityFilter) {
+            cityFilterBadge.querySelector('.filter-value').textContent = cityFilter;
+            cityFilterBadge.style.display = 'inline-block';
+            hasActiveFilters = true;
+        } else {
+            cityFilterBadge.style.display = 'none';
+        }
+
+        if (typeFilter) {
+            typeFilterBadge.querySelector('.filter-value').textContent = typeFilter;
+            typeFilterBadge.style.display = 'inline-block';
+            hasActiveFilters = true;
+        } else {
+            typeFilterBadge.style.display = 'none';
+        }
+
+        if (costFilter) {
+            const costText = costFilter === 'free' ? 'Free Events' : 'Paid Events';
+            costFilterBadge.querySelector('.filter-value').textContent = costText;
+            costFilterBadge.style.display = 'inline-block';
+            hasActiveFilters = true;
+        } else {
+            costFilterBadge.style.display = 'none';
+        }
+
+        activeFiltersDiv.style.display = hasActiveFilters ? 'block' : 'none';
+    }
+
+    function clearStateFilter() {
+        document.getElementById('stateFilter').value = '';
+        filterEvents();
+        updateActiveFilters();
+    }
+
+    function clearCityFilter() {
+        document.getElementById('cityFilter').value = '';
+        filterEvents();
+        updateActiveFilters();
+    }
+
+    function clearTypeFilter() {
+        document.getElementById('typeFilter').value = '';
+        filterEvents();
+        updateActiveFilters();
+    }
+
+    function clearCostFilter() {
+        document.getElementById('costFilter').value = '';
+        filterEvents();
+        updateActiveFilters();
+    }
+
+    function clearAllFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('stateFilter').value = '';
+        document.getElementById('cityFilter').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('costFilter').value = '';
+        filterEvents();
+        updateActiveFilters();
     }
 
     // Handle broken registration links
