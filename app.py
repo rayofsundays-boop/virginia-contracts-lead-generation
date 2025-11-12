@@ -11074,6 +11074,50 @@ def admin_run_database_migration():
                     results['errors'].append(f'posted_date: {str(e2)}')
                     db.session.rollback()
         
+                # Migration 7: Convert posted_date to proper DATE in PostgreSQL (non-destructive)
+                try:
+                    # Add a new DATE column if it doesn't exist yet
+                    db.session.execute(text("""
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.columns
+                                WHERE table_name='supply_contracts'
+                                  AND column_name='posted_date_date'
+                            ) THEN
+                                ALTER TABLE supply_contracts ADD COLUMN posted_date_date DATE;
+                            END IF;
+                        END $$;
+                    """))
+                    db.session.commit()
+                    results['columns_added'].append('supply_contracts.posted_date_date')
+                    results['messages'].append('✅ Ensured posted_date_date (DATE) exists on supply_contracts')
+
+                    # Backfill DATE column from existing posted_date strings when possible
+                    db.session.execute(text("""
+                        UPDATE supply_contracts
+                        SET posted_date_date = CASE
+                            WHEN posted_date ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$' THEN to_date(posted_date, 'MM/DD/YYYY')
+                            WHEN posted_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN posted_date::date
+                            ELSE posted_date_date
+                        END
+                        WHERE posted_date IS NOT NULL
+                    """))
+                    db.session.commit()
+                    results['messages'].append('✅ Backfilled posted_date_date from posted_date string values')
+
+                    # Create index on the DATE column for faster filtering/sorting
+                    db.session.execute(text("""
+                        CREATE INDEX IF NOT EXISTS idx_supply_contracts_posted_date_date
+                        ON supply_contracts(posted_date_date)
+                    """))
+                    db.session.commit()
+                    results['indexes_created'].append('idx_supply_contracts_posted_date_date')
+                except Exception as e:
+                    # Likely SQLite or missing features; skip gracefully
+                    db.session.rollback()
+                    results['errors'].append(f'posted_date_date backfill (non-fatal): {str(e)}')
+        
         # Verification
         try:
             # Count rows in new tables
