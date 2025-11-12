@@ -498,18 +498,15 @@
 
 html {
     overflow-x: hidden;
-    overflow-y: auto; /* Only one vertical scrollbar on html */
     width: 100%;
     max-width: 100%;
-    height: 100%;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    overflow: hidden; /* Prevent body from creating its own scrollbar */
+    overflow-x: hidden; /* Only hide horizontal overflow */
     width: 100%;
     max-width: 100%;
-    min-height: 100%;
     position: relative;
 }
 
