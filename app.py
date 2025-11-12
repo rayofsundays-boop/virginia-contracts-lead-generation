@@ -5731,14 +5731,13 @@ def federal_contracts():
         # Get today's date in ISO format (YYYY-MM-DD) for string comparison
         today = date.today().isoformat()
         
-        # Build base query - deadline is stored as ISO date string, use simple string comparison
+        # Build base query - deadline comparison works on both DATE and TEXT columns
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
                    naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at,
                    contact_name, contact_email, contact_phone, contact_title
             FROM federal_contracts 
             WHERE deadline IS NOT NULL 
-            AND deadline != ''
             AND deadline >= :today
         '''
         params = {'today': today}
