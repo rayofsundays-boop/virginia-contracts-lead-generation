@@ -32,154 +32,59 @@ try:
     except Exception:
         openai = None  # type: ignore
         _OPENAI_SDK_AVAILABLE = False
-
-    def is_openai_configured() -> bool:
-        """Return True if OpenAI SDK is importable and API key exists in env."""
-        try:
-            return bool(_OPENAI_SDK_AVAILABLE and os.getenv('OPENAI_API_KEY'))
-        except Exception:
-            return False
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    print("OpenAI not installed. AI features will be disabled.")
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
 except Exception:
-    # Safe to continue if dotenv is not available in production
-    pass
+    openai = None  # type: ignore
+    _OPENAI_SDK_AVAILABLE = False
 
-# Virginia Government Contracting Lead Generation Application
-#
-# DATA FETCHING SCHEDULE (OFF-PEAK HOURS: MIDNIGHT-6 AM EST)
-# ============================================================
-# SAM.gov Federal Contracts: Hourly at 12 AM, 1 AM, 2 AM, 3 AM, 4 AM, 5 AM
-# Data.gov Bulk Updates: Daily at 2 AM
-# Local Government Contracts: Daily at 4 AM
-# 
-# Off-peak scheduling reduces API load, improves performance, and avoids rate limits
-# Set FETCH_ON_INIT=1 to force immediate fetch on startup (use for development only)
-
+# Flask application setup (reconstructed after accidental removal)
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'virginia-contracting-fallback-key-2024')
-
-# Initialize lightweight analytics logger for AI Assistant (optional)
-try:
-    import logging
-    import os as _os
-    from logging.handlers import RotatingFileHandler
-    _os.makedirs('logs', exist_ok=True)
-    _handler = RotatingFileHandler('logs/assistant.log', maxBytes=512_000, backupCount=3)
-    _handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s role=%(role)s source=%(source)s len=%(length)s'))
-    _logger = logging.getLogger('assistant')
-    _logger.setLevel(logging.INFO)
-    _logger.addHandler(_handler)
-    app.assistant_logger = _logger
-except Exception:
-    # If logging setup fails, continue without analytics
-    app.assistant_logger = None
-
-# Build/version marker injection for deployment verification.
-# Adds a timestamp comment to the rendered HTML so external scripts (check_deployment.sh)
-# can detect current deployed build without exposing sensitive data.
-@app.context_processor
-def inject_build_meta():
-    try:
-        # Use UTC for consistency across environments
-        ts = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
-        return {
-            'build_comment': f'<!-- Built: {ts} -->'
-        }
-    except Exception:
-        return {'build_comment': '<!-- Built: unknown -->'}
-
-# Session configuration
-# Regular users: 20 minutes
-# Admin users: 8 hours (extended for admin workflow)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=20)
-app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=8)
-
-# Admin credentials (bypass paywall)
-# Admin login is optional - set ADMIN_USERNAME and ADMIN_PASSWORD in environment to enable
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
-
-if ADMIN_USERNAME and ADMIN_PASSWORD:
-    ADMIN_ENABLED = True
-    print("✅ Admin credentials loaded from environment variables")
-else:
-    ADMIN_ENABLED = False
-    print("⚠️ Admin login is DISABLED. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables to enable.")
-
-# OpenAI Configuration for AI Features
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-if OPENAI_API_KEY and OPENAI_AVAILABLE:
-    openai.api_key = OPENAI_API_KEY
-    print("✓ OpenAI API configured for AI-powered features")
-else:
-    print("⚠ OpenAI API key not set. AI features will be disabled.")
-
-# PayPal Configuration
-paypalrestsdk.configure({
-    "mode": os.environ.get('PAYPAL_MODE', 'sandbox'),  # 'sandbox' or 'live'
-    "client_id": os.environ.get('PAYPAL_CLIENT_ID', ''),
-    "client_secret": os.environ.get('PAYPAL_SECRET', '')
-})
-
-# PayPal subscription plans (Update these with your actual Plan IDs from PayPal dashboard)
-SUBSCRIPTION_PLANS = {
-    'monthly': {
-        'name': 'Monthly Subscription',
-        'price': 99.00,
-        'plan_id': os.environ.get('PAYPAL_MONTHLY_PLAN_ID', 'P-MONTHLY-PLAN-ID')
-    },
-    'annual': {
-        'name': 'Annual Subscription',
-        'price': 950.00,
-        'plan_id': os.environ.get('PAYPAL_ANNUAL_PLAN_ID', 'P-ANNUAL-PLAN-ID')
-    },
-    # WIN50 Discounted Plans (50% OFF)
-    'monthly_win50': {
-        'name': 'Monthly Subscription (50% OFF)',
-        'price': 49.50,
-        'plan_id': os.environ.get('PAYPAL_MONTHLY_WIN50_PLAN_ID', 'P-MONTHLY-WIN50-PLAN-ID')
-    },
-    'annual_win50': {
-        'name': 'Annual Subscription (50% OFF)',
-        'price': 475.00,
-        'plan_id': os.environ.get('PAYPAL_ANNUAL_WIN50_PLAN_ID', 'P-ANNUAL-WIN50-PLAN-ID')
-    }
-}
-
-# Database configuration - supports both PostgreSQL and SQLite
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
-    # Fix Heroku's postgres:// to postgresql://
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-
-# Use psycopg (version 3) instead of psycopg2
-if DATABASE_URL and 'postgresql://' in DATABASE_URL:
-    # Change postgresql:// to postgresql+psycopg:// for psycopg3 driver
-    if '+psycopg' not in DATABASE_URL:
-        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
-
-"""
-Use an absolute path for the local SQLite database to avoid CWD-related
-"no such table" issues when the app is launched from different folders or
-by various task runners. If DATABASE_URL is provided (e.g., Postgres), use it;
-otherwise fall back to a stable absolute sqlite path.
-"""
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if DATABASE_URL:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    sqlite_path = os.path.join(basedir, 'leads.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
+}
+
+# --- Restored global configuration constants ---
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '').strip()
+OPENAI_AVAILABLE = bool(openai and OPENAI_API_KEY)
+
+def is_openai_configured():
+    """Return True if OpenAI features can be used."""
+    return OPENAI_AVAILABLE
+
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+ADMIN_ENABLED = True  # Toggle if you want to disable legacy admin login paths
+
+SUBSCRIPTION_PLANS = {
+    'monthly': {
+        'price': 99.00,
+        'interval': 'MONTH',
+        'paypal_plan_id': os.getenv('PAYPAL_MONTHLY_PLAN_ID')
+    },
+    'annual': {
+        'price': 950.00,
+        'interval': 'YEAR',
+        'paypal_plan_id': os.getenv('PAYPAL_ANNUAL_PLAN_ID')
+    },
+    # WIN50 promotional discounted plans
+    'monthly_win50': {
+        'price': 49.50,
+        'interval': 'MONTH',
+        'paypal_plan_id': os.getenv('PAYPAL_MONTHLY_WIN50_PLAN_ID')
+    },
+    'annual_win50': {
+        'price': 475.00,
+        'interval': 'YEAR',
+        'paypal_plan_id': os.getenv('PAYPAL_ANNUAL_WIN50_PLAN_ID')
+    }
 }
 
 db = SQLAlchemy(app)
@@ -4152,62 +4057,37 @@ def user_profile():
         flash('Error loading profile. Please try again.', 'error')
         return redirect(url_for('customer_leads'))
 
-@app.route('/customer-dashboard')
+@app.route('/client-dashboard')
 @login_required
-def customer_dashboard():
-    """Optimized customer dashboard with caching, personalization, and recommendations"""
+def client_dashboard():
+    """Unified client dashboard combining stats, recommendations, notifications, onboarding, and full leads grid"""
     try:
         user_email = session.get('user_email')
 
         # Log activity
-        log_user_activity(user_email, 'viewed_dashboard')
+        log_user_activity(user_email, 'viewed_client_dashboard')
 
-        # Check cache first
+        # ===== STATS (cached) =====
         cached_data = get_dashboard_cache(user_email)
         if cached_data:
             stats = cached_data
         else:
-            # Get stats from all lead sources
-            gov_contracts = 0
-            try:
-                gov_contracts = db.session.execute(text("SELECT COUNT(*) FROM contracts")).scalar() or 0
-            except Exception:
-                pass
-
-            supply_contracts = 0
-            try:
-                supply_contracts = db.session.execute(text("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'"))\
-                    .scalar() or 0
-            except Exception:
-                pass
-
-            commercial_leads = 0
-            try:
-                commercial_leads = db.session.execute(text("SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'"))\
-                    .scalar() or 0
-            except Exception:
-                pass
-
-            residential_leads = 0
-            try:
-                residential_leads = db.session.execute(text("SELECT COUNT(*) FROM residential_leads WHERE status = 'new'"))\
-                    .scalar() or 0
-            except Exception:
-                pass
-
+            def safe_count(sql):
+                try:
+                    return db.session.execute(text(sql)).scalar() or 0
+                except Exception:
+                    return 0
+            gov_contracts = safe_count("SELECT COUNT(*) FROM contracts")
+            supply_contracts = safe_count("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'")
+            commercial_leads = safe_count("SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'")
+            residential_leads = safe_count("SELECT COUNT(*) FROM residential_leads WHERE status = 'new'")
             quick_wins = 0
             try:
-                # Quick Wins includes: open supply + urgent commercial + capped gov upcoming deadlines
-                quick_wins += db.session.execute(text(
-                    "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency', 'urgent') AND status = 'open'"
-                )).scalar() or 0
-                upcoming_contracts = db.session.execute(text(
-                    "SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'"
-                )).scalar() or 0
+                quick_wins += safe_count("SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency','urgent') AND status='open'")
+                upcoming_contracts = safe_count("SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'")
                 quick_wins += min(upcoming_contracts, 20)
             except Exception:
                 pass
-
             total_leads = gov_contracts + supply_contracts + commercial_leads + residential_leads
             stats = {
                 'total_leads': total_leads,
@@ -4219,202 +4099,161 @@ def customer_dashboard():
             }
             set_dashboard_cache(user_email, stats)
 
-        # Personalization
-        preferences = {}
+        # ===== PERSONALIZATION =====
         try:
             preferences = get_user_preferences(user_email)
-        except Exception as e:
-            print(f"Error getting preferences: {e}")
+        except Exception:
             preferences = {}
-
-        notifications = []
         try:
             notifications = get_unread_notifications(user_email, limit=5)
-        except Exception as e:
-            print(f"Error getting notifications: {e}")
+        except Exception:
             notifications = []
-
-        show_onboarding = False
         try:
             show_onboarding = not check_onboarding_status(user_email)
-        except Exception as e:
-            print(f"Error checking onboarding: {e}")
+        except Exception:
             show_onboarding = False
-
-        # Recommendations
-        recommended_leads = []
         try:
             recommended_leads = get_personalized_recommendations(user_email, limit=5)
-        except Exception as e:
-            print(f"Error getting recommendations: {e}")
+        except Exception:
             recommended_leads = []
 
-        # Latest opportunities (and per-category lists)
-        latest_opportunities = []
-        gov_opps_list, supply_opps_list, com_reqs_list, res_reqs_list = [], [], [], []
+        # ===== FULL LEADS AGGREGATION (from former customer_leads) =====
+        government_leads = []
+        supply_leads = []
+        commercial_opps = []
+        commercial_requests = []
+        residential_requests = []
+
         try:
-            # Government Contracts - using federal_contracts table
-            gov_rows = db.session.execute(text(
-                """
-                SELECT title, agency, location, value, posted_date, created_at,
-                       'Government Contract' as lead_type, id, sam_gov_url
+            government_leads = db.session.execute(text('''
+                SELECT id, title, agency, location, description, value as contract_value, deadline, naics_code,
+                       posted_date as created_at, sam_gov_url as website_url
                 FROM federal_contracts
+                WHERE title IS NOT NULL
                 ORDER BY created_at DESC
-                LIMIT 10
-                """
-            )).fetchall()
-            for r in gov_rows:
-                rec = {
-                    'title': r.title or 'Federal Contract Opportunity', 
-                    'agency': r.agency or 'Federal Agency', 
-                    'location': r.location or 'Virginia',
-                    'value': r.value or 'See details',
-                    'posted_date': r.posted_date or r.created_at, 
-                    'lead_type': r.lead_type, 
-                    'id': r.id, 
-                    'link': r.sam_gov_url or url_for('federal_contracts')
-                }
-                latest_opportunities.append(rec); gov_opps_list.append(rec)
-
-            # Supply Opportunities
-            supply_rows = db.session.execute(text(
-                """
-                SELECT title, agency, location, estimated_value, posted_date,
-                       'Supply Opportunity' as lead_type, id, website_url
-                FROM supply_contracts
-                WHERE status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 10
-                """
-            )).fetchall()
-            for r in supply_rows:
-                rec = {
-                    'title': r.title, 'agency': r.agency, 'location': r.location, 'value': r.estimated_value,
-                    'posted_date': r.posted_date, 'lead_type': r.lead_type, 'id': r.id, 
-                    'link': r.website_url or url_for('quick_wins')
-                }
-                latest_opportunities.append(rec); supply_opps_list.append(rec)
-
-            # Commercial Requests
-            com_rows = db.session.execute(text(
-                """
-                SELECT business_name, business_type, city as full_city, budget_range, created_at,
-                       'Commercial Request' as lead_type, id
-                FROM commercial_lead_requests
-                WHERE status = 'open'
-                ORDER BY created_at DESC
-                LIMIT 5
-                """
-            )).fetchall()
-            for r in com_rows:
-                rec = {
-                    'title': f"Commercial Cleaning - {r.business_name}", 
-                    'agency': r.business_type, 
-                    'location': (r.full_city or 'Unknown'),
-                    'value': r.budget_range or 'Contact for quote', 
-                    'posted_date': r.created_at, 
-                    'lead_type': r.lead_type, 
-                    'id': r.id,
-                    'link': url_for('customer_leads')
-                }
-                latest_opportunities.append(rec); com_reqs_list.append(rec)
-
-            # Residential Requests
-            res_rows = db.session.execute(text(
-                """
-                SELECT homeowner_name, property_type, city as full_city, estimated_value, created_at,
-                       'Residential Request' as lead_type, id
-                FROM residential_leads
-                WHERE status = 'new'
-                ORDER BY created_at DESC
-                LIMIT 5
-                """
-            )).fetchall()
-            for r in res_rows:
-                rec = {
-                    'title': f"Residential Cleaning - {r.property_type}", 
-                    'agency': f"Homeowner: {r.homeowner_name}", 
-                    'location': (r.full_city or 'Unknown'),
-                    'value': r.estimated_value or 'Contact for quote', 
-                    'posted_date': r.created_at, 
-                    'lead_type': r.lead_type, 
-                    'id': r.id,
-                    'link': url_for('customer_leads')
-                }
-                latest_opportunities.append(rec); res_reqs_list.append(rec)
-
-            # Website Leads - All registered users/companies
-            website_leads_rows = db.session.execute(text(
-                """
-                SELECT company_name, contact_name, email, phone, state, 
-                       certifications, experience_years, created_at, id
-                FROM leads
-                WHERE subscription_status != 'admin'
-                ORDER BY created_at DESC
-                LIMIT 50
-                """
-            )).fetchall()
-            
-            website_leads_list = []
-            for r in website_leads_rows:
-                rec = {
-                    'title': r.company_name if hasattr(r, 'company_name') else r[0] or 'Company',
-                    'agency': r.contact_name if hasattr(r, 'contact_name') else r[1] or 'Contact',
-                    'location': r.state if hasattr(r, 'state') else (r[4] or 'VA'),
-                    'value': (r.certifications if hasattr(r, 'certifications') else r[5]) or 'N/A',
-                    'posted_date': r.created_at if hasattr(r, 'created_at') else r[7],
-                    'lead_type': 'Website Lead',
-                    'id': r.id if hasattr(r, 'id') else r[8],
-                    'link': '#',
-                    'email': r.email if hasattr(r, 'email') else r[2],
-                    'phone': r.phone if hasattr(r, 'phone') else r[3],
-                    'experience': (r.experience_years if hasattr(r, 'experience_years') else r[6]) or 'N/A'
-                }
-                website_leads_list.append(rec)
-
-            latest_opportunities.sort(key=lambda x: x['posted_date'] if x['posted_date'] else '', reverse=True)
-            latest_opportunities = latest_opportunities[:15]
+                LIMIT 100''')).fetchall()
         except Exception as e:
-            print(f"Error fetching latest opportunities: {e}")
-            website_leads_list = []
+            print(f"Government leads error: {e}")
+        try:
+            supply_leads = db.session.execute(text('''
+                SELECT id, title, agency, location, description, estimated_value as contract_value, bid_deadline as deadline,
+                       '' as naics_code, created_at, website_url, product_category, requirements
+                FROM supply_contracts
+                ORDER BY created_at DESC''')).fetchall()
+        except Exception as e:
+            print(f"Supply leads error: {e}")
+        try:
+            commercial_opps = db.session.execute(text('''
+                SELECT id, business_name, business_type, location, description, monthly_value, 'Ongoing' as deadline,
+                       '' as naics_code, 'Recent' as date_posted, website_url, services_needed, special_requirements
+                FROM commercial_opportunities ORDER BY id DESC''')).fetchall()
+        except Exception as e:
+            print(f"Commercial opps error: {e}")
+        try:
+            commercial_requests = db.session.execute(text('''
+                SELECT id, business_name, contact_name, email, phone, address, city, zip_code,
+                       business_type, square_footage, frequency, services_needed, special_requirements, budget_range,
+                       start_date, urgency, status, created_at
+                FROM commercial_lead_requests WHERE status='open' ORDER BY created_at DESC''')).fetchall()
+        except Exception as e:
+            print(f"Commercial requests error: {e}")
+        try:
+            residential_requests = db.session.execute(text('''
+                SELECT id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, square_footage,
+                       contact_email, contact_phone, estimated_value, cleaning_frequency, services_needed, special_requirements,
+                       status, created_at
+                FROM residential_leads WHERE status='new' ORDER BY created_at DESC''')).fetchall()
+        except Exception as e:
+            print(f"Residential requests error: {e}")
+
+        all_leads = []
+        for lead in government_leads:
+            app_url = lead[9] if lead[9] and str(lead[9]).startswith(('http://','https://')) else None
+            all_leads.append({
+                'id': f'gov_{lead[0]}', 'title': lead[1], 'agency': lead[2], 'location': lead[3], 'description': lead[4],
+                'contract_value': lead[5], 'deadline': lead[6], 'naics_code': lead[7], 'date_posted': lead[8],
+                'application_url': app_url, 'lead_type': 'government', 'services_needed': 'General Cleaning',
+                'status': 'Active', 'requirements': lead[4] or 'Standard government requirements',
+                'days_left': calculate_days_left(lead[6])
+            })
+        for lead in supply_leads:
+            app_url = lead[9] if lead[9] and str(lead[9]).startswith(('http://','https://')) else None
+            all_leads.append({
+                'id': f'supply_{lead[0]}', 'title': lead[1], 'agency': lead[2], 'location': lead[3], 'description': lead[4],
+                'contract_value': lead[5], 'deadline': lead[6], 'naics_code': lead[7], 'date_posted': lead[8],
+                'application_url': app_url, 'lead_type': 'supply', 'services_needed': lead[10], 'status': 'Active',
+                'requirements': lead[11] or 'Standard procurement requirements', 'days_left': calculate_days_left(lead[6])
+            })
+        for lead in commercial_opps:
+            app_url = lead[9] if lead[9] and str(lead[9]).startswith(('http://','https://')) else None
+            all_leads.append({
+                'id': f'com_{lead[0]}', 'title': lead[1], 'agency': lead[2], 'location': lead[3], 'description': lead[4],
+                'contract_value': f'${lead[5]}/month' if lead[5] else 'N/A', 'deadline': lead[6], 'naics_code': lead[7],
+                'date_posted': lead[8], 'application_url': app_url, 'lead_type': 'commercial', 'services_needed': lead[10],
+                'status': 'Active', 'requirements': lead[11] or 'Standard commercial requirements', 'days_left': 30
+            })
+        for req in commercial_requests:
+            all_leads.append({
+                'id': f'comreq_{req[0]}', 'title': f"Commercial Cleaning Needed - {req[1]}", 'agency': req[8],
+                'location': f"{req[6]}, VA {req[7]}", 'description': f"{req[1]} seeking cleaning. {req[11]} | Freq: {req[10]} | Special: {req[12] or 'None'}",
+                'contract_value': req[13] or 'Contact for quote', 'deadline': req[14] or 'ASAP', 'naics_code': '',
+                'date_posted': req[17], 'application_url': None, 'lead_type': 'commercial_request', 'services_needed': req[11],
+                'status': 'NEW - Client Seeking Services', 'requirements': f"Contact: {req[2]} | Phone: {req[4]} | Email: {req[3]}",
+                'days_left': 7, 'contact_name': req[2], 'contact_email': req[3], 'contact_phone': req[4], 'address': req[5]
+            })
+        for req in residential_requests:
+            all_leads.append({
+                'id': f'resreq_{req[0]}', 'title': f"Residential Cleaning Needed - {req[5]} in {req[3]}", 'agency': 'Homeowner',
+                'location': f"{req[3]}, VA {req[4]}", 'description': f"{req[1]} needs {req[13]} services for {req[5]}. {req[6]} bed, {req[7]} bath | {req[8]} sq ft | Freq: {req[12]}",
+                'contract_value': req[11] or 'Contact for quote', 'deadline': 'ASAP', 'naics_code': '', 'date_posted': req[16],
+                'application_url': None, 'lead_type': 'residential_request', 'services_needed': req[13], 'status': 'NEW - Client Seeking Services',
+                'requirements': f"Contact: {req[1]} | Phone: {req[10]} | Email: {req[9]}", 'days_left': 7,
+                'contact_name': req[1], 'contact_email': req[9], 'contact_phone': req[10], 'address': req[2]
+            })
+
+        total_leads = len(all_leads)
+        try:
+            emergency_count = db.session.execute(text("SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency='emergency' AND status='open'")).scalar() or 0
+        except Exception:
+            emergency_count = 0
+        try:
+            urgent_count = db.session.execute(text("SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency='urgent' AND status='open'")).scalar() or 0
+        except Exception:
+            urgent_count = 0
 
         # Saved stats
-        saved_searches_count = 0
         try:
-            saved_searches_count = db.session.execute(text(
-                "SELECT COUNT(*) FROM saved_searches WHERE user_email = :email"
-            ), {'email': user_email}).scalar() or 0
+            saved_searches_count = db.session.execute(text("SELECT COUNT(*) FROM saved_searches WHERE user_email = :e"), {'e': user_email}).scalar() or 0
         except Exception:
-            pass
-
-        saved_leads_count = 0
+            saved_searches_count = 0
         try:
-            saved_leads_count = db.session.execute(text(
-                "SELECT COUNT(*) FROM saved_leads WHERE user_email = :email"
-            ), {'email': user_email}).scalar() or 0
+            saved_leads_count = db.session.execute(text("SELECT COUNT(*) FROM saved_leads WHERE user_email = :e"), {'e': user_email}).scalar() or 0
         except Exception:
-            pass
+            saved_leads_count = 0
 
-        return render_template('customer_dashboard.html',
+        return render_template('client_dashboard.html',
                                stats=stats,
-                               latest_opportunities=latest_opportunities,
-                               preferences=preferences,
                                notifications=notifications,
                                show_onboarding=show_onboarding,
                                recommended_leads=recommended_leads,
-                               gov_leads=gov_opps_list,
-                               supply_leads=supply_opps_list,
-                               commercial_leads_list=com_reqs_list,
-                               residential_leads_list=res_reqs_list,
-                               website_leads=website_leads_list,
+                               preferences=preferences,
+                               all_leads=all_leads,
+                               total_leads=total_leads,
+                               emergency_count=emergency_count,
+                               urgent_count=urgent_count,
                                saved_searches_count=saved_searches_count,
                                saved_leads_count=saved_leads_count)
     except Exception as e:
-        print(f"Error loading dashboard: {e}")
-        import traceback
-        traceback.print_exc()
-        flash('Error loading dashboard. Please try again.', 'error')
-        return redirect(url_for('customer_leads'))
+        print(f"Unified client dashboard error: {e}")
+        import traceback; traceback.print_exc()
+        flash('Error loading client dashboard.', 'error')
+        return render_template('client_dashboard.html', all_leads=[], total_leads=0, emergency_count=0, urgent_count=0, stats={})
+
+@app.route('/customer-dashboard')
+@login_required
+def customer_dashboard():
+    """Backward compatible redirect to unified client dashboard"""
+    return redirect(url_for('client_dashboard'))
 
 @app.route('/naics-profile')
 @login_required
@@ -18985,7 +18824,6 @@ def scrape_construction_leads():
     return render_template('admin_scrape_construction.html')
 
 @app.route('/quick-wins')
-@app.route('/supply-contracts')  # Added redirect route - both URLs work
 @login_required
 def quick_wins():
     """Show urgent leads and quick win supply contracts requiring immediate response
@@ -19345,6 +19183,97 @@ def quick_wins():
         except:
             # If even that fails, redirect
             return redirect(url_for('customer_leads'))
+
+@app.route('/supply-contracts')
+@login_required
+def supply_contracts():
+    """Paginated supply contracts page with filters (location, category, state, quick wins, set-asides)."""
+    try:
+        is_admin = session.get('is_admin', False)
+        is_paid_subscriber = False
+        if is_admin:
+            is_paid_subscriber = True
+        elif 'user_id' in session:
+            row = db.session.execute(text("SELECT subscription_status FROM leads WHERE id = :uid"), {'uid': session['user_id']}).fetchone()
+            if row and row[0] == 'paid':
+                is_paid_subscriber = True
+
+        # Query params
+        location = request.args.get('location', '').strip()
+        category = request.args.get('category', '').strip()
+        quick_wins_only = request.args.get('quick_wins') == 'true'
+        small_biz_only = request.args.get('small_biz') == 'true'
+        state_filter = request.args.get('state', '').strip()
+        page = max(1, int(request.args.get('page', 1) or 1))
+        per_page = 12
+        offset = (page - 1) * per_page
+
+        where = ["status = 'open'"]
+        params = {}
+        if location:
+            where.append("location = :location")
+            params['location'] = location
+        if category:
+            where.append("product_category = :category")
+            params['category'] = category
+        if quick_wins_only:
+            where.append("is_quick_win = 1")
+        if small_biz_only:
+            where.append("is_small_business_set_aside = 1")
+        if state_filter:
+            where.append("location LIKE :state_like")
+            params['state_like'] = f"%{state_filter}%"
+
+        where_sql = ' AND '.join(where) if where else '1=1'
+        count_sql = f"SELECT COUNT(*) FROM supply_contracts WHERE {where_sql}";
+        total_count = db.session.execute(text(count_sql), params).scalar() or 0
+        total_pages = max(1, (total_count + per_page - 1) // per_page)
+        if page > total_pages:
+            page = total_pages
+            offset = (page - 1) * per_page
+
+        query_sql = (
+            "SELECT id, title, agency, location, product_category, estimated_value, bid_deadline, website_url, "
+            "is_quick_win, is_small_business_set_aside, contact_name, contact_email, contact_phone, requirements "
+            f"FROM supply_contracts WHERE {where_sql} "
+            "ORDER BY CASE WHEN is_quick_win THEN 0 ELSE 1 END, bid_deadline ASC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        params.update({'limit': per_page, 'offset': offset})
+        contracts = db.session.execute(text(query_sql), params).fetchall()
+
+        # Distinct lists
+        locations = [r[0] for r in db.session.execute(text("SELECT DISTINCT location FROM supply_contracts WHERE location IS NOT NULL AND location != '' ORDER BY location"))]
+        categories = [r[0] for r in db.session.execute(text("SELECT DISTINCT product_category FROM supply_contracts WHERE product_category IS NOT NULL AND product_category != '' ORDER BY product_category"))]
+
+        states = [
+            'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+        ]
+
+        current_filters = {
+            'location': location,
+            'category': category,
+            'quick_wins': quick_wins_only,
+            'small_biz': small_biz_only,
+            'state': state_filter
+        }
+
+        return render_template('supply_contracts.html',
+                               contracts=contracts,
+                               total_count=total_count,
+                               page=page,
+                               total_pages=total_pages,
+                               locations=locations,
+                               categories=categories,
+                               states=states,
+                               current_filters=current_filters,
+                               is_paid_subscriber=is_paid_subscriber,
+                               is_admin=is_admin)
+    except Exception as e:
+        print(f"Supply contracts page error: {e}")
+        flash('Error loading supply contracts.', 'error')
+        return render_template('supply_contracts.html', contracts=[], total_count=0, page=1, total_pages=1,
+                               locations=[], categories=[], states=[], current_filters={}, is_paid_subscriber=False, is_admin=session.get('is_admin', False))
 
 @app.route('/global-opportunities')
 @login_required

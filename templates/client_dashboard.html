@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Client Dashboard - Unified Leads & Insights{% endblock %}
+{% block content %}
+<!-- Onboarding Modal -->
+{% if show_onboarding %}
+<div class="modal fade" id="onboardingModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-graduation-cap me-2"></i>Getting Started</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ol class="small">
+          <li class="mb-3"><strong>Complete Profile:</strong> Add company details for personalization.</li>
+          <li class="mb-3"><strong>Set Preferences:</strong> Choose locations & contract types.</li>
+          <li class="mb-3"><strong>Save a Lead:</strong> Bookmark opportunities to build your pipeline.</li>
+        </ol>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('user_profile') }}" class="btn btn-primary"><i class="fas fa-user-circle me-1"></i>Profile</a>
+          <button class="btn btn-success" onclick="showPreferences()"><i class="fas fa-sliders-h me-1"></i>Preferences</button>
+          <a href="{{ url_for('client_dashboard') }}" class="btn btn-warning"><i class="fas fa-bookmark me-1"></i>Browse Leads</a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-danger" onclick="neverShowOnboarding()">Never Show Again</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dismiss</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="container-fluid py-4">
+  <!-- Notifications -->
+  {% if notifications %}
+  <div class="alert alert-info d-flex align-items-start" role="alert">
+    <i class="fas fa-bell me-3 fa-lg"></i>
+    <div class="flex-grow-1">
+      <strong>{{ notifications|length }} notification(s)</strong>
+      <ul class="mb-0 mt-2 small">
+        {% for n in notifications[:3] %}
+        <li>{{ n.message }} <button class="btn btn-sm btn-link" onclick="markRead({{ n.id }})">Mark read</button></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Header Stats -->
+  <div class="portal-header-band mb-4">
+    <div class="d-flex justify-content-between flex-wrap gap-3 align-items-center">
+      <div>
+        <h2 class="mb-1"><i class="fas fa-tachometer-alt me-2"></i>Client Dashboard</h2>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="stat-pill"><i class="fas fa-landmark text-white-50"></i> {{ stats.government_contracts or 0 }} Gov</span>
+          <span class="stat-pill"><i class="fas fa-boxes text-white-50"></i> {{ stats.supply_contracts or 0 }} Supply</span>
+          <span class="stat-pill"><i class="fas fa-building text-white-50"></i> {{ stats.commercial_leads or 0 }} Commercial</span>
+          <span class="stat-pill"><i class="fas fa-home text-white-50"></i> {{ stats.residential_leads or 0 }} Residential</span>
+          <span class="stat-pill"><i class="fas fa-bolt text-white-50"></i> {{ stats.quick_wins or 0 }} Quick Wins</span>
+          <span class="stat-pill"><i class="fas fa-bookmark text-white-50"></i> {{ saved_leads_count or 0 }} Saved</span>
+        </div>
+      </div>
+      <div class="text-end">
+        <div class="badge bg-warning text-dark me-2">⚠ {{ emergency_count|default(0) }} Emergency</div>
+        <div class="badge bg-danger">🔥 {{ urgent_count|default(0) }} Urgent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Filters & Advanced Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="filter-pill active" data-filter="all" onclick="quickFilter(this, 'all')"><i class="fas fa-th me-1"></i>All <span class="badge bg-white text-primary ms-1">{{ total_leads }}</span></button>
+          <button class="filter-pill" data-filter="urgent" onclick="quickFilter(this, 'urgent')"><i class="fas fa-fire text-danger me-1"></i>Urgent <span class="badge bg-danger ms-1">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span></button>
+          <button class="filter-pill" data-filter="government" onclick="quickFilter(this, 'government')"><i class="fas fa-landmark text-success me-1"></i>Gov</button>
+          <button class="filter-pill" data-filter="commercial" onclick="quickFilter(this, 'commercial')"><i class="fas fa-building text-info me-1"></i>Commercial</button>
+          <button class="filter-pill" data-filter="high-value" onclick="quickFilter(this, 'high-value')"><i class="fas fa-gem text-warning me-1"></i>High Value</button>
+          <button class="filter-pill" data-filter="closing-soon" onclick="quickFilter(this, 'closing-soon')"><i class="fas fa-clock text-danger me-1"></i>Closing Soon</button>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" onclick="toggleAdvancedFilters()"><i class="fas fa-sliders-h me-1"></i><span id="advFilterText">More Filters</span></button>
+      </div>
+      <div id="advancedFilters" style="display:none;">
+        <hr class="my-3"/>
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-bold small">Category</label>
+            <select id="categoryFilter" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="Hospital">Hospitals</option>
+              <option value="School District">Schools</option>
+              <option value="Hotel">Hotels</option>
+              <option value="Office">Office Buildings</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold small">City</label>
+            <select id="locationFilter" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="Hampton">Hampton</option>
+              <option value="Norfolk">Norfolk</option>
+              <option value="Virginia Beach">Virginia Beach</option>
+              <option value="Newport News">Newport News</option>
+              <option value="Williamsburg">Williamsburg</option>
+              <option value="Suffolk">Suffolk</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold small">Value</label>
+            <select id="valueFilter" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="under-50k">Under $50K</option>
+              <option value="50k-100k">$50K - $100K</option>
+              <option value="100k-250k">$100K - $250K</option>
+              <option value="250k-500k">$250K - $500K</option>
+              <option value="500k-1m">$500K - $1M</option>
+              <option value="over-1m">Over $1M</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold small">Deadline</label>
+            <select id="deadlineFilter" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">Any</option>
+              <option value="3-days">Next 3 days</option>
+              <option value="7-days">Next 7 days</option>
+              <option value="14-days">Next 14 days</option>
+              <option value="30-days">Next 30 days</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold small">Keywords</label>
+            <div class="input-group input-group-sm">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search..." onkeyup="applyFilters()"/>
+              <button class="btn btn-primary" type="button" onclick="applyFilters()"><i class="fas fa-search"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mt-3">
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()"><i class="fas fa-undo me-1"></i>Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leads Grid -->
+  <div class="row" id="leadsContainer">
+    {% for lead in all_leads %}
+    <div class="col-xl-3 col-lg-4 col-md-6 mb-4 lead-card" data-type="{{ lead.lead_type }}" data-location="{{ lead.location }}" data-value="{{ lead.contract_value }}" data-services="{{ lead.services_needed }}" data-status="{{ lead.status }}" data-days-left="{{ lead.days_left|default(999) }}">
+      <div class="card h-100">
+        <div class="card-header pt-3 px-3 pb-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              {% if lead.lead_type == 'government' %}
+                <span class="badge rounded-pill bg-success bg-opacity-10 text-success mb-2">Government</span>
+              {% elif lead.lead_type == 'commercial' %}
+                <span class="badge rounded-pill bg-info bg-opacity-10 text-info mb-2">Commercial</span>
+              {% elif lead.lead_type == 'commercial_request' %}
+                <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning mb-2">Direct Lead</span>
+              {% elif lead.lead_type == 'residential_request' %}
+                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary mb-2">Residential</span>
+              {% elif lead.lead_type == 'supply' %}
+                <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary mb-2">Supply</span>
+              {% endif %}
+            </div>
+            <button class="btn btn-link p-0 save-btn" data-lead-type="{{ lead.lead_type }}" data-lead-id="{{ lead.id }}" data-lead-title="{{ lead.title }}" onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')" title="Save lead"><i class="far fa-bookmark text-muted" style="font-size:1.2rem;"></i></button>
+          </div>
+          <h6 class="card-title mb-1">{{ lead.title[:70] }}{% if lead.title|length > 70 %}...{% endif %}</h6>
+          <p class="text-muted small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
+        </div>
+        <div class="card-body pt-2 p-3">
+          <p class="card-text small" style="height:50px; overflow:hidden;">{{ lead.description[:100] }}{% if lead.description|length > 100 %}...{% endif %}</p>
+          <div class="row g-2 small my-2">
+            <div class="col-6"><div class="text-muted"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div><strong class="text-success">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong></div>
+            <div class="col-6"><div class="text-muted"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div><strong>{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong></div>
+          </div>
+          <div class="row g-2 small">
+            <div class="col-6"><div class="text-muted"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div><strong class="text-danger">{{ lead.deadline[:15] if lead.deadline else 'N/A' }}</strong></div>
+            <div class="col-6"><div class="text-muted"><i class="fas fa-tools me-1 text-info"></i>Services</div><strong class="text-info">{{ lead.services_needed[:25] if lead.services_needed else 'N/A' }}</strong></div>
+          </div>
+        </div>
+        <div class="card-footer p-3">
+          <div class="d-grid">
+            {% if lead.lead_type in ['commercial_request','residential_request'] %}
+              <button class="btn btn-warning" onclick="showContactInfo('{{ lead.id }}','{{ lead.contact_name }}','{{ lead.contact_email }}','{{ lead.contact_phone }}','{{ lead.address }}')"><i class="fas fa-phone me-1"></i>Contact Info</button>
+            {% elif lead.application_url and lead.application_url.startswith(('http://','https://')) %}
+              <a href="{{ lead.application_url }}" target="_blank" class="btn btn-primary"><i class="fas fa-external-link-alt me-1"></i>Apply</a>
+            {% else %}
+              <button class="btn btn-primary" onclick="viewLeadDetails('{{ lead.id }}','{{ lead.lead_type }}')"><i class="fas fa-info-circle me-1"></i>Details</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <div class="card text-center p-5"><div class="card-body"><i class="fas fa-search-dollar fa-3x text-muted mb-3"></i><h5>No Leads Found</h5><p class="text-muted">Adjust filters and try again.</p><button class="btn btn-primary" onclick="clearAllFilters()"><i class="fas fa-undo me-1"></i>Clear Filters</button></div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12 d-flex justify-content-center">
+      <nav aria-label="Page navigation"><ul class="pagination" id="paginationContainer"></ul></nav>
+    </div>
+  </div>
+</div>
+
+<script>
+// Basic data exposure for client-side filtering (large arrays acceptable client-side)
+window.leadsData = {{ all_leads|tojson }};
+</script>
+{% endblock %}
