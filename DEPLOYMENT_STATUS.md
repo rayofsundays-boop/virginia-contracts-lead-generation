@@ -1,6 +1,11 @@
-# Deployment Status - November 1, 2025
+# Deployment Status - November 12, 2025
 
 ## ✅ Completed Features
+
+### Hotfix: Scheduler Startup (Nov 12)
+- Fixed NameError at boot by ensuring `schedule_url_population` is defined before it's used in `start_background_jobs_once()`.
+- Added `ensure_minimum_schema()` to guarantee `supply_contracts.posted_date` exists before any inserts.
+- Verified locally: import passes, schedulers initialize, no seed errors.
 
 ### 1. Educational Contracts System (DEPLOYED)
 - **Status**: ✅ Code deployed to GitHub

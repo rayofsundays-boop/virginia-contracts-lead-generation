@@ -2188,9 +2188,7 @@ def start_background_jobs_once():
         print("   Set FETCH_ON_INIT=1 to force immediate fetch, or wait for scheduled off-peak updates")
 
 # Launch background jobs once per container/process cluster AFTER all functions are defined
-@app.before_first_request
-def _launch_background_jobs_on_first_request():
-    start_background_jobs_once()
+start_background_jobs_once()
 
 
 def run_daily_updates():
