@@ -15258,6 +15258,11 @@ def industry_days_events():
                 except Exception:
                     is_virtual_flag = str(raw_virtual).strip().lower() in ('true', 't', '1', 'yes')
 
+            # Detect platform from URL
+            platform = None
+            if reg_link and 'eventbrite' in reg_link.lower():
+                platform = 'Eventbrite'
+            
             events.append({
                 'id': getattr(row, 'id', None),
                 'title': title,
@@ -15269,7 +15274,8 @@ def industry_days_events():
                 'topics': topics_list,
                 'cost': 'Free (Registration Required)',  # Placeholder
                 'url': reg_link,
-                'virtual': is_virtual_flag
+                'virtual': is_virtual_flag,
+                'platform': platform
             })
         
         # If no events found, show clean empty state
