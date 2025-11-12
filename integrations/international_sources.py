@@ -8,6 +8,22 @@ logger = logging.getLogger(__name__)
 UK_BASE = "https://www.contractsfinder.service.gov.uk"
 UK_SEARCH = UK_BASE + "/Published/Notices/OCDS/Search"
 
+# NAICS 561720 (Janitorial Services), 561790 (Other Services to Buildings), 561730 (Landscaping/Snow Removal)
+# Keywords that match cleaning/janitorial industry scope
+CLEANING_KEYWORDS = {
+    'cleaning', 'janitorial', 'custodial', 'housekeeping', 'sanitation',
+    'disinfection', 'hygiene', 'floor care', 'carpet cleaning', 'window cleaning',
+    'waste management', 'trash removal', 'facilities maintenance', 'building services',
+    'porter services', 'environmental services', 'grounds maintenance', 'snow removal'
+}
+
+def _matches_cleaning_naics(text: str) -> bool:
+    """Check if text contains cleaning/janitorial keywords matching NAICS 561720/561790/561730."""
+    if not text:
+        return False
+    text_lower = text.lower()
+    return any(keyword in text_lower for keyword in CLEANING_KEYWORDS)
+
 
 def _safe_get(d: dict, path: list, default=None):
     cur = d
@@ -70,12 +86,15 @@ def _normalize_deadline(raw: Any) -> str:
 def fetch_uk_contracts_finder_cleaning(limit: int = 50) -> List[Dict[str, Any]]:
     """
     Fetch open cleaning-related opportunities from UK Contracts Finder (OCDS Search API).
+    Filters for NAICS 561720/561790/561730-related services (janitorial, facilities, building services).
     Returns a list of records mapped to supply_contracts fields.
     """
+    # Search with broader keywords to catch all cleaning/janitorial opportunities
+    # UK Contracts Finder doesn't support multiple keywords, so we'll search and filter
     params = {
         "limit": str(max(1, min(limit, 200))),
         "noticetype": "Opportunity",
-        "keyword": "cleaning",
+        "keyword": "cleaning janitorial",  # Combined search
     }
     try:
         r = requests.get(UK_SEARCH, params=params, timeout=20)
@@ -161,7 +180,21 @@ def fetch_uk_contracts_finder_cleaning(limit: int = 50) -> List[Dict[str, Any]]:
                 "status": tender.get("status") or "open",
                 "posted_date": rel.get("date") or "",
             })
-        return mapped
+        
+        # Filter to only include contracts matching NAICS 561720/561790/561730 keywords
+        filtered_mapped = []
+        for contract in mapped:
+            title = contract.get('title', '')
+            description = contract.get('description', '')
+            combined_text = f"{title} {description}"
+            
+            if _matches_cleaning_naics(combined_text):
+                filtered_mapped.append(contract)
+            else:
+                logger.info("UK CF: Filtered out non-NAICS match: '%s'", title)
+        
+        logger.info("UK CF: Fetched %d contracts, %d match NAICS cleaning codes", len(mapped), len(filtered_mapped))
+        return filtered_mapped
     except Exception:
         logger.exception("UK CF: fetch failed")
         return []
@@ -263,9 +296,10 @@ def fetch_rss_cleaning_generic(limit: int = 50) -> List[Dict[str, Any]]:
             description = (it.findtext('description') or '').strip()
             pub_date = (it.findtext('pubDate') or '').strip()
 
-            text_blob = f"{title}\n{description}".lower()
-            if 'clean' not in text_blob:
-                # Skip non-cleaning entries
+            text_blob = f"{title}\n{description}"
+            # Filter by NAICS-relevant cleaning keywords
+            if not _matches_cleaning_naics(text_blob):
+                # Skip non-NAICS cleaning entries
                 continue
 
             mapped: Dict[str, Any] = {
@@ -313,7 +347,8 @@ def fetch_rss_from_url(url: str, source_label: str = 'RSS', limit: int = 50) -> 
             link = (it.findtext('link') or '').strip()
             description = (it.findtext('description') or '').strip()
             pub_date = (it.findtext('pubDate') or '').strip()
-            if 'clean' not in f"{title}\n{description}".lower():
+            # Filter by NAICS-relevant cleaning keywords
+            if not _matches_cleaning_naics(f"{title}\n{description}"):
                 continue
             out.append({
                 'title': title or 'Cleaning Services / Supplies',
