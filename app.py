@@ -4719,45 +4719,61 @@ def saved_leads():
     """Show user's saved/bookmarked leads"""
     try:
         user_email = session.get('user_email')
+        if not user_email:
+            flash('Please log in to view saved leads', 'warning')
+            return redirect(url_for('signin'))
         
         # Get saved leads with details
-        # Schema uses saved_at (not created_at); select with alias for clarity
-        saved_items = db.session.execute(text('''
-            SELECT sl.id, sl.lead_type, sl.lead_id, COALESCE(sl.notes, '') AS notes, sl.saved_at AS saved_at
-            FROM saved_leads sl
-            WHERE sl.user_email = :email
-            ORDER BY sl.saved_at DESC
-        '''), {'email': user_email}).fetchall()
+        try:
+            # Schema uses saved_at (not created_at); select with alias for clarity
+            saved_items = db.session.execute(text('''
+                SELECT sl.id, sl.lead_type, sl.lead_id, COALESCE(sl.notes, '') AS notes, sl.saved_at AS saved_at
+                FROM saved_leads sl
+                WHERE sl.user_email = :email
+                ORDER BY sl.saved_at DESC
+            '''), {'email': user_email}).fetchall()
+            print(f"✅ Found {len(saved_items)} saved leads for {user_email}")
+        except Exception as fetch_err:
+            print(f"Error fetching saved leads: {fetch_err}")
+            import traceback
+            traceback.print_exc()
+            saved_items = []
         
         # Fetch full lead details for each saved lead
         leads_with_details = []
         for item in saved_items:
-            lead_type = item[1]
-            lead_id = item[2]
-            lead_details = get_lead_details(lead_type, lead_id)
-            if lead_details:
-                lead_details['saved_id'] = item[0]
-                lead_details['notes'] = item[3] or ''
-                lead_details['saved_at'] = item[4]
-                leads_with_details.append(lead_details)
-            else:
-                # If original lead is missing (deleted), keep minimal record
-                leads_with_details.append({
-                    'saved_id': item[0],
-                    'lead_type': lead_type,
-                    'lead_id': lead_id,
-                    'title': 'Original lead removed',
-                    'description': 'This lead no longer exists in the system.',
-                    'value': 'N/A',
-                    'location': '-',
-                    'saved_at': item[4],
-                    'url': None,
-                    'status': 'Removed'
-                })
+            try:
+                lead_type = item[1]
+                lead_id = item[2]
+                lead_details = get_lead_details(lead_type, lead_id)
+                if lead_details:
+                    lead_details['saved_id'] = item[0]
+                    lead_details['notes'] = item[3] or ''
+                    lead_details['saved_at'] = item[4]
+                    leads_with_details.append(lead_details)
+                else:
+                    # If original lead is missing (deleted), keep minimal record
+                    leads_with_details.append({
+                        'saved_id': item[0],
+                        'lead_type': lead_type,
+                        'lead_id': lead_id,
+                        'title': 'Original lead removed',
+                        'description': 'This lead no longer exists in the system.',
+                        'value': 'N/A',
+                        'location': '-',
+                        'saved_at': item[4],
+                        'url': None,
+                        'status': 'Removed'
+                    })
+            except Exception as detail_err:
+                print(f"Error processing saved lead {item[0]}: {detail_err}")
+                continue
         
         return render_template('saved_leads.html', saved_leads=leads_with_details)
     except Exception as e:
         print(f"Error loading saved leads: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error loading saved leads', 'error')
         return redirect(url_for('customer_dashboard'))
 
@@ -4765,78 +4781,94 @@ def get_lead_details(lead_type, lead_id):
     """Helper to fetch lead details by type and ID"""
     try:
         if lead_type == 'federal_contract':
-            result = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, notice_id, sam_gov_url
-                FROM federal_contracts WHERE id = :id
-            '''), {'id': lead_id}).fetchone()
-            if result:
-                return {
-                    'type': 'Federal Contract',
-                    'title': result[1],
-                    'agency': result[2],
-                    'location': result[3],
-                    'value': result[4],
-                    'date': result[5],
-                    'description': result[6],
-                    'notice_id': result[7],
-                    'url': result[8],
-                    'lead_type': 'federal_contract',
-                    'lead_id': result[0]
-                }
+            try:
+                result = db.session.execute(text('''
+                    SELECT id, title, agency, location, value, deadline, description, notice_id, sam_gov_url
+                    FROM federal_contracts WHERE id = :id
+                '''), {'id': lead_id}).fetchone()
+                if result:
+                    return {
+                        'type': 'Federal Contract',
+                        'title': result[1],
+                        'agency': result[2],
+                        'location': result[3],
+                        'value': result[4],
+                        'date': result[5],
+                        'description': result[6],
+                        'notice_id': result[7],
+                        'url': result[8],
+                        'lead_type': 'federal_contract',
+                        'lead_id': result[0]
+                    }
+            except Exception as e:
+                print(f"Error fetching federal_contract {lead_id}: {e}")
+                return None
         elif lead_type == 'local_contract' or lead_type == 'contract':
-            result = db.session.execute(text('''
-                SELECT id, title, agency, location, value, deadline, description, website_url
-                FROM contracts WHERE id = :id
-            '''), {'id': lead_id}).fetchone()
-            if result:
-                return {
-                    'type': 'Local/State Contract',
-                    'title': result[1],
-                    'agency': result[2],
-                    'location': result[3],
-                    'value': result[4],
-                    'date': result[5],
-                    'description': result[6],
-                    'url': result[7],
-                    'lead_type': 'local_contract',
-                    'lead_id': result[0]
-                }
+            try:
+                result = db.session.execute(text('''
+                    SELECT id, title, agency, location, value, deadline, description, website_url
+                    FROM contracts WHERE id = :id
+                '''), {'id': lead_id}).fetchone()
+                if result:
+                    return {
+                        'type': 'Local/State Contract',
+                        'title': result[1],
+                        'agency': result[2],
+                        'location': result[3],
+                        'value': result[4],
+                        'date': result[5],
+                        'description': result[6],
+                        'url': result[7],
+                        'lead_type': 'local_contract',
+                        'lead_id': result[0]
+                    }
+            except Exception as e:
+                print(f"Error fetching local_contract {lead_id}: {e}")
+                return None
         elif lead_type == 'commercial':
-            result = db.session.execute(text('''
-                SELECT id, business_name, location, monthly_value, business_type, description, status
-                FROM commercial_opportunities WHERE id = :id
-            '''), {'id': lead_id}).fetchone()
-            if result:
-                return {
-                    'type': 'Commercial Opportunity',
-                    'title': result[1],
-                    'agency': result[4],  # business_type as agency
-                    'location': result[2],
-                    'value': f"${result[3]}/month" if result[3] else 'N/A',
-                    'date': None,
-                    'description': result[5],
-                    'status': result[6],
-                    'lead_type': 'commercial',
-                    'lead_id': result[0]
-                }
+            try:
+                result = db.session.execute(text('''
+                    SELECT id, business_name, location, monthly_value, business_type, description, status
+                    FROM commercial_opportunities WHERE id = :id
+                '''), {'id': lead_id}).fetchone()
+                if result:
+                    return {
+                        'type': 'Commercial Opportunity',
+                        'title': result[1],
+                        'agency': result[4],  # business_type as agency
+                        'location': result[2],
+                        'value': f"${result[3]}/month" if result[3] else 'N/A',
+                        'date': None,
+                        'description': result[5],
+                        'status': result[6],
+                        'lead_type': 'commercial',
+                        'lead_id': result[0]
+                    }
+            except Exception as e:
+                print(f"Error fetching commercial {lead_id}: {e}")
+                return None
         elif lead_type == 'supply_contract':
-            result = db.session.execute(text('''
-                SELECT id, title, agency, location, estimated_value, created_at, description, website_url
-                FROM supply_contracts WHERE id = :id
-            '''), {'id': lead_id}).fetchone()
-            if result:
-                return {
-                    'type': 'Supply Contract',
-                    'title': result[1],
-                    'agency': result[2],
-                    'location': result[3],
-                    'value': result[4],
-                    'date': result[5],
-                    'description': result[6],
-                    'url': result[7],
-                    'lead_type': 'supply_contract',
-                    'lead_id': result[0]
-                }
+            try:
+                result = db.session.execute(text('''
+                    SELECT id, title, agency, location, estimated_value, created_at, description, website_url
+                    FROM supply_contracts WHERE id = :id
+                '''), {'id': lead_id}).fetchone()
+                if result:
+                    return {
+                        'type': 'Supply Contract',
+                        'title': result[1],
+                        'agency': result[2],
+                        'location': result[3],
+                        'value': result[4],
+                        'date': result[5],
+                        'description': result[6],
+                        'url': result[7],
+                        'lead_type': 'supply_contract',
+                        'lead_id': result[0]
+                    }
+            except Exception as e:
+                print(f"Error fetching supply_contract {lead_id}: {e}")
+                return None
         elif lead_type == 'quick_win':
             result = db.session.execute(text('''
                 SELECT id, title, location, estimated_value, deadline, description, phone, email, website_url
@@ -22120,28 +22152,48 @@ def send_message_to_admin():
 def my_messages():
     """Customer inbox to view messages from admin"""
     try:
-        messages = db.session.execute(
-            text("SELECT m.*, sender.email as sender_email, "
-                 "sender.first_name || ' ' || sender.last_name as sender_name "
-                 "FROM messages m "
-                 "LEFT JOIN leads sender ON m.sender_id = sender.id "
-                 "WHERE m.recipient_id = :user_id "
-                 "ORDER BY m.sent_at DESC"),
-            {'user_id': session['user_id']}
-        ).fetchall()
+        # Check if user_id exists in session
+        user_id = session.get('user_id')
+        if not user_id:
+            flash('Please log in to view messages', 'warning')
+            return redirect(url_for('signin'))
         
-        # Mark all as read
-        db.session.execute(
-            text("UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP "
-                 "WHERE recipient_id = :user_id AND is_read = FALSE"),
-            {'user_id': session['user_id']}
-        )
-        db.session.commit()
+        # Try to get messages with error handling
+        try:
+            messages = db.session.execute(
+                text("SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, m.sent_at, m.is_read, m.read_at, "
+                     "sender.email as sender_email, "
+                     "COALESCE(sender.first_name || ' ' || sender.last_name, sender.email) as sender_name "
+                     "FROM messages m "
+                     "LEFT JOIN leads sender ON m.sender_id = sender.id "
+                     "WHERE m.recipient_id = :user_id "
+                     "ORDER BY m.sent_at DESC"),
+                {'user_id': user_id}
+            ).fetchall()
+        except Exception as msg_err:
+            print(f"Error fetching messages: {msg_err}")
+            # Return empty messages list if table doesn't exist or query fails
+            messages = []
+        
+        # Mark all as read (only if we have messages)
+        if messages:
+            try:
+                db.session.execute(
+                    text("UPDATE messages SET is_read = TRUE, read_at = CURRENT_TIMESTAMP "
+                         "WHERE recipient_id = :user_id AND is_read = FALSE"),
+                    {'user_id': user_id}
+                )
+                db.session.commit()
+            except Exception as update_err:
+                print(f"Error marking messages as read: {update_err}")
+                db.session.rollback()
         
         return render_template('customer_messages.html', messages=messages)
         
     except Exception as e:
         print(f"Error loading messages: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error loading messages', 'error')
         return redirect(url_for('customer_dashboard'))
 
@@ -22154,34 +22206,29 @@ def admin_mailbox():
         # Get all messages sent to admins
         messages_list = []
         
-        # 1. Regular customer messages (with table existence check)
+        # 1. Regular customer messages
         try:
-            # Check if messages table exists and has data
-            table_check = db.session.execute(text(
-                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'messages')"
-            )).scalar()
+            # Try to query directly - if table doesn't exist, catch the error
+            customer_messages = db.session.execute(
+                text("SELECT id, sender_id, recipient_id, subject, body, sent_at, is_read "
+                     "FROM messages "
+                     "ORDER BY is_read ASC, sent_at DESC LIMIT 50")
+            ).fetchall()
             
-            if table_check:
-                # Simple query without complex joins
-                customer_messages = db.session.execute(
-                    text("SELECT id, sender_id, recipient_id, subject, body, sent_at, is_read "
-                         "FROM messages "
-                         "ORDER BY is_read ASC, sent_at DESC LIMIT 50")
-                ).fetchall()
-                
-                for msg in customer_messages:
-                    messages_list.append({
-                        'id': msg[0],
-                        'type': 'customer_message',
-                        'sender_name': 'Customer',
-                        'sender_email': '',
-                        'company': '',
-                        'subject': msg[3] or 'No subject',
-                        'body': msg[4] or 'No message',
-                        'created_at': msg[5],
-                        'is_read': msg[6],
-                        'sender_id': msg[1]
-                    })
+            for msg in customer_messages:
+                messages_list.append({
+                    'id': msg[0],
+                    'type': 'customer_message',
+                    'sender_name': 'Customer',
+                    'sender_email': '',
+                    'company': '',
+                    'subject': msg[3] or 'No subject',
+                    'body': msg[4] or 'No message',
+                    'created_at': msg[5],
+                    'is_read': msg[6],
+                    'sender_id': msg[1]
+                })
+            print(f"✅ Found {len(customer_messages)} customer messages")
         except Exception as e:
             print(f"Could not fetch customer messages: {e}")
             import traceback
