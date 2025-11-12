@@ -5668,6 +5668,8 @@ def industry_days():
 @app.route('/federal-contracts')
 def federal_contracts():
     """Federal contracts from SAM.gov with 3-click limit for non-subscribers"""
+    from datetime import date
+    
     department_filter = request.args.get('department', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
     per_page = int(request.args.get('per_page', 12) or 12)
@@ -5684,10 +5686,9 @@ def federal_contracts():
     # Admin gets unlimited access
     if is_admin:
         is_paid_subscriber = True
-        is_annual_subscriber = True  # Admin has full access
-        clicks_remaining = 999  # Unlimited for admin
+        is_annual_subscriber = True
+        clicks_remaining = 999
     elif 'user_id' in session:
-        # Check if paid subscriber
         user_id = session['user_id']
         result = db.session.execute(text('''
             SELECT subscription_status FROM leads WHERE id = :user_id
@@ -5696,7 +5697,6 @@ def federal_contracts():
         if result and result[0] == 'paid':
             is_paid_subscriber = True
             
-            # Check if annual subscriber for historical award access
             if user_email:
                 sub_result = db.session.execute(text('''
                     SELECT plan_type FROM subscriptions 
@@ -5707,48 +5707,52 @@ def federal_contracts():
                 if sub_result and sub_result[0] == 'annual':
                     is_annual_subscriber = True
     
-    # Track clicks for non-subscribers (not admin)
+    # Track clicks for non-subscribers
     if not is_paid_subscriber and not is_admin:
         if 'contract_clicks' not in session:
             session['contract_clicks'] = 0
         clicks_remaining = max(0, 3 - session['contract_clicks'])
     
     try:
-        # Build dynamic filter with SQLAlchemy text
+        # Get today's date in ISO format (YYYY-MM-DD) for string comparison
+        today = date.today().isoformat()
+        
+        # Build base query - deadline is stored as ISO date string, use simple string comparison
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
                    naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at,
                    contact_name, contact_email, contact_phone, contact_title
-            FROM federal_contracts WHERE 1=1
+            FROM federal_contracts 
+            WHERE deadline IS NOT NULL 
+            AND deadline != ''
+            AND deadline >= :today
         '''
-        params = {}
+        params = {'today': today}
+        
+        # Add department filter if provided
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
         
-        # Only show open bids (deadline today or later)
-        # Use CAST for PostgreSQL compatibility, filter empty strings before conversion
-        is_postgres = 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']
-        if is_postgres:
-            base_sql += " AND deadline IS NOT NULL AND deadline != '' AND CAST(deadline AS DATE) >= CURRENT_DATE"
-        else:
-            base_sql += " AND deadline IS NOT NULL AND deadline != '' AND DATE(deadline) >= DATE('now')"
-        
-        # Count total
+        # Count total matching contracts
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
-
-        # SQLite does not support "NULLS LAST" syntax; emulate by ordering on IS NULL
-        base_sql += ' ORDER BY COALESCE(posted_date, created_at) DESC, (deadline IS NULL), deadline LIMIT :limit OFFSET :offset'
+        
+        # Add ordering and pagination
+        base_sql += ' ORDER BY COALESCE(posted_date, created_at) DESC, deadline LIMIT :limit OFFSET :offset'
         params.update({'limit': per_page, 'offset': offset})
         rows = db.session.execute(text(base_sql), params).fetchall()
-
-        # Filters - use Row attribute access
+        
+        # Get unique departments for filter dropdown
         departments_rows = db.session.execute(text('''
-            SELECT DISTINCT department FROM federal_contracts WHERE department IS NOT NULL AND department <> '' ORDER BY department
+            SELECT DISTINCT department 
+            FROM federal_contracts 
+            WHERE department IS NOT NULL AND department != '' 
+            ORDER BY department
         ''')).fetchall()
         departments = [r.department for r in departments_rows]
-
+        
+        # Build pagination
         pages = max(math.ceil(total / per_page), 1)
         args_base = dict(request.args)
         args_base.pop('page', None)
@@ -5765,7 +5769,7 @@ def federal_contracts():
             'prev_url': prev_url,
             'next_url': next_url
         }
-
+        
         return render_template('federal_contracts.html', 
                                contracts=rows,
                                departments=departments,
@@ -5775,8 +5779,13 @@ def federal_contracts():
                                is_paid_subscriber=is_paid_subscriber,
                                is_annual_subscriber=is_annual_subscriber,
                                clicks_remaining=clicks_remaining)
+                               
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Federal contracts error: {error_details}")
         msg = f"<h1>Federal Contracts Page Error</h1><p>{str(e)}</p>"
+        msg += f"<pre>{error_details}</pre>"
         msg += "<p>Try running <a href='/run-updates'>/run-updates</a> and then check <a href='/db-status'>/db-status</a>.</p>"
         return msg
 
