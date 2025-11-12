@@ -5734,7 +5734,7 @@ def federal_contracts():
         today = date.today().isoformat()
         
         # Build base query - only select columns that exist in SQLite
-        # Filter out awarded, cancelled, and inactive contracts
+        # Filter out awarded, cancelled, inactive, and non-cleaning contracts
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
                    naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at
@@ -5744,6 +5744,13 @@ def federal_contracts():
             AND LOWER(title) NOT LIKE '%award%'
             AND LOWER(title) NOT LIKE '%cancel%'
             AND LOWER(title) NOT LIKE '%inactive%'
+            AND LOWER(title) NOT LIKE '%construction%'
+            AND LOWER(title) NOT LIKE '%engineering%'
+            AND LOWER(title) NOT LIKE '%launcher%'
+            AND LOWER(title) NOT LIKE '%vehicle%'
+            AND LOWER(title) NOT LIKE '%research%'
+            AND LOWER(title) NOT LIKE '%development%'
+            AND LOWER(title) NOT LIKE '%accelerator%'
         '''
         params = {'today': today}
         
