@@ -9179,7 +9179,7 @@ def customer_leads():
             print(f"Error fetching residential requests: {e}")
             residential_requests = []
         
-    # Combine and format leads
+        # Combine and format leads
         all_leads = []
         
         # Add government leads
