@@ -102,6 +102,181 @@
     }
 }
 
+/* ========================================
+   UNIFORM HEIGHT CARD GRID SYSTEM
+   ======================================== */
+
+/* Card Grid Container */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+    width: 100%;
+}
+
+/* Individual Card with Flexbox for bottom-aligned buttons */
+.uniform-card {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid rgba(0, 102, 204, 0.1);
+}
+
+.uniform-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.15);
+    border-color: var(--primary-color);
+}
+
+/* Card Header (Optional) */
+.uniform-card-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(0, 102, 204, 0.02));
+    border-bottom: 1px solid rgba(0, 102, 204, 0.1);
+}
+
+/* Card Body - grows to fill space */
+.uniform-card-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card Title */
+.uniform-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    min-height: 2.8rem; /* Ensures consistent title height */
+}
+
+/* Card Description - grows to fill available space */
+.uniform-card-description {
+    flex: 1;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+/* Card Footer - always at bottom */
+.uniform-card-footer {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    margin-top: auto; /* Pushes footer to bottom */
+}
+
+/* Button in Footer */
+.uniform-card-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 102, 204, 0.2);
+}
+
+.uniform-card-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #003366);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.uniform-card-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.2);
+}
+
+/* Badge/Tag Support */
+.uniform-card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 102, 204, 0.1);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Icon Support */
+.uniform-card-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+/* Secondary Button Variant */
+.uniform-card-btn-secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.uniform-card-btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Responsive Grid Adjustments */
+@media (max-width: 1200px) {
+    .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .uniform-card-title {
+        font-size: 1.15rem;
+        min-height: auto;
+    }
+    
+    .uniform-card-body {
+        padding: 1.25rem;
+    }
+    
+    .uniform-card-footer {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .uniform-card {
+        border-radius: 8px;
+    }
+    
+    .uniform-card-btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
+
 /* Print styles */
 @media print {
     .navbar, .hero-section, footer, .btn {
@@ -112,5 +287,15 @@
         border: 1px solid #ccc;
         page-break-inside: avoid;
         margin-bottom: 1rem;
+    }
+    
+    .uniform-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+    
+    .uniform-card-btn {
+        display: none;
     }
 }

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Card Grid Example - Uniform Height Cards{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-3">Uniform Height Card Grid</h1>
+        <p class="lead text-muted">
+            All cards maintain equal height with buttons perfectly aligned at the bottom,
+            regardless of content length.
+        </p>
+    </div>
+
+    <!-- Card Grid -->
+    <div class="card-grid">
+        
+        <!-- Card 1: Short Content -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <div class="uniform-card-badge">Featured</div>
+                <h3 class="uniform-card-title">Short Title</h3>
+                <p class="uniform-card-description">
+                    This card has minimal content to demonstrate how the button stays at the bottom.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn">Learn More</a>
+            </div>
+        </div>
+
+        <!-- Card 2: Medium Content -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <div class="uniform-card-badge">New</div>
+                <h3 class="uniform-card-title">Medium Length Title Example</h3>
+                <p class="uniform-card-description">
+                    This card contains a moderate amount of text content. Notice how the card
+                    height adjusts but the button remains perfectly aligned with other cards.
+                    The flexbox layout ensures consistent spacing and alignment.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn">View Details</a>
+            </div>
+        </div>
+
+        <!-- Card 3: Long Content -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <div class="uniform-card-badge">Popular</div>
+                <h3 class="uniform-card-title">This is a Much Longer Title That Demonstrates Title Wrapping</h3>
+                <p class="uniform-card-description">
+                    This card has significantly more content to showcase the flexibility of the
+                    layout system. Even with varying amounts of text, the grid maintains visual
+                    harmony and the buttons align perfectly across all cards. The description can
+                    be as long as needed, and the card will grow accordingly while maintaining
+                    the uniform button position at the bottom. This is achieved through CSS Flexbox
+                    with flex-direction: column and margin-top: auto on the footer.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn">Get Started</a>
+            </div>
+        </div>
+
+        <!-- Card 4: With Icon -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <svg class="uniform-card-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                </svg>
+                <h3 class="uniform-card-title">With Icon</h3>
+                <p class="uniform-card-description">
+                    Cards can include icons, badges, and other elements while maintaining
+                    perfect alignment.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn">Subscribe</a>
+            </div>
+        </div>
+
+        <!-- Card 5: Secondary Button Style -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <h3 class="uniform-card-title">Secondary Style</h3>
+                <p class="uniform-card-description">
+                    Buttons can also use the secondary style with outlined design.
+                    Hover effects work perfectly on both variants.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn uniform-card-btn-secondary">Contact Us</a>
+            </div>
+        </div>
+
+        <!-- Card 6: Minimal Content -->
+        <div class="uniform-card">
+            <div class="uniform-card-body">
+                <h3 class="uniform-card-title">Minimal</h3>
+                <p class="uniform-card-description">
+                    Short and sweet.
+                </p>
+            </div>
+            <div class="uniform-card-footer">
+                <a href="#" class="uniform-card-btn">Explore</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Usage Documentation -->
+    <div class="mt-5 p-4 bg-light rounded">
+        <h2 class="h4 mb-3">How to Use</h2>
+        <p>Copy this HTML structure for your cards:</p>
+        <pre class="bg-white p-3 rounded"><code>&lt;div class="card-grid"&gt;
+    &lt;div class="uniform-card"&gt;
+        &lt;div class="uniform-card-body"&gt;
+            &lt;div class="uniform-card-badge"&gt;Optional Badge&lt;/div&gt;
+            &lt;h3 class="uniform-card-title"&gt;Card Title&lt;/h3&gt;
+            &lt;p class="uniform-card-description"&gt;
+                Your description text here...
+            &lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="uniform-card-footer"&gt;
+            &lt;a href="#" class="uniform-card-btn"&gt;Button Text&lt;/a&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        
+        <div class="mt-4">
+            <h3 class="h5">Features:</h3>
+            <ul>
+                <li>✅ All cards maintain equal height</li>
+                <li>✅ Buttons perfectly aligned at bottom</li>
+                <li>✅ Smooth hover effects</li>
+                <li>✅ Fully responsive (4 cols → 3 cols → 2 cols → 1 col)</li>
+                <li>✅ Works with varying content lengths</li>
+                <li>✅ Optional badges and icons</li>
+                <li>✅ Primary and secondary button styles</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

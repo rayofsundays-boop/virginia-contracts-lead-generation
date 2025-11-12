@@ -18014,6 +18014,11 @@ def pricing_calculator():
     """Redirect to pricing guide with integrated calculator"""
     return redirect(url_for('pricing_guide'))
 
+@app.route('/card-grid-example')
+def card_grid_example():
+    """Example page demonstrating uniform height card grid system"""
+    return render_template('card_grid_example.html')
+
 @app.route('/ai-assistant')
 @login_required
 def ai_assistant():
