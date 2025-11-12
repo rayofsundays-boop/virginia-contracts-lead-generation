@@ -21924,16 +21924,23 @@ try:
         with app.app_context():
             # Ensure critical columns exist before any potential inserts
             ensure_minimum_schema()
-            print("🔍 Checking supply_contracts table...")
-            count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
-            current_count = count_result[0] if count_result else 0
             
-            if current_count == 0:
-                print("📦 Supply contracts table is empty - auto-populating now...")
-                new_count = populate_supply_contracts(force=False)
-                print(f"✅ SUCCESS: Auto-populated {new_count} supply contracts on startup!")
-            else:
-                print(f"ℹ️  Supply contracts table already has {current_count} records - no action needed")
+            # Check if supply_contracts table exists before querying it
+            try:
+                print("🔍 Checking supply_contracts table...")
+                count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
+                current_count = count_result[0] if count_result else 0
+                
+                if current_count == 0:
+                    print("📦 Supply contracts table is empty - auto-populating now...")
+                    new_count = populate_supply_contracts(force=False)
+                    print(f"✅ SUCCESS: Auto-populated {new_count} supply contracts on startup!")
+                else:
+                    print(f"ℹ️  Supply contracts table already has {current_count} records - no action needed")
+            except Exception as table_error:
+                # Table doesn't exist yet - it will be created by PostgreSQL init or remain empty for SQLite
+                print(f"ℹ️  supply_contracts table not yet available: {table_error}")
+                print("💡 Table will be created during first use or via admin interface")
     except Exception as populate_error:
         # Log the error but don't crash the app
         print(f"⚠️  WARNING: Could not auto-populate supply contracts: {populate_error}")
