@@ -2623,6 +2623,9 @@ def init_postgres_db():
                       proposal_support BOOLEAN DEFAULT FALSE,
                       free_leads_remaining INTEGER DEFAULT 0,
                       subscription_status TEXT DEFAULT 'unpaid',
+                      is_beta_tester BOOLEAN DEFAULT FALSE,
+                      beta_registered_at TIMESTAMP,
+                      beta_expiry_date TIMESTAMP,
                       credits_balance INTEGER DEFAULT 0,
                       credits_used INTEGER DEFAULT 0,
                       last_credit_purchase_date TEXT,
@@ -2632,6 +2635,46 @@ def init_postgres_db():
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         db.session.commit()
+
+        # Backfill beta tester columns for legacy databases
+        try:
+            db.session.execute(text(
+                "ALTER TABLE leads ADD COLUMN IF NOT EXISTS is_beta_tester BOOLEAN DEFAULT FALSE"
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            if 'already exists' not in str(e).lower():
+                print(f"⚠️  Could not add leads.is_beta_tester: {e}")
+
+        try:
+            db.session.execute(text(
+                "ALTER TABLE leads ADD COLUMN IF NOT EXISTS beta_registered_at TIMESTAMP"
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            if 'already exists' not in str(e).lower():
+                print(f"⚠️  Could not add leads.beta_registered_at: {e}")
+
+        try:
+            db.session.execute(text(
+                "ALTER TABLE leads ADD COLUMN IF NOT EXISTS beta_expiry_date TIMESTAMP"
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            if 'already exists' not in str(e).lower():
+                print(f"⚠️  Could not add leads.beta_expiry_date: {e}")
+
+        try:
+            db.session.execute(text(
+                "UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"⚠️  Could not normalize leads.is_beta_tester: {e}")
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS contracts
                      (id SERIAL PRIMARY KEY,
