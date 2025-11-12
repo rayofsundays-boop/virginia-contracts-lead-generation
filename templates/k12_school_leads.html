@@ -169,6 +169,66 @@
                         <p class="small">{{ school.special_requirements }}</p>
                     </div>
                     
+                    <!-- District Size Analysis (tailored to this specific district) -->
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#sizeGuide{{ loop.index }}" aria-expanded="false">
+                            <i class="fas fa-chart-bar me-2"></i>View District Size Analysis
+                        </button>
+                        <div class="collapse mt-2" id="sizeGuide{{ loop.index }}">
+                            <div class="card card-body bg-light border-info">
+                                <h6 class="fw-bold text-center mb-3">
+                                    <i class="fas fa-ruler-combined me-2"></i>{{ school.school_name }} - Size Profile
+                                </h6>
+                                
+                                {% if 'school_name' in school and ('statewide' in school.status.lower() or 'Statewide' in school.school_name) %}
+                                    <!-- Statewide Entry -->
+                                    <div class="alert alert-primary mb-2">
+                                        <strong><i class="fas fa-flag me-2"></i>Statewide Opportunity</strong><br>
+                                        <small>Multiple districts across {{ school.location }}</small>
+                                    </div>
+                                    <p class="small mb-2"><strong>Coverage:</strong> Access to numerous school districts throughout the state</p>
+                                    <p class="small mb-0"><strong>Strategy:</strong> Target individual districts based on your service area and capacity. Each district has unique procurement processes and timelines.</p>
+                                
+                                {% elif '86 schools' in school.facilities or '70+' in school.facilities or '80' in school.facilities or '10M' in school.square_footage %}
+                                    <!-- Large District -->
+                                    <div class="alert alert-danger mb-2">
+                                        <strong><i class="fas fa-building me-2"></i>Large District</strong><br>
+                                        <small>{{ school.facilities }} | {{ school.square_footage }}</small>
+                                    </div>
+                                    <p class="small mb-2"><strong>Contract Value:</strong> {{ school.contract_value }}</p>
+                                    <p class="small mb-0"><strong>Advantages:</strong> Major revenue opportunity ($10M+ annually), long-term partnership potential, economies of scale, prestigious portfolio addition</p>
+                                
+                                {% elif '40 schools' in school.facilities or '41 schools' in school.facilities or '48 schools' in school.facilities or '30-50 schools' in school.facilities or ('4.2M' in school.square_footage or '6.5M' in school.square_footage) %}
+                                    <!-- Medium District -->
+                                    <div class="alert alert-warning mb-2">
+                                        <strong><i class="fas fa-school me-2"></i>Medium District</strong><br>
+                                        <small>{{ school.facilities }} | {{ school.square_footage }}</small>
+                                    </div>
+                                    <p class="small mb-2"><strong>Contract Value:</strong> {{ school.contract_value }}</p>
+                                    <p class="small mb-0"><strong>Advantages:</strong> Stable revenue base ($4M-$9M annually), room for operational efficiency, manageable scale, good contract size without overwhelming complexity</p>
+                                
+                                {% elif '29 schools' in school.facilities or '15 schools' in school.facilities or '16 schools' in school.facilities or '17 schools' in school.facilities or '10-20 schools' in school.facilities or ('1.' in school.square_footage and 'M' in school.square_footage) or ('2.' in school.square_footage and 'M' in school.square_footage) %}
+                                    <!-- Small District -->
+                                    <div class="alert alert-success mb-2">
+                                        <strong><i class="fas fa-home me-2"></i>Small District</strong><br>
+                                        <small>{{ school.facilities }} | {{ school.square_footage }}</small>
+                                    </div>
+                                    <p class="small mb-2"><strong>Contract Value:</strong> {{ school.contract_value }}</p>
+                                    <p class="small mb-0"><strong>Advantages:</strong> Easier relationship building ($2M-$4M annually), faster communication, potential for personalized service, less complex logistics, ideal for regional contractors</p>
+                                
+                                {% else %}
+                                    <!-- Private/Specialty -->
+                                    <div class="alert alert-info mb-2">
+                                        <strong><i class="fas fa-star me-2"></i>Specialty/Private Institution</strong><br>
+                                        <small>{{ school.facilities }} | {{ school.square_footage }}</small>
+                                    </div>
+                                    <p class="small mb-2"><strong>Contract Value:</strong> {{ school.contract_value }}</p>
+                                    <p class="small mb-0"><strong>Advantages:</strong> Focused scope, direct relationships, often less competitive bidding, potential for value-added services, flexibility in service customization</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
                     <hr>
                     
                     <div class="mb-3">
@@ -288,10 +348,13 @@
 
 /* High-contrast chip for school names for better accessibility */
 .school-name-chip {
-    background: #0f172a; /* slate-900 */
-    color: #ffffff;      /* white */
-    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.25); /* Semi-transparent white background */
+    color: #ffffff;      /* white text */
+    padding: 4px 10px;
     border-radius: 6px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Stronger shadow for better contrast */
+    font-weight: 700;    /* Extra bold */
+    display: inline-block;
 }
 </style>
 

@@ -8680,12 +8680,8 @@ def college_university_leads():
     if institution_type and institution_type != 'all':
         filtered_colleges = [c for c in filtered_colleges if institution_type in c['institution_type'].lower()]
     
-    # All 50 US states + DC for filter dropdown
-    all_states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 
-                  'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 
-                  'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 
-                  'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 
-                  'WV', 'WI', 'WY']
+    # Get unique locations from actual college data (extract city, state format)
+    all_locations = sorted(set(c['location'] for c in colleges_universities))
     
     # Get unique institution types from actual data
     all_types = sorted(set(c['institution_type'] for c in colleges_universities))
@@ -8693,7 +8689,7 @@ def college_university_leads():
     return render_template('college_university_leads.html',
                          colleges=filtered_colleges,
                          total_colleges=len(filtered_colleges),
-                         all_locations=all_states,
+                         all_locations=all_locations,
                          all_types=all_types,
                          search_query=search_query,
                          location_filter=location_filter,
