@@ -27,7 +27,7 @@
                         <div class="col-md-6">
                             <!-- State Selection -->
                             <div class="mb-3">
-                                <label for="state" class="form-label fw-bold">State</label>
+                                <label for="state" class="form-label fw-bold">State <span class="text-muted fw-normal">(adjusts pricing for local costs)</span></label>
                                 <select class="form-select" id="state" onchange="calculatePricing()">
                                     <option value="VA" selected>Virginia</option>
                                     <option value="AL">Alabama</option>
@@ -85,7 +85,7 @@
 
                             <!-- Metro Area -->
                             <div class="mb-3">
-                                <label for="metroArea" class="form-label fw-bold">Metro Area Type</label>
+                                <label for="metroArea" class="form-label fw-bold">Metro Area Type <span class="text-muted fw-normal">(urban areas cost more wages)</span></label>
                                 <select class="form-select" id="metroArea" onchange="calculatePricing()">
                                     <option value="rural">Rural Area</option>
                                     <option value="suburban" selected>Suburban</option>
@@ -96,7 +96,7 @@
 
                             <!-- Facility Type -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Facility Type</label>
+                                <label class="form-label fw-bold">Facility Type <span class="text-muted fw-normal">(medical costs more than office)</span></label>
                                 <select class="form-select" id="facilityType" onchange="calculatePricing()">
                                     <option value="office">Office Building</option>
                                     <option value="medical">Medical Facility</option>
@@ -111,14 +111,14 @@
 
                             <!-- Square Footage -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Square Footage</label>
+                                <label class="form-label fw-bold">Square Footage <span class="text-muted fw-normal">(total area needing regular cleaning)</span></label>
                                 <input type="number" class="form-control" id="squareFootage" 
                                        placeholder="Enter square footage" min="0" value="10000" onchange="calculatePricing()">
                             </div>
 
                             <!-- Cleaning Frequency -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Cleaning Frequency</label>
+                                <label class="form-label fw-bold">Cleaning Frequency <span class="text-muted fw-normal">(how often you visit site)</span></label>
                                 <select class="form-select" id="frequency" onchange="calculatePricing()">
                                     <option value="daily">Daily (5x per week)</option>
                                     <option value="3x">3x per week</option>
@@ -130,7 +130,7 @@
 
                             <!-- Service Level -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Service Level</label>
+                                <label class="form-label fw-bold">Service Level <span class="text-muted fw-normal">(quality depth of cleaning service)</span></label>
                                 <select class="form-select" id="serviceLevel" onchange="calculatePricing()">
                                     <option value="basic">Basic (Light cleaning, trash removal)</option>
                                     <option value="standard">Standard (Vacuuming, dusting, restrooms)</option>
@@ -143,7 +143,7 @@
                         <div class="col-md-6">
                             <!-- Additional Services -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Additional Services (Optional)</label>
+                                <label class="form-label fw-bold">Additional Services <span class="text-muted fw-normal">(extra work beyond basic cleaning)</span></label>
                                 <small class="text-muted d-block mb-2">
                                     <i class="fas fa-info-circle me-1"></i>Check all services included in your bid. Each adds a percentage to your base price.
                                 </small>
@@ -179,18 +179,18 @@
 
                             <!-- Labor Rate -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Labor Rate (Auto-calculated)</label>
+                                <label class="form-label fw-bold">Labor Rate <span class="text-muted fw-normal">(worker hourly wage in area)</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
                                     <input type="number" class="form-control" id="laborRate" value="18.50" readonly>
                                     <span class="input-group-text">/hr</span>
                                 </div>
-                                <small class="text-muted" id="laborRateNote">Based on state and metro area</small>
+                                <small class="text-muted" id="laborRateNote">Auto-calculated based on state and metro area</small>
                             </div>
 
                             <!-- Competition Level -->
                             <div class="mb-3">
-                                <label for="competition" class="form-label fw-bold">Competition Level</label>
+                                <label for="competition" class="form-label fw-bold">Competition Level <span class="text-muted fw-normal">(adjust bid to win contract)</span></label>
                                 <select class="form-select" id="competition" onchange="calculatePricing()">
                                     <option value="high">High (bid lower)</option>
                                     <option value="moderate" selected>Moderate</option>
@@ -200,7 +200,7 @@
 
                             <!-- Profit Margin -->
                             <div class="mb-3">
-                                <label for="profitMargin" class="form-label fw-bold">Profit Margin: <span id="profitMarginValue">12</span>%</label>
+                                <label for="profitMargin" class="form-label fw-bold">Profit Margin: <span id="profitMarginValue">12</span>% <span class="text-muted fw-normal">(your profit after all costs)</span></label>
                                 <input type="range" class="form-range" id="profitMargin" 
                                        min="5" max="30" value="12" step="1" 
                                        oninput="document.getElementById('profitMarginValue').textContent = this.value; calculatePricing();">
@@ -208,7 +208,7 @@
 
                             <!-- Contract Duration -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Contract Duration</label>
+                                <label class="form-label fw-bold">Contract Duration <span class="text-muted fw-normal">(total years of service agreement)</span></label>
                                 <select class="form-select" id="contractDuration" onchange="calculatePricing()">
                                     <option value="1">1 Year</option>
                                     <option value="2">2 Years</option>
