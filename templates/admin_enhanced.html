@@ -161,6 +161,9 @@ body {
                     <div class="sidebar-heading mt-2">
                         System & Tools
                     </div>
+                    <a class="nav-link {% if section == 'database-migration' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='database-migration') }}">
+                        <i class="fas fa-database"></i>Database Migration
+                    </a>
                     <a class="nav-link {% if section == 'url-automation' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='url-automation') }}">
                         <i class="fas fa-robot"></i>URL Automation
                     </a>
@@ -224,6 +227,151 @@ body {
             {% elif section == 'link-doctor' %}
             {% include 'admin_sections/link_doctor.html' %}
 
+            {% elif section == 'database-migration' %}
+            <!-- Database Migration Section -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-database me-2"></i>Database Migration</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle me-2"></i>What this does:</strong>
+                        <p class="mb-0">Creates missing database tables and columns to fix SQL errors in production logs:</p>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>user_activity</strong> - Tracks user actions and behavior</li>
+                            <li><strong>user_preferences</strong> - Stores user settings and preferences</li>
+                            <li><strong>notifications</strong> - In-app notification system</li>
+                            <li><strong>website_url column</strong> - Adds to commercial_opportunities table</li>
+                            <li><strong>Performance indexes</strong> - Improves query speed</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Important:</strong>
+                        <p class="mb-0">This is safe to run multiple times. It uses CREATE IF NOT EXISTS to avoid duplicates. Takes ~30 seconds.</p>
+                    </div>
+
+                    <button id="runMigrationBtn" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket me-2"></i>Run Database Migration
+                    </button>
+
+                    <div id="migrationResults" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header" id="migrationResultsHeader">
+                                <strong>Migration Results</strong>
+                            </div>
+                            <div class="card-body" id="migrationResultsBody">
+                                <!-- Results will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            document.getElementById('runMigrationBtn').addEventListener('click', function() {
+                const btn = this;
+                const resultsDiv = document.getElementById('migrationResults');
+                const resultsBody = document.getElementById('migrationResultsBody');
+                const resultsHeader = document.getElementById('migrationResultsHeader');
+                
+                // Disable button and show loading
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Running migration...';
+                
+                // Show results area
+                resultsDiv.style.display = 'block';
+                resultsBody.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Please wait...</p></div>';
+                
+                // Call the migration endpoint
+                fetch('/admin-run-database-migration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rocket me-2"></i>Run Database Migration';
+                    
+                    // Update header based on success
+                    if (data.success) {
+                        resultsHeader.className = 'card-header bg-success text-white';
+                        resultsHeader.innerHTML = '<strong><i class="fas fa-check-circle me-2"></i>Migration Completed Successfully!</strong>';
+                    } else {
+                        resultsHeader.className = 'card-header bg-danger text-white';
+                        resultsHeader.innerHTML = '<strong><i class="fas fa-exclamation-circle me-2"></i>Migration Completed with Errors</strong>';
+                    }
+                    
+                    // Build results HTML
+                    let html = '';
+                    
+                    // Tables created
+                    if (data.tables_created && data.tables_created.length > 0) {
+                        html += '<div class="mb-3"><strong>✅ Tables Created:</strong><ul>';
+                        data.tables_created.forEach(table => {
+                            html += `<li><code>${table}</code></li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                    
+                    // Columns added
+                    if (data.columns_added && data.columns_added.length > 0) {
+                        html += '<div class="mb-3"><strong>✅ Columns Added:</strong><ul>';
+                        data.columns_added.forEach(col => {
+                            html += `<li><code>${col}</code></li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                    
+                    // Indexes created
+                    if (data.indexes_created && data.indexes_created.length > 0) {
+                        html += '<div class="mb-3"><strong>✅ Indexes Created:</strong><ul>';
+                        data.indexes_created.forEach(idx => {
+                            html += `<li><code>${idx}</code></li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                    
+                    // Messages
+                    if (data.messages && data.messages.length > 0) {
+                        html += '<div class="mb-3"><strong>📋 Details:</strong><ul>';
+                        data.messages.forEach(msg => {
+                            html += `<li>${msg}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                    
+                    // Errors
+                    if (data.errors && data.errors.length > 0) {
+                        html += '<div class="mb-3"><strong>⚠️ Warnings/Errors:</strong><ul>';
+                        data.errors.forEach(err => {
+                            html += `<li class="text-warning">${err}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                    
+                    if (html === '') {
+                        html = '<p>No changes made. All tables and columns may already exist.</p>';
+                    }
+                    
+                    resultsBody.innerHTML = html;
+                })
+                .catch(error => {
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rocket me-2"></i>Run Database Migration';
+                    
+                    // Show error
+                    resultsHeader.className = 'card-header bg-danger text-white';
+                    resultsHeader.innerHTML = '<strong><i class="fas fa-times-circle me-2"></i>Migration Failed</strong>';
+                    resultsBody.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                });
+            });
+            </script>
+            
             {% elif section == 'track-all-urls' %}
             {% include 'admin_sections/track_all_urls.html' %}
 

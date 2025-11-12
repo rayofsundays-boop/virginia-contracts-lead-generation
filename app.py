@@ -10908,6 +10908,161 @@ def admin_clear_fake_contracts():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-run-database-migration', methods=['POST', 'GET'])
+def admin_run_database_migration():
+    """Run database migrations to create missing tables and columns"""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    results = {
+        'success': True,
+        'tables_created': [],
+        'columns_added': [],
+        'indexes_created': [],
+        'errors': [],
+        'messages': []
+    }
+    
+    try:
+        # Migration 1: Create user_activity table
+        try:
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS user_activity (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER,
+                    activity_type VARCHAR(100) NOT NULL,
+                    activity_description TEXT,
+                    ip_address VARCHAR(50),
+                    user_agent TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            db.session.commit()
+            results['tables_created'].append('user_activity')
+            results['messages'].append('✅ Created user_activity table')
+        except Exception as e:
+            results['errors'].append(f'user_activity: {str(e)}')
+            db.session.rollback()
+        
+        # Migration 2: Create user_preferences table
+        try:
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS user_preferences (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER UNIQUE,
+                    email_notifications BOOLEAN DEFAULT TRUE,
+                    sms_notifications BOOLEAN DEFAULT FALSE,
+                    notification_frequency VARCHAR(20) DEFAULT 'daily',
+                    preferred_locations TEXT,
+                    preferred_contract_types TEXT,
+                    dark_mode BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            db.session.commit()
+            results['tables_created'].append('user_preferences')
+            results['messages'].append('✅ Created user_preferences table')
+        except Exception as e:
+            results['errors'].append(f'user_preferences: {str(e)}')
+            db.session.rollback()
+        
+        # Migration 3: Create notifications table
+        try:
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER,
+                    notification_type VARCHAR(50) NOT NULL,
+                    title VARCHAR(200) NOT NULL,
+                    message TEXT NOT NULL,
+                    link TEXT,
+                    is_read BOOLEAN DEFAULT FALSE,
+                    priority VARCHAR(20) DEFAULT 'normal',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    read_at TIMESTAMP
+                )
+            """))
+            db.session.commit()
+            results['tables_created'].append('notifications')
+            results['messages'].append('✅ Created notifications table')
+        except Exception as e:
+            results['errors'].append(f'notifications: {str(e)}')
+            db.session.rollback()
+        
+        # Migration 4: Create indexes
+        indexes = [
+            ("idx_user_activity_created_at", "user_activity", "created_at"),
+            ("idx_notifications_is_read", "notifications", "is_read"),
+        ]
+        
+        for idx_name, table, column in indexes:
+            try:
+                db.session.execute(text(f"""
+                    CREATE INDEX IF NOT EXISTS {idx_name} ON {table}({column})
+                """))
+                db.session.commit()
+                results['indexes_created'].append(idx_name)
+                results['messages'].append(f'✅ Created index {idx_name}')
+            except Exception as e:
+                results['errors'].append(f'{idx_name}: {str(e)}')
+                db.session.rollback()
+        
+        # Migration 5: Add website_url column to commercial_opportunities
+        try:
+            # For PostgreSQL, we can use IF NOT EXISTS in a safer way
+            db.session.execute(text("""
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name='commercial_opportunities' 
+                        AND column_name='website_url'
+                    ) THEN
+                        ALTER TABLE commercial_opportunities ADD COLUMN website_url TEXT;
+                    END IF;
+                END $$;
+            """))
+            db.session.commit()
+            results['columns_added'].append('commercial_opportunities.website_url')
+            results['messages'].append('✅ Added website_url column to commercial_opportunities')
+        except Exception as e:
+            # If the DO block fails (SQLite), try simple ALTER TABLE
+            try:
+                db.session.rollback()
+                db.session.execute(text("""
+                    ALTER TABLE commercial_opportunities 
+                    ADD COLUMN website_url TEXT
+                """))
+                db.session.commit()
+                results['columns_added'].append('commercial_opportunities.website_url')
+                results['messages'].append('✅ Added website_url column to commercial_opportunities')
+            except Exception as e2:
+                results['errors'].append(f'website_url: {str(e2)}')
+                db.session.rollback()
+        
+        # Verification
+        try:
+            # Count rows in new tables
+            for table in ['user_activity', 'user_preferences', 'notifications']:
+                try:
+                    count = db.session.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
+                    results['messages'].append(f'📊 {table}: {count} rows')
+                except:
+                    pass
+        except:
+            pass
+        
+        results['success'] = len(results['errors']) == 0 or len(results['tables_created']) > 0
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        db.session.rollback()
+        results['success'] = False
+        results['errors'].append(f'Fatal error: {str(e)}')
+        return jsonify(results), 500
+
 @app.route('/admin-remove-broken-urls', methods=['POST', 'GET'])
 def admin_remove_broken_urls():
     """Remove contracts with NULL or broken URLs"""
