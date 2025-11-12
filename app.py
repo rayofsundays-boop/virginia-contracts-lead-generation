@@ -2635,32 +2635,30 @@ def init_postgres_db():
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
         db.session.commit()
-
-        # Backfill and normalize beta tester columns within a single, safe transaction.
+        
+        # Backfill beta tester columns if they don't already exist (for legacy databases)
+        # These columns are already in the CREATE TABLE above for new databases
+        for column_name, column_def in [
+            ('is_beta_tester', 'BOOLEAN DEFAULT FALSE'),
+            ('beta_registered_at', 'TIMESTAMP'),
+            ('beta_expiry_date', 'TIMESTAMP')
+        ]:
+            try:
+                db.session.execute(text(f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {column_name} {column_def}"))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                if 'already exists' not in str(e).lower() and 'duplicate column' not in str(e).lower():
+                    print(f"⚠️  Could not add leads.{column_name}: {e}")
+        
+        # Normalize any NULL values to FALSE for is_beta_tester
         try:
-            with app.app_context():
-                # Use a single transaction for all schema modifications to ensure atomicity.
-                with db.engine.connect() as connection:
-                    trans = connection.begin()
-                    try:
-                        # Add columns if they don't exist.
-                        connection.execute(text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS is_beta_tester BOOLEAN DEFAULT FALSE"))
-                        connection.execute(text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS beta_registered_at TIMESTAMP"))
-                        connection.execute(text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS beta_expiry_date TIMESTAMP"))
-                        
-                        # Normalize NULL values to FALSE. This is safe to run even if no rows are affected.
-                        connection.execute(text("UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"))
-                        
-                        trans.commit()
-                        print("✅ Beta tester columns are present and normalized.")
-                    except Exception as e:
-                        trans.rollback()
-                        # Gracefully handle cases where columns might already exist from a race condition.
-                        if 'already exists' not in str(e).lower() and 'duplicate column' not in str(e).lower():
-                            print(f"⚠️  Error during beta tester schema backfill: {e}")
-
+            db.session.execute(text("UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"))
+            db.session.commit()
         except Exception as e:
-            print(f"⚠️  Outer error during schema backfill transaction: {e}")
+            db.session.rollback()
+            # This is non-critical, so just log it
+            pass
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS contracts
                      (id SERIAL PRIMARY KEY,
