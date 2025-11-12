@@ -109,8 +109,8 @@
                 <div class="card-header text-white" style="background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h5 class="mb-0 fw-bold" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
-                            <small class="d-block mt-1 fw-semibold" style="opacity: 1; background: rgba(255, 255, 255, 0.2); padding: 2px 8px; border-radius: 4px; display: inline-block;">{{ college.institution_type }}</small>
+                            <h5 class="mb-0 fw-bold text-white" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);"><i class="fas fa-university me-2"></i>{{ college.institution_name }}</h5>
+                            <small class="d-block mt-1 fw-semibold text-white" style="opacity: 1; background: rgba(255, 255, 255, 0.2); padding: 2px 8px; border-radius: 4px; display: inline-block; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{{ college.institution_type }}</small>
                         </div>
                         <div class="d-flex gap-2">
                             {% if college.status == 'upcoming' %}
