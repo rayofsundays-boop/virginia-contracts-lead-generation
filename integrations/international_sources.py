@@ -17,11 +17,29 @@ CLEANING_KEYWORDS = {
     'porter services', 'environmental services', 'grounds maintenance', 'snow removal'
 }
 
+# Exclude contracts that are NOT physical cleaning (IT, software, data, consulting, etc.)
+EXCLUDE_KEYWORDS = {
+    'data cleaning', 'data model', 'data management', 'database', 'data warehouse',
+    'software', 'IT services', 'cloud', 'digital', 'cyber', 'information technology',
+    'consulting', 'advisory', 'analytics', 'data science', 'machine learning',
+    'development', 'programming', 'coding', 'application', 'system integration',
+    'enterprise data', 'data governance', 'metadata', 'data quality',
+    'business intelligence', 'reporting', 'dashboard', 'ETL', 'data pipeline'
+}
+
 def _matches_cleaning_naics(text: str) -> bool:
-    """Check if text contains cleaning/janitorial keywords matching NAICS 561720/561790/561730."""
+    """Check if text contains cleaning/janitorial keywords matching NAICS 561720/561790/561730.
+    Excludes IT/software/data contracts that use 'cleaning' in non-physical context.
+    """
     if not text:
         return False
     text_lower = text.lower()
+    
+    # First check if any exclude keywords are present (IT, data, software)
+    if any(keyword in text_lower for keyword in EXCLUDE_KEYWORDS):
+        return False
+    
+    # Then check if valid cleaning keywords are present
     return any(keyword in text_lower for keyword in CLEANING_KEYWORDS)
 
 
