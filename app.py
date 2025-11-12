@@ -21917,11 +21917,16 @@ try:
     # Use PostgreSQL init if DATABASE_URL is set, otherwise use SQLite
     if DATABASE_URL and 'postgresql' in DATABASE_URL:
         print("📡 Detected PostgreSQL - using init_postgres_db()")
-        init_postgres_db()
+        result = init_postgres_db()
+        if result is True:
+            print("✅ PostgreSQL database initialized")
+        else:
+            print(f"⚠️  PostgreSQL init returned: {result}")
+            print("⚠️  Continuing anyway - app will use existing database state")
     else:
         print("💾 Using SQLite - using init_db()")
         init_db()
-    print("✅ Database initialized")
+        print("✅ SQLite database initialized")
     
     # Auto-populate supply contracts only if table is empty
     # This runs on every app startup/restart to ensure data is always available
