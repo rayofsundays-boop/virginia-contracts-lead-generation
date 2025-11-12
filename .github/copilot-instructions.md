@@ -17,7 +17,34 @@ All setup steps have been completed:
 
 ## Latest Features ✅ DEPLOYED
 
-### 🌎 Nationwide Construction Cleanup Scraper (Nov 12, 2025) - LIVE ✅
+### � Mini-Toolbox Accessibility Overhaul (Nov 12, 2025) - DEPLOYED ✅
+**Comprehensive Bootstrap and color contrast fixes for WCAG AA compliance:**
+
+**Issues Fixed:**
+1. ✅ **42 Text Contrast Issues**: Replaced `text-muted` with `text-secondary` throughout
+2. ✅ **Invalid Bootstrap Class**: Fixed `text-purple` to inline style `color: #667eea`
+3. ✅ **Warning Button Contrast**: Added `text-dark` to 3 yellow buttons for visibility
+4. ✅ **Button Routing Verification**: Confirmed all 14 modal functions and Flask routes work
+
+**Locations Updated:**
+- Tool card descriptions (13 cards)
+- Modal content (calculator labels, vendor descriptions, timeline notes)
+- Vendor modals (Supplies, Equipment, Repair)
+- Badge text on warning-colored elements
+
+**User Benefits:**
+- WCAG AA compliant contrast ratios for accessibility
+- Professional appearance with consistent Bootstrap 5 styling
+- All buttons verified working with correct routing
+- Improved readability on all backgrounds
+
+**Route:** `/mini-toolbox`
+
+**Documentation:** `MINI_TOOLBOX_FIXES_SUMMARY.md` - Complete fix report
+
+**Commit:** Auto-deploy 2025-11-12 - Accessibility overhaul deployed
+
+### �🌎 Nationwide Construction Cleanup Scraper (Nov 12, 2025) - LIVE ✅
 **Automated web scraper for post-construction cleanup leads across all 50 states:**
 
 **Features Implemented:**
