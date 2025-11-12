@@ -3120,6 +3120,22 @@ def init_postgres_db():
         db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_created_at 
                                    ON invoices(created_at DESC)'''))
         
+        # User NAICS codes table for capability statement enhancement
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_naics_codes
+                     (id SERIAL PRIMARY KEY,
+                      user_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      naics_code TEXT NOT NULL,
+                      code_title TEXT NOT NULL,
+                      code_description TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_id) REFERENCES leads(id),
+                      FOREIGN KEY (user_email) REFERENCES leads(email),
+                      UNIQUE(user_email, naics_code))'''))
+        
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_user_naics_email 
+                                   ON user_naics_codes(user_email)'''))
+        
         db.session.commit()
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
@@ -3365,6 +3381,21 @@ def init_db():
                       submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       reviewed_at TIMESTAMP,
                       user_email TEXT)''')
+        
+        # User NAICS codes table for capability statement enhancement
+        c.execute('''CREATE TABLE IF NOT EXISTS user_naics_codes
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_id INTEGER NOT NULL,
+                      user_email TEXT NOT NULL,
+                      naics_code TEXT NOT NULL,
+                      code_title TEXT NOT NULL,
+                      code_description TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_id) REFERENCES leads(id),
+                      FOREIGN KEY (user_email) REFERENCES leads(email),
+                      UNIQUE(user_email, naics_code))''')
+        
+        c.execute('CREATE INDEX IF NOT EXISTS idx_user_naics_email ON user_naics_codes(user_email)')
         
         conn.commit()
         
@@ -4281,6 +4312,103 @@ def customer_dashboard():
         traceback.print_exc()
         flash('Error loading dashboard. Please try again.', 'error')
         return redirect(url_for('customer_leads'))
+
+@app.route('/naics-profile')
+@login_required
+def naics_profile():
+    """NAICS Code Profile page for capability statement enhancement"""
+    try:
+        user_email = session.get('email')
+        user_id = session.get('user_id')
+        
+        # Fetch user's selected NAICS codes
+        user_naics = db.session.execute(text('''
+            SELECT naics_code as code, code_title as title, code_description as description
+            FROM user_naics_codes
+            WHERE user_email = :email
+            ORDER BY created_at
+        '''), {'email': user_email}).fetchall()
+        
+        return render_template('naics_profile.html',
+                             user_naics_codes=user_naics)
+    except Exception as e:
+        print(f"Error loading NAICS profile: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading NAICS profile. Please try again.', 'error')
+        return redirect(url_for('customer_dashboard'))
+
+@app.route('/api/save-naics-profile', methods=['POST'])
+@login_required
+def save_naics_profile():
+    """API endpoint to save user's selected NAICS codes"""
+    try:
+        data = request.get_json()
+        naics_codes = data.get('naics_codes', [])
+        
+        if len(naics_codes) > 3:
+            return jsonify({'success': False, 'error': 'Maximum 3 NAICS codes allowed'}), 400
+        
+        user_email = session.get('email')
+        user_id = session.get('user_id')
+        
+        # NAICS code definitions
+        naics_definitions = {
+            '561720': {'title': 'Janitorial Services', 'description': 'Daily cleaning, floor care, restroom maintenance, trash removal'},
+            '561740': {'title': 'Carpet and Upholstery Cleaning', 'description': 'Steam cleaning, stain removal, fabric protection'},
+            '561790': {'title': 'Other Services to Buildings', 'description': 'Window washing, power washing, specialized facility services'},
+            '561210': {'title': 'Facilities Support Services', 'description': 'On-site management, maintenance coordination, facility operations'},
+            '561110': {'title': 'Office Administrative Services', 'description': 'Reception, mail handling, administrative support'},
+            '561499': {'title': 'Business Support Services', 'description': 'Document management, facilities coordination'},
+            '561990': {'title': 'All Other Support Services', 'description': 'Event setup, move coordination, specialized services'},
+            '238910': {'title': 'Site Preparation Contractors', 'description': 'Demolition, excavation, site cleanup'},
+            '238990': {'title': 'Specialty Trade Contractors', 'description': 'HVAC cleaning, duct work, facility maintenance'},
+            '562910': {'title': 'Remediation Services', 'description': 'Mold removal, asbestos abatement, biohazard cleanup'},
+            '561730': {'title': 'Landscaping Services', 'description': 'Lawn care, snow removal, groundskeeping'},
+            '561710': {'title': 'Pest Control Services', 'description': 'Extermination, fumigation, pest management'},
+            '562111': {'title': 'Solid Waste Collection', 'description': 'Trash pickup, recycling services, waste removal'},
+            '562119': {'title': 'Other Waste Collection', 'description': 'Hazardous waste, medical waste, specialized disposal'},
+            '562991': {'title': 'Septic Tank Services', 'description': 'Septic pumping, grease trap cleaning, drain services'},
+            '562998': {'title': 'Miscellaneous Waste Management', 'description': 'Portable toilets, waste consulting, specialized waste services'},
+            '325612': {'title': 'Polish & Sanitation Manufacturing', 'description': 'Cleaning products, disinfectants, sanitation goods'},
+            '811310': {'title': 'Machinery Repair & Maintenance', 'description': 'Equipment servicing, industrial machinery, HVAC systems'},
+            '236118': {'title': 'Residential Remodelers', 'description': 'Home renovations, repairs, residential improvements'},
+            '236220': {'title': 'Commercial Building Construction', 'description': 'Commercial renovations, facility improvements'},
+            '531312': {'title': 'Nonresidential Property Managers', 'description': 'Commercial building management, tenant services'},
+            '531311': {'title': 'Residential Property Managers', 'description': 'Apartment management, HOA services, residential facilities'}
+        }
+        
+        # Delete existing NAICS codes for this user
+        db.session.execute(text('''
+            DELETE FROM user_naics_codes WHERE user_email = :email
+        '''), {'email': user_email})
+        
+        # Insert new selections
+        for code in naics_codes:
+            if code in naics_definitions:
+                definition = naics_definitions[code]
+                db.session.execute(text('''
+                    INSERT INTO user_naics_codes 
+                    (user_id, user_email, naics_code, code_title, code_description)
+                    VALUES (:user_id, :email, :code, :title, :description)
+                '''), {
+                    'user_id': user_id,
+                    'email': user_email,
+                    'code': code,
+                    'title': definition['title'],
+                    'description': definition['description']
+                })
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'NAICS profile saved successfully'})
+    
+    except Exception as e:
+        print(f"Error saving NAICS profile: {e}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/update-profile', methods=['POST'])
 @login_required

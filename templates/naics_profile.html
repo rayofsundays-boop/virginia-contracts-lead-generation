@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+
+{% block title %}NAICS Code Profile - Enhance Your Capability Statement{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white py-5">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-certificate me-3"></i>Your NAICS Code Profile
+                    </h1>
+                    <p class="lead fs-4 mb-4">Select up to 3 NAICS codes to enhance your capability statement and unlock targeted federal contract opportunities</p>
+                    <div class="d-flex gap-3">
+                        <div class="badge bg-white text-primary px-4 py-2 fs-5">
+                            <i class="fas fa-check-circle me-2"></i>22 Categories Available
+                        </div>
+                        <div class="badge bg-white text-success px-4 py-2 fs-5">
+                            <i class="fas fa-dollar-sign me-2"></i>Billions in Annual Contracts
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- What Are NAICS Codes -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-info text-white py-3">
+                    <h3 class="mb-0"><i class="fas fa-question-circle me-2"></i>What Are NAICS Codes?</h3>
+                </div>
+                <div class="card-body p-4">
+                    <p class="fs-5">
+                        <strong>NAICS</strong> (North American Industry Classification System) codes are 6-digit numbers used by the federal government to classify businesses by industry type.
+                    </p>
+                    <div class="alert alert-light border-start border-primary border-4 my-4">
+                        <h5 class="text-primary"><i class="fas fa-lightbulb me-2"></i>Why They Matter</h5>
+                        <ul class="mb-0">
+                            <li><strong>Contract Matching:</strong> Federal agencies use NAICS codes to find qualified vendors</li>
+                            <li><strong>Set-Aside Eligibility:</strong> Determine if you qualify for small business set-asides</li>
+                            <li><strong>Capability Statement:</strong> Show your expertise across multiple service areas</li>
+                            <li><strong>Search Visibility:</strong> Get discovered by contracting officers seeking your services</li>
+                        </ul>
+                    </div>
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-info-circle me-2"></i><strong>Pro Tip:</strong> Choose codes that align with your actual experience and capabilities. Agencies verify your past performance in these areas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Selection -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-star me-2"></i>Your Selected NAICS Codes (<span id="selected-count">{{ user_naics_codes|length if user_naics_codes else 0 }}</span>/3)</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div id="selected-naics" class="mb-3">
+                        {% if user_naics_codes and user_naics_codes|length > 0 %}
+                            {% for code in user_naics_codes %}
+                            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="fs-5">{{ code.code }}</strong> - {{ code.title }}
+                                    <br><small class="text-muted">{{ code.description }}</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeNAICS('{{ code.code }}')">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>No NAICS codes selected yet. Choose up to 3 below to enhance your profile.
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" onclick="saveNAICSProfile()">
+                        <i class="fas fa-save me-2"></i>Save NAICS Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available NAICS Codes -->
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <h2 class="mb-4"><i class="fas fa-list me-2"></i>Available NAICS Codes (Select Up To 3)</h2>
+            
+            <!-- Core Cleaning Services -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-broom me-2"></i>Core Cleaning Services (6 codes)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561720', 'Janitorial Services', 'Daily cleaning, floor care, restroom maintenance, trash removal')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561720" value="561720">
+                                    <label class="form-check-label w-100" for="naics-561720">
+                                        <strong class="text-primary">561720</strong> - Janitorial Services
+                                        <br><small class="text-muted">Daily cleaning, floor care, restroom maintenance, trash removal</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561740', 'Carpet and Upholstery Cleaning', 'Steam cleaning, stain removal, fabric protection')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561740" value="561740">
+                                    <label class="form-check-label w-100" for="naics-561740">
+                                        <strong class="text-primary">561740</strong> - Carpet and Upholstery Cleaning
+                                        <br><small class="text-muted">Steam cleaning, stain removal, fabric protection</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561790', 'Other Services to Buildings', 'Window washing, power washing, specialized facility services')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561790" value="561790">
+                                    <label class="form-check-label w-100" for="naics-561790">
+                                        <strong class="text-primary">561790</strong> - Other Services to Buildings
+                                        <br><small class="text-muted">Window washing, power washing, specialized facility services</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561730', 'Landscaping Services', 'Lawn care, snow removal, groundskeeping')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561730" value="561730">
+                                    <label class="form-check-label w-100" for="naics-561730">
+                                        <strong class="text-primary">561730</strong> - Landscaping Services
+                                        <br><small class="text-muted">Lawn care, snow removal, groundskeeping</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561710', 'Pest Control Services', 'Extermination, fumigation, pest management')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561710" value="561710">
+                                    <label class="form-check-label w-100" for="naics-561710">
+                                        <strong class="text-primary">561710</strong> - Pest Control Services
+                                        <br><small class="text-muted">Extermination, fumigation, pest management</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('562910', 'Remediation Services', 'Mold removal, asbestos abatement, biohazard cleanup')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-562910" value="562910">
+                                    <label class="form-check-label w-100" for="naics-562910">
+                                        <strong class="text-primary">562910</strong> - Remediation Services
+                                        <br><small class="text-muted">Mold removal, asbestos abatement, biohazard cleanup</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facility Support & Management -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-building me-2"></i>Facility Support & Management (6 codes)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561210', 'Facilities Support Services', 'On-site management, maintenance coordination, facility operations')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561210" value="561210">
+                                    <label class="form-check-label w-100" for="naics-561210">
+                                        <strong class="text-primary">561210</strong> - Facilities Support Services
+                                        <br><small class="text-muted">On-site management, maintenance coordination, facility operations</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561110', 'Office Administrative Services', 'Reception, mail handling, administrative support')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561110" value="561110">
+                                    <label class="form-check-label w-100" for="naics-561110">
+                                        <strong class="text-primary">561110</strong> - Office Administrative Services
+                                        <br><small class="text-muted">Reception, mail handling, administrative support</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561499', 'Business Support Services', 'Document management, facilities coordination')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561499" value="561499">
+                                    <label class="form-check-label w-100" for="naics-561499">
+                                        <strong class="text-primary">561499</strong> - Business Support Services
+                                        <br><small class="text-muted">Document management, facilities coordination</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('561990', 'All Other Support Services', 'Event setup, move coordination, specialized services')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-561990" value="561990">
+                                    <label class="form-check-label w-100" for="naics-561990">
+                                        <strong class="text-primary">561990</strong> - All Other Support Services
+                                        <br><small class="text-muted">Event setup, move coordination, specialized services</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('531312', 'Nonresidential Property Managers', 'Commercial building management, tenant services')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-531312" value="531312">
+                                    <label class="form-check-label w-100" for="naics-531312">
+                                        <strong class="text-primary">531312</strong> - Nonresidential Property Managers
+                                        <br><small class="text-muted">Commercial building management, tenant services</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('531311', 'Residential Property Managers', 'Apartment management, HOA services, residential facilities')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-531311" value="531311">
+                                    <label class="form-check-label w-100" for="naics-531311">
+                                        <strong class="text-primary">531311</strong> - Residential Property Managers
+                                        <br><small class="text-muted">Apartment management, HOA services, residential facilities</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waste & Environmental -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-recycle me-2"></i>Waste & Environmental Services (4 codes)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('562111', 'Solid Waste Collection', 'Trash pickup, recycling services, waste removal')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-562111" value="562111">
+                                    <label class="form-check-label w-100" for="naics-562111">
+                                        <strong class="text-primary">562111</strong> - Solid Waste Collection
+                                        <br><small class="text-muted">Trash pickup, recycling services, waste removal</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('562119', 'Other Waste Collection', 'Hazardous waste, medical waste, specialized disposal')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-562119" value="562119">
+                                    <label class="form-check-label w-100" for="naics-562119">
+                                        <strong class="text-primary">562119</strong> - Other Waste Collection
+                                        <br><small class="text-muted">Hazardous waste, medical waste, specialized disposal</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('562991', 'Septic Tank Services', 'Septic pumping, grease trap cleaning, drain services')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-562991" value="562991">
+                                    <label class="form-check-label w-100" for="naics-562991">
+                                        <strong class="text-primary">562991</strong> - Septic Tank Services
+                                        <br><small class="text-muted">Septic pumping, grease trap cleaning, drain services</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('562998', 'Miscellaneous Waste Management', 'Portable toilets, waste consulting, specialized waste services')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-562998" value="562998">
+                                    <label class="form-check-label w-100" for="naics-562998">
+                                        <strong class="text-primary">562998</strong> - Miscellaneous Waste Management
+                                        <br><small class="text-muted">Portable toilets, waste consulting, specialized waste services</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Construction & Maintenance -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Construction & Maintenance (5 codes)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('238910', 'Site Preparation Contractors', 'Demolition, excavation, site cleanup')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-238910" value="238910">
+                                    <label class="form-check-label w-100" for="naics-238910">
+                                        <strong class="text-primary">238910</strong> - Site Preparation Contractors
+                                        <br><small class="text-muted">Demolition, excavation, site cleanup</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('238990', 'Specialty Trade Contractors', 'HVAC cleaning, duct work, facility maintenance')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-238990" value="238990">
+                                    <label class="form-check-label w-100" for="naics-238990">
+                                        <strong class="text-primary">238990</strong> - Specialty Trade Contractors
+                                        <br><small class="text-muted">HVAC cleaning, duct work, facility maintenance</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('236118', 'Residential Remodelers', 'Home renovations, repairs, residential improvements')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-236118" value="236118">
+                                    <label class="form-check-label w-100" for="naics-236118">
+                                        <strong class="text-primary">236118</strong> - Residential Remodelers
+                                        <br><small class="text-muted">Home renovations, repairs, residential improvements</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('236220', 'Commercial Building Construction', 'Commercial renovations, facility improvements')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-236220" value="236220">
+                                    <label class="form-check-label w-100" for="naics-236220">
+                                        <strong class="text-primary">236220</strong> - Commercial Building Construction
+                                        <br><small class="text-muted">Commercial renovations, facility improvements</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('811310', 'Machinery Repair & Maintenance', 'Equipment servicing, industrial machinery, HVAC systems')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-811310" value="811310">
+                                    <label class="form-check-label w-100" for="naics-811310">
+                                        <strong class="text-primary">811310</strong> - Machinery Repair & Maintenance
+                                        <br><small class="text-muted">Equipment servicing, industrial machinery, HVAC systems</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manufacturing -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0"><i class="fas fa-industry me-2"></i>Manufacturing (1 code)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="naics-card p-3 border rounded" onclick="selectNAICS('325612', 'Polish & Sanitation Manufacturing', 'Cleaning products, disinfectants, sanitation goods')">
+                                <div class="form-check">
+                                    <input class="form-check-input naics-checkbox" type="checkbox" id="naics-325612" value="325612">
+                                    <label class="form-check-label w-100" for="naics-325612">
+                                        <strong class="text-primary">325612</strong> - Polish & Sanitation Manufacturing
+                                        <br><small class="text-muted">Cleaning products, disinfectants, sanitation goods</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+.naics-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.naics-card:hover {
+    background-color: #f8f9fa;
+    border-color: #667eea !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.naics-card.selected {
+    background-color: #e7f3ff;
+    border-color: #0d6efd !important;
+    border-width: 2px !important;
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+</style>
+
+<script>
+let selectedNAICS = new Set();
+const MAX_SELECTION = 3;
+
+// Load existing selections on page load
+document.addEventListener('DOMContentLoaded', function() {
+    {% if user_naics_codes %}
+        {% for code in user_naics_codes %}
+            selectedNAICS.add('{{ code.code }}');
+            const checkbox = document.getElementById('naics-{{ code.code }}');
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.closest('.naics-card').classList.add('selected');
+            }
+        {% endfor %}
+    {% endif %}
+    updateSelectedCount();
+});
+
+function selectNAICS(code, title, description) {
+    const checkbox = document.getElementById(`naics-${code}`);
+    const card = checkbox.closest('.naics-card');
+    
+    if (checkbox.checked) {
+        // Deselect
+        checkbox.checked = false;
+        card.classList.remove('selected');
+        selectedNAICS.delete(code);
+    } else {
+        // Check if limit reached
+        if (selectedNAICS.size >= MAX_SELECTION) {
+            alert(`You can only select up to ${MAX_SELECTION} NAICS codes. Please deselect one before adding another.`);
+            return;
+        }
+        // Select
+        checkbox.checked = true;
+        card.classList.add('selected');
+        selectedNAICS.add(code);
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selected-count').textContent = selectedNAICS.size;
+}
+
+function removeNAICS(code) {
+    selectedNAICS.delete(code);
+    const checkbox = document.getElementById(`naics-${code}`);
+    if (checkbox) {
+        checkbox.checked = false;
+        checkbox.closest('.naics-card').classList.remove('selected');
+    }
+    updateSelectedCount();
+    saveNAICSProfile();
+}
+
+function saveNAICSProfile() {
+    if (selectedNAICS.size === 0) {
+        alert('Please select at least one NAICS code.');
+        return;
+    }
+    
+    const codes = Array.from(selectedNAICS);
+    
+    fetch('/api/save-naics-profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ naics_codes: codes })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ NAICS profile saved successfully! Your capability statement has been updated.');
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (data.error || 'Failed to save NAICS profile'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error saving NAICS profile. Please try again.');
+    });
+}
+
+// Prevent form submission on checkbox click
+document.querySelectorAll('.naics-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const code = this.value;
+        const card = this.closest('.naics-card');
+        
+        if (this.checked) {
+            if (selectedNAICS.size >= MAX_SELECTION) {
+                e.preventDefault();
+                alert(`You can only select up to ${MAX_SELECTION} NAICS codes.`);
+                return;
+            }
+            selectedNAICS.add(code);
+            card.classList.add('selected');
+        } else {
+            selectedNAICS.delete(code);
+            card.classList.remove('selected');
+        }
+        
+        updateSelectedCount();
+    });
+});
+</script>
+{% endblock %}
