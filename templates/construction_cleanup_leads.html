@@ -94,8 +94,12 @@
                         </a>
                     </div>
                 </div>
-                {% if location_filter or project_type_filter or min_sqft %}
+                {% if state_filter or location_filter or project_type_filter or min_sqft %}
                 <div class="mt-3">
+                    <strong class="text-secondary">Active Filters:</strong>
+                    {% if state_filter %}
+                    <span class="badge bg-primary ms-2">State: {{ state_filter }}</span>
+                    {% endif %}
                     {% if location_filter %}
                     <span class="badge bg-info ms-2">Location: {{ location_filter }}</span>
                     {% endif %}
