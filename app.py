@@ -2091,15 +2091,7 @@ def schedule_instantmarkets_updates():
         schedule.run_pending()
         time.sleep(3600)  # Check every hour
 
-def schedule_url_population():
-    """Run automated URL population at 3 AM daily (off-peak)"""
-    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
-    
-    print("⏰ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(3600)  # Check every hour
+# Note: schedule_url_population defined after auto_populate_missing_urls_background function (line ~14700)
 
 def start_background_jobs_once():
     """Start schedulers and optional initial fetch only in a single worker."""
@@ -14707,6 +14699,15 @@ Only respond with the JSON array, no other text."""
         import traceback
         traceback.print_exc()
 
+def schedule_url_population():
+    """Run automated URL population at 3 AM daily (off-peak)"""
+    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
+    
+    print("✅ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
 
 def populate_urls_for_new_leads(lead_type, lead_ids):
     """

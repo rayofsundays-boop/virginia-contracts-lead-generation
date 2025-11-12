@@ -3174,4 +3174,20 @@ function trackApplyClick(event, url, title) {
         return false;
     }
     
+    
     // Track which lead was clicked
+    localStorage.setItem('lastLeadClicked', JSON.stringify({ url, title, timestamp: Date.now() }));
+    
+    // Allow the click to proceed
+    return true;
+}
+</script>
+{% endblock %}
+    // Track which lead was clicked
+    localStorage.setItem('lastLeadClicked', JSON.stringify({ url, title, timestamp: Date.now() }));
+    
+    // Allow the click to proceed
+    return true;
+}
+</script>
+{% endblock %}

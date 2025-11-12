@@ -81,31 +81,11 @@
                             <span class="stat-pill"><i class="fas fa-bolt text-white-50"></i> {{ stats.quick_wins or 0 }} Quick Wins</span>
                             <span class="stat-pill"><i class="fas fa-building text-white-50"></i> {{ stats.commercial_leads or 0 }} Commercial</span>
                         </div>
-                    {% extends "base.html" %}
-                    {% block title %}Customer Dashboard - VA Contracts Lead Generation{% endblock %}
-                    {% block content %}
-                    <div class="container-fluid py-4">
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <div class="portal-header-band">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h2 class="mb-1"><i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ session.get('user_email').split('@')[0].title() }}!</h2>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="stat-pill"><i class="fas fa-flag text-white-50"></i> {{ stats.government_contracts or 0 }} Gov</span>
-                                                <span class="stat-pill"><i class="fas fa-bolt text-white-50"></i> {{ stats.quick_wins or 0 }} Quick Wins</span>
-                                                <span class="stat-pill"><i class="fas fa-building text-white-50"></i> {{ stats.commercial_leads or 0 }} Commercial</span>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="display-6 mb-0">{{ stats.total_leads or 0 }}</div>
-                                            <small>Total Opportunities</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Banner-only dashboard: all other sections intentionally removed -->
                     </div>
-                    {% endblock %}
-                <div class="card-header bg-white border-0 pt-4">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Banner-only dashboard: all other sections intentionally removed -->
+{% endblock %}
