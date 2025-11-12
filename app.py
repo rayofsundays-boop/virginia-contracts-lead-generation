@@ -2093,6 +2093,15 @@ def schedule_instantmarkets_updates():
 
 # Note: schedule_url_population defined after auto_populate_missing_urls_background function (line ~14700)
 
+def schedule_url_population():
+    """Run automated URL population at 3 AM daily (off-peak)"""
+    # Schedule daily auto URL population job
+    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
+    print("✅ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
 def start_background_jobs_once():
     """Start schedulers and optional initial fetch only in a single worker."""
     if not _acquire_background_lock():
@@ -2126,9 +2135,15 @@ def start_background_jobs_once():
 
     # Start Auto URL Population scheduler in background thread (runs at 3 AM daily)
     if OPENAI_AVAILABLE and OPENAI_API_KEY:
-        url_population_thread = threading.Thread(target=schedule_url_population, daemon=True)
-        url_population_thread.start()
-        print("✅ Auto URL Population enabled - will run daily at 3 AM")
+        try:
+            url_population_thread = threading.Thread(target=schedule_url_population, daemon=True)
+            url_population_thread.start()
+            print("✅ Auto URL Population enabled - will run daily at 3 AM")
+        except NameError as ne:
+            # Defensive guard in case definition ordering changes unexpectedly
+            print(f"⚠️  schedule_url_population not available yet: {ne}")
+        except Exception as e:
+            print(f"⚠️  Could not start URL population scheduler: {e}")
     else:
         print("⏸️  Auto URL Population disabled (OpenAI not configured)")
 
@@ -2172,8 +2187,10 @@ def start_background_jobs_once():
         print(f"⏸️  Skipping initial fetch (current time: {datetime.now().strftime('%I:%M %p')}, off-peak: {is_off_peak})")
         print("   Set FETCH_ON_INIT=1 to force immediate fetch, or wait for scheduled off-peak updates")
 
-# Launch background jobs once per container/process cluster
-start_background_jobs_once()
+# Launch background jobs once per container/process cluster AFTER all functions are defined
+@app.before_first_request
+def _launch_background_jobs_on_first_request():
+    start_background_jobs_once()
 
 
 def run_daily_updates():
@@ -14931,15 +14948,7 @@ Only respond with the JSON array, no other text."""
         import traceback
         traceback.print_exc()
 
-def schedule_url_population():
-    """Run automated URL population at 3 AM daily (off-peak)"""
-    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
-    
-    print("✅ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(3600)  # Check every hour
+ 
 
 def populate_urls_for_new_leads(lead_type, lead_ids):
     """
@@ -21908,6 +21917,45 @@ def populate_supply_contracts(force=False):
         traceback.print_exc()
         return 0
 
+# Helper: Ensure critical columns/tables exist before any seed/insert logic
+def ensure_minimum_schema():
+    """Create/alter essential schema pieces needed by startup seeds.
+    Currently ensures:
+      - supply_contracts.posted_date (TEXT)
+    Safe for both SQLite and PostgreSQL; no-ops if already present.
+    """
+    try:
+        with app.app_context():
+            dialect = db.engine.dialect.name
+            has_posted_date = False
+            if dialect == 'sqlite':
+                cols = db.session.execute(text("PRAGMA table_info('supply_contracts')")).fetchall()
+                col_names = {row[1] for row in cols}  # row[1] = name
+                has_posted_date = 'posted_date' in col_names
+            else:
+                # PostgreSQL and others
+                res = db.session.execute(text(
+                    """
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'supply_contracts' AND column_name = 'posted_date'
+                    """
+                )).fetchone()
+                has_posted_date = bool(res)
+
+            if not has_posted_date:
+                try:
+                    db.session.execute(text("ALTER TABLE supply_contracts ADD COLUMN posted_date TEXT"))
+                    db.session.commit()
+                    print("✅ Added missing column supply_contracts.posted_date")
+                except Exception as e:
+                    db.session.rollback()
+                    # If it races with another worker or already exists, ignore gracefully
+                    if 'already exists' not in str(e).lower():
+                        print(f"⚠️  Could not add posted_date column: {e}")
+    except Exception as outer_e:
+        # Do not block app start on schema guard
+        print(f"⚠️  Schema guard error (continuing): {outer_e}")
+
 # Initialize database for both local and production
 try:
     print("🔧 Initializing database...")
@@ -21919,6 +21967,8 @@ try:
     # Wrapped in app context to work properly in production
     try:
         with app.app_context():
+            # Ensure critical columns exist before any potential inserts
+            ensure_minimum_schema()
             print("🔍 Checking supply_contracts table...")
             count_result = db.session.execute(text('SELECT COUNT(*) FROM supply_contracts')).fetchone()
             current_count = count_result[0] if count_result else 0
