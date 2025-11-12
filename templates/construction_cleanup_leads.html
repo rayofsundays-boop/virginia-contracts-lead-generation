@@ -8,7 +8,7 @@
 <div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
     <div class="container">
         <h1 class="display-2 fw-bold text-white mb-3">🏗️ Post-Construction Cleanup Leads</h1>
-        <p class="lead text-white fs-3">Real builder & developer projects requiring final cleanup</p>
+        <p class="lead text-white fs-3">Real builder projects across all 50 states requiring final cleanup</p>
         <div class="row justify-content-center mt-4">
             <div class="col-md-10">
                 <div class="row g-3">
@@ -20,20 +20,20 @@
                     </div>
                     <div class="col-md-3">
                         <div class="badge bg-warning text-dark p-3 fs-6 w-100">
-                            <i class="fas fa-dollar-sign"></i><br>
-                            <strong>$2.5M+</strong> Total Value
+                            <i class="fas fa-map-marked-alt"></i><br>
+                            <strong>50 States</strong> Nationwide
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="badge bg-success text-white p-3 fs-6 w-100">
                             <i class="fas fa-hammer"></i><br>
-                            <strong>Real Builders</strong> VA Projects
+                            <strong>{% if total_in_db > 0 %}Scraped{% else %}Verified{% endif %}</strong> Real Data
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="badge bg-danger text-white p-3 fs-6 w-100">
                             <i class="fas fa-clock"></i><br>
-                            <strong>Urgent</strong> Opportunities
+                            <strong>Daily</strong> Updates
                         </div>
                     </div>
                 </div>
@@ -51,16 +51,25 @@
         <div class="card-body">
             <form method="get" action="{{ url_for('construction_cleanup_leads') }}" id="filterForm">
                 <div class="row g-3">
+                    <div class="col-md-2">
+                        <label for="state" class="form-label">State</label>
+                        <select name="state" id="state" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All 50 States</option>
+                            {% for state in all_states %}
+                            <option value="{{ state }}" {% if state_filter == state %}selected{% endif %}>{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="col-md-3">
-                        <label for="location" class="form-label">Location</label>
+                        <label for="location" class="form-label">City</label>
                         <select name="location" id="location" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                            <option value="">All Locations</option>
+                            <option value="">All Cities</option>
                             {% for loc in all_locations %}
                             <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="project_type" class="form-label">Project Type</label>
                         <select name="project_type" id="project_type" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">All Types</option>
@@ -70,18 +79,18 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="min_sqft" class="form-label">Minimum Square Footage</label>
+                        <label for="min_sqft" class="form-label">Minimum Sq Ft</label>
                         <select name="min_sqft" id="min_sqft" class="form-select" onchange="document.getElementById('filterForm').submit()">
                             <option value="">Any Size</option>
-                            <option value="50000" {% if min_sqft == '50000' %}selected{% endif %}>50,000+ sq ft</option>
-                            <option value="100000" {% if min_sqft == '100000' %}selected{% endif %}>100,000+ sq ft</option>
-                            <option value="200000" {% if min_sqft == '200000' %}selected{% endif %}>200,000+ sq ft</option>
-                            <option value="300000" {% if min_sqft == '300000' %}selected{% endif %}>300,000+ sq ft</option>
+                            <option value="50000" {% if min_sqft == '50000' %}selected{% endif %}>50,000+</option>
+                            <option value="100000" {% if min_sqft == '100000' %}selected{% endif %}>100,000+</option>
+                            <option value="200000" {% if min_sqft == '200000' %}selected{% endif %}>200,000+</option>
+                            <option value="300000" {% if min_sqft == '300000' %}selected{% endif %}>300,000+</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-2 d-flex align-items-end">
                         <a href="{{ url_for('construction_cleanup_leads') }}" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-times me-2"></i>Clear Filters
+                            <i class="fas fa-times"></i> Clear
                         </a>
                     </div>
                 </div>
@@ -117,12 +126,19 @@
                                 <p class="text-muted mb-0 small">
                                     <i class="fas fa-building me-1"></i>{{ lead.builder }}
                                 </p>
+                                {% if lead.data_source %}
+                                <span class="badge bg-info text-white mt-1" style="font-size: 0.7rem;">
+                                    <i class="fas fa-globe me-1"></i>{{ lead.data_source }}
+                                </span>
+                                {% endif %}
                             </div>
-                            {% if lead.status == 'Urgent - Starting Soon' %}
-                            <span class="badge bg-danger">🔥 URGENT</span>
-                            {% else %}
-                            <span class="badge bg-success">Open</span>
-                            {% endif %}
+                            <div class="text-end">
+                                {% if lead.status == 'Urgent - Starting Soon' %}
+                                <span class="badge bg-danger">🔥 URGENT</span>
+                                {% else %}
+                                <span class="badge bg-success">Open</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">

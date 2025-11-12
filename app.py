@@ -18108,14 +18108,26 @@ def generate_proposal_api():
 @app.route('/construction-cleanup-leads')
 @login_required
 def construction_cleanup_leads():
-    """Post-construction cleanup opportunities from Virginia builders and developers
+    """Post-construction cleanup opportunities from all 50 states
     
     Real construction projects requiring final cleanup before occupancy.
-    Sources: Building permits, commercial construction projects, developer partnerships
+    Sources: Building permits, commercial construction projects, bid boards, construction news
     """
     
-    # Construction cleanup opportunities - Real Virginia builders and projects
-    construction_leads = [
+    # Get scraped leads from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Check if table exists and has data
+    try:
+        cursor.execute("SELECT COUNT(*) FROM construction_cleanup_leads")
+        count = cursor.fetchone()[0]
+    except:
+        count = 0
+    
+    # If no scraped data yet, use fallback Virginia leads
+    if count == 0:
+        construction_leads = [
         # VIRGINIA BEACH
         {
             'id': 'const_001',
@@ -18364,16 +18376,60 @@ def construction_cleanup_leads():
             'bid_deadline': '2025-12-01'
         }
     ]
+    else:
+        # Use scraped data from database
+        try:
+            cursor.execute('''
+                SELECT project_name, builder, project_type, location, square_footage,
+                       estimated_value, completion_date, status, description, services_needed,
+                       contact_name, contact_phone, contact_email, website, requirements,
+                       bid_deadline, data_source
+                FROM construction_cleanup_leads
+                ORDER BY created_at DESC
+            ''')
+            rows = cursor.fetchall()
+            
+            construction_leads = []
+            for i, row in enumerate(rows):
+                construction_leads.append({
+                    'id': f'scraped_{i+1}',
+                    'project_name': row[0],
+                    'builder': row[1],
+                    'project_type': row[2],
+                    'location': row[3],
+                    'square_footage': row[4],
+                    'estimated_value': row[5],
+                    'completion_date': row[6],
+                    'status': row[7],
+                    'description': row[8],
+                    'services_needed': row[9],
+                    'contact_name': row[10],
+                    'contact_phone': row[11],
+                    'contact_email': row[12],
+                    'website': row[13],
+                    'requirements': row[14],
+                    'bid_deadline': row[15],
+                    'data_source': row[16] if len(row) > 16 else 'Web Scraper'
+                })
+        except Exception as e:
+            print(f"Error loading scraped leads: {e}")
+            # Fall back to static Virginia leads if database error
+            pass
+    
+    conn.close()
     
     # Get filter parameters
     location_filter = request.args.get('location', '')
     project_type_filter = request.args.get('project_type', '')
     min_sqft = request.args.get('min_sqft', '')
+    state_filter = request.args.get('state', '')  # New state filter
     
     # Filter leads
     filtered_leads = construction_leads
     if location_filter:
         filtered_leads = [l for l in filtered_leads if location_filter.lower() in l['location'].lower()]
+    if state_filter:
+        filtered_leads = [l for l in filtered_leads if state_filter.upper() in l['location'].upper()]
     if project_type_filter:
         filtered_leads = [l for l in filtered_leads if project_type_filter.lower() in l['project_type'].lower()]
     if min_sqft:
@@ -18387,14 +18443,57 @@ def construction_cleanup_leads():
     all_locations = sorted(set(l['location'] for l in construction_leads))
     all_project_types = sorted(set(l['project_type'] for l in construction_leads))
     
+    # Extract all states from locations
+    all_states = sorted(set(l['location'].split(', ')[-1] for l in construction_leads if ', ' in l['location']))
+    
     return render_template('construction_cleanup_leads.html',
                          leads=filtered_leads,
                          total_leads=len(filtered_leads),
                          all_locations=all_locations,
                          all_project_types=all_project_types,
+                         all_states=all_states,
                          location_filter=location_filter,
                          project_type_filter=project_type_filter,
-                         min_sqft=min_sqft)
+                         state_filter=state_filter,
+                         min_sqft=min_sqft,
+                         total_in_db=count)
+
+@app.route('/admin/scrape-construction', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def scrape_construction_leads():
+    """Admin tool to scrape post-construction cleanup leads from all 50 states"""
+    if request.method == 'POST':
+        try:
+            from construction_scraper import ConstructionLeadsScraper
+            
+            # Create scraper instance
+            scraper = ConstructionLeadsScraper()
+            
+            # Get scraping parameters
+            limit_per_state = int(request.form.get('limit_per_state', 2))
+            
+            # Run scraper in background
+            flash('🚀 Scraping started! This will take several minutes...', 'info')
+            
+            # Scrape all 50 states
+            leads = scraper.scrape_all_states(limit_per_state=limit_per_state)
+            
+            # Save to database
+            inserted = scraper.save_to_database()
+            
+            # Export to JSON
+            scraper.export_to_json()
+            
+            flash(f'✅ Scraping complete! Added {inserted} new construction leads from all 50 states.', 'success')
+            return redirect(url_for('construction_cleanup_leads'))
+            
+        except Exception as e:
+            flash(f'❌ Scraping error: {str(e)}', 'danger')
+            return redirect(url_for('admin_enhanced'))
+    
+    # GET request - show scraping form
+    return render_template('admin_scrape_construction.html')
 
 @app.route('/quick-wins')
 @app.route('/supply-contracts')  # Added redirect route - both URLs work

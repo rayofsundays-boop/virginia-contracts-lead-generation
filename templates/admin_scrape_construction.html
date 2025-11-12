@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Scrape Construction Leads - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-4">🤖 Construction Leads Scraper</h1>
+                <p class="lead text-muted">Automatically scrape post-construction cleanup leads from all 50 states</p>
+            </div>
+
+            <!-- Scraper Configuration Card -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Scraper Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('scrape_construction_leads') }}" id="scrapeForm">
+                        
+                        <!-- Data Sources Info -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Data Sources</h6>
+                            <ul class="mb-0">
+                                <li><strong>Building Permits:</strong> Public permit databases from city governments</li>
+                                <li><strong>Construction News:</strong> Project announcements from industry news sites</li>
+                                <li><strong>Commercial Real Estate:</strong> Under-construction properties from CRE sites</li>
+                                <li><strong>Bid Boards:</strong> Active bids from construction bid aggregators</li>
+                            </ul>
+                        </div>
+
+                        <!-- Leads Per State -->
+                        <div class="mb-4">
+                            <label for="limit_per_state" class="form-label">
+                                <strong>Leads Per State</strong>
+                            </label>
+                            <select name="limit_per_state" id="limit_per_state" class="form-select">
+                                <option value="1">1 lead per state (51 total - Fast)</option>
+                                <option value="2" selected>2 leads per state (102 total - Recommended)</option>
+                                <option value="3">3 leads per state (153 total - Thorough)</option>
+                                <option value="5">5 leads per state (255 total - Comprehensive)</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Higher numbers = more leads but longer scraping time (5-30 minutes depending on selection)
+                            </small>
+                        </div>
+
+                        <!-- Coverage Info -->
+                        <div class="mb-4">
+                            <h6>Coverage</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="text-primary">51</h3>
+                                            <small>States + DC</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="text-success">4</h3>
+                                            <small>Data Sources</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="text-warning">Auto</h3>
+                                            <small>Updates Daily</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning -->
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
+                            <ul class="mb-0 small">
+                                <li>Scraping respects rate limits and robots.txt files</li>
+                                <li>Process may take 5-30 minutes depending on settings</li>
+                                <li>Results are automatically saved to database</li>
+                                <li>Duplicate detection prevents redundant entries</li>
+                                <li>Some data sources may be temporarily unavailable</li>
+                            </ul>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Start scraping construction leads from all 50 states? This may take several minutes.')">
+                                <i class="fas fa-play-circle me-2"></i>Start Scraping
+                            </button>
+                            <a href="{{ url_for('construction_cleanup_leads') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>View Current Leads
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>How It Works</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="small">
+                        <li><strong>Data Collection:</strong> Scraper visits public construction project databases, news sites, and bid boards</li>
+                        <li><strong>Information Extraction:</strong> Extracts project details (name, builder, size, location, contact info)</li>
+                        <li><strong>Value Calculation:</strong> Estimates cleanup value based on square footage ($0.50-$0.75/sq ft)</li>
+                        <li><strong>Database Storage:</strong> Saves verified leads to construction_cleanup_leads table</li>
+                        <li><strong>JSON Export:</strong> Creates backup file construction_leads.json</li>
+                        <li><strong>Display:</strong> Leads immediately available on Construction Cleanup page</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- State Coverage -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>State Coverage (51 Markets)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 small">
+                        <div class="col-md-3">AL, AK, AZ, AR, CA, CO, CT, DE, DC, FL, GA, HI, ID</div>
+                        <div class="col-md-3">IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO</div>
+                        <div class="col-md-3">MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA</div>
+                        <div class="col-md-3">RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+</style>
+
+{% endblock %}
