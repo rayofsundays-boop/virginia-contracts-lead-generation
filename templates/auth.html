@@ -175,6 +175,38 @@
                                               rows="2" placeholder="List any relevant certifications..."></textarea>
                                 </div>
                                 
+                                <!-- Beta Tester Program -->
+                                <div class="mb-3" id="beta-tester-section">
+                                    <div class="card border-warning bg-light">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-start">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input" type="checkbox" id="beta_tester" name="beta_tester">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <label class="form-check-label fw-bold text-warning" for="beta_tester">
+                                                        <i class="fas fa-star me-1"></i>Join Beta Tester Program (Limited to 100 Members)
+                                                    </label>
+                                                    <p class="mb-2 small text-dark">
+                                                        <strong>Get 1 Year FREE Premium Access!</strong> Beta testers receive:
+                                                    </p>
+                                                    <ul class="small mb-2 text-dark">
+                                                        <li>Full platform access for 12 months</li>
+                                                        <li>Unlimited contract leads and downloads</li>
+                                                        <li>Priority customer support</li>
+                                                        <li>Ability to provide feedback and shape features</li>
+                                                    </ul>
+                                                    <p class="mb-0 small" id="beta-spots-remaining">
+                                                        <span class="badge bg-success" id="beta-badge">
+                                                            <i class="fas fa-users me-1"></i><span id="spots-count">Loading...</span> spots remaining
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="terms" required>
@@ -307,6 +339,43 @@
 </style>
 
 <script>
+// Check beta tester availability on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkBetaTesterAvailability();
+});
+
+function checkBetaTesterAvailability() {
+    fetch('/api/beta-tester-count')
+        .then(response => response.json())
+        .then(data => {
+            const spotsRemaining = data.remaining;
+            const spotsCount = document.getElementById('spots-count');
+            const betaBadge = document.getElementById('beta-badge');
+            const betaCheckbox = document.getElementById('beta_tester');
+            const betaSection = document.getElementById('beta-tester-section');
+            
+            spotsCount.textContent = spotsRemaining;
+            
+            if (spotsRemaining === 0) {
+                // Gray out and disable beta tester option
+                betaBadge.classList.remove('bg-success');
+                betaBadge.classList.add('bg-secondary');
+                betaCheckbox.disabled = true;
+                betaCheckbox.checked = false;
+                betaSection.style.opacity = '0.5';
+                spotsCount.textContent = 'Program Full - No spots available';
+            } else if (spotsRemaining <= 10) {
+                // Change to warning color when spots are low
+                betaBadge.classList.remove('bg-success');
+                betaBadge.classList.add('bg-warning');
+                betaBadge.classList.add('text-dark');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking beta tester availability:', error);
+        });
+}
+
 function togglePassword(inputId, eyeId) {
     const input = document.getElementById(inputId);
     const eye = document.getElementById(eyeId);

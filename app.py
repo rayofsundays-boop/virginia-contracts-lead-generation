@@ -3795,16 +3795,40 @@ def register():
         state = request.form.get('state', '')
         experience_years = request.form.get('experience_years', 0)
         certifications = request.form.get('certifications', '')
+        is_beta_tester = request.form.get('beta_tester') == 'on'
         
         # Hash the password
         password_hash = generate_password_hash(password)
+        
+        # Check beta tester limit if user wants to be a beta tester
+        if is_beta_tester:
+            beta_count = db.session.execute(
+                text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE OR is_beta_tester = 1")
+            ).scalar()
+            
+            if beta_count >= 100:
+                flash('⚠️ Sorry, the Beta Tester program is full (100/100 members). You can still register for a regular account.', 'warning')
+                is_beta_tester = False
+        
+        # Calculate subscription status and expiry for beta testers
+        if is_beta_tester:
+            from datetime import datetime, timedelta
+            subscription_status = 'paid'  # Beta testers get paid status
+            beta_registered_at = datetime.utcnow()
+            beta_expiry_date = beta_registered_at + timedelta(days=365)  # 1 year free access
+        else:
+            subscription_status = 'unpaid'
+            beta_registered_at = None
+            beta_expiry_date = None
         
         # Save to database
         try:
             db.session.execute(
                 text('''INSERT INTO leads (company_name, contact_name, email, username, password_hash, phone, 
-                        state, experience_years, certifications, free_leads_remaining, credits_balance, subscription_status)
-                        VALUES (:company, :contact, :email, :username, :password, :phone, :state, :exp, :certs, :free, :credits, :status)'''),
+                        state, experience_years, certifications, free_leads_remaining, credits_balance, subscription_status,
+                        is_beta_tester, beta_registered_at, beta_expiry_date)
+                        VALUES (:company, :contact, :email, :username, :password, :phone, :state, :exp, :certs, :free, :credits, :status,
+                        :is_beta, :beta_reg, :beta_exp)'''),
                 {
                     'company': company_name,
                     'contact': contact_name,
@@ -3817,7 +3841,10 @@ def register():
                     'certs': certifications,
                     'free': 0,
                     'credits': 0,
-                    'status': 'unpaid'
+                    'status': subscription_status,
+                    'is_beta': is_beta_tester,
+                    'beta_reg': beta_registered_at,
+                    'beta_exp': beta_expiry_date
                 }
             )
             db.session.commit()
@@ -3825,7 +3852,10 @@ def register():
             # Send welcome email
             send_welcome_email(email, contact_name)
             
-            flash('🎉 Welcome! Your account has been created successfully. Please sign in to get started.', 'success')
+            if is_beta_tester:
+                flash('🎉🌟 Welcome, Beta Tester! Your account has been created with 1 YEAR FREE Premium access. Please sign in to get started.', 'success')
+            else:
+                flash('🎉 Welcome! Your account has been created successfully. Please sign in to get started.', 'success')
             return redirect(url_for('auth'))
             
         except Exception as e:
@@ -3837,6 +3867,29 @@ def register():
             return redirect(url_for('auth') + '#register')
     
     return render_template('register.html')
+
+@app.route('/api/beta-tester-count')
+def beta_tester_count():
+    """API endpoint to check beta tester availability"""
+    try:
+        count = db.session.execute(
+            text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE OR is_beta_tester = 1")
+        ).scalar()
+        
+        remaining = max(0, 100 - count)
+        
+        return jsonify({
+            'success': True,
+            'total': count,
+            'remaining': remaining,
+            'limit': 100
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'remaining': 0
+        }), 500
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
@@ -3869,13 +3922,39 @@ def signin():
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
         return redirect(url_for('contracts'))
     
-    # Get user from database (including is_admin flag and subscription status)
+    # Get user from database (including beta tester fields)
     result = db.session.execute(
-        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
         {'username': username}
     ).fetchone()
     
     if result and check_password_hash(result[3], password):
+        from datetime import datetime
+        
+        # Check if beta tester membership has expired
+        is_beta_tester = bool(result[8])
+        beta_expiry_date = result[9]
+        beta_expired = False
+        
+        if is_beta_tester and beta_expiry_date:
+            # Parse expiry date (handle both datetime and string formats)
+            if isinstance(beta_expiry_date, str):
+                try:
+                    expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
+                except:
+                    expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
+            else:
+                expiry_dt = beta_expiry_date
+            
+            if datetime.utcnow() > expiry_dt:
+                beta_expired = True
+                # Update subscription status to unpaid
+                db.session.execute(
+                    text('UPDATE leads SET subscription_status = :status WHERE id = :user_id'),
+                    {'status': 'unpaid', 'user_id': result[0]}
+                )
+                db.session.commit()
+        
         # Login successful - set all session variables
         session['user_id'] = result[0]
         session['username'] = result[1]
@@ -3884,17 +3963,34 @@ def signin():
         session['name'] = result[4]
         session['credits_balance'] = result[5]
         session['is_admin'] = bool(result[6])  # Set admin status from database
+        session['is_beta_tester'] = is_beta_tester and not beta_expired
+        session['beta_expiry_date'] = beta_expiry_date
         
         # Admin users get paid subscription status and unlimited credits
         if session['is_admin']:
             session['subscription_status'] = 'paid'  # Force paid status for all admins
             session['credits_balance'] = 999999  # Unlimited credits for admins
+        elif is_beta_tester and not beta_expired:
+            session['subscription_status'] = 'paid'  # Active beta testers get paid status
         else:
             session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
         
         # Show appropriate welcome message
         if session['is_admin']:
             flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
+        elif is_beta_tester and not beta_expired:
+            # Calculate days remaining
+            if isinstance(beta_expiry_date, str):
+                try:
+                    expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
+                except:
+                    expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
+            else:
+                expiry_dt = beta_expiry_date
+            days_remaining = (expiry_dt - datetime.utcnow()).days
+            flash(f'Welcome back, {result[4]}! 🌟 Beta Tester - {days_remaining} days of Premium access remaining.', 'success')
+        elif beta_expired:
+            flash(f'Welcome back, {result[4]}! Your 1-year Beta Tester period has expired. Please subscribe to continue Premium access.', 'warning')
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
         
