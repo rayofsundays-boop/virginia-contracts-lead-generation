@@ -11459,18 +11459,18 @@ def admin_dashboard_redirect():
         return redirect(url_for('auth'))
 
 @app.route('/admin/my-leads')
-@login_required
-@admin_required
 def admin_my_leads():
     """Admin view of all leads across the system"""
+    if not session.get('is_admin'):
+        return redirect(url_for('auth'))
     # Redirect to admin enhanced with all_leads section
     return redirect(url_for('admin_enhanced', section='all-leads'))
 
 @app.route('/admin/commercial-leads')
-@login_required
-@admin_required
 def admin_commercial_leads():
     """Redirect to commercial leads review page"""
+    if not session.get('is_admin'):
+        return redirect(url_for('auth'))
     return redirect(url_for('admin_review_commercial_leads'))
 
 @app.route('/admin-enhanced')
