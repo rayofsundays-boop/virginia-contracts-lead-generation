@@ -5715,9 +5715,9 @@ def federal_contracts():
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
         # Only show open bids (deadline today or later), safely handling text/date/timestamp
-        base_sql += " AND (CASE WHEN deadline IS NULL OR deadline::text = '' THEN NULL " \
-                    "WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (deadline::text)::date " \
-                    "WHEN deadline::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN substring(deadline::text from 1 for 10)::date " \
+        base_sql += " AND (CASE WHEN deadline IS NULL OR CAST(deadline AS TEXT) = '' THEN NULL " \
+                    "WHEN CAST(deadline AS TEXT) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN CAST(CAST(deadline AS TEXT) AS DATE) " \
+                    "WHEN CAST(deadline AS TEXT) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN CAST(substring(CAST(deadline AS TEXT) from 1 for 10) AS DATE) " \
                     "ELSE NULL END) >= CURRENT_DATE"
         # Count total
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
