@@ -439,6 +439,189 @@ function viewGuide(guideName) {
 
 // Download Material
 function downloadMaterial(materialName) {
+    const materials = {
+        'Logo Package': `LOGO PACKAGE INSTRUCTIONS
+
+Your company logo should include:
+- Full color version (CMYK for print, RGB for web)
+- Grayscale version
+- White version (for dark backgrounds)
+- Minimum size requirements
+
+File formats needed:
+- Vector: .AI, .EPS, .SVG (scalable)
+- Raster: .PNG (with transparency), .JPG
+
+Usage guidelines:
+- Maintain clear space around logo
+- Never stretch or distort
+- Use approved color codes only
+
+Contact a graphic designer to create your professional logo package.`,
+
+        'Business Card Template': `BUSINESS CARD TEMPLATE
+
+FRONT SIDE:
+[Your Company Logo]
+
+[Your Name]
+[Your Title]
+
+BACK SIDE:
+Phone: [Your Phone]
+Email: [Your Email]
+Website: [Your Website]
+Address: [Your Address]
+
+Standard business card size: 3.5" x 2"
+Recommended: Full color, both sides
+Paper: 14pt cardstock with matte or glossy finish`,
+
+        'Letterhead Template': `LETTERHEAD TEMPLATE
+
+Header:
+[Your Company Logo] | [Company Name]
+[Address]
+[Phone] | [Email] | [Website]
+
+Body content area:
+[Your letter content goes here]
+
+Footer:
+[Company registration info if required]
+[Certifications: Licensed, Bonded, Insured]
+
+Use for:
+- Proposals
+- Letters of introduction
+- Official correspondence`,
+
+        'Email Signature': `EMAIL SIGNATURE TEMPLATE
+
+[Your Name]
+[Your Title]
+[Your Company Name]
+
+P: [Your Phone]
+E: [Your Email]
+W: [Your Website]
+
+[Small company logo - 150px wide max]
+
+Certified: [List certifications]
+Licensed | Bonded | Insured
+
+Add this to your email client's signature settings.`,
+
+        'Social Media Templates': `SOCIAL MEDIA BRANDING GUIDE
+
+Profile Image:
+- Use your logo
+- Square format (1:1 ratio)
+- 400x400 pixels minimum
+
+Cover Photos:
+- Facebook: 820x312 pixels
+- LinkedIn: 1584x396 pixels
+- Twitter: 1500x500 pixels
+
+Post Templates:
+- Before/After photos
+- Team highlights
+- Client testimonials
+- Safety tips
+- Service spotlights
+
+Brand Colors: [Your brand hex codes]
+Fonts: [Your brand fonts]`,
+
+        'Brochure Template': `TRI-FOLD BROCHURE TEMPLATE
+
+PANEL 1 (Cover):
+[Company Logo]
+[Tagline]
+[Eye-catching image]
+
+PANEL 2:
+ABOUT US
+[Company description]
+[Years in business]
+[Service area]
+
+PANEL 3:
+OUR SERVICES
+• [Service 1]
+• [Service 2]
+• [Service 3]
+
+PANEL 4 (Inside):
+WHY CHOOSE US?
+• Licensed & Insured
+• Background-checked staff
+• Eco-friendly products
+• 100% satisfaction guarantee
+
+PANEL 5:
+TESTIMONIALS
+"[Client quote]"
+- [Client Name]
+
+PANEL 6 (Back):
+CONTACT US
+Phone: [Phone]
+Email: [Email]
+Website: [Website]
+Address: [Address]
+
+Size: 8.5" x 11" paper, tri-fold`,
+
+        'Invoice Template': `INVOICE TEMPLATE
+
+[Company Name & Logo]
+[Address] | [Phone] | [Email]
+
+INVOICE #: [Number]
+DATE: [Date]
+DUE DATE: [Date]
+
+BILL TO:
+[Client Name]
+[Client Address]
+
+Services Rendered:
+[Description] - $[Amount]
+[Description] - $[Amount]
+
+Subtotal: $[Amount]
+Tax ([X]%): $[Amount]
+TOTAL DUE: $[Amount]
+
+Payment Terms: Net 30
+Thank you for your business!`,
+
+        'Proposal Cover Page': `PROPOSAL COVER PAGE TEMPLATE
+
+[Company Logo - centered, large]
+
+PROPOSAL FOR
+[Project Name/Solicitation Number]
+
+Submitted to:
+[Agency Name]
+[Agency Address]
+
+Submitted by:
+[Your Company Name]
+[Your Address]
+[Phone] | [Email]
+
+Date: [Submission Date]
+
+[Include any required cage codes, DUNS, certifications]`
+    };
+
+    const content = materials[materialName] || `${materialName} template - Contact support for custom materials.`;
+    
     // Show loading state
     const loadingAlert = document.createElement('div');
     loadingAlert.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
@@ -450,8 +633,18 @@ function downloadMaterial(materialName) {
     `;
     document.body.appendChild(loadingAlert);
     
-    // Simulate download preparation
+    // Download file
     setTimeout(() => {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = materialName.replace(/ /g, '_') + '_Template.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
         loadingAlert.remove();
         
         const successAlert = document.createElement('div');
@@ -467,10 +660,7 @@ function downloadMaterial(materialName) {
         setTimeout(() => {
             successAlert.remove();
         }, 3000);
-    }, 1500);
-    
-    // In production, this would trigger actual file download
-    // Example: window.location.href = '/download-material?name=' + encodeURIComponent(materialName);
+    }, 500);
 }
 
 // Show selected palette on page load

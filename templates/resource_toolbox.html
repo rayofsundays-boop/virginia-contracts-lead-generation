@@ -459,23 +459,244 @@ function showROICalculator() {
 }
 
 function showContracts() {
-    alert('Contract Templates - Coming soon! Download professional contract templates.');
+    downloadTemplate('contract-template.txt', 'Contract Template');
 }
 
 function showEmails() {
-    alert('Email Templates - Coming soon! Professional communication templates for clients.');
+    downloadTemplate('email-template.txt', 'Email Template');
 }
 
 function showInvoices() {
-    alert('Invoice Templates - Coming soon! Professional invoice formats for billing.');
+    downloadTemplate('invoice-template.txt', 'Invoice Template');
 }
 
 function showPastPerformance() {
-    alert('Past Performance Template - Coming soon! Document your successful projects.');
+    downloadTemplate('past-performance-template.txt', 'Past Performance Template');
 }
 
 function downloadChecklist(type) {
-    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} Checklist - Downloading... (Feature coming soon)`);
+    const checklists = {
+        'office': `OFFICE CLEANING CHECKLIST
+☐ Empty all trash bins
+☐ Dust desks and surfaces
+☐ Vacuum carpets
+☐ Mop hard floors
+☐ Clean windows and glass
+☐ Sanitize high-touch areas
+☐ Clean restrooms
+☐ Restock supplies`,
+        
+        'restroom': `RESTROOM CLEANING CHECKLIST
+☐ Clean and disinfect toilets
+☐ Clean and disinfect sinks
+☐ Clean mirrors
+☐ Wipe down countertops
+☐ Scrub floors
+☐ Restock toilet paper
+☐ Restock paper towels
+☐ Empty trash bins`,
+        
+        'school': `SCHOOL CLEANING CHECKLIST
+☐ Clean and disinfect desktops
+☐ Clean whiteboards
+☐ Vacuum all areas
+☐ Mop floors
+☐ Empty trash bins
+☐ Clean restrooms
+☐ Sanitize door handles
+☐ Clean windows`,
+        
+        'medical': `MEDICAL FACILITY CLEANING CHECKLIST
+☐ Disinfect all surfaces
+☐ Clean exam rooms
+☐ Clean waiting areas
+☐ Sanitize medical equipment surfaces
+☐ Mop floors with hospital-grade disinfectant
+☐ Empty biohazard containers (if trained)
+☐ Restock supplies
+☐ Document cleaning completion`,
+        
+        'warehouse': `WAREHOUSE CLEANING CHECKLIST
+☐ Sweep entire floor
+☐ Clean loading dock
+☐ Dust shelving
+☐ Remove cobwebs
+☐ Clean windows
+☐ Clean office areas
+☐ Clean restrooms
+☐ Empty all trash`,
+        
+        'kitchen': `COMMERCIAL KITCHEN CLEANING CHECKLIST
+☐ Clean and degrease cooking surfaces
+☐ Clean ovens and grills
+☐ Clean refrigerators
+☐ Mop floors
+☐ Clean prep tables
+☐ Sanitize sinks
+☐ Empty trash and recycling
+☐ Clean exhaust hoods`,
+        
+        'lab': `LABORATORY CLEANING CHECKLIST
+☐ Wipe down lab benches
+☐ Clean equipment surfaces
+☐ Clean fume hoods
+☐ Mop floors with appropriate cleaner
+☐ Empty waste containers
+☐ Clean glass surfaces
+☐ Sanitize door handles
+☐ Document cleaning`,
+        
+        'inspection': `PRE-INSPECTION CHECKLIST
+☐ All floors swept and mopped
+☐ All surfaces dusted
+☐ Windows cleaned
+☐ Restrooms spotless
+☐ Trash removed
+☐ Supplies restocked
+☐ Equipment put away
+☐ Final walkthrough complete`
+    };
+    
+    const content = checklists[type] || 'Checklist not found';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${type}_cleaning_checklist.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function downloadTemplate(filename, displayName) {
+    const templates = {
+        'contract-template.txt': `CLEANING SERVICE CONTRACT TEMPLATE
+
+This agreement is made on [DATE] between [YOUR COMPANY] and [CLIENT NAME].
+
+SCOPE OF WORK:
+- Services to be provided: [DESCRIBE SERVICES]
+- Location: [ADDRESS]
+- Frequency: [DAILY/WEEKLY/MONTHLY]
+
+TERMS:
+- Contract Duration: [START DATE] to [END DATE]
+- Payment Terms: [NET 30/NET 15]
+- Price: $[AMOUNT] per [MONTH/SERVICE]
+
+RESPONSIBILITIES:
+Client will provide access to facilities and notify of any changes.
+Contractor will provide all equipment and supplies unless otherwise noted.
+
+TERMINATION:
+Either party may terminate with [30/60] days written notice.
+
+Signed: _________________________ Date: _____________
+[YOUR NAME], [YOUR COMPANY]
+
+Signed: _________________________ Date: _____________
+[CLIENT NAME], [CLIENT COMPANY]`,
+
+        'email-template.txt': `PROFESSIONAL EMAIL TEMPLATES
+
+=== NEW CLIENT INTRODUCTION ===
+Subject: Introduction - [YOUR COMPANY] Cleaning Services
+
+Dear [CLIENT NAME],
+
+Thank you for your interest in [YOUR COMPANY]. We specialize in [TYPE OF CLEANING] and have [X] years of experience serving [INDUSTRY/AREA].
+
+I'd love to discuss your cleaning needs and provide a free quote.
+
+Are you available for a brief call this week?
+
+Best regards,
+[YOUR NAME]
+[YOUR COMPANY]
+[PHONE] | [EMAIL]
+
+=== QUOTE FOLLOW-UP ===
+Subject: Following Up - Cleaning Services Quote
+
+Dear [CLIENT NAME],
+
+I wanted to follow up on the quote I sent last [DAY]. Do you have any questions about our services or pricing?
+
+I'm happy to adjust the proposal to better fit your needs.
+
+Best regards,
+[YOUR NAME]`,
+
+        'invoice-template.txt': `INVOICE TEMPLATE
+
+[YOUR COMPANY NAME]
+[ADDRESS]
+[PHONE] | [EMAIL]
+
+INVOICE #: [NUMBER]
+DATE: [DATE]
+DUE DATE: [DATE]
+
+BILL TO:
+[CLIENT NAME]
+[CLIENT ADDRESS]
+
+SERVICES PROVIDED:
+- [SERVICE 1]: $[AMOUNT]
+- [SERVICE 2]: $[AMOUNT]
+- [SERVICE 3]: $[AMOUNT]
+
+SUBTOTAL: $[AMOUNT]
+TAX ([X]%): $[AMOUNT]
+TOTAL DUE: $[AMOUNT]
+
+PAYMENT TERMS: Net 30
+Make checks payable to: [YOUR COMPANY]
+
+Thank you for your business!`,
+
+        'past-performance-template.txt': `PAST PERFORMANCE REFERENCE
+
+PROJECT DETAILS:
+Client: [CLIENT NAME]
+Contract Period: [START DATE] to [END DATE]
+Contract Value: $[AMOUNT]
+Services Provided: [DESCRIPTION]
+
+SCOPE OF WORK:
+- [SERVICE 1]
+- [SERVICE 2]
+- [SERVICE 3]
+
+PERFORMANCE METRICS:
+- Quality Score: [X]/10
+- On-time Completion: [X]%
+- Client Satisfaction: [X]%
+
+CONTACT REFERENCE:
+Name: [CONTACT NAME]
+Title: [TITLE]
+Phone: [PHONE]
+Email: [EMAIL]
+
+CHALLENGES OVERCOME:
+[DESCRIBE ANY CHALLENGES AND HOW YOU RESOLVED THEM]
+
+RESULTS DELIVERED:
+[DESCRIBE POSITIVE OUTCOMES FOR CLIENT]`
+    };
+    
+    const content = templates[filename] || 'Template not found';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
 }
 
 function showGuide(guide) {
