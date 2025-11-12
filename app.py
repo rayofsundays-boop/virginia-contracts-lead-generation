@@ -5714,11 +5714,8 @@ def federal_contracts():
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
-        # Only show open bids (deadline today or later), safely handling text/date/timestamp
-        base_sql += " AND (CASE WHEN deadline IS NULL OR CAST(deadline AS TEXT) = '' THEN NULL " \
-                    "WHEN CAST(deadline AS TEXT) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN CAST(CAST(deadline AS TEXT) AS DATE) " \
-                    "WHEN CAST(deadline AS TEXT) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} ' THEN CAST(substring(CAST(deadline AS TEXT) from 1 for 10) AS DATE) " \
-                    "ELSE NULL END) >= CURRENT_DATE"
+        # Only show open bids (deadline today or later) - simplified for SQLite compatibility
+        base_sql += " AND (deadline IS NOT NULL AND deadline != '' AND DATE(deadline) >= DATE('now'))"
         # Count total
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
