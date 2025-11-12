@@ -143,22 +143,37 @@
                         <div class="col-md-6">
                             <!-- Additional Services -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Additional Services</label>
+                                <label class="form-label fw-bold">Additional Services (Optional)</label>
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-info-circle me-1"></i>Check all services included in your bid. Each adds a percentage to your base price.
+                                </small>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="floorCare" onchange="calculatePricing()">
-                                    <label class="form-check-label small" for="floorCare">Floor Care (+15%)</label>
+                                    <label class="form-check-label small" for="floorCare">
+                                        <strong>Floor Care</strong> (+15%)
+                                        <span class="d-block text-muted" style="font-size: 0.85em; padding-left: 1.25rem;">Stripping, waxing, buffing</span>
+                                    </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="windowCleaning" onchange="calculatePricing()">
-                                    <label class="form-check-label small" for="windowCleaning">Window Cleaning (+10%)</label>
+                                    <label class="form-check-label small" for="windowCleaning">
+                                        <strong>Window Cleaning</strong> (+10%)
+                                        <span class="d-block text-muted" style="font-size: 0.85em; padding-left: 1.25rem;">Interior/exterior glass</span>
+                                    </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="carpetCleaning" onchange="calculatePricing()">
-                                    <label class="form-check-label small" for="carpetCleaning">Carpet Cleaning (+12%)</label>
+                                    <label class="form-check-label small" for="carpetCleaning">
+                                        <strong>Carpet Cleaning</strong> (+12%)
+                                        <span class="d-block text-muted" style="font-size: 0.85em; padding-left: 1.25rem;">Deep clean, spot treatment</span>
+                                    </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="specializedCleaning" onchange="calculatePricing()">
-                                    <label class="form-check-label small" for="specializedCleaning">Specialized Cleaning (+20%)</label>
+                                    <label class="form-check-label small" for="specializedCleaning">
+                                        <strong>Specialized/Medical Cleaning</strong> (+20%)
+                                        <span class="d-block text-muted" style="font-size: 0.85em; padding-left: 1.25rem;">Biohazard, disinfection protocols</span>
+                                    </label>
                                 </div>
                             </div>
 
