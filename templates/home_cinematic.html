@@ -572,14 +572,9 @@ section, .container, .row {
 }
 
 .hero-content {
-    position: fixed; /* Keep hero content fixed in place */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) !important;
+    position: relative;
     z-index: 10;
     text-align: center;
-    width: 90%;
-    max-width: 1200px;
 }
 
 .hero-headline {
@@ -1141,7 +1136,7 @@ section, .container, .row {
 
 /* ==================== FEATURED PARTNER SECTION ==================== */
 .featured-partner-section {
-    padding: 10rem 0 8rem 0; /* Increased top padding from 8rem to 10rem */
+    padding: 8rem 0;
     margin-top: 4rem;
     background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
     position: relative;
@@ -1194,7 +1189,7 @@ section, .container, .row {
 
 .partner-badge {
     position: absolute;
-    top: 15px; /* Changed from -15px to 15px to keep badge inside card */
+    top: -15px;
     right: 30px;
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
     color: #000;
@@ -1203,7 +1198,6 @@ section, .container, .row {
     font-weight: 700;
     font-size: 0.85rem;
     letter-spacing: 1px;
-    z-index: 10; /* Ensure badge stays on top */
     box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
     animation: badge-pulse 2s ease-in-out infinite;
 }
@@ -1776,18 +1770,18 @@ html { scroll-padding-top: var(--top-offset, 0px); }
 }
 </style>
 
-<!-- AOS Animation Library - DISABLED -->
-<!-- <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"> -->
-<!-- <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> -->
+<!-- AOS Animation Library -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
 <!-- Scripts -->
 <script>
-// AOS disabled - no scroll animations
-// AOS.init({
-//     duration: 1000,
-//     once: true,
-//     offset: 100
-// });
+// Initialize AOS
+AOS.init({
+    duration: 1000,
+    once: true,
+    offset: 100
+});
 
 // Particles Canvas Animation
 const canvas = document.getElementById('particlesCanvas');
