@@ -14897,10 +14897,14 @@ def toggle_admin_privilege():
 @app.route('/industry-days-events')
 def industry_days_events():
     """Display networking and bidding events for contractors - All 50 States"""
+    print("=" * 80)
+    print("🎪 INDUSTRY DAYS EVENTS ROUTE CALLED")
+    print("=" * 80)
     try:
         # Ensure industry_days table exists (portable across SQLite/Postgres)
         try:
             is_postgres = 'postgresql' in str(db.engine.url)
+            print(f"📊 Database type: {'PostgreSQL' if is_postgres else 'SQLite'}")
             id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY'
             bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
             reg_default = 'TRUE' if is_postgres else '1'
