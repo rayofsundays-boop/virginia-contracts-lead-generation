@@ -27,6 +27,7 @@ body {
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     box-shadow: 2px 0 15px var(--shadow-color);
+    z-index: 1040; /* Ensure sidebar links remain clickable above fading overlays */
 }
 
 .admin-sidebar .nav-link {
@@ -36,6 +37,8 @@ body {
     transition: all 0.3s ease;
     font-weight: 600;
     font-size: 15px;
+    position: relative;
+    z-index: 1050; /* Keep individual link above accidental overlays */
 }
 
 .admin-sidebar .nav-link:hover {
@@ -106,7 +109,7 @@ body {
                     <small class="text-secondary fw-semibold">{{ session.get('user_email') }}</small>
                 </div>
                 
-                <nav class="nav flex-column pt-3">
+                <nav class="nav flex-column pt-3" aria-label="Admin primary navigation">
                     <!-- Overview -->
                     <div class="sidebar-heading">
                         Overview
