@@ -10,7 +10,8 @@
             <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.3);">
                 QUICK WINS
             </h1>
-            <p class="lead mb-4">Hot opportunities requiring immediate response</p>
+            <p class="lead mb-4">Nationwide hot opportunities requiring immediate response</p>
+            <p class="mb-4"><span class="badge bg-light text-primary fs-6 px-3 py-2"><i class="fas fa-map-marked-alt me-2"></i>All 50 States Coverage</span></p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
                 <a href="{{ url_for('quick_wins', expiring='7days') }}" class="badge bg-danger fs-5 px-4 py-2 pulse-animation text-decoration-none" style="cursor: pointer;">
                     <i class="fas fa-clock me-2"></i>{{ expiring_7days_count }} Expiring in 7 Days
@@ -30,19 +31,20 @@
             <form method="GET" action="{{ url_for('quick_wins') }}" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label fw-bold">
-                        <i class="fas fa-map-marker-alt text-primary me-2"></i>City
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i>Filter by City (Optional)
                     </label>
                     <select class="form-select form-select-lg" name="city">
-                        <option value="">All Cities</option>
-                        <option value="Hampton" {% if request.args.get('city') == 'Hampton' %}selected{% endif %}>Hampton</option>
-                        <option value="Newport News" {% if request.args.get('city') == 'Newport News' %}selected{% endif %}>Newport News</option>
-                        <option value="Virginia Beach" {% if request.args.get('city') == 'Virginia Beach' %}selected{% endif %}>Virginia Beach</option>
-                        <option value="Suffolk" {% if request.args.get('city') == 'Suffolk' %}selected{% endif %}>Suffolk</option>
-                        <option value="Williamsburg" {% if request.args.get('city') == 'Williamsburg' %}selected{% endif %}>Williamsburg</option>
-                        <option value="Norfolk" {% if request.args.get('city') == 'Norfolk' %}selected{% endif %}>Norfolk</option>
-                        <option value="Chesapeake" {% if request.args.get('city') == 'Chesapeake' %}selected{% endif %}>Chesapeake</option>
-                        <option value="Portsmouth" {% if request.args.get('city') == 'Portsmouth' %}selected{% endif %}>Portsmouth</option>
+                        <option value="">🌎 All US Cities (Nationwide)</option>
+                        <option value="Hampton" {% if request.args.get('city') == 'Hampton' %}selected{% endif %}>Hampton, VA</option>
+                        <option value="Newport News" {% if request.args.get('city') == 'Newport News' %}selected{% endif %}>Newport News, VA</option>
+                        <option value="Virginia Beach" {% if request.args.get('city') == 'Virginia Beach' %}selected{% endif %}>Virginia Beach, VA</option>
+                        <option value="Suffolk" {% if request.args.get('city') == 'Suffolk' %}selected{% endif %}>Suffolk, VA</option>
+                        <option value="Williamsburg" {% if request.args.get('city') == 'Williamsburg' %}selected{% endif %}>Williamsburg, VA</option>
+                        <option value="Norfolk" {% if request.args.get('city') == 'Norfolk' %}selected{% endif %}>Norfolk, VA</option>
+                        <option value="Chesapeake" {% if request.args.get('city') == 'Chesapeake' %}selected{% endif %}>Chesapeake, VA</option>
+                        <option value="Portsmouth" {% if request.args.get('city') == 'Portsmouth' %}selected{% endif %}>Portsmouth, VA</option>
                     </select>
+                    <small class="text-muted">Showing opportunities from all 50 states. Filter to narrow results.</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">
