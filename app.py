@@ -9085,29 +9085,38 @@ def customer_leads():
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
         
-        # Get commercial opportunities
+        # Get commercial opportunities - Skip for now (table may not exist)
         try:
-            commercial_leads = db.session.execute(text('''
-                SELECT 
-                    commercial_opportunities.id,
-                    commercial_opportunities.business_name as title,
-                    commercial_opportunities.business_type as agency,
-                    commercial_opportunities.location,
-                    commercial_opportunities.description,
-                    '$' || CAST(commercial_opportunities.monthly_value AS TEXT) || '/month' as contract_value,
-                    'Ongoing' as deadline,
-                    '' as naics_code,
-                    'Recent' as date_posted,
-                    commercial_opportunities.website_url,
-                    'commercial' as lead_type,
-                    commercial_opportunities.services_needed,
-                    'Active' as status,
-                    commercial_opportunities.special_requirements as requirements
-                FROM commercial_opportunities 
-                ORDER BY commercial_opportunities.id DESC
-            ''')).fetchall()
+            # Check if table exists first
+            table_check = db.session.execute(text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'commercial_opportunities')"
+            )).scalar()
+            
+            if table_check:
+                commercial_leads = db.session.execute(text('''
+                    SELECT 
+                        commercial_opportunities.id,
+                        commercial_opportunities.business_name as title,
+                        commercial_opportunities.business_type as agency,
+                        commercial_opportunities.location,
+                        commercial_opportunities.description,
+                        '$' || CAST(commercial_opportunities.monthly_value AS TEXT) || '/month' as contract_value,
+                        'Ongoing' as deadline,
+                        '' as naics_code,
+                        'Recent' as date_posted,
+                        commercial_opportunities.website_url,
+                        'commercial' as lead_type,
+                        commercial_opportunities.services_needed,
+                        'Active' as status,
+                        commercial_opportunities.special_requirements as requirements
+                    FROM commercial_opportunities 
+                    ORDER BY commercial_opportunities.id DESC
+                ''')).fetchall()
+            else:
+                commercial_leads = []
         except Exception as e:
             print(f"Error fetching commercial opportunities: {e}")
+            commercial_leads = []
         
         # Get commercial cleaning requests (businesses looking for cleaners)
         commercial_requests = []
@@ -9127,15 +9136,21 @@ def customer_leads():
         # Get residential cleaning requests (homeowners looking for cleaners)
         residential_requests = []
         try:
-            residential_requests = db.session.execute(text('''
-                SELECT 
-                    id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
-                    square_footage, contact_email, contact_phone, estimated_value, 
-                    cleaning_frequency, services_needed, special_requirements, status, created_at
-                FROM residential_leads 
-                WHERE status = 'new'
-                ORDER BY created_at DESC
-            ''')).fetchall()
+            # Check if table exists first
+            table_check = db.session.execute(text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'residential_leads')"
+            )).scalar()
+            
+            if table_check:
+                residential_requests = db.session.execute(text('''
+                    SELECT 
+                        id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
+                        square_footage, contact_email, contact_phone, estimated_value, 
+                        cleaning_frequency, services_needed, special_requirements, status, created_at
+                    FROM residential_leads 
+                    WHERE status = 'new'
+                    ORDER BY created_at DESC
+                ''')).fetchall()
         except Exception as e:
             print(f"Error fetching residential requests: {e}")
         
