@@ -164,7 +164,18 @@ if DATABASE_URL and 'postgresql://' in DATABASE_URL:
     if '+psycopg' not in DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///leads.db'
+"""
+Use an absolute path for the local SQLite database to avoid CWD-related
+"no such table" issues when the app is launched from different folders or
+by various task runners. If DATABASE_URL is provided (e.g., Postgres), use it;
+otherwise fall back to a stable absolute sqlite path.
+"""
+if DATABASE_URL:
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    sqlite_path = os.path.join(basedir, 'leads.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
@@ -5720,7 +5731,8 @@ def federal_contracts():
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
 
-        base_sql += ' ORDER BY COALESCE(posted_date, created_at) DESC, deadline ASC NULLS LAST LIMIT :limit OFFSET :offset'
+    # SQLite does not support "NULLS LAST" syntax; emulate by ordering on IS NULL
+    base_sql += ' ORDER BY COALESCE(posted_date, created_at) DESC, (deadline IS NULL), deadline LIMIT :limit OFFSET :offset'
         params.update({'limit': per_page, 'offset': offset})
         rows = db.session.execute(text(base_sql), params).fetchall()
 
