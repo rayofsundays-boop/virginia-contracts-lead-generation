@@ -5685,6 +5685,8 @@ def federal_contracts():
     from datetime import date
     
     department_filter = request.args.get('department', '')
+    state_filter = request.args.get('state', '')
+    city_filter = request.args.get('city', '')
     page = max(int(request.args.get('page', 1) or 1), 1)
     per_page = int(request.args.get('per_page', 12) or 12)
     per_page = min(max(per_page, 6), 48)
@@ -5731,12 +5733,11 @@ def federal_contracts():
         # Get today's date in ISO format (YYYY-MM-DD) for string comparison
         today = date.today().isoformat()
         
-        # Build base query - deadline comparison works on both DATE and TEXT columns
+        # Build base query - only select columns that exist in SQLite
         # Filter out awarded, cancelled, and inactive contracts
         base_sql = '''
             SELECT id, title, agency, department, location, value, deadline, description, 
-                   naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at,
-                   contact_name, contact_email, contact_phone, contact_title
+                   naics_code, sam_gov_url, notice_id, set_aside, posted_date, created_at
             FROM federal_contracts 
             WHERE deadline IS NOT NULL 
             AND deadline >= :today
@@ -5750,6 +5751,16 @@ def federal_contracts():
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
+        
+        # Add state filter if provided
+        if state_filter:
+            base_sql += ' AND LOWER(location) LIKE LOWER(:state)'
+            params['state'] = f"%{state_filter}%"
+        
+        # Add city filter if provided
+        if city_filter:
+            base_sql += ' AND LOWER(location) LIKE LOWER(:city)'
+            params['city'] = f"%{city_filter}%"
         
         # Count total matching contracts
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
@@ -5768,6 +5779,35 @@ def federal_contracts():
             ORDER BY department
         ''')).fetchall()
         departments = [r.department for r in departments_rows]
+        
+        # Get unique states from location field (extract state abbreviations)
+        states_rows = db.session.execute(text('''
+            SELECT DISTINCT location
+            FROM federal_contracts 
+            WHERE location IS NOT NULL AND location != ''
+        ''')).fetchall()
+        
+        # Extract unique states from location strings (e.g., "City, ST" or "ST")
+        states = set()
+        cities = set()
+        for row in states_rows:
+            loc = row.location
+            if loc:
+                # Try to extract state (usually last 2 chars or after comma)
+                if ',' in loc:
+                    parts = [p.strip() for p in loc.split(',')]
+                    if len(parts) >= 2:
+                        state = parts[-1].strip()
+                        city = parts[0].strip()
+                        if len(state) <= 3:  # State abbreviation
+                            states.add(state)
+                        if city:
+                            cities.add(city)
+                elif len(loc) == 2:  # Just state abbreviation
+                    states.add(loc)
+        
+        states = sorted(states)
+        cities = sorted(cities)
         
         # Build pagination
         pages = max(math.ceil(total / per_page), 1)
@@ -5791,6 +5831,10 @@ def federal_contracts():
                                contracts=rows,
                                departments=departments,
                                current_department=department_filter,
+                               states=states,
+                               current_state=state_filter,
+                               cities=cities,
+                               current_city=city_filter,
                                pagination=pagination,
                                is_admin=is_admin,
                                is_paid_subscriber=is_paid_subscriber,
