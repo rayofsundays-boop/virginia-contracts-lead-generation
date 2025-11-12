@@ -2668,10 +2668,14 @@ def init_postgres_db():
                 print(f"⚠️  Could not add leads.beta_expiry_date: {e}")
 
         try:
-            db.session.execute(text(
-                "UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"
-            ))
-            db.session.commit()
+            has_beta_flag = db.session.execute(text(
+                "SELECT 1 FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'is_beta_tester'"
+            )).fetchone()
+            if has_beta_flag:
+                db.session.execute(text(
+                    "UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"
+                ))
+                db.session.commit()
         except Exception as e:
             db.session.rollback()
             print(f"⚠️  Could not normalize leads.is_beta_tester: {e}")
