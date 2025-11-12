@@ -5725,8 +5725,15 @@ def federal_contracts():
         if department_filter:
             base_sql += ' AND LOWER(department) LIKE LOWER(:dept)'
             params['dept'] = f"%{department_filter}%"
-        # Only show open bids (deadline today or later) - simplified for SQLite compatibility
-        base_sql += " AND (deadline IS NOT NULL AND deadline != '' AND DATE(deadline) >= DATE('now'))"
+        
+        # Only show open bids (deadline today or later)
+        # Use CAST for PostgreSQL compatibility, filter empty strings before conversion
+        is_postgres = 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']
+        if is_postgres:
+            base_sql += " AND deadline IS NOT NULL AND deadline != '' AND CAST(deadline AS DATE) >= CURRENT_DATE"
+        else:
+            base_sql += " AND deadline IS NOT NULL AND deadline != '' AND DATE(deadline) >= DATE('now')"
+        
         # Count total
         count_sql = 'SELECT COUNT(*) FROM (' + base_sql + ') as sub'
         total = db.session.execute(text(count_sql), params).scalar() or 0
