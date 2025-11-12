@@ -2668,9 +2668,17 @@ def init_postgres_db():
                 print(f"⚠️  Could not add leads.beta_expiry_date: {e}")
 
         try:
-            has_beta_flag = db.session.execute(text(
-                "SELECT 1 FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'is_beta_tester'"
-            )).fetchone()
+            dialect = db.engine.dialect.name
+            has_beta_flag = False
+            if dialect == 'sqlite':
+                cols = db.session.execute(text("PRAGMA table_info('leads')")).fetchall()
+                has_beta_flag = any(col[1] == 'is_beta_tester' for col in cols)
+            else:
+                res = db.session.execute(text(
+                    "SELECT 1 FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'is_beta_tester'"
+                )).fetchone()
+                has_beta_flag = bool(res)
+
             if has_beta_flag:
                 db.session.execute(text(
                     "UPDATE leads SET is_beta_tester = FALSE WHERE is_beta_tester IS NULL"
