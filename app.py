@@ -9073,7 +9073,7 @@ def customer_leads():
                     supply_contracts.estimated_value as contract_value,
                     supply_contracts.bid_deadline as deadline,
                     '' as naics_code,
-                    supply_contracts.posted_date as created_at,
+                    supply_contracts.created_at,
                     supply_contracts.website_url,
                     'supply' as lead_type,
                     supply_contracts.product_category as services_needed,
@@ -9082,38 +9082,34 @@ def customer_leads():
                 FROM supply_contracts 
                 ORDER BY supply_contracts.created_at DESC
             '''), {'current_date': current_date}).fetchall()
+            print(f"✅ Found {len(supply_leads)} supply contracts")
         except Exception as e:
             print(f"Error fetching supply contracts: {e}")
+            supply_leads = []
         
         # Get commercial opportunities - Skip for now (table may not exist)
         try:
-            # Check if table exists first
-            table_check = db.session.execute(text(
-                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'commercial_opportunities')"
-            )).scalar()
-            
-            if table_check:
-                commercial_leads = db.session.execute(text('''
-                    SELECT 
-                        commercial_opportunities.id,
-                        commercial_opportunities.business_name as title,
-                        commercial_opportunities.business_type as agency,
-                        commercial_opportunities.location,
-                        commercial_opportunities.description,
-                        '$' || CAST(commercial_opportunities.monthly_value AS TEXT) || '/month' as contract_value,
-                        'Ongoing' as deadline,
-                        '' as naics_code,
-                        'Recent' as date_posted,
-                        commercial_opportunities.website_url,
-                        'commercial' as lead_type,
-                        commercial_opportunities.services_needed,
-                        'Active' as status,
-                        commercial_opportunities.special_requirements as requirements
-                    FROM commercial_opportunities 
-                    ORDER BY commercial_opportunities.id DESC
-                ''')).fetchall()
-            else:
-                commercial_leads = []
+            # Try to query directly - if table doesn't exist, catch the error
+            commercial_leads = db.session.execute(text('''
+                SELECT 
+                    commercial_opportunities.id,
+                    commercial_opportunities.business_name as title,
+                    commercial_opportunities.business_type as agency,
+                    commercial_opportunities.location,
+                    commercial_opportunities.description,
+                    '$' || CAST(commercial_opportunities.monthly_value AS TEXT) || '/month' as contract_value,
+                    'Ongoing' as deadline,
+                    '' as naics_code,
+                    'Recent' as date_posted,
+                    commercial_opportunities.website_url,
+                    'commercial' as lead_type,
+                    commercial_opportunities.services_needed,
+                    'Active' as status,
+                    commercial_opportunities.special_requirements as requirements
+                FROM commercial_opportunities 
+                ORDER BY commercial_opportunities.id DESC
+            ''')).fetchall()
+            print(f"✅ Found {len(commercial_leads)} commercial opportunities")
         except Exception as e:
             print(f"Error fetching commercial opportunities: {e}")
             commercial_leads = []
@@ -9136,23 +9132,20 @@ def customer_leads():
         # Get residential cleaning requests (homeowners looking for cleaners)
         residential_requests = []
         try:
-            # Check if table exists first
-            table_check = db.session.execute(text(
-                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'residential_leads')"
-            )).scalar()
-            
-            if table_check:
-                residential_requests = db.session.execute(text('''
-                    SELECT 
-                        id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
-                        square_footage, contact_email, contact_phone, estimated_value, 
-                        cleaning_frequency, services_needed, special_requirements, status, created_at
-                    FROM residential_leads 
-                    WHERE status = 'new'
-                    ORDER BY created_at DESC
-                ''')).fetchall()
+            # Try to query directly - if table doesn't exist, catch the error
+            residential_requests = db.session.execute(text('''
+                SELECT 
+                    id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms,
+                    square_footage, contact_email, contact_phone, estimated_value, 
+                    cleaning_frequency, services_needed, special_requirements, status, created_at
+                FROM residential_leads 
+                WHERE status = 'new'
+                ORDER BY created_at DESC
+            ''')).fetchall()
+            print(f"✅ Found {len(residential_requests)} residential requests")
         except Exception as e:
             print(f"Error fetching residential requests: {e}")
+            residential_requests = []
         
     # Combine and format leads
         all_leads = []
@@ -9283,14 +9276,23 @@ def customer_leads():
         total = len(all_leads)
         
         # Get Quick Wins counts for promotion banner
-        emergency_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
-        )).scalar() or 0
+        try:
+            emergency_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'emergency' AND status = 'open'"
+            )).scalar() or 0
+        except Exception as e:
+            print(f"Error getting emergency count: {e}")
+            emergency_count = 0
         
-        urgent_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
-        )).scalar() or 0
+        try:
+            urgent_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency = 'urgent' AND status = 'open'"
+            )).scalar() or 0
+        except Exception as e:
+            print(f"Error getting urgent count: {e}")
+            urgent_count = 0
 
+        print(f"✅ Customer leads page loaded successfully - Total: {total} leads")
         return render_template('customer_leads.html', 
                              all_leads=all_leads,  # Send ALL leads, not paginated
                              total_leads=total,
