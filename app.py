@@ -3832,11 +3832,12 @@ def beta_tester_count():
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    # Redirect GET requests to unified auth page
-    if request.method == 'GET':
-        return redirect(url_for('auth'))
-    
-    if request.method == 'POST':
+    try:
+        # Redirect GET requests to unified auth page
+        if request.method == 'GET':
+            return redirect(url_for('auth'))
+        
+        if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
@@ -3948,8 +3949,14 @@ def signin():
         else:
             flash('Invalid username or password. Please try again.', 'error')
             return redirect(url_for('auth'))
-    
-    return render_template('signin.html')
+        
+        return render_template('signin.html')
+    except Exception as e:
+        print(f"❌ Error in signin route: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('An error occurred during sign in. Please try again.', 'error')
+        return redirect(url_for('auth'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
