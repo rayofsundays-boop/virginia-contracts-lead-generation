@@ -4332,12 +4332,23 @@ def client_dashboard():
             government_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, value as contract_value, deadline, naics_code,
                        posted_date as created_at, sam_gov_url as website_url
-                FROM federal_contracts
+                FROM contracts
                 WHERE title IS NOT NULL
-                ORDER BY created_at DESC
+                ORDER BY posted_date DESC
                 LIMIT 100''')).fetchall()
         except Exception as e:
             print(f"Government leads error: {e}")
+            try:
+                # Fallback to federal_contracts if contracts table doesn't work
+                government_leads = db.session.execute(text('''
+                    SELECT id, title, agency, location, description, value as contract_value, deadline, naics_code,
+                           posted_date as created_at, sam_gov_url as website_url
+                    FROM federal_contracts
+                    WHERE title IS NOT NULL
+                    ORDER BY posted_date DESC
+                    LIMIT 100''')).fetchall()
+            except Exception as e2:
+                print(f"Fallback federal_contracts error: {e2}")
         try:
             supply_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, estimated_value as contract_value, bid_deadline as deadline,
