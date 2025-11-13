@@ -744,6 +744,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('commercial_contracts') }}"><i class="fas fa-building me-2"></i>Commercial Leads</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('my_messages') }}"><i class="fas fa-envelope me-2"></i>My Messages</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('send_message_to_admin') }}"><i class="fas fa-paper-plane me-2"></i>Contact Admin</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('feedback') }}"><i class="fas fa-comment-dots me-2"></i>Send Feedback</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('pricing_guide') }}"><i class="fas fa-tags me-2"></i>Pricing Guide</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('resource_toolbox') }}"><i class="fas fa-toolbox me-2"></i>Resource Toolbox</a></li>
@@ -857,6 +858,10 @@
                         <li class="text-light mb-2">
                             <i class="fas fa-phone me-2"></i>
                             <a href="tel:+17579457428" class="text-light text-decoration-none">(757) 945-7428</a>
+                        </li>
+                        <li class="text-light mb-2">
+                            <i class="fas fa-comment-dots me-2"></i>
+                            <a href="{{ url_for('feedback') }}" class="text-light text-decoration-none">Send Feedback</a>
                         </li>
                         <li class="text-light">
                             <i class="fas fa-map-marker-alt me-2"></i>Nationwide Service

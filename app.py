@@ -3651,6 +3651,158 @@ def contact():
         print(f"Error in /contact: {e}")
         return render_template('contact.html', error=str(e))
 
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    """Feedback form for authenticated users to send feedback to admin"""
+    try:
+        if request.method == 'POST':
+            # Rate limiting
+            last_ts = session.get('last_feedback_ts')
+            now_ts = time.time()
+            if last_ts and now_ts - last_ts < 60:
+                flash('Please wait a minute before sending another feedback message.', 'warning')
+                return redirect(url_for('feedback'))
+
+            # Get form data
+            category = request.form.get('category', 'General').strip()
+            subject = request.form.get('subject', '').strip()
+            message = request.form.get('message', '').strip()
+            rating = request.form.get('rating', '').strip()
+
+            if not message:
+                flash('Please provide your feedback message.', 'warning')
+                return redirect(url_for('feedback'))
+
+            # Get user info if logged in
+            user_id = session.get('user_id')
+            username = session.get('username', 'Anonymous')
+            user_email = session.get('email', session.get('user_email', 'no-reply@vacontracthub.com'))
+
+            # Prepare email to admin
+            admin_email = os.environ.get('ADMIN_EMAIL', os.environ.get('MAIL_USERNAME', 'admin@vacontracthub.com'))
+            
+            try:
+                msg = Message(
+                    subject=f"[Feedback - {category}] {subject or 'User Feedback'}",
+                    recipients=[admin_email],
+                )
+                
+                msg.body = f"""New Feedback Received
+                
+Category: {category}
+Rating: {rating if rating else 'Not provided'}
+Subject: {subject or 'No subject'}
+
+From: {username} (User ID: {user_id if user_id else 'Not logged in'})
+Email: {user_email}
+
+Message:
+{message}
+
+---
+Sent via ContractLink.ai Feedback Form
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+                mail.send(msg)
+                flash('Thank you for your feedback! Your message has been sent to our team.', 'success')
+            except Exception as e:
+                print(f"Feedback email send failed: {e}")
+                flash('Your feedback was recorded but email delivery failed. We will still review it.', 'info')
+
+            # Store feedback in database
+            try:
+                ensure_feedback_table()
+                save_feedback(user_id, username, user_email, category, subject, message, rating)
+            except Exception as e:
+                print(f"Failed to save feedback to database: {e}")
+
+            # Update rate limit timestamp
+            session['last_feedback_ts'] = now_ts
+            return redirect(url_for('feedback'))
+
+        return render_template('feedback.html')
+    except Exception as e:
+        print(f"Error in /feedback: {e}")
+        flash('An error occurred. Please try again.', 'error')
+        return redirect(url_for('home'))
+
+# ============================
+# Feedback persistence
+# ============================
+def ensure_feedback_table():
+    """Create feedback table if it doesn't exist"""
+    if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.session.execute(text('''
+            CREATE TABLE IF NOT EXISTS feedback (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                username TEXT,
+                email TEXT,
+                category TEXT,
+                subject TEXT,
+                message TEXT NOT NULL,
+                rating TEXT,
+                ip_address TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        '''))
+        db.session.commit()
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    username TEXT,
+                    email TEXT,
+                    category TEXT,
+                    subject TEXT,
+                    message TEXT NOT NULL,
+                    rating TEXT,
+                    ip_address TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+        finally:
+            if conn:
+                conn.close()
+
+def save_feedback(user_id, username, email, category, subject, message, rating):
+    """Save feedback to database"""
+    ip = request.remote_addr
+    if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.session.execute(text('''
+            INSERT INTO feedback (user_id, username, email, category, subject, message, rating, ip_address)
+            VALUES (:user_id, :username, :email, :category, :subject, :message, :rating, :ip_address)
+        '''), {
+            'user_id': user_id,
+            'username': username,
+            'email': email,
+            'category': category,
+            'subject': subject,
+            'message': message,
+            'rating': rating,
+            'ip_address': ip
+        })
+        db.session.commit()
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO feedback (user_id, username, email, category, subject, message, rating, ip_address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, username, email, category, subject, message, rating, ip))
+            conn.commit()
+        finally:
+            if conn:
+                conn.close()
+
 # ============================
 # Contact message persistence
 # ============================
