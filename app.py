@@ -224,6 +224,27 @@ with app.app_context():
 
         db.session.commit()
 
+        # Extra defensive schema verification (idempotent): ensure 2FA columns truly exist.
+        # In some edge cases (SQLite race, earlier crash before commit) the ALTER loop above may
+        # silently skip adding columns. We re-check with PRAGMA and add if still missing so that
+        # admin sign-in with FORCE_ADMIN_2FA enabled never crashes due to absent columns.
+        try:
+            if not is_postgres:  # SQLite path
+                existing_cols = {row[1] for row in db.session.execute(text('PRAGMA table_info(leads)')).fetchall()}
+                alter_performed = False
+                if 'twofa_enabled' not in existing_cols:
+                    db.session.execute(text(f'ALTER TABLE leads ADD COLUMN twofa_enabled {bool_type} DEFAULT 0'))
+                    alter_performed = True
+                if 'twofa_secret' not in existing_cols:
+                    db.session.execute(text('ALTER TABLE leads ADD COLUMN twofa_secret TEXT'))
+                    alter_performed = True
+                if alter_performed:
+                    db.session.commit()
+                    print('[BOOTSTRAP] Added missing 2FA columns (twofa_enabled, twofa_secret) to leads table.')
+        except Exception as schema_guard_err:
+            # Do not block startup; just log for visibility.
+            print(f'[BOOTSTRAP] 2FA column verification warning: {schema_guard_err}')
+
         # Optional dev-only seed (controlled by SEED_TEST_USER=1)
         if os.getenv('SEED_TEST_USER', '').lower() in ('1','true','yes','on'):
             existing = db.session.execute(text('SELECT id FROM leads WHERE username = :u OR email = :e'),
