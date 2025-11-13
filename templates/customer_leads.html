@@ -1250,23 +1250,7 @@ function loadMoreLeads() {
     showToast('All available leads are currently displayed', 'info');
 }
 
-function showToast(message, type) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-    toast.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
-    }, 5000);
-}
+// showToast now provided by static/js/ui.js
 
 // CSS for text truncation
 const style = document.createElement('style');
@@ -2751,23 +2735,7 @@ function loadMoreLeads() {
     showToast('All available leads are currently displayed', 'info');
 }
 
-function showToast(message, type) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-    toast.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
-    }, 5000);
-}
+// showToast now provided by static/js/ui.js
 
 // CSS for text truncation
 const style = document.createElement('style');

@@ -59,9 +59,10 @@ def is_openai_configured():
     """Return True if OpenAI features can be used."""
     return OPENAI_AVAILABLE
 
-ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
-ADMIN_ENABLED = True  # Toggle if you want to disable legacy admin login paths
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')  # Must be set explicitly
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')  # Must be set explicitly
+# Enable admin login only if both credentials supplied
+ADMIN_ENABLED = bool(ADMIN_USERNAME and ADMIN_PASSWORD)
 
 SUBSCRIPTION_PLANS = {
     'monthly': {
@@ -160,28 +161,31 @@ with app.app_context():
 
         db.session.commit()
 
-        # Seed a test user if none exists (username: testuser / password: test123)
-        existing = db.session.execute(text('SELECT id FROM leads WHERE username = :u OR email = :e'),
-                                      {'u': 'testuser', 'e': 'testuser@example.com'}).fetchone()
-        if not existing:
-            from werkzeug.security import generate_password_hash
-            pw_hash = generate_password_hash('test123')
-            db.session.execute(text('''INSERT INTO leads (
-                company_name, contact_name, email, username, password_hash, subscription_status, credits_balance)
-                VALUES (:company_name, :contact_name, :email, :username, :password_hash, :subscription_status, :credits_balance)'''),
-                {
-                    'company_name': 'Test Co',
-                    'contact_name': 'Test User',
-                    'email': 'testuser@example.com',
-                    'username': 'testuser',
-                    'password_hash': pw_hash,
-                    'subscription_status': 'free',
-                    'credits_balance': 0
-                })
-            db.session.commit()
-            print('✅ Seeded test user (testuser / test123) for authentication testing.')
+        # Optional dev-only seed (controlled by SEED_TEST_USER=1)
+        if os.getenv('SEED_TEST_USER', '').lower() in ('1','true','yes','on'):
+            existing = db.session.execute(text('SELECT id FROM leads WHERE username = :u OR email = :e'),
+                                          {'u': 'devsample', 'e': 'devsample@example.com'}).fetchone()
+            if not existing:
+                from werkzeug.security import generate_password_hash
+                pw_hash = generate_password_hash(os.getenv('SEED_TEST_PASSWORD','ChangeMe123!'))
+                db.session.execute(text('''INSERT INTO leads (
+                    company_name, contact_name, email, username, password_hash, subscription_status, credits_balance)
+                    VALUES (:company_name, :contact_name, :email, :username, :password_hash, :subscription_status, :credits_balance)'''),
+                    {
+                        'company_name': 'Dev Sample Co',
+                        'contact_name': 'Dev Sample',
+                        'email': 'devsample@example.com',
+                        'username': 'devsample',
+                        'password_hash': pw_hash,
+                        'subscription_status': 'free',
+                        'credits_balance': 0
+                    })
+                db.session.commit()
+                print('✅ Seeded dev sample user (username: devsample) — password from SEED_TEST_PASSWORD env.')
+            else:
+                print('ℹ️  Dev sample user already present.')
         else:
-            print('ℹ️  Test user already present.')
+            print('ℹ️  Test user seeding disabled (set SEED_TEST_USER=1 to enable in development).')
     except Exception as e:
         db.session.rollback()
         print(f'⚠️  Failed to ensure leads table or seed test user: {e}')

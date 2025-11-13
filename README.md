@@ -199,6 +199,42 @@ Contracts can be added directly to the database or by modifying the sample data 
 The SQLite database (`leads.db`) is created automatically on first run. For production use, consider upgrading to PostgreSQL or MySQL.
 
 ### Testing International Ingestion (Optional)
+### Authentication Debugging & Secure Credentials
+
+The application purposely avoids shipping hard‑coded admin or demo user credentials.
+
+Environment variables control authentication behavior:
+
+| Variable | Purpose | Default | Notes |
+|----------|---------|---------|-------|
+| `ADMIN_USERNAME` | Admin login username | (unset) | Admin login disabled unless BOTH username & password are set |
+| `ADMIN_PASSWORD` | Admin login password | (unset) | Choose a strong secret; rotate regularly |
+| `AUTH_DEBUG` | Verbose signin logging | `0` | Set to `1` (or `true`) temporarily during debugging; prints form keys & validation path |
+| `SEED_TEST_USER` | Seed a development sample user | `0` | If `1`, creates user `devsample` with password from `SEED_TEST_PASSWORD` |
+| `SEED_TEST_PASSWORD` | Password for seeded dev user | `ChangeMe123!` | Only read when `SEED_TEST_USER=1`; change before enabling |
+
+Example (temporary) development export:
+```bash
+export ADMIN_USERNAME="admin@example.com"
+export ADMIN_PASSWORD="$(openssl rand -base64 24)"
+export AUTH_DEBUG=1
+export SEED_TEST_USER=1
+export SEED_TEST_PASSWORD="DevOnly!Pass123"
+```
+Disable debug & test seeding before production:
+```bash
+unset AUTH_DEBUG
+unset SEED_TEST_USER SEED_TEST_PASSWORD
+```
+
+Security recommendations:
+- Never commit real credentials to the repository.
+- Keep `AUTH_DEBUG` off in production to avoid leaking request patterns.
+- Use a password manager or secret manager (e.g. AWS Secrets Manager) for `ADMIN_*` values.
+- Enforce TLS (reverse proxy / load balancer) for deployment.
+
+If admin credentials are not provided, admin login paths automatically redirect to the standard auth flow.
+
 Use the included script for a quick smoke test:
 ```bash
 export TEST_LIMIT=10
