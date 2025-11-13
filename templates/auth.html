@@ -177,34 +177,53 @@
                                 
                                 <!-- Beta Tester Program -->
                                 <div class="mb-3" id="beta-tester-section">
-                                    <div class="card border-warning bg-light">
+                                    <div class="card border-3 border-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);">
                                         <div class="card-body">
                                             <div class="d-flex align-items-start">
-                                                <div class="form-check me-3">
-                                                    <input class="form-check-input" type="checkbox" id="beta_tester" name="beta_tester">
+                                                <div class="form-check me-3 mt-1">
+                                                    <input class="form-check-input" type="checkbox" id="beta_tester" name="beta_tester" style="width: 24px; height: 24px; cursor: pointer;">
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <label class="form-check-label fw-bold text-warning" for="beta_tester">
-                                                        <i class="fas fa-star me-1"></i>Join Beta Tester Program (Limited to 100 Members)
+                                                    <label class="form-check-label fw-bold fs-5 mb-2" for="beta_tester" style="color: #856404; cursor: pointer;">
+                                                        <i class="fas fa-star me-2" style="color: #ffc107;"></i>Join Beta Tester Program
+                                                        <span class="badge bg-danger ms-2 pulse-badge">LIMITED: 100 Spots</span>
                                                     </label>
-                                                    <p class="mb-2 small text-dark">
-                                                        <strong>Get 1 Year FREE Premium Access!</strong> Beta testers receive:
-                                                    </p>
-                                                    <ul class="small mb-2 text-dark">
-                                                        <li>Full platform access for 12 months</li>
-                                                        <li>Unlimited contract leads and downloads</li>
-                                                        <li>Priority customer support</li>
-                                                        <li>Ability to provide feedback and shape features</li>
+                                                    <div class="alert alert-success mb-2 py-2" style="background-color: #d4edda; border-color: #c3e6cb;">
+                                                        <strong style="color: #155724;"><i class="fas fa-gift me-1"></i>Get 1 Year FREE Premium Access!</strong>
+                                                    </div>
+                                                    <p class="mb-2 fw-semibold" style="color: #212529;">Beta testers receive:</p>
+                                                    <ul class="mb-2" style="color: #212529;">
+                                                        <li><strong>Full platform access</strong> for 12 months ($1,188 value)</li>
+                                                        <li><strong>Unlimited</strong> contract leads and downloads</li>
+                                                        <li><strong>Priority</strong> customer support</li>
+                                                        <li><strong>Exclusive</strong> ability to shape new features</li>
                                                     </ul>
-                                                    <p class="mb-0 small" id="beta-spots-remaining">
-                                                        <span class="badge bg-success" id="beta-badge">
-                                                            <i class="fas fa-users me-1"></i><span id="spots-count">Loading...</span> spots remaining
-                                                        </span>
-                                                    </p>
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <p class="mb-0" id="beta-spots-remaining">
+                                                            <span class="badge bg-success fs-6 px-3 py-2" id="beta-badge">
+                                                                <i class="fas fa-users me-1"></i><span id="spots-count">Loading...</span> spots remaining
+                                                            </span>
+                                                        </p>
+                                                        <p class="mb-0 small text-muted fst-italic">
+                                                            <i class="fas fa-check-circle me-1"></i>Check box to join
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <style>
+                                        .pulse-badge {
+                                            animation: pulse 2s infinite;
+                                        }
+                                        @keyframes pulse {
+                                            0%, 100% { transform: scale(1); }
+                                            50% { transform: scale(1.05); }
+                                        }
+                                        #beta_tester:checked + label {
+                                            color: #155724 !important;
+                                        }
+                                    </style>
                                 </div>
                                 
                                 <div class="mb-3">
