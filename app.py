@@ -19941,20 +19941,20 @@ def mailbox():
     is_admin = session.get('is_admin', False)
     
     # Get unread count
-    # SQLite portability: use = 1 instead of = TRUE
+    # SQLite portability: use = 0 for FALSE (unread messages)
     unread_count = db.session.execute(text(
-        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = 1"
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL)"
     ), {'user_id': user_id}).scalar() or 0
     
     # Get messages based on folder
     if folder == 'inbox':
         query = (
             "SELECT m.*, "
-            "sender.email as sender_email, "
-            "recipient.email as recipient_email "
+            "COALESCE(sender.email, 'System') as sender_email, "
+            "COALESCE(recipient.email, 'Admin') as recipient_email "
             "FROM messages m "
-            "JOIN leads sender ON m.sender_id = sender.id "
-            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "LEFT JOIN leads sender ON m.sender_id = sender.id "
+            "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
             "WHERE m.recipient_id = :user_id "
             "ORDER BY m.created_at DESC "
             "LIMIT :limit OFFSET :offset"
@@ -19965,11 +19965,11 @@ def mailbox():
     elif folder == 'sent':
         query = (
             "SELECT m.*, "
-            "sender.email as sender_email, "
-            "recipient.email as recipient_email "
+            "COALESCE(sender.email, 'System') as sender_email, "
+            "COALESCE(recipient.email, 'Admin') as recipient_email "
             "FROM messages m "
-            "JOIN leads sender ON m.sender_id = sender.id "
-            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "LEFT JOIN leads sender ON m.sender_id = sender.id "
+            "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
             "WHERE m.sender_id = :user_id "
             "ORDER BY m.created_at DESC "
             "LIMIT :limit OFFSET :offset"
@@ -19980,11 +19980,11 @@ def mailbox():
     elif folder == 'admin' and is_admin:
         query = (
             "SELECT m.*, "
-            "sender.email as sender_email, "
-            "recipient.email as recipient_email "
+            "COALESCE(sender.email, 'System') as sender_email, "
+            "COALESCE(recipient.email, 'Admin') as recipient_email "
             "FROM messages m "
-            "JOIN leads sender ON m.sender_id = sender.id "
-            "JOIN leads recipient ON m.recipient_id = recipient.id "
+            "LEFT JOIN leads sender ON m.sender_id = sender.id "
+            "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
             "WHERE m.is_admin_message = 1 "
             "ORDER BY m.created_at DESC "
             "LIMIT :limit OFFSET :offset"
@@ -20024,11 +20024,11 @@ def view_message(message_id):
     # Get message
     message = db.session.execute(text(
         "SELECT m.*, "
-        "sender.email as sender_email, "
-        "recipient.email as recipient_email "
+        "COALESCE(sender.email, 'System') as sender_email, "
+        "COALESCE(recipient.email, 'Admin') as recipient_email "
         "FROM messages m "
-        "JOIN leads sender ON m.sender_id = sender.id "
-        "JOIN leads recipient ON m.recipient_id = recipient.id "
+        "LEFT JOIN leads sender ON m.sender_id = sender.id "
+        "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
         "WHERE m.id = :message_id "
         "AND (m.sender_id = :user_id OR m.recipient_id = :user_id)"
     ), {'message_id': message_id, 'user_id': user_id}).fetchone()
