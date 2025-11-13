@@ -3692,12 +3692,17 @@ Email: {user_email}
 Sent via Feedback Form
 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-                # Insert into messages table for admin mailbox (recipient_id = 1 is admin)
+                # Get admin user ID (first admin or fallback to ID 1)
+                admin_result = db.session.execute(text("SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1")).fetchone()
+                admin_id = admin_result[0] if admin_result else 1
+                
+                # Insert into messages table for admin mailbox
                 db.session.execute(text('''
                     INSERT INTO messages (sender_id, recipient_id, subject, body, is_read, is_admin_message, created_at)
-                    VALUES (:sender, 1, :subject, :body, FALSE, TRUE, CURRENT_TIMESTAMP)
+                    VALUES (:sender, :admin_id, :subject, :body, FALSE, TRUE, CURRENT_TIMESTAMP)
                 '''), {
                     'sender': user_id if user_id else None,
+                    'admin_id': admin_id,
                     'subject': f"[Feedback - {category}] {subject or 'User Feedback'}",
                     'body': message_body
                 })
