@@ -87,6 +87,10 @@ SUBSCRIPTION_PLANS = {
     }
 }
 
+# Session configuration
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # Default 24 hours
+app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=48)  # Admin sessions last 48 hours
+
 db = SQLAlchemy(app)
 
 # =============================
@@ -21965,12 +21969,13 @@ try:
     # Use PostgreSQL init if DATABASE_URL is set, otherwise use SQLite
     if DATABASE_URL and 'postgresql' in DATABASE_URL:
         print("📡 Detected PostgreSQL - using init_postgres_db()")
-        result = init_postgres_db()
-        if result is True:
-            print("✅ PostgreSQL database initialized")
-        else:
-            print(f"⚠️  PostgreSQL init returned: {result}")
-            print("⚠️  Continuing anyway - app will use existing database state")
+        with app.app_context():
+            result = init_postgres_db()
+            if result is True:
+                print("✅ PostgreSQL database initialized")
+            else:
+                print(f"⚠️  PostgreSQL init returned: {result}")
+                print("⚠️  Continuing anyway - app will use existing database state")
     else:
         print("💾 Using SQLite - using init_db()")
         init_db()
