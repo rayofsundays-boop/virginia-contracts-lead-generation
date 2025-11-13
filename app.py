@@ -40,6 +40,61 @@ except Exception:
     openai = None  # type: ignore
     _OPENAI_SDK_AVAILABLE = False
 
+from hashlib import sha256
+from cryptography.fernet import Fernet, InvalidToken
+
+# In-memory tracking for 2FA attempts (user_id -> timestamps)
+TWOFA_ATTEMPTS = {}
+FORCE_ADMIN_2FA = os.getenv('FORCE_ADMIN_2FA', '').lower() in ('1','true','yes','on')
+
+def _get_fernet():
+    key = os.getenv('TWOFA_ENCRYPTION_KEY','').strip()
+    if not key:
+        return None
+    try:
+        return Fernet(key)
+    except Exception:
+        print('⚠️ Invalid TWOFA_ENCRYPTION_KEY; must be 32 url-safe base64 bytes. Using plaintext for 2FA secrets.')
+        return None
+
+def encrypt_twofa_secret(secret: str) -> str:
+    f = _get_fernet()
+    if not f:
+        return secret
+    return f.encrypt(secret.encode()).decode()
+
+def decrypt_twofa_secret(data: str) -> str:
+    if not data:
+        return ''
+    f = _get_fernet()
+    if not f:
+        return data
+    try:
+        return f.decrypt(data.encode()).decode()
+    except InvalidToken:
+        # Likely stored plaintext before encryption was enabled
+        return data
+    except Exception as e:
+        print(f"2FA decrypt error: {e}")
+        return ''
+
+def record_twofa_attempt(user_id: int):
+    from time import time as _now
+    now = _now()
+    bucket = TWOFA_ATTEMPTS.setdefault(user_id, [])
+    cutoff = now - 600  # 10 minutes
+    bucket[:] = [t for t in bucket if t >= cutoff]
+    bucket.append(now)
+    return bucket
+
+def too_many_twofa_attempts(user_id: int, limit=5):
+    from time import time as _now
+    now = _now()
+    bucket = TWOFA_ATTEMPTS.get(user_id, [])
+    cutoff = now - 600
+    bucket[:] = [t for t in bucket if t >= cutoff]
+    return len(bucket) >= limit
+
 # Flask application setup (reconstructed after accidental removal)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
@@ -766,6 +821,25 @@ def supply_refresh_due(hours:int = 24) -> bool:
 
 # Add to Jinja environment
 app.jinja_env.globals.update(generate_temp_password=generate_temp_password)
+@app.template_filter('format_msg_ts')
+def format_msg_ts(value):
+    """Format message timestamp safely whether it's a datetime or string."""
+    if not value:
+        return ''
+    try:
+        if isinstance(value, str):
+            from datetime import datetime
+            # Attempt common formats
+            for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S'):
+                try:
+                    dt = datetime.strptime(value.split('+')[0], fmt)
+                    return dt.strftime('%b %d, %Y %I:%M %p')
+                except Exception:
+                    pass
+            return value[:19]
+        return value.strftime('%b %d, %Y %I:%M %p')
+    except Exception:
+        return str(value)
 
 # Custom Jinja filters
 @app.template_filter('comma')
@@ -4206,6 +4280,10 @@ def signin():
                 session['name'] = result[4]
                 session['credits_balance'] = result[5]
                 session['is_admin'] = bool(result[6])  # Set admin status from database
+                session['twofa_enabled'] = twofa_enabled
+                if session['is_admin'] and FORCE_ADMIN_2FA and not twofa_enabled:
+                    flash('Administrator accounts must enable 2FA before accessing the platform.', 'warning')
+                    return redirect(url_for('enable_2fa'))
                 session['is_beta_tester'] = is_beta_tester and not beta_expired
                 session['beta_expiry_date'] = beta_expiry_date
                 
@@ -4315,6 +4393,10 @@ def login():
         session['name'] = result[4]
         session['credits_balance'] = result[5]
         session['is_admin'] = bool(result[6])
+        session['twofa_enabled'] = twofa_enabled
+        if session['is_admin'] and FORCE_ADMIN_2FA and not twofa_enabled:
+            flash('Administrator accounts must enable 2FA before accessing the platform.', 'warning')
+            return redirect(url_for('enable_2fa'))
         
         # Admin users get paid subscription status and unlimited credits
         if session['is_admin']:
@@ -4389,9 +4471,11 @@ def enable_2fa():
             flash('Invalid code. Make sure time is correct on your device and try again.', 'error')
             return redirect(url_for('enable_2fa'))
         # Persist secret
-        db.session.execute(text('UPDATE leads SET twofa_secret = :s, twofa_enabled = 1 WHERE id = :i'), {'s': secret, 'i': session['user_id']})
+        encrypted = encrypt_twofa_secret(secret)
+        db.session.execute(text('UPDATE leads SET twofa_secret = :s, twofa_enabled = 1 WHERE id = :i'), {'s': encrypted, 'i': session['user_id']})
         db.session.commit()
         session.pop('provisioning_2fa_secret', None)
+        session['twofa_enabled'] = True
         flash('Two-Factor Authentication enabled successfully! 🔐', 'success')
         return redirect(url_for('customer_dashboard'))
 
@@ -4403,6 +4487,7 @@ def disable_2fa():
     """Disable 2FA for current user (requires being logged in)."""
     db.session.execute(text('UPDATE leads SET twofa_enabled = 0, twofa_secret = NULL WHERE id = :i'), {'i': session['user_id']})
     db.session.commit()
+    session['twofa_enabled'] = False
     flash('Two-Factor Authentication disabled.', 'info')
     return redirect(url_for('customer_dashboard'))
 
@@ -4430,7 +4515,7 @@ def verify_2fa():
                 if k.startswith('pending_2fa_'):
                     session.pop(k, None)
             return redirect(url_for('auth'))
-        secret = row[0]
+        secret = decrypt_twofa_secret(row[0])
         ok = False
         try:
             ok = pyotp.TOTP(secret).verify(code, valid_window=1)
@@ -4438,8 +4523,26 @@ def verify_2fa():
             print(f"2FA verification error: {e}")
             ok = False
         if not ok:
-            flash('Invalid authentication code.', 'error')
-            return redirect(url_for('verify_2fa'))
+            # Check recovery codes if provided code not valid TOTP
+            candidate = code
+            if len(candidate) >= 8:
+                h = sha256(candidate.encode()).hexdigest()
+                rc = db.session.execute(text('SELECT id FROM twofa_recovery_codes WHERE user_id = :u AND code_hash = :h AND used = 0'), {'u': session['pending_2fa_user_id'], 'h': h}).fetchone()
+                if rc:
+                    db.session.execute(text('UPDATE twofa_recovery_codes SET used = 1, used_at = CURRENT_TIMESTAMP WHERE id = :i'), {'i': rc[0]})
+                    db.session.commit()
+                    ok = True
+                    flash('Recovery code accepted. Generate a new set after login.', 'warning')
+            if not ok:
+                # Rate limit tracking
+                uid = session.get('pending_2fa_user_id')
+                if uid:
+                    record_twofa_attempt(uid)
+                    if too_many_twofa_attempts(uid):
+                        flash('Too many invalid codes. Try again in a few minutes.', 'error')
+                        return redirect(url_for('auth'))
+                flash('Invalid authentication code.', 'error')
+                return redirect(url_for('verify_2fa'))
 
         # Finalize login
         user_id = session.pop('pending_2fa_user_id')
@@ -4467,6 +4570,7 @@ def verify_2fa():
         # Credits (fetch fresh to avoid stale value)
         credits_row = db.session.execute(text('SELECT credits_balance FROM leads WHERE id = :i'), {'i': user_id}).fetchone()
         session['credits_balance'] = credits_row[0] if credits_row else 0
+        session['twofa_enabled'] = True
         if session['is_admin']:
             session['credits_balance'] = 999999
 
@@ -4474,6 +4578,64 @@ def verify_2fa():
         return redirect(url_for('customer_leads'))
 
     return render_template('verify_2fa.html')
+
+# -----------------------------
+# 2FA Recovery Codes Management
+# -----------------------------
+with app.app_context():
+    try:
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS twofa_recovery_codes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            code_hash TEXT NOT NULL,
+            used BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            used_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES leads(id) ON DELETE CASCADE
+        )'''))
+        db.session.commit()
+    except Exception as e:
+        print(f"Recovery codes table creation error: {e}")
+
+def generate_recovery_codes(n=10):
+    import secrets, string
+    alphabet = string.ascii_uppercase + string.digits
+    return [''.join(secrets.choice(alphabet) for _ in range(10)) for _ in range(n)]
+
+@app.route('/2fa-recovery-codes', methods=['GET'])
+@login_required
+def view_recovery_codes():
+    # Only visible if 2FA enabled
+    row = db.session.execute(text('SELECT COALESCE(twofa_enabled,0) FROM leads WHERE id = :i'), {'i': session['user_id']}).fetchone()
+    if not row or not bool(row[0]):
+        flash('Enable 2FA first before managing recovery codes.', 'warning')
+        return redirect(url_for('enable_2fa'))
+    # We never show existing codes (they are hashed). We show a regenerate option.
+    new_codes = session.pop('recent_recovery_codes', None)
+    return render_template('recovery_codes.html', new_codes=new_codes)
+
+@app.route('/generate-2fa-recovery-codes', methods=['POST'])
+@login_required
+def generate_new_recovery_codes():
+    row = db.session.execute(text('SELECT COALESCE(twofa_enabled,0) FROM leads WHERE id = :i'), {'i': session['user_id']}).fetchone()
+    if not row or not bool(row[0]):
+        flash('Enable 2FA first before generating recovery codes.', 'warning')
+        return redirect(url_for('enable_2fa'))
+    # Invalidate old (leave them in DB as used for audit by marking used)
+    try:
+        db.session.execute(text('UPDATE twofa_recovery_codes SET used = 1, used_at = CURRENT_TIMESTAMP WHERE user_id = :u AND used = 0'), {'u': session['user_id']})
+        codes = generate_recovery_codes()
+        for c in codes:
+            h = sha256(c.encode()).hexdigest()
+            db.session.execute(text('INSERT INTO twofa_recovery_codes (user_id, code_hash, used) VALUES (:u, :h, 0)'), {'u': session['user_id'], 'h': h})
+        db.session.commit()
+        session['recent_recovery_codes'] = codes
+        flash('New recovery codes generated. Store them securely—each can be used once.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Recovery code generation error: {e}")
+        flash('Failed to generate recovery codes. Try again.', 'error')
+    return redirect(url_for('view_recovery_codes'))
 
 @app.route('/user-profile')
 @login_required

@@ -86,7 +86,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ msg.subject|truncate(50) }}</td>
-                                    <td class="text-muted small">{{ msg.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                    <td class="text-muted small">{{ msg.created_at|format_msg_ts }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

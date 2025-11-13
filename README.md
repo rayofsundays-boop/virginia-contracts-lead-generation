@@ -292,6 +292,29 @@ The platform now supports optional Time-based One-Time Password (TOTP) 2FA for u
 ### Disabling 2FA
 POST to `/disable-2fa` while logged in (a button is shown on the enable page if already active). This clears the stored secret. Disabling reduces account security—recommend only for troubleshooting.
 
+### Recovery Codes
+If you lose access to your authenticator device you can use a one-time recovery code:
+1. After enabling 2FA visit `/2fa-recovery-codes`.
+2. Click Generate New Codes (this invalidates any previous unused codes).
+3. Store the displayed codes securely (password manager or offline file). They are shown only once.
+4. On the 2FA verification screen you may enter a recovery code instead of the 6-digit TOTP.
+
+Recovery codes are hashed at rest; used codes are marked and cannot be reused.
+
+### Forced Admin 2FA
+Set `FORCE_ADMIN_2FA=1` to require any admin user to enable 2FA before accessing the platform beyond the enable screen.
+
+### Secret Encryption
+Provide `TWOFA_ENCRYPTION_KEY` (a 32-byte url-safe base64 Fernet key) to encrypt the stored TOTP secret. Example:
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+export TWOFA_ENCRYPTION_KEY="<output>"
+```
+If absent or invalid, secrets are stored plaintext (a warning is printed). Existing plaintext secrets continue to work after adding a key; they will be re-encrypted upon regeneration.
+
+### Rate Limiting
+`/verify-2fa` enforces a simple in-memory limit: 5 failed attempts per user within 10 minutes → temporary block (requires re-login). Adjust logic in `record_twofa_attempt` / `too_many_twofa_attempts` if deploying multi-instance (for production, use a shared store like Redis).
+
 ### Environment / Dependencies
 - Library: `pyotp` (added to `requirements.txt`).
 - No external API dependency; all codes generated/validated locally.
@@ -304,10 +327,11 @@ Columns added to `leads` table (auto-migrated on app start):
 | `twofa_secret` | TEXT | Base32 TOTP secret (stored in plain form; consider encrypting at rest in future) |
 
 ### Security Notes & Roadmap
-- Current implementation: no recovery codes (future enhancement).
-- Secret stored unencrypted; for higher assurance deploy at-rest encryption (e.g. Fernet + key in KMS / env).
-- Rate limiting for `/verify-2fa` not yet enforced (add via reverse proxy or Flask limiter extension).
-- Optional future: `FORCE_ADMIN_2FA=1` to mandate admins enable 2FA before accessing sensitive routes.
+- Recovery codes implemented (hashed, one-time use).
+- Secret encryption supported via Fernet key environment variable.
+- Basic in-memory rate limiting implemented (augment with distributed store in clustered deployments).
+- Admin 2FA enforcement available via `FORCE_ADMIN_2FA`.
+- Future: UI for viewing last 2FA usage, email notification on new 2FA enabling, WebAuthn/FIDO2 support, distributed rate limit backend.
 
 ### Testing
 Automated tests in `tests/test_2fa.py` cover enablement, login challenge, valid & invalid code flows.

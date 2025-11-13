@@ -1,6 +1,6 @@
 import os
 import unittest
-from app import app, db, text, pyotp
+from app import app, db, text, pyotp, decrypt_twofa_secret
 from werkzeug.security import generate_password_hash
 
 class TwoFATestCase(unittest.TestCase):
@@ -50,8 +50,9 @@ class TwoFATestCase(unittest.TestCase):
         with self.app.app_context():
             row = db.session.execute(text('SELECT twofa_secret FROM leads WHERE username = :u'), {'u': 'twofatest'}).fetchone()
             self.assertTrue(row and row[0])
-            secret_db = row[0]
-        code = pyotp.TOTP(secret_db).now()
+            secret_db_enc = row[0]
+            secret_plain = decrypt_twofa_secret(secret_db_enc)
+        code = pyotp.TOTP(secret_plain).now()
         # Submit correct code
         rv = self.client.post('/verify-2fa', data={'code': code}, follow_redirects=False)
         self.assertIn(rv.status_code, (302, 303))
@@ -62,6 +63,28 @@ class TwoFATestCase(unittest.TestCase):
         bad_code = '000000'
         rv_bad = self.client.post('/verify-2fa', data={'code': bad_code}, follow_redirects=True)
         self.assertIn(b'Invalid authentication code', rv_bad.data)
+
+    def test_recovery_codes_flow(self):
+        # Login & enable 2FA
+        self.login('twofatest', 'TestPass123!')
+        rv = self.client.get('/enable-2fa')
+        with self.client.session_transaction() as sess:
+            secret = sess.get('provisioning_2fa_secret')
+        token = pyotp.TOTP(secret).now()
+        self.client.post('/enable-2fa', data={'code': token})
+        # Generate recovery codes
+        gen = self.client.post('/generate-2fa-recovery-codes', follow_redirects=True)
+        self.assertEqual(gen.status_code, 200)
+        with self.client.session_transaction() as sess:
+            codes = sess.get('recent_recovery_codes')
+        self.assertTrue(codes and len(codes) == 10)
+        rc = codes[0]
+        # Logout then login and use recovery code
+        self.client.get('/logout')
+        rv = self.login('twofatest', 'TestPass123!')
+        self.assertIn('/verify-2fa', rv.headers.get('Location',''))
+        use_rc = self.client.post('/verify-2fa', data={'code': rc}, follow_redirects=False)
+        self.assertIn(use_rc.status_code, (302,303))
 
 if __name__ == '__main__':
     unittest.main()

@@ -772,6 +772,14 @@
                                 <li><a class="dropdown-item" href="{{ url_for('proposal_support') }}"><i class="fas fa-headset me-2"></i>Expert Consultation</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('pricing_calculator') }}"><i class="fas fa-calculator me-2"></i>Pricing Calculator</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('partnerships') }}"><i class="fas fa-handshake me-2"></i>Partnerships</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header">Security</li>
+                                {% if session.get('twofa_enabled') %}
+                                <li><a class="dropdown-item" href="{{ url_for('enable_2fa') }}"><i class="fas fa-lock text-success me-2"></i>2FA Enabled</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('view_recovery_codes') }}"><i class="fas fa-key me-2"></i>Recovery Codes</a></li>
+                                {% else %}
+                                <li><a class="dropdown-item" href="{{ url_for('enable_2fa') }}"><i class="fas fa-shield-alt me-2 text-warning"></i>Enable 2FA</a></li>
+                                {% endif %}
                                 {% if session.get('is_admin') %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li class="dropdown-header text-danger">Admin Controls</li>
