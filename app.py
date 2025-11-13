@@ -4435,6 +4435,55 @@ def client_dashboard():
         except Exception:
             saved_leads_count = 0
 
+        # Gamification data
+        try:
+            # Calculate streak (simplified - could track actual login dates)
+            from datetime import datetime, timedelta
+            today = datetime.now().date()
+            user_id = session.get('user_id')
+            
+            # Get activity stats for today
+            leads_viewed_today = db.session.execute(text("""
+                SELECT COUNT(*) FROM user_activity 
+                WHERE user_email = :email AND activity_type = 'viewed_lead' 
+                AND DATE(timestamp) = :today
+            """), {'email': user_email, 'today': today}).scalar() or 0
+            
+            leads_saved_today = db.session.execute(text("""
+                SELECT COUNT(*) FROM saved_leads 
+                WHERE user_email = :email AND DATE(created_at) = :today
+            """), {'email': user_email, 'today': today}).scalar() or 0
+            
+            # Calculate activity score (simplified)
+            activity_score = (leads_viewed_today * 5) + (leads_saved_today * 10) + (saved_leads_count * 10)
+            
+            # Calculate level based on activity score
+            user_level = 1 + (activity_score // 100)  # Level up every 100 points
+            points_to_next_level = 100 - (activity_score % 100)
+            progress_to_next_level = ((activity_score % 100) / 100) * 100
+            
+            # Calculate streak days (simplified - actual implementation would track daily logins)
+            streak_days = 1
+            
+            # Today's actions
+            actions_today = leads_viewed_today + leads_saved_today
+            inquiries_today = 0  # Could track from contact form submissions
+            
+            points_today = actions_today * 5
+            
+        except Exception as e:
+            print(f"Gamification data error: {e}")
+            streak_days = 1
+            user_level = 1
+            activity_score = 0
+            points_today = 0
+            progress_to_next_level = 0
+            points_to_next_level = 100
+            leads_viewed_today = 0
+            leads_saved_today = 0
+            actions_today = 0
+            inquiries_today = 0
+
         return render_template('client_dashboard.html',
                                stats=stats,
                                notifications=notifications,
@@ -4446,7 +4495,17 @@ def client_dashboard():
                                emergency_count=emergency_count,
                                urgent_count=urgent_count,
                                saved_searches_count=saved_searches_count,
-                               saved_leads_count=saved_leads_count)
+                               saved_leads_count=saved_leads_count,
+                               streak_days=streak_days,
+                               user_level=user_level,
+                               activity_score=activity_score,
+                               points_today=points_today,
+                               progress_to_next_level=progress_to_next_level,
+                               points_to_next_level=points_to_next_level,
+                               leads_viewed_today=leads_viewed_today,
+                               leads_saved_today=leads_saved_today,
+                               actions_today=actions_today,
+                               inquiries_today=inquiries_today)
     except Exception as e:
         print(f"Unified client dashboard error: {e}")
         import traceback; traceback.print_exc()

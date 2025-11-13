@@ -68,6 +68,122 @@
     </div>
   </div>
 
+  <!-- Gamified Progress Dashboard -->
+  <div class="row mb-4 g-4">
+    <!-- Daily Streak Card -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0"><i class="fas fa-fire me-1"></i> Daily Streak</h6>
+            <span class="badge bg-white text-dark pulse-badge">🔥</span>
+          </div>
+          <div class="display-4 fw-bold mb-1" id="streakCount">{{ streak_days|default(1) }}</div>
+          <small class="opacity-75">days active this week</small>
+          <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.3);">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (streak_days|default(1) / 7 * 100)|int }}%"></div>
+          </div>
+          <small class="opacity-75 mt-1 d-block">Next milestone: 7 days 🎯</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 text-success"><i class="fas fa-bolt me-1"></i> Hot Opportunities</h6>
+            <span class="badge bg-danger blink-badge">{{ emergency_count|default(0) }} NEW</span>
+          </div>
+          <div class="d-flex align-items-end mb-2">
+            <span class="display-6 fw-bold text-success me-2">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+            <span class="text-muted mb-1">urgent leads</span>
+          </div>
+          <button class="btn btn-success btn-sm w-100" onclick="quickFilter(document.querySelector('[data-filter=urgent]'), 'urgent')">
+            <i class="fas fa-rocket me-1"></i> View Now
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Score Card -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 text-primary"><i class="fas fa-chart-line me-1"></i> Your Score</h6>
+            <span class="badge bg-primary" id="userLevel">Level {{ user_level|default(1) }}</span>
+          </div>
+          <div class="d-flex align-items-end mb-2">
+            <span class="display-6 fw-bold text-primary me-2" id="activityScore">{{ activity_score|default(0) }}</span>
+            <span class="text-success mb-1">+{{ points_today|default(0) }} today</span>
+          </div>
+          <div class="progress mb-1" style="height: 8px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ progress_to_next_level|default(0) }}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+          </div>
+          <small class="text-muted">{{ points_to_next_level|default(100) }} pts to Level {{ (user_level|default(1)) + 1 }} 🏆</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Card -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 text-warning"><i class="fas fa-star me-1"></i> Today's Actions</h6>
+            <span class="badge bg-warning text-dark" id="todayActionsCount">{{ actions_today|default(0) }}</span>
+          </div>
+          <ul class="list-unstyled small mb-0">
+            <li class="d-flex justify-content-between mb-1">
+              <span>✓ Leads viewed:</span>
+              <strong id="viewedCount">{{ leads_viewed_today|default(0) }}</strong>
+            </li>
+            <li class="d-flex justify-content-between mb-1">
+              <span>★ Leads saved:</span>
+              <strong id="savedCount">{{ leads_saved_today|default(0) }}</strong>
+            </li>
+            <li class="d-flex justify-content-between">
+              <span>✉ Inquiries sent:</span>
+              <strong id="inquiriesCount">{{ inquiries_today|default(0) }}</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Activity Feed -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card" style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center">
+            <div class="me-3 flex-shrink-0">
+              <div class="pulse-dot bg-success"></div>
+            </div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="activity-ticker-container">
+                <div class="activity-ticker">
+                  <span class="activity-item">🎯 <strong>Sarah M.</strong> saved $250K hospital contract...</span>
+                  <span class="activity-item">⚡ <strong>Mike T.</strong> accessed Hampton Schools RFP...</span>
+                  <span class="activity-item">🔥 <strong>Lisa K.</strong> requested proposal help...</span>
+                  <span class="activity-item">✨ <strong>John D.</strong> reached Level 3!</span>
+                  <span class="activity-item">💼 <strong>Amy S.</strong> won Virginia Beach contract!</span>
+                  <span class="activity-item">🌟 <strong>Chris P.</strong> completed profile setup...</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary flex-shrink-0 ms-3" onclick="showActivityFeed()">
+              <i class="fas fa-users me-1"></i> <span class="d-none d-md-inline">Community</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Filters & Advanced Filters -->
   <div class="card mb-4">
     <div class="card-body">
@@ -207,8 +323,286 @@
   </div>
 </div>
 
+<!-- Gamification Styles -->
+<style>
+.pulse-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.blink-badge {
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+}
+
+.pulse-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0% {
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+    }
+}
+
+.activity-ticker-container {
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.activity-ticker {
+    display: flex;
+    gap: 2rem;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.activity-item {
+    display: inline-block;
+    padding: 0 1rem;
+}
+
+.stat-pill {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #667eea;
+}
+
+.portal-header-band {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border-radius: 10px;
+    color: white;
+}
+
+.filter-pill {
+    border: 1px solid #dee2e6;
+    background: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-pill:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+}
+
+.filter-pill.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.save-btn .fa-bookmark.saved {
+    color: #ffc107 !important;
+    font-weight: 900;
+}
+</style>
+
 <script>
 // Basic data exposure for client-side filtering (large arrays acceptable client-side)
 window.leadsData = {{ all_leads|tojson }};
+
+// Gamification Functions
+function showActivityFeed() {
+    // Redirect to community forum or show modal
+    window.location.href = "{{ url_for('community_forum') }}";
+}
+
+// Update activity score when user interacts
+function updateActivityScore(points, action) {
+    const scoreEl = document.getElementById('activityScore');
+    if (scoreEl) {
+        let currentScore = parseInt(scoreEl.textContent) || 0;
+        currentScore += points;
+        scoreEl.textContent = currentScore;
+        
+        // Update today's actions count
+        const actionsEl = document.getElementById('todayActionsCount');
+        if (actionsEl) {
+            let actions = parseInt(actionsEl.textContent) || 0;
+            actionsEl.textContent = actions + 1;
+        }
+        
+        // Could show achievement toast here
+        console.log(`+${points} points for ${action}`);
+    }
+}
+
+// Track when user views a lead
+function viewLeadDetails(leadId, leadType) {
+    updateActivityScore(5, 'viewing lead');
+    const viewedEl = document.getElementById('viewedCount');
+    if (viewedEl) {
+        let count = parseInt(viewedEl.textContent) || 0;
+        viewedEl.textContent = count + 1;
+    }
+    // Continue with normal flow
+    alert('Lead details coming soon!');
+}
+
+// Track when user saves a lead
+function toggleSaveLead(btn, leadType, leadId, leadTitle) {
+    const icon = btn.querySelector('i');
+    const isSaved = icon.classList.contains('fas');
+    
+    if (isSaved) {
+        // Unsave
+        icon.classList.remove('fas', 'saved');
+        icon.classList.add('far');
+    } else {
+        // Save
+        icon.classList.remove('far');
+        icon.classList.add('fas', 'saved');
+        updateActivityScore(10, 'saving lead');
+        
+        const savedEl = document.getElementById('savedCount');
+        if (savedEl) {
+            let count = parseInt(savedEl.textContent) || 0;
+            savedEl.textContent = count + 1;
+        }
+    }
+    
+    // Make API call to save/unsave
+    fetch('/api/toggle-save-lead', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lead_type: leadType,
+            lead_id: leadId,
+            lead_title: leadTitle,
+            action: isSaved ? 'unsave' : 'save'
+        })
+    }).then(response => response.json())
+      .then(data => {
+          console.log('Save status updated:', data);
+      })
+      .catch(error => {
+          console.error('Error saving lead:', error);
+      });
+}
+
+// Contact info modal
+function showContactInfo(leadId, name, email, phone, address) {
+    updateActivityScore(15, 'viewing contact info');
+    const inquiriesEl = document.getElementById('inquiriesCount');
+    if (inquiriesEl) {
+        let count = parseInt(inquiriesEl.textContent) || 0;
+        inquiriesEl.textContent = count + 1;
+    }
+    
+    alert(`Contact Information:\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nAddress: ${address}`);
+}
+
+// Filter functions (basic implementation)
+let currentFilter = 'all';
+
+function quickFilter(btn, filter) {
+    // Remove active from all pills
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.classList.remove('active');
+    });
+    
+    // Add active to clicked pill
+    btn.classList.add('active');
+    currentFilter = filter;
+    
+    // Apply filter to leads
+    const leadCards = document.querySelectorAll('.lead-card');
+    leadCards.forEach(card => {
+        let show = true;
+        
+        if (filter === 'urgent') {
+            const daysLeft = parseInt(card.dataset.daysLeft) || 999;
+            show = daysLeft <= 7;
+        } else if (filter === 'government') {
+            show = card.dataset.type === 'government';
+        } else if (filter === 'commercial') {
+            show = card.dataset.type === 'commercial' || card.dataset.type === 'commercial_request';
+        } else if (filter === 'high-value') {
+            const value = card.dataset.value || '';
+            show = value.includes('$') && (value.includes('K') || value.includes('M'));
+        } else if (filter === 'closing-soon') {
+            const daysLeft = parseInt(card.dataset.daysLeft) || 999;
+            show = daysLeft <= 14;
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function toggleAdvancedFilters() {
+    const container = document.getElementById('advancedFilters');
+    const text = document.getElementById('advFilterText');
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        text.textContent = 'Hide Filters';
+    } else {
+        container.style.display = 'none';
+        text.textContent = 'More Filters';
+    }
+}
+
+function applyFilters() {
+    // Implement advanced filtering logic
+    console.log('Applying advanced filters...');
+}
+
+function clearAllFilters() {
+    // Reset all filters
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('valueFilter').value = '';
+    document.getElementById('deadlineFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    
+    // Show all cards
+    document.querySelectorAll('.lead-card').forEach(card => {
+        card.style.display = 'block';
+    });
+    
+    // Reset quick filter
+    const allBtn = document.querySelector('[data-filter="all"]');
+    if (allBtn) {
+        quickFilter(allBtn, 'all');
+    }
+}
 </script>
 {% endblock %}
