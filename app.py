@@ -4281,14 +4281,21 @@ def client_dashboard():
                     return db.session.execute(text(sql)).scalar() or 0
                 except Exception:
                     return 0
-            gov_contracts = safe_count("SELECT COUNT(*) FROM contracts")
+            # Try federal_contracts first, fallback to contracts
+            try:
+                gov_contracts = safe_count("SELECT COUNT(*) FROM federal_contracts")
+            except:
+                gov_contracts = safe_count("SELECT COUNT(*) FROM contracts")
             supply_contracts = safe_count("SELECT COUNT(*) FROM supply_contracts WHERE status = 'open'")
             commercial_leads = safe_count("SELECT COUNT(*) FROM commercial_lead_requests WHERE status = 'open'")
             residential_leads = safe_count("SELECT COUNT(*) FROM residential_leads WHERE status = 'new'")
             quick_wins = 0
             try:
                 quick_wins += safe_count("SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency IN ('emergency','urgent') AND status='open'")
-                upcoming_contracts = safe_count("SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'")
+                try:
+                    upcoming_contracts = safe_count("SELECT COUNT(*) FROM federal_contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'")
+                except:
+                    upcoming_contracts = safe_count("SELECT COUNT(*) FROM contracts WHERE deadline IS NOT NULL AND deadline != '' AND deadline != 'Rolling'")
                 quick_wins += min(upcoming_contracts, 20)
             except Exception:
                 pass
@@ -4329,26 +4336,27 @@ def client_dashboard():
         residential_requests = []
 
         try:
+            # Try federal_contracts first (primary table)
             government_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, value as contract_value, deadline, naics_code,
                        posted_date as created_at, sam_gov_url as website_url
-                FROM contracts
+                FROM federal_contracts
                 WHERE title IS NOT NULL
                 ORDER BY posted_date DESC
                 LIMIT 100''')).fetchall()
         except Exception as e:
-            print(f"Government leads error: {e}")
+            print(f"Federal contracts error: {e}")
             try:
-                # Fallback to federal_contracts if contracts table doesn't work
+                # Fallback to contracts table
                 government_leads = db.session.execute(text('''
                     SELECT id, title, agency, location, description, value as contract_value, deadline, naics_code,
                            posted_date as created_at, sam_gov_url as website_url
-                    FROM federal_contracts
+                    FROM contracts
                     WHERE title IS NOT NULL
                     ORDER BY posted_date DESC
                     LIMIT 100''')).fetchall()
             except Exception as e2:
-                print(f"Fallback federal_contracts error: {e2}")
+                print(f"Fallback contracts table error: {e2}")
         try:
             supply_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, estimated_value as contract_value, bid_deadline as deadline,
