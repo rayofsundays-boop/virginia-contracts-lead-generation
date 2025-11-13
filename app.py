@@ -3840,114 +3840,114 @@ def signin():
         username = request.form.get('username')
         password = request.form.get('password')
         
-    # Check for admin login first (superadmin) — only if admin creds are configured
-    if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        # Set permanent session with extended timeout for admin
-        session.permanent = True
-        app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
-        
-        session['user_id'] = 1  # Set admin user_id
-        session['is_admin'] = True
-        session['username'] = 'Admin'
-        session['name'] = 'Administrator'
-        session['user_email'] = 'admin@vacontracts.com'
-        session['email'] = 'admin@vacontracts.com'
-        session['subscription_status'] = 'paid'  # Admin has full paid subscription access
-        session['credits_balance'] = 999999  # Admin has unlimited credits
-        
-        # Log admin login
-        log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
-        
-        flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
-        return redirect(url_for('contracts'))
-    
-    # Get user from database (including beta tester fields if they exist)
-    try:
-        result = db.session.execute(
-            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
-            {'username': username}
-        ).fetchone()
-    except Exception as e:
-        # Fallback if beta tester columns don't exist yet
-        print(f"⚠️ Beta columns not available, using legacy query: {e}")
-        result = db.session.execute(
-            text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
-            {'username': username}
-        ).fetchone()
-        # Append None values for missing beta columns
-        if result:
-            result = tuple(list(result) + [False, None])
-    
-    if result and check_password_hash(result[3], password):
-        from datetime import datetime
-        
-        # Check if beta tester membership has expired
-        is_beta_tester = bool(result[8])
-        beta_expiry_date = result[9]
-        beta_expired = False
-        
-        if is_beta_tester and beta_expiry_date:
-            # Parse expiry date (handle both datetime and string formats)
-            if isinstance(beta_expiry_date, str):
-                try:
-                    expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
-                except:
-                    expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
-            else:
-                expiry_dt = beta_expiry_date
+        # Check for admin login first (superadmin) — only if admin creds are configured
+        if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            # Set permanent session with extended timeout for admin
+            session.permanent = True
+            app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
             
-            if datetime.utcnow() > expiry_dt:
-                beta_expired = True
-                # Update subscription status to unpaid
-                db.session.execute(
-                    text('UPDATE leads SET subscription_status = :status WHERE id = :user_id'),
-                    {'status': 'unpaid', 'user_id': result[0]}
-                )
-                db.session.commit()
+            session['user_id'] = 1  # Set admin user_id
+            session['is_admin'] = True
+            session['username'] = 'Admin'
+            session['name'] = 'Administrator'
+            session['user_email'] = 'admin@vacontracts.com'
+            session['email'] = 'admin@vacontracts.com'
+            session['subscription_status'] = 'paid'  # Admin has full paid subscription access
+            session['credits_balance'] = 999999  # Admin has unlimited credits
+            
+            # Log admin login
+            log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
+            
+            flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
+            return redirect(url_for('contracts'))
         
-        # Login successful - set all session variables
-        session['user_id'] = result[0]
-        session['username'] = result[1]
-        session['email'] = result[2]
-        session['user_email'] = result[2]  # Add user_email for template compatibility
-        session['name'] = result[4]
-        session['credits_balance'] = result[5]
-        session['is_admin'] = bool(result[6])  # Set admin status from database
-        session['is_beta_tester'] = is_beta_tester and not beta_expired
-        session['beta_expiry_date'] = beta_expiry_date
+        # Get user from database (including beta tester fields if they exist)
+        try:
+            result = db.session.execute(
+                text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
+                {'username': username}
+            ).fetchone()
+        except Exception as e:
+            # Fallback if beta tester columns don't exist yet
+            print(f"⚠️ Beta columns not available, using legacy query: {e}")
+            result = db.session.execute(
+                text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+                {'username': username}
+            ).fetchone()
+            # Append None values for missing beta columns
+            if result:
+                result = tuple(list(result) + [False, None])
         
-        # Admin users get paid subscription status and unlimited credits
-        if session['is_admin']:
-            session['subscription_status'] = 'paid'  # Force paid status for all admins
-            session['credits_balance'] = 999999  # Unlimited credits for admins
-        elif is_beta_tester and not beta_expired:
-            session['subscription_status'] = 'paid'  # Active beta testers get paid status
-        else:
-            session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
-        
-        # Show appropriate welcome message
-        if session['is_admin']:
-            flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
-        elif is_beta_tester and not beta_expired:
-            # Calculate days remaining
-            if isinstance(beta_expiry_date, str):
-                try:
-                    expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
-                except:
-                    expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
+        if result and check_password_hash(result[3], password):
+            from datetime import datetime
+            
+            # Check if beta tester membership has expired
+            is_beta_tester = bool(result[8])
+            beta_expiry_date = result[9]
+            beta_expired = False
+            
+            if is_beta_tester and beta_expiry_date:
+                # Parse expiry date (handle both datetime and string formats)
+                if isinstance(beta_expiry_date, str):
+                    try:
+                        expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
+                    except:
+                        expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
+                else:
+                    expiry_dt = beta_expiry_date
+                
+                if datetime.utcnow() > expiry_dt:
+                    beta_expired = True
+                    # Update subscription status to unpaid
+                    db.session.execute(
+                        text('UPDATE leads SET subscription_status = :status WHERE id = :user_id'),
+                        {'status': 'unpaid', 'user_id': result[0]}
+                    )
+                    db.session.commit()
+            
+            # Login successful - set all session variables
+            session['user_id'] = result[0]
+            session['username'] = result[1]
+            session['email'] = result[2]
+            session['user_email'] = result[2]  # Add user_email for template compatibility
+            session['name'] = result[4]
+            session['credits_balance'] = result[5]
+            session['is_admin'] = bool(result[6])  # Set admin status from database
+            session['is_beta_tester'] = is_beta_tester and not beta_expired
+            session['beta_expiry_date'] = beta_expiry_date
+            
+            # Admin users get paid subscription status and unlimited credits
+            if session['is_admin']:
+                session['subscription_status'] = 'paid'  # Force paid status for all admins
+                session['credits_balance'] = 999999  # Unlimited credits for admins
+            elif is_beta_tester and not beta_expired:
+                session['subscription_status'] = 'paid'  # Active beta testers get paid status
             else:
-                expiry_dt = beta_expiry_date
-            days_remaining = (expiry_dt - datetime.utcnow()).days
-            flash(f'Welcome back, {result[4]}! 🌟 Beta Tester - {days_remaining} days of Premium access remaining.', 'success')
-        elif beta_expired:
-            flash(f'Welcome back, {result[4]}! Your 1-year Beta Tester period has expired. Please subscribe to continue Premium access.', 'warning')
+                session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
+            
+            # Show appropriate welcome message
+            if session['is_admin']:
+                flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
+            elif is_beta_tester and not beta_expired:
+                # Calculate days remaining
+                if isinstance(beta_expiry_date, str):
+                    try:
+                        expiry_dt = datetime.fromisoformat(beta_expiry_date.replace('Z', '+00:00'))
+                    except:
+                        expiry_dt = datetime.strptime(beta_expiry_date, '%Y-%m-%d %H:%M:%S')
+                else:
+                    expiry_dt = beta_expiry_date
+                days_remaining = (expiry_dt - datetime.utcnow()).days
+                flash(f'Welcome back, {result[4]}! 🌟 Beta Tester - {days_remaining} days of Premium access remaining.', 'success')
+            elif beta_expired:
+                flash(f'Welcome back, {result[4]}! Your 1-year Beta Tester period has expired. Please subscribe to continue Premium access.', 'warning')
+            else:
+                flash(f'Welcome back, {result[4]}! 🎉', 'success')
+            
+            return redirect(url_for('customer_leads'))
         else:
-            flash(f'Welcome back, {result[4]}! 🎉', 'success')
-        
-        return redirect(url_for('customer_leads'))
-    else:
-        flash('Invalid username or password. Please try again.', 'error')
-        return redirect(url_for('auth'))
+            flash('Invalid username or password. Please try again.', 'error')
+            return redirect(url_for('auth'))
     
     return render_template('signin.html')
 
