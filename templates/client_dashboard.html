@@ -607,31 +607,11 @@
 // Basic data exposure for client-side filtering (large arrays acceptable client-side)
 window.leadsData = {{ all_leads|tojson }};
 
-// Gamification Functions
+// Gamification Functions (moved core logic to static/js/gamification.js)
 function showActivityFeed() {
-    // Redirect to community forum or show modal
-    window.location.href = "{{ url_for('community_forum') }}";
+  window.location.href = "{{ url_for('community_forum') }}";
 }
-
-// Update activity score when user interacts
-function updateActivityScore(points, action) {
-    const scoreEl = document.getElementById('activityScore');
-    if (scoreEl) {
-        let currentScore = parseInt(scoreEl.textContent) || 0;
-        currentScore += points;
-        scoreEl.textContent = currentScore;
-        
-        // Update today's actions count
-        const actionsEl = document.getElementById('todayActionsCount');
-        if (actionsEl) {
-            let actions = parseInt(actionsEl.textContent) || 0;
-            actionsEl.textContent = actions + 1;
-        }
-        
-        // Could show achievement toast here
-        console.log(`+${points} points for ${action}`);
-    }
-}
+// updateActivityScore now provided by shared static script
 
 // Track when user views a lead
 function viewLeadDetails(leadId, leadType) {
@@ -775,4 +755,6 @@ function clearAllFilters() {
     }
 }
 </script>
+<!-- Shared gamification script -->
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 {% endblock %}

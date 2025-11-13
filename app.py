@@ -93,6 +93,96 @@ app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=48)  # Admin sessions las
 
 db = SQLAlchemy(app)
 
+# ------------------------------------------------------------------
+# Ensure core authentication table (leads) exists for SQLite setups.
+# In some earlier refactors the SQLite helper created a separate leads.db
+# while SQLAlchemy pointed at db.sqlite3, leaving the /signin route with
+# no backing table. This bootstrap block guarantees the required columns
+# (including username/password_hash/is_admin/beta tester fields) are
+# present in the primary SQLAlchemy database. Safe for Postgres as well.
+# ------------------------------------------------------------------
+with app.app_context():
+    try:
+        is_postgres = 'postgresql' in str(db.engine.url)
+        serial_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY AUTOINCREMENT'
+        bool_type = 'BOOLEAN' if is_postgres else 'INTEGER'
+        ts_default = 'CURRENT_TIMESTAMP'
+
+        db.session.execute(text(f'''CREATE TABLE IF NOT EXISTS leads (
+            id {serial_type},
+            company_name TEXT NOT NULL,
+            contact_name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            username TEXT UNIQUE,
+            password_hash TEXT,
+            phone TEXT,
+            state TEXT,
+            experience_years TEXT,
+            certifications TEXT,
+            registration_date TEXT,
+            lead_source TEXT DEFAULT 'website',
+            survey_responses TEXT,
+            proposal_support {bool_type} DEFAULT 0,
+            free_leads_remaining INTEGER DEFAULT 0,
+            subscription_status TEXT DEFAULT 'unpaid',
+            is_beta_tester {bool_type} DEFAULT 0,
+            beta_registered_at TIMESTAMP,
+            beta_expiry_date TIMESTAMP,
+            credits_balance INTEGER DEFAULT 0,
+            credits_used INTEGER DEFAULT 0,
+            last_credit_purchase_date TEXT,
+            low_credits_alert_sent {bool_type} DEFAULT 0,
+            email_notifications {bool_type} DEFAULT 1,
+            sms_notifications {bool_type} DEFAULT 0,
+            is_admin {bool_type} DEFAULT 0,
+            created_at TIMESTAMP DEFAULT {ts_default}
+        )'''))
+
+        # Add any missing columns (idempotent attempts wrapped in try/except)
+        for col, definition in [
+            ('is_admin', f'{bool_type} DEFAULT 0'),
+            ('is_beta_tester', f'{bool_type} DEFAULT 0'),
+            ('beta_registered_at', 'TIMESTAMP'),
+            ('beta_expiry_date', 'TIMESTAMP'),
+            ('username', 'TEXT'),
+            ('password_hash', 'TEXT'),
+            ('credits_balance', 'INTEGER DEFAULT 0'),
+            ('subscription_status', "TEXT DEFAULT 'unpaid'")
+        ]:
+            try:
+                db.session.execute(text(f'ALTER TABLE leads ADD COLUMN {col} {definition}'))
+            except Exception as _e:
+                # Ignore if already exists (SQLite lacks IF NOT EXISTS for ADD COLUMN)
+                pass
+
+        db.session.commit()
+
+        # Seed a test user if none exists (username: testuser / password: test123)
+        existing = db.session.execute(text('SELECT id FROM leads WHERE username = :u OR email = :e'),
+                                      {'u': 'testuser', 'e': 'testuser@example.com'}).fetchone()
+        if not existing:
+            from werkzeug.security import generate_password_hash
+            pw_hash = generate_password_hash('test123')
+            db.session.execute(text('''INSERT INTO leads (
+                company_name, contact_name, email, username, password_hash, subscription_status, credits_balance)
+                VALUES (:company_name, :contact_name, :email, :username, :password_hash, :subscription_status, :credits_balance)'''),
+                {
+                    'company_name': 'Test Co',
+                    'contact_name': 'Test User',
+                    'email': 'testuser@example.com',
+                    'username': 'testuser',
+                    'password_hash': pw_hash,
+                    'subscription_status': 'free',
+                    'credits_balance': 0
+                })
+            db.session.commit()
+            print('✅ Seeded test user (testuser / test123) for authentication testing.')
+        else:
+            print('ℹ️  Test user already present.')
+    except Exception as e:
+        db.session.rollback()
+        print(f'⚠️  Failed to ensure leads table or seed test user: {e}')
+
 # =============================
 # Proposal Wizard & Compliance AI Feature (Capability Statements)
 # =============================
@@ -3997,6 +4087,13 @@ def signin():
             return redirect(url_for('auth'))
         
         if request.method == 'POST':
+            # Debug logging for authentication flow (can disable after verification)
+            try:
+                print('\n[AUTH] /signin POST received')
+                print('[AUTH] Form keys:', list(request.form.keys()))
+                print('[AUTH] Username raw value length:', len(request.form.get('username','')))
+            except Exception as _log_e:
+                print(f"[AUTH] Logging error: {_log_e}")
             username = request.form.get('username')
             password = request.form.get('password')
             
@@ -4106,6 +4203,7 @@ def signin():
                 
                 return redirect(url_for('customer_leads'))
             else:
+                print('[AUTH] Invalid credentials for', username)
                 flash('Invalid username or password. Please try again.', 'error')
                 return redirect(url_for('auth'))
         
