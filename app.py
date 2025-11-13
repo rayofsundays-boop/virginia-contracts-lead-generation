@@ -3678,38 +3678,36 @@ def feedback():
             username = session.get('username', 'Anonymous')
             user_email = session.get('email', session.get('user_email', 'no-reply@vacontracthub.com'))
 
-            # Prepare email to admin
-            admin_email = os.environ.get('ADMIN_EMAIL', os.environ.get('MAIL_USERNAME', 'admin@vacontracthub.com'))
-            
+            # Send to internal mailbox (admin inbox)
             try:
-                msg = Message(
-                    subject=f"[Feedback - {category}] {subject or 'User Feedback'}",
-                    recipients=[admin_email],
-                )
-                
-                msg.body = f"""New Feedback Received
-                
-Category: {category}
+                # Create message body with feedback details
+                message_body = f"""Category: {category}
 Rating: {rating if rating else 'Not provided'}
-Subject: {subject or 'No subject'}
 
-From: {username} (User ID: {user_id if user_id else 'Not logged in'})
-Email: {user_email}
-
-Message:
 {message}
 
 ---
-Sent via ContractLink.ai Feedback Form
-Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-"""
-                mail.send(msg)
-                flash('Thank you for your feedback! Your message has been sent to our team.', 'success')
-            except Exception as e:
-                print(f"Feedback email send failed: {e}")
-                flash('Your feedback was recorded but email delivery failed. We will still review it.', 'info')
+From: {username} (User ID: {user_id if user_id else 'Not logged in'})
+Email: {user_email}
+Sent via Feedback Form
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-            # Store feedback in database
+                # Insert into messages table for admin mailbox
+                db.session.execute(text('''
+                    INSERT INTO messages (sender_id, recipient_id, subject, body, is_read, is_admin_message, created_at)
+                    VALUES (:sender, NULL, :subject, :body, FALSE, FALSE, CURRENT_TIMESTAMP)
+                '''), {
+                    'sender': user_id if user_id else None,
+                    'subject': f"[Feedback - {category}] {subject or 'User Feedback'}",
+                    'body': message_body
+                })
+                db.session.commit()
+                flash('✅ Thank you for your feedback! Your message has been sent to our admin team.', 'success')
+            except Exception as e:
+                print(f"Failed to save feedback to mailbox: {e}")
+                flash('⚠️ Your feedback could not be delivered. Please try again.', 'warning')
+
+            # Store feedback in database (backup table)
             try:
                 ensure_feedback_table()
                 save_feedback(user_id, username, user_email, category, subject, message, rating)
