@@ -20378,89 +20378,78 @@ def submit_bulk_request():
 @app.route('/mailbox')
 @login_required
 def mailbox():
-    """Internal messaging system mailbox"""
-    folder = request.args.get('folder', 'inbox')
-    page = max(int(request.args.get('page', 1) or 1), 1)
-    per_page = 20
-    offset = (page - 1) * per_page
-    
-    user_id = session['user_id']
-    is_admin = session.get('is_admin', False)
-    
-    # Get unread count
-    # SQLite portability: use = 0 for FALSE (unread messages)
-    unread_count = db.session.execute(text(
-        "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL)"
-    ), {'user_id': user_id}).scalar() or 0
-    
-    # Get messages based on folder
-    if folder == 'inbox':
-        query = (
-            "SELECT m.*, "
-            "COALESCE(sender.email, 'System') as sender_email, "
-            "COALESCE(recipient.email, 'Admin') as recipient_email "
+    """Internal messaging system mailbox (robust with fallbacks)."""
+    try:
+        folder = request.args.get('folder', 'inbox')
+        page = max(int(request.args.get('page', 1) or 1), 1)
+        per_page = 20
+        offset = (page - 1) * per_page
+
+        user_id = session['user_id']
+        is_admin = session.get('is_admin', False)
+
+        # Unread count (COALESCE for portability)
+        unread_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL)"
+        ), {'user_id': user_id}).scalar() or 0
+
+        # Base select with COALESCE on created_at vs sent_at for legacy rows
+        base_select = (
+            "SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, m.is_read, m.is_admin, "
+            "COALESCE(m.created_at, m.sent_at) AS created_at, m.sent_at, m.read_at, m.is_admin_message, m.parent_message_id, "
+            "COALESCE(sender.email, 'System') as sender_email, COALESCE(recipient.email, 'Admin') as recipient_email "
             "FROM messages m "
             "LEFT JOIN leads sender ON m.sender_id = sender.id "
             "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
-            "WHERE m.recipient_id = :user_id "
-            "ORDER BY m.created_at DESC "
-            "LIMIT :limit OFFSET :offset"
         )
-        count_query = "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id"
-        count_params = {'user_id': user_id}
-        exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
-    elif folder == 'sent':
-        query = (
-            "SELECT m.*, "
-            "COALESCE(sender.email, 'System') as sender_email, "
-            "COALESCE(recipient.email, 'Admin') as recipient_email "
-            "FROM messages m "
-            "LEFT JOIN leads sender ON m.sender_id = sender.id "
-            "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
-            "WHERE m.sender_id = :user_id "
-            "ORDER BY m.created_at DESC "
-            "LIMIT :limit OFFSET :offset"
-        )
-        count_query = "SELECT COUNT(*) FROM messages WHERE sender_id = :user_id"
-        count_params = {'user_id': user_id}
-        exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
-    elif folder == 'admin' and is_admin:
-        query = (
-            "SELECT m.*, "
-            "COALESCE(sender.email, 'System') as sender_email, "
-            "COALESCE(recipient.email, 'Admin') as recipient_email "
-            "FROM messages m "
-            "LEFT JOIN leads sender ON m.sender_id = sender.id "
-            "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
-            "WHERE m.is_admin_message = 1 "
-            "ORDER BY m.created_at DESC "
-            "LIMIT :limit OFFSET :offset"
-        )
-        count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = 1"
-        count_params = {}
-        exec_params = {'limit': per_page, 'offset': offset}
-    else:
-        return redirect(url_for('mailbox'))
-    
-    total_count = db.session.execute(text(count_query), count_params).scalar() or 0
-    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-    
-    messages = db.session.execute(text(query), exec_params).fetchall()
-    
-    # Get all users for admin compose
-    all_users = []
-    if is_admin:
-        all_users = db.session.execute(text(
-            "SELECT id, email, company_name FROM leads WHERE is_admin = FALSE ORDER BY email"
-        )).fetchall()
-    
-    return render_template('mailbox.html',
-                         messages=messages,
-                         folder=folder,
-                         page=page,
-                         total_pages=total_pages,
-                         unread_count=unread_count,
-                         all_users=all_users)
+
+        if folder == 'inbox':
+            query = base_select + "WHERE m.recipient_id = :user_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            count_query = "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id"
+            count_params = {'user_id': user_id}
+            exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
+        elif folder == 'sent':
+            query = base_select + "WHERE m.sender_id = :user_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            count_query = "SELECT COUNT(*) FROM messages WHERE sender_id = :user_id"
+            count_params = {'user_id': user_id}
+            exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
+        elif folder == 'admin' and is_admin:
+            query = base_select + "WHERE m.is_admin_message = 1 ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = 1"
+            count_params = {}
+            exec_params = {'limit': per_page, 'offset': offset}
+        else:
+            return redirect(url_for('mailbox'))
+
+        total_count = db.session.execute(text(count_query), count_params).scalar() or 0
+        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        messages = db.session.execute(text(query), exec_params).fetchall()
+
+        all_users = []
+        if is_admin:
+            all_users = db.session.execute(text(
+                "SELECT id, email, company_name FROM leads WHERE is_admin = FALSE ORDER BY email"
+            )).fetchall()
+
+        return render_template('mailbox.html',
+                               messages=messages,
+                               folder=folder,
+                               page=page,
+                               total_pages=total_pages,
+                               unread_count=unread_count,
+                               all_users=all_users)
+    except Exception as e:
+        import traceback
+        print(f"Mailbox route error: {e}")
+        traceback.print_exc()
+        flash('Mailbox temporarily unavailable. Our team has been notified.', 'error')
+        return render_template('mailbox.html',
+                               messages=[],
+                               folder='inbox',
+                               page=1,
+                               total_pages=1,
+                               unread_count=0,
+                               all_users=[])
 
 @app.route('/mailbox/message/<int:message_id>')
 @login_required
