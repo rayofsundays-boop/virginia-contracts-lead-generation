@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Enable Two-Factor Authentication{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">🔐 Two-Factor Authentication (2FA)</h2>
+  {% if already_enabled %}
+    <div class="alert alert-success">2FA is currently <strong>ENABLED</strong> on your account.</div>
+    <form method="post" action="{{ url_for('disable_2fa') }}" onsubmit="return confirm('Disable 2FA? Your account will rely only on password.');">
+      <button class="btn btn-danger">Disable 2FA</button>
+      <a href="{{ url_for('customer_dashboard') }}" class="btn btn-secondary ms-2">Back</a>
+    </form>
+  {% else %}
+    <p class="text-secondary">Add an extra layer of security. Scan the QR (if generated) or enter the secret manually in Google Authenticator, Microsoft Authenticator, or any TOTP app.</p>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Your Secret Key</h5>
+        <code style="font-size:1.1rem; user-select:all;">{{ secret }}</code>
+        {% if otpauth_url %}
+          <hr/>
+          <p class="mb-1">Can't scan a QR? Use the secret above.</p>
+          <p class="small text-muted mb-0">Issuer: ContractLink.ai | Type: TOTP | Interval: 30s</p>
+        {% endif %}
+      </div>
+    </div>
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Enter 6-digit Code</label>
+        <input name="code" class="form-control" placeholder="123456" required pattern="[0-9]{6}">
+      </div>
+      <button class="btn btn-primary">Enable 2FA</button>
+      <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

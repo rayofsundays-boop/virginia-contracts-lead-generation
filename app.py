@@ -25,6 +25,10 @@ import string
 import random
 import re
 try:
+    import pyotp  # Time-based OTP for 2FA
+except Exception:
+    pyotp = None  # Allow app to run without 2FA dependency until installed
+try:
     # Optional OpenAI SDK: guard import so non-AI features work without the package
     try:
         import openai  # type: ignore
@@ -119,6 +123,8 @@ with app.app_context():
             email TEXT NOT NULL UNIQUE,
             username TEXT UNIQUE,
             password_hash TEXT,
+            twofa_enabled {bool_type} DEFAULT 0,
+            twofa_secret TEXT,
             phone TEXT,
             state TEXT,
             experience_years TEXT,
@@ -150,6 +156,8 @@ with app.app_context():
             ('beta_expiry_date', 'TIMESTAMP'),
             ('username', 'TEXT'),
             ('password_hash', 'TEXT'),
+            ('twofa_enabled', f'{bool_type} DEFAULT 0'),
+            ('twofa_secret', 'TEXT'),
             ('credits_balance', 'INTEGER DEFAULT 0'),
             ('subscription_status', "TEXT DEFAULT 'unpaid'")
         ]:
@@ -4129,19 +4137,23 @@ def signin():
             # Get user from database (including beta tester fields if they exist)
             try:
                 result = db.session.execute(
-                    text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status, is_beta_tester, beta_expiry_date FROM leads WHERE username = :username OR email = :username'),
+                    text('''SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin,
+                                 subscription_status, is_beta_tester, beta_expiry_date, COALESCE(twofa_enabled,0) as twofa_enabled
+                           FROM leads WHERE username = :username OR email = :username'''),
                     {'username': username}
                 ).fetchone()
             except Exception as e:
-                # Fallback if beta tester columns don't exist yet
-                print(f"⚠️ Beta columns not available, using legacy query: {e}")
-                result = db.session.execute(
+                # Fallback if newer columns don't exist yet
+                print(f"⚠️ Extended auth columns not available, using legacy query: {e}")
+                legacy = db.session.execute(
                     text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
                     {'username': username}
                 ).fetchone()
-                # Append None values for missing beta columns
-                if result:
-                    result = tuple(list(result) + [False, None])
+                if legacy:
+                    # Pad values to expected tuple length (beta flags, twofa)
+                    result = tuple(list(legacy) + [False, None, 0])
+                else:
+                    result = None
             
             if result and check_password_hash(result[3], password):
                 from datetime import datetime
@@ -4170,7 +4182,23 @@ def signin():
                         )
                         db.session.commit()
                 
-                # Login successful - set all session variables
+                # Check if 2FA required
+                twofa_enabled = bool(result[10]) if len(result) > 10 else False
+                if twofa_enabled:
+                    # Stage session for second factor (don't log user fully in yet)
+                    session.clear()
+                    session['pending_2fa_user_id'] = result[0]
+                    session['pending_2fa_username'] = result[1]
+                    session['pending_2fa_email'] = result[2]
+                    session['pending_2fa_contact_name'] = result[4]
+                    session['pending_2fa_is_admin'] = bool(result[6])
+                    session['pending_2fa_subscription_status'] = result[7]
+                    session['pending_2fa_beta'] = is_beta_tester and not beta_expired
+                    session['pending_2fa_beta_expiry'] = str(beta_expiry_date) if beta_expiry_date else None
+                    flash('Enter your 6-digit authentication code to finish signing in.', 'info')
+                    return redirect(url_for('verify_2fa'))
+
+                # Login successful (no 2FA) - set all session variables
                 session['user_id'] = result[0]
                 session['username'] = result[1]
                 session['email'] = result[2]
@@ -4266,6 +4294,20 @@ def login():
     ).fetchone()
     
     if result and check_password_hash(result[3], password):
+        # Check 2FA status
+        twofa_row = db.session.execute(text('SELECT COALESCE(twofa_enabled,0) FROM leads WHERE id = :i'), {'i': result[0]}).fetchone()
+        twofa_enabled = bool(twofa_row[0]) if twofa_row else False
+        if twofa_enabled:
+            session.clear()
+            session['pending_2fa_user_id'] = result[0]
+            session['pending_2fa_username'] = result[1]
+            session['pending_2fa_email'] = result[2]
+            session['pending_2fa_contact_name'] = result[4]
+            session['pending_2fa_is_admin'] = bool(result[6])
+            session['pending_2fa_subscription_status'] = result[7]
+            flash('Enter your authentication code to continue.', 'info')
+            return redirect(url_for('verify_2fa'))
+
         session['user_id'] = result[0]
         session['username'] = result[1]
         session['email'] = result[2]
@@ -4296,6 +4338,142 @@ def logout():
     session.clear()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('landing'))
+
+# -----------------------------
+# Two-Factor Authentication (TOTP)
+# -----------------------------
+
+@app.route('/enable-2fa', methods=['GET', 'POST'])
+@login_required
+def enable_2fa():
+    """Enable Time-based One-Time Password (TOTP) 2FA for the current user."""
+    if pyotp is None:
+        flash('2FA library (pyotp) not installed. Ask admin to install pyotp to enable this feature.', 'warning')
+        return redirect(url_for('customer_dashboard'))
+
+    # Fetch current 2FA status
+    row = db.session.execute(text('SELECT COALESCE(twofa_enabled,0), twofa_secret, username, email FROM leads WHERE id = :i'), {'i': session['user_id']}).fetchone()
+    enabled = bool(row[0]) if row else False
+    existing_secret = row[1] if row else None
+    username = row[2] if row else session.get('username','user')
+    email = row[3] if row else session.get('email','')
+
+    # If already enabled and GET, show status page
+    if request.method == 'GET' and enabled:
+        return render_template('enable_2fa.html', already_enabled=True, secret='••••••••', otpauth_url=None)
+
+    # If not enabled, prepare a provisioning secret (persist only after verification)
+    if not enabled:
+        if 'provisioning_2fa_secret' not in session:
+            session['provisioning_2fa_secret'] = pyotp.random_base32()
+        secret = session['provisioning_2fa_secret']
+        totp = pyotp.TOTP(secret)
+        # Use email if available for better label inside authenticator apps
+        label_identity = email or username
+        otpauth_url = totp.provisioning_uri(name=label_identity, issuer_name='ContractLink.ai')
+    else:
+        secret = existing_secret
+        otpauth_url = None
+
+    if request.method == 'POST':
+        code = request.form.get('code','').strip().replace(' ','')
+        if not code:
+            flash('Enter the 6-digit code from your authenticator app.', 'error')
+            return redirect(url_for('enable_2fa'))
+        secret = session.get('provisioning_2fa_secret')
+        if not secret:
+            flash('Provisioning secret missing. Start again.', 'error')
+            return redirect(url_for('enable_2fa'))
+        totp = pyotp.TOTP(secret)
+        if not totp.verify(code, valid_window=1):
+            flash('Invalid code. Make sure time is correct on your device and try again.', 'error')
+            return redirect(url_for('enable_2fa'))
+        # Persist secret
+        db.session.execute(text('UPDATE leads SET twofa_secret = :s, twofa_enabled = 1 WHERE id = :i'), {'s': secret, 'i': session['user_id']})
+        db.session.commit()
+        session.pop('provisioning_2fa_secret', None)
+        flash('Two-Factor Authentication enabled successfully! 🔐', 'success')
+        return redirect(url_for('customer_dashboard'))
+
+    return render_template('enable_2fa.html', already_enabled=False, secret=secret, otpauth_url=otpauth_url)
+
+@app.route('/disable-2fa', methods=['POST'])
+@login_required
+def disable_2fa():
+    """Disable 2FA for current user (requires being logged in)."""
+    db.session.execute(text('UPDATE leads SET twofa_enabled = 0, twofa_secret = NULL WHERE id = :i'), {'i': session['user_id']})
+    db.session.commit()
+    flash('Two-Factor Authentication disabled.', 'info')
+    return redirect(url_for('customer_dashboard'))
+
+@app.route('/verify-2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    """Second factor challenge page. User reaches here only after password auth."""
+    if 'pending_2fa_user_id' not in session:
+        flash('No pending 2FA session. Please sign in again.', 'warning')
+        return redirect(url_for('auth'))
+
+    if request.method == 'POST':
+        if pyotp is None:
+            flash('2FA library missing on server. Contact support.', 'error')
+            return redirect(url_for('auth'))
+        code = request.form.get('code','').strip().replace(' ','')
+        if not code:
+            flash('Enter your 6-digit code.', 'error')
+            return redirect(url_for('verify_2fa'))
+        # Fetch secret securely
+        row = db.session.execute(text('SELECT twofa_secret FROM leads WHERE id = :i'), {'i': session['pending_2fa_user_id']}).fetchone()
+        if not row or not row[0]:
+            flash('2FA is not properly configured for this account.', 'error')
+            # Clean pending session
+            for k in list(session.keys()):
+                if k.startswith('pending_2fa_'):
+                    session.pop(k, None)
+            return redirect(url_for('auth'))
+        secret = row[0]
+        ok = False
+        try:
+            ok = pyotp.TOTP(secret).verify(code, valid_window=1)
+        except Exception as e:
+            print(f"2FA verification error: {e}")
+            ok = False
+        if not ok:
+            flash('Invalid authentication code.', 'error')
+            return redirect(url_for('verify_2fa'))
+
+        # Finalize login
+        user_id = session.pop('pending_2fa_user_id')
+        username = session.pop('pending_2fa_username', '')
+        email = session.pop('pending_2fa_email', '')
+        contact = session.pop('pending_2fa_contact_name', '')
+        is_admin = session.pop('pending_2fa_is_admin', False)
+        sub_status = session.pop('pending_2fa_subscription_status', 'free')
+        beta_active = session.pop('pending_2fa_beta', False)
+        beta_expiry = session.pop('pending_2fa_beta_expiry', None)
+        # Clear any remaining pending keys
+        for k in list(session.keys()):
+            if k.startswith('pending_2fa_'):
+                session.pop(k, None)
+
+        session['user_id'] = user_id
+        session['username'] = username
+        session['email'] = email
+        session['user_email'] = email
+        session['name'] = contact
+        session['is_admin'] = bool(is_admin)
+        session['subscription_status'] = 'paid' if (is_admin or beta_active) else (sub_status or 'free')
+        session['is_beta_tester'] = beta_active
+        session['beta_expiry_date'] = beta_expiry
+        # Credits (fetch fresh to avoid stale value)
+        credits_row = db.session.execute(text('SELECT credits_balance FROM leads WHERE id = :i'), {'i': user_id}).fetchone()
+        session['credits_balance'] = credits_row[0] if credits_row else 0
+        if session['is_admin']:
+            session['credits_balance'] = 999999
+
+        flash('Two-Factor authentication successful. Welcome back! 🔐', 'success')
+        return redirect(url_for('customer_leads'))
+
+    return render_template('verify_2fa.html')
 
 @app.route('/user-profile')
 @login_required

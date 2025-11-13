@@ -265,3 +265,51 @@ For issues or questions about this Virginia government contracting platform, ple
 ---
 
 Note on Chatbot Docs: `CHATBOT_QUICK_START.md` documents the earlier client-side-only chatbot. The live AI Assistant uses the role-aware KB + API described in `AI_ASSISTANT_OVERVIEW.md`.
+
+## Two-Factor Authentication (2FA)
+
+The platform now supports optional Time-based One-Time Password (TOTP) 2FA for user accounts.
+
+### Overview
+2FA adds a second verification step after the password. Supported by common authenticator apps:
+- Google Authenticator
+- Microsoft Authenticator
+- 1Password / Bitwarden
+- Authy
+
+### Enabling 2FA
+1. Sign in normally with username/email + password.
+2. Visit `/enable-2fa` (linked from account/security sections if exposed) or manually navigate.
+3. Scan the displayed secret (or copy manually) into your authenticator app.
+4. Enter the 6-digit code and submit.
+5. On success you will see a confirmation banner.
+
+### Signing In with 2FA
+1. Enter username/email + password as usual.
+2. You are redirected to `/verify-2fa` (session is staged, not fully authenticated yet).
+3. Enter the current 6‑digit code from your app. After success the full session is established.
+
+### Disabling 2FA
+POST to `/disable-2fa` while logged in (a button is shown on the enable page if already active). This clears the stored secret. Disabling reduces account security—recommend only for troubleshooting.
+
+### Environment / Dependencies
+- Library: `pyotp` (added to `requirements.txt`).
+- No external API dependency; all codes generated/validated locally.
+
+### Database Additions
+Columns added to `leads` table (auto-migrated on app start):
+| Column | Type | Purpose |
+|--------|------|---------|
+| `twofa_enabled` | BOOLEAN/INTEGER | Flag indicating whether 2FA is active |
+| `twofa_secret` | TEXT | Base32 TOTP secret (stored in plain form; consider encrypting at rest in future) |
+
+### Security Notes & Roadmap
+- Current implementation: no recovery codes (future enhancement).
+- Secret stored unencrypted; for higher assurance deploy at-rest encryption (e.g. Fernet + key in KMS / env).
+- Rate limiting for `/verify-2fa` not yet enforced (add via reverse proxy or Flask limiter extension).
+- Optional future: `FORCE_ADMIN_2FA=1` to mandate admins enable 2FA before accessing sensitive routes.
+
+### Testing
+Automated tests in `tests/test_2fa.py` cover enablement, login challenge, valid & invalid code flows.
+
+If `pyotp` is not installed the feature gracefully degrades and informs the user.

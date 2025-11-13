@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Verify 2FA{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:560px;">
+  <h2 class="mb-3">🔐 Verify Your Identity</h2>
+  <p class="text-secondary">Enter the 6-digit code from your authenticator app to finish signing in.</p>
+  <form method="post" class="card p-3 shadow-sm">
+    <div class="mb-3">
+      <label class="form-label">Authentication Code</label>
+      <input type="text" name="code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" class="form-control form-control-lg text-center" placeholder="••••••" required>
+    </div>
+    <div class="d-flex align-items-center">
+      <button class="btn btn-primary flex-fill">Verify</button>
+      <a href="{{ url_for('auth') }}" class="btn btn-link ms-2">Cancel</a>
+    </div>
+  </form>
+  <div class="mt-3 small text-muted">Time-based codes rotate every 30 seconds. Ensure your device time is correct.</div>
+</div>
+{% endblock %}
