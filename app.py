@@ -4344,8 +4344,9 @@ def client_dashboard():
                 WHERE title IS NOT NULL
                 ORDER BY posted_date DESC
                 LIMIT 100''')).fetchall()
+            print(f"✅ Federal contracts query returned {len(government_leads)} leads")
         except Exception as e:
-            print(f"Federal contracts error: {e}")
+            print(f"❌ Federal contracts error: {e}")
             try:
                 # Fallback to contracts table
                 government_leads = db.session.execute(text('''
@@ -4355,8 +4356,9 @@ def client_dashboard():
                     WHERE title IS NOT NULL
                     ORDER BY posted_date DESC
                     LIMIT 100''')).fetchall()
+                print(f"✅ Contracts fallback returned {len(government_leads)} leads")
             except Exception as e2:
-                print(f"Fallback contracts table error: {e2}")
+                print(f"❌ Fallback contracts table error: {e2}")
         try:
             supply_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, estimated_value as contract_value, bid_deadline as deadline,
