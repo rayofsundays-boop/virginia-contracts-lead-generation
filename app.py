@@ -3953,7 +3953,10 @@ def signin():
         return render_template('signin.html')
     except Exception as e:
         print(f"❌ Error in signin route: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        print(f"❌ Request method: {request.method}")
         import traceback
+        print("❌ Full traceback:")
         traceback.print_exc()
         flash('An error occurred during sign in. Please try again.', 'error')
         return redirect(url_for('auth'))
