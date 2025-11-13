@@ -3692,10 +3692,10 @@ Email: {user_email}
 Sent via Feedback Form
 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-                # Insert into messages table for admin mailbox
+                # Insert into messages table for admin mailbox (recipient_id = 1 is admin)
                 db.session.execute(text('''
                     INSERT INTO messages (sender_id, recipient_id, subject, body, is_read, is_admin_message, created_at)
-                    VALUES (:sender, NULL, :subject, :body, FALSE, FALSE, CURRENT_TIMESTAMP)
+                    VALUES (:sender, 1, :subject, :body, FALSE, TRUE, CURRENT_TIMESTAMP)
                 '''), {
                     'sender': user_id if user_id else None,
                     'subject': f"[Feedback - {category}] {subject or 'User Feedback'}",
