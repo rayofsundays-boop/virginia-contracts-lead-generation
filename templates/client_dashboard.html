@@ -57,27 +57,27 @@
         
         <div class="nav flex-column">
           <a href="{{ url_for('client_dashboard') }}" class="nav-link active">
-            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            <span><i class="fas fa-tachometer-alt me-2"></i>Dashboard</span>
           </a>
           
-          <a href="{{ url_for('saved_leads') }}" class="nav-link">
-            <i class="fas fa-bookmark me-2 text-warning"></i>Saved Leads
-            <span class="badge bg-warning float-end">{{ saved_leads_count or 0 }}</span>
+          <a href="/saved-leads" class="nav-link">
+            <span><i class="fas fa-bookmark me-2"></i>Saved Leads</span>
+            <span class="badge bg-warning text-dark">{{ saved_leads_count or 0 }}</span>
           </a>
           
-          <a href="{{ url_for('federal_contracts') }}" class="nav-link">
-            <i class="fas fa-landmark me-2"></i>Government Contracts
-            <span class="badge bg-primary float-end">{{ stats.government_contracts or 0 }}</span>
+          <a href="/contracts" class="nav-link">
+            <span><i class="fas fa-landmark me-2"></i>Government Contracts</span>
+            <span class="badge bg-primary">{{ stats.government_contracts or 0 }}</span>
           </a>
           
-          <a href="{{ url_for('supply_contracts') }}" class="nav-link">
-            <i class="fas fa-boxes me-2"></i>Supply Contracts
-            <span class="badge bg-info float-end">{{ stats.supply_contracts or 0 }}</span>
+          <a href="/supply-contracts" class="nav-link">
+            <span><i class="fas fa-boxes me-2"></i>Supply Contracts</span>
+            <span class="badge bg-info">{{ stats.supply_contracts or 0 }}</span>
           </a>
           
-          <a href="{{ url_for('commercial_contracts') }}" class="nav-link">
-            <i class="fas fa-building me-2"></i>Commercial Leads
-            <span class="badge bg-success float-end">{{ stats.commercial_leads or 0 }}</span>
+          <a href="/commercial-contracts" class="nav-link">
+            <span><i class="fas fa-building me-2"></i>Commercial Leads</span>
+            <span class="badge bg-success">{{ stats.commercial_leads or 0 }}</span>
           </a>
         </div>
         
@@ -86,21 +86,21 @@
         </h6>
         
         <div class="nav flex-column">
-          <a href="{{ url_for('pricing_calculator') }}" class="nav-link">
-            <i class="fas fa-calculator me-2"></i>Pricing Calculator
+          <a href="/pricing-calculator" class="nav-link">
+            <span><i class="fas fa-calculator me-2"></i>Pricing Calculator</span>
           </a>
           
-          <a href="{{ url_for('resource_toolbox') }}" class="nav-link">
-            <i class="fas fa-toolbox me-2"></i>Mini Toolbox
+          <a href="/resource-toolbox" class="nav-link">
+            <span><i class="fas fa-toolbox me-2"></i>Mini Toolbox</span>
           </a>
           
-          <a href="{{ url_for('ai_proposal_generator') }}" class="nav-link">
-            <i class="fas fa-magic me-2"></i>AI Proposal Writer
-            <span class="badge bg-success float-end">AI</span>
+          <a href="/ai-proposal-generator" class="nav-link">
+            <span><i class="fas fa-magic me-2"></i>AI Proposal Writer</span>
+            <span class="badge bg-success">AI</span>
           </a>
           
-          <a href="{{ url_for('proposal_support') }}" class="nav-link">
-            <i class="fas fa-file-contract me-2"></i>Proposal Templates
+          <a href="/proposal-support" class="nav-link">
+            <span><i class="fas fa-file-contract me-2"></i>Proposal Templates</span>
           </a>
         </div>
         
@@ -109,23 +109,23 @@
         </h6>
         
         <div class="nav flex-column">
-          <a href="{{ url_for('my_messages') }}" class="nav-link">
-            <i class="fas fa-envelope me-2"></i>Messages
+          <a href="/mailbox" class="nav-link">
+            <span><i class="fas fa-envelope me-2"></i>Messages</span>
             {% if unread_messages_count and unread_messages_count > 0 %}
-            <span class="badge bg-danger float-end">{{ unread_messages_count }}</span>
+            <span class="badge bg-danger">{{ unread_messages_count }}</span>
             {% endif %}
           </a>
           
-          <a href="{{ url_for('community_forum') }}" class="nav-link">
-            <i class="fas fa-users me-2"></i>Community Forum
+          <a href="/community-forum" class="nav-link">
+            <span><i class="fas fa-users me-2"></i>Community Forum</span>
           </a>
           
-          <a href="{{ url_for('feedback') }}" class="nav-link">
-            <i class="fas fa-comment-dots me-2"></i>Send Feedback
+          <a href="/feedback" class="nav-link">
+            <span><i class="fas fa-comment-dots me-2"></i>Send Feedback</span>
           </a>
           
-          <a href="{{ url_for('payment') }}" class="nav-link">
-            <i class="fas fa-credit-card me-2"></i>Subscription
+          <a href="/payment" class="nav-link">
+            <span><i class="fas fa-credit-card me-2"></i>Subscription</span>
           </a>
         </div>
       </div>
@@ -420,10 +420,11 @@
 .sidebar-sticky {
     position: sticky;
     top: 80px;
-    background-color: #f8f9fa;
+    background-color: #ffffff;
     border-radius: 10px;
     padding: 1rem 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    border: 1px solid #dee2e6;
 }
 
 .sidebar-heading {
@@ -431,40 +432,58 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #6c757d;
+    color: #495057;
+    padding: 0.5rem 0;
 }
 
 .sidebar-sticky .nav-link {
-    color: #495057;
-    padding: 10px 20px;
+    color: #212529;
+    padding: 12px 20px;
     border-left: 3px solid transparent;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-weight: 500;
     font-size: 14px;
     border-radius: 0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .sidebar-sticky .nav-link:hover {
-    background-color: #e9ecef;
+    background-color: #f8f9fa;
     color: #667eea;
     border-left-color: #667eea;
+    text-decoration: none;
 }
 
 .sidebar-sticky .nav-link.active {
-    color: #667eea;
-    background-color: rgba(102, 126, 234, 0.1);
-    border-left-color: #667eea;
+    color: #ffffff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-left-color: #5568d3;
     font-weight: 600;
+}
+
+.sidebar-sticky .nav-link.active i {
+    color: #ffffff;
+}
+
+.sidebar-sticky .nav-link.active .badge {
+    background-color: #ffffff !important;
+    color: #667eea !important;
 }
 
 .sidebar-sticky .nav-link i {
     width: 20px;
-    transition: color 0.3s ease;
+    margin-right: 8px;
+    transition: color 0.2s ease;
+    font-size: 14px;
 }
 
 .sidebar-sticky .nav-link .badge {
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.4rem;
+    font-weight: 600;
 }
 
 .pulse-badge {
