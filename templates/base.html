@@ -720,6 +720,19 @@
                         </li>
                         
                         {% if session.get('user_email') %}
+                        <!-- Mail Icon with Unread Count -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{{ url_for('mailbox') }}" title="Mailbox">
+                                <i class="fas fa-envelope" style="font-size: 1.2rem;"></i>
+                                {% if unread_count and unread_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                    {{ unread_count if unread_count < 100 else '99+' }}
+                                    <span class="visually-hidden">unread messages</span>
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        
                         <!-- User Profile for Authenticated Users -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">

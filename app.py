@@ -251,12 +251,12 @@ def inject_unread_messages():
         try:
             unread_count = db.session.execute(text('''
                 SELECT COUNT(*) FROM messages 
-                WHERE recipient_id = :user_id AND is_read = FALSE
+                WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL OR is_read = FALSE)
             '''), {'user_id': session['user_id']}).scalar() or 0
-            return dict(unread_messages_count=unread_count)
+            return dict(unread_messages_count=unread_count, unread_count=unread_count)
         except:
-            return dict(unread_messages_count=0)
-    return dict(unread_messages_count=0)
+            return dict(unread_messages_count=0, unread_count=0)
+    return dict(unread_messages_count=0, unread_count=0)
 
 # Helper function for generating temporary passwords
 def generate_temp_password(length=12):
