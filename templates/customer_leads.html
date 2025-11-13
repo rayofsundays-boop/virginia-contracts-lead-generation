@@ -2109,35 +2109,7 @@ function resetApplyClickCount() {
 
 <!-- Removed duplicate trailing script block (variables & init) -->
 
-function updateActivityScore(points, action) {
-    activityScore += points;
-    document.getElementById('activityScore').textContent = activityScore;
-    
-    // Animate score change
-    const scoreEl = document.getElementById('activityScore');
-    scoreEl.style.transform = 'scale(1.2)';
-    scoreEl.style.color = '#28a745';
-    setTimeout(() => {
-        scoreEl.style.transform = 'scale(1)';
-        scoreEl.style.color = '';
-    }, 300);
-    
-    // Update today's actions
-    if (action === 'view') todayActions.viewed++;
-    if (action === 'save') todayActions.saved++;
-    if (action === 'inquiry') todayActions.inquiries++;
-    
-    document.getElementById('viewedCount').textContent = todayActions.viewed;
-    document.getElementById('savedCount').textContent = todayActions.saved;
-    document.getElementById('inquiriesCount').textContent = todayActions.inquiries;
-    document.getElementById('todayActionsCount').textContent = 
-        todayActions.viewed + todayActions.saved + todayActions.inquiries;
-    
-    // Save to localStorage
-    const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
-    stats.score = activityScore;
-    localStorage.setItem('userStats', JSON.stringify(stats));
-}
+<!-- Removed legacy inline updateActivityScore duplicate; now provided by static/js/gamification.js -->
 
 function checkAndShowAchievement() {
     const hour = new Date().getHours();

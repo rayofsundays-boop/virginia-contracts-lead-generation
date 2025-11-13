@@ -93,6 +93,9 @@ app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=48)  # Admin sessions las
 
 db = SQLAlchemy(app)
 
+# Auth debug toggle (set AUTH_DEBUG=1 in environment to enable verbose signin logging)
+AUTH_DEBUG = os.getenv('AUTH_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
+
 # ------------------------------------------------------------------
 # Ensure core authentication table (leads) exists for SQLite setups.
 # In some earlier refactors the SQLite helper created a separate leads.db
@@ -4087,13 +4090,14 @@ def signin():
             return redirect(url_for('auth'))
         
         if request.method == 'POST':
-            # Debug logging for authentication flow (can disable after verification)
-            try:
-                print('\n[AUTH] /signin POST received')
-                print('[AUTH] Form keys:', list(request.form.keys()))
-                print('[AUTH] Username raw value length:', len(request.form.get('username','')))
-            except Exception as _log_e:
-                print(f"[AUTH] Logging error: {_log_e}")
+            if AUTH_DEBUG:
+                # Debug logging for authentication flow
+                try:
+                    print('\n[AUTH] /signin POST received')
+                    print('[AUTH] Form keys:', list(request.form.keys()))
+                    print('[AUTH] Username raw value length:', len(request.form.get('username','')))
+                except Exception as _log_e:
+                    print(f"[AUTH] Logging error: {_log_e}")
             username = request.form.get('username')
             password = request.form.get('password')
             
@@ -4203,7 +4207,8 @@ def signin():
                 
                 return redirect(url_for('customer_leads'))
             else:
-                print('[AUTH] Invalid credentials for', username)
+                if AUTH_DEBUG:
+                    print('[AUTH] Invalid credentials for', username)
                 flash('Invalid username or password. Please try again.', 'error')
                 return redirect(url_for('auth'))
         
