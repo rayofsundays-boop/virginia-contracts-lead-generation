@@ -25,6 +25,7 @@ import math
 import string
 import random
 import re
+import uuid
 try:
     import pyotp  # Time-based OTP for 2FA
 except Exception:
@@ -105,6 +106,76 @@ if DATABASE_URL:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Global upload security controls
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return default
+
+# Maximum upload size (entire request)
+app.config['MAX_CONTENT_LENGTH'] = _env_int('MAX_UPLOAD_MB', 25) * 1024 * 1024  # default 25 MB
+
+# Allowed file extensions for user uploads
+ALLOWED_UPLOAD_EXTENSIONS = {'.pdf', '.docx', '.txt'}
+
+# Per-file size cap (bytes) for multi-file uploads like bid docs
+PER_FILE_MAX_BYTES = _env_int('PER_FILE_MAX_MB', 10) * 1024 * 1024  # default 10 MB each
+
+def _allowed_extension(filename: str) -> bool:
+    ext = (os.path.splitext(filename)[1] or '').lower()
+    return ext in ALLOWED_UPLOAD_EXTENSIONS
+
+def _sniff_filetype_and_rewind(file_storage, peek_bytes: int = 8) -> str:
+    """Best-effort lightweight magic sniff: returns 'pdf', 'docx', 'zip', or ''. Rewinds stream."""
+    try:
+        pos = file_storage.stream.tell()
+    except Exception:
+        pos = None
+    head = b''
+    try:
+        head = file_storage.stream.read(peek_bytes) or b''
+    except Exception:
+        head = b''
+    try:
+        if pos is not None:
+            file_storage.stream.seek(pos)
+    except Exception:
+        try:
+            file_storage.stream.seek(0)
+        except Exception:
+            pass
+    if head.startswith(b'%PDF'):
+        return 'pdf'
+    if head.startswith(b'PK'):
+        # docx is a zip container; we cannot distinguish all zips cheaply
+        return 'docx'
+    return ''
+
+def _safe_user_storage_dir(user_id: int, *segments: str) -> str:
+    base_dir = os.path.join(os.path.dirname(__file__), 'user_docs', str(user_id), *[secure_filename(s) for s in segments if s])
+    os.makedirs(base_dir, exist_ok=True)
+    return base_dir
+
+def _store_secure_file(user_id: int, file_storage, subdir: str = '', prefix: str = '') -> tuple[str, str]:
+    """Store an uploaded file with randomized name under a per-user directory.
+    Returns (stored_path, stored_filename).
+    """
+    original = secure_filename(getattr(file_storage, 'filename', '') or 'upload')
+    ext = (os.path.splitext(original)[1] or '').lower()
+    rnd = uuid.uuid4().hex
+    stored_name = f"{prefix}{rnd}{ext}"
+    target_dir = _safe_user_storage_dir(user_id, subdir)
+    stored_path = os.path.join(target_dir, stored_name)
+    # Save to disk
+    file_storage.save(stored_path)
+    # Tighten file permissions (owner read/write only)
+    try:
+        os.chmod(stored_path, 0o600)
+    except Exception:
+        pass
+    return stored_path, stored_name
 
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
@@ -1356,18 +1427,24 @@ def proposal_wizard_upload():
     if not file or file.filename == '':
         flash('Please select a PDF file.', 'danger')
         return redirect(request.url)
-    if not file.filename.lower().endswith('.pdf'):
+    # Validate extension and magic bytes
+    if not _allowed_extension(file.filename) or (os.path.splitext(file.filename)[1].lower() != '.pdf'):
         flash('Only PDF files are accepted.', 'warning')
         return redirect(request.url)
-    store_root = os.path.join(os.path.dirname(__file__), 'capability_uploads')
-    os.makedirs(store_root, exist_ok=True)
-    safe_name = secure_filename(file.filename)
-    stored = os.path.join(store_root, f"{session['user_id']}_{int(time.time())}_{safe_name}")
-    file.save(stored)
+    # Basic file size guard per-file
+    if hasattr(request, 'content_length') and request.content_length and request.content_length > PER_FILE_MAX_BYTES:
+        flash('File is too large. Max 10 MB per file.', 'warning')
+        return redirect(request.url)
+    sniff = _sniff_filetype_and_rewind(file)
+    if sniff != 'pdf':
+        flash('The uploaded file does not look like a valid PDF.', 'danger')
+        return redirect(request.url)
+    # Store under per-user directory with random name and tight perms
+    stored, _stored_name = _store_secure_file(session['user_id'], file, subdir='capability', prefix='cap_')
     size = os.path.getsize(stored)
     parsed = _extract_pdf_text(stored)
     db.session.execute(text('''INSERT INTO capability_statements (user_id, original_filename, stored_path, file_size, parsed_text) VALUES (:uid,:fn,:sp,:sz,:pt)'''),
-                       {'uid': session['user_id'], 'fn': safe_name, 'sp': stored, 'sz': size, 'pt': parsed})
+                       {'uid': session['user_id'], 'fn': secure_filename(file.filename), 'sp': stored, 'sz': size, 'pt': parsed})
     db.session.commit()
     new_id = db.session.execute(text('SELECT MAX(id) FROM capability_statements WHERE user_id=:uid'), {'uid': session['user_id']}).scalar()
     return redirect(url_for('proposal_wizard_select', capability_id=new_id))
@@ -19042,15 +19119,28 @@ def proposal_review():
             import os
             from werkzeug.utils import secure_filename
             
-            upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            
-            rfp_filename = secure_filename(rfp_file.filename)
-            proposal_filename = secure_filename(proposal_file.filename)
-            
-            rfp_path = os.path.join(upload_folder, f"rfp_{session['user_id']}_{rfp_filename}")
-            proposal_path = os.path.join(upload_folder, f"prop_{session['user_id']}_{proposal_filename}")
-            
+            # Validate types and sizes
+            for fs in (rfp_file, proposal_file):
+                if not fs or not getattr(fs, 'filename', ''):
+                    return jsonify({'success': False, 'message': 'Invalid upload'}), 400
+                if not _allowed_extension(fs.filename):
+                    return jsonify({'success': False, 'message': 'Only PDF, DOCX, or TXT files are accepted'}), 400
+                if hasattr(request, 'content_length') and request.content_length and request.content_length > app.config['MAX_CONTENT_LENGTH']:
+                    return jsonify({'success': False, 'message': 'Upload too large'}), 400
+                kind = _sniff_filetype_and_rewind(fs)
+                # Allow empty sniff for txt; require match for pdf/docx
+                if os.path.splitext(fs.filename)[1].lower() == '.pdf' and kind != 'pdf':
+                    return jsonify({'success': False, 'message': 'RFP/Proposal must be a valid PDF'}), 400
+                if os.path.splitext(fs.filename)[1].lower() == '.docx' and kind not in ('docx',):
+                    return jsonify({'success': False, 'message': 'RFP/Proposal must be a valid DOCX'}), 400
+
+            # Use secure temporary files that auto-clean when closed
+            from tempfile import NamedTemporaryFile
+            rfp_tmp = NamedTemporaryFile(prefix='rfp_', suffix=os.path.splitext(rfp_file.filename)[1].lower(), delete=False)
+            prop_tmp = NamedTemporaryFile(prefix='prop_', suffix=os.path.splitext(proposal_file.filename)[1].lower(), delete=False)
+            rfp_path = rfp_tmp.name
+            proposal_path = prop_tmp.name
+            rfp_tmp.close(); prop_tmp.close()
             rfp_file.save(rfp_path)
             proposal_file.save(proposal_path)
             
@@ -19058,8 +19148,11 @@ def proposal_review():
             analysis = analyze_proposal_compliance(rfp_path, proposal_path)
             
             # Clean up files
-            os.remove(rfp_path)
-            os.remove(proposal_path)
+            try:
+                os.remove(rfp_path)
+                os.remove(proposal_path)
+            except Exception:
+                pass
             
             return jsonify({
                 'success': True,
@@ -19339,8 +19432,17 @@ def upload_rfp_api():
         file = request.files.get('file')
         if not file:
             return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+        if not _allowed_extension(file.filename):
+            return jsonify({'success': False, 'error': 'Only PDF, DOCX, or TXT are accepted'}), 400
+        if hasattr(request, 'content_length') and request.content_length and request.content_length > PER_FILE_MAX_BYTES:
+            return jsonify({'success': False, 'error': 'File too large (max 10 MB)'}), 400
+        sniff = _sniff_filetype_and_rewind(file)
         filename = secure_filename(file.filename)
         ext = (os.path.splitext(filename)[1] or '').lower()
+        if ext == '.pdf' and sniff != 'pdf':
+            return jsonify({'success': False, 'error': 'Invalid or corrupted PDF'}), 400
+        if ext == '.docx' and sniff not in ('docx',):
+            return jsonify({'success': False, 'error': 'Invalid DOCX (expected Office OpenXML)'}), 400
         tmpdir = tempfile.mkdtemp()
         path = os.path.join(tmpdir, filename)
         file.save(path)
@@ -19433,24 +19535,40 @@ def upload_bid_docs():
             ('other_files', 'other')
         ]
         saved = []
-        base_dir = os.path.join(os.path.dirname(__file__), 'user_docs', str(user_id))
-        os.makedirs(base_dir, exist_ok=True)
+        base_dir = _safe_user_storage_dir(user_id)
         total_files = 0
+        per_request_files = 0
         for field, dtype in buckets:
             for file in request.files.getlist(field):
                 if not file or not getattr(file, 'filename', ''):
                     continue
+                # Global per-request sanity to avoid abuse
+                per_request_files += 1
+                if per_request_files > 20:
+                    return jsonify({'success': False, 'error': 'Too many files uploaded in one request (limit 20).'}), 400
+                # Validate extension and size
+                if not _allowed_extension(file.filename):
+                    return jsonify({'success': False, 'error': f'Unsupported file type for {file.filename}'}), 400
+                if hasattr(request, 'content_length') and request.content_length and request.content_length > app.config['MAX_CONTENT_LENGTH']:
+                    return jsonify({'success': False, 'error': 'Upload too large'}), 400
+                if hasattr(file, 'content_length') and file.content_length and file.content_length > PER_FILE_MAX_BYTES:
+                    return jsonify({'success': False, 'error': f'File {file.filename} exceeds per-file limit (10 MB).'}), 400
+                sniff = _sniff_filetype_and_rewind(file)
+                ext = (os.path.splitext(file.filename)[1] or '').lower()
+                if ext == '.pdf' and sniff != 'pdf':
+                    return jsonify({'success': False, 'error': f'{file.filename} is not a valid PDF'}), 400
+                if ext == '.docx' and sniff not in ('docx',):
+                    return jsonify({'success': False, 'error': f'{file.filename} is not a valid DOCX'}), 400
                 total_files += 1
                 fname = secure_filename(file.filename)
-                path = os.path.join(base_dir, f"{int(datetime.now().timestamp())}_{fname}")
-                file.save(path)
+                # Store securely with randomized filename
+                path, stored_name = _store_secure_file(user_id, file, subdir='bid_docs', prefix='doc_')
                 # Extract text for heuristics
-                ext = (os.path.splitext(fname)[1] or '').lower()
                 text = ''
                 try:
-                    if ext == '.pdf':
+                    if ext == '.pdf' or stored_name.lower().endswith('.pdf'):
                         text = _extract_text_from_pdf(path)
-                    elif ext == '.docx':
+                    elif ext == '.docx' or stored_name.lower().endswith('.docx'):
                         text = _extract_text_from_docx(path)
                     else:
                         try:
