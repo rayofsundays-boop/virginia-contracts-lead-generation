@@ -3428,8 +3428,8 @@ def init_postgres_db():
         
         db.session.execute(text('''CREATE TABLE IF NOT EXISTS password_reset_tokens
                      (id SERIAL PRIMARY KEY,
-                      email TEXT NOT NULL UNIQUE,
-                      token TEXT NOT NULL,
+                      email TEXT NOT NULL,
+                      token TEXT NOT NULL UNIQUE,
                       expiry TIMESTAMP NOT NULL,
                       used BOOLEAN DEFAULT FALSE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
