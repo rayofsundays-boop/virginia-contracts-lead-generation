@@ -104,7 +104,17 @@ DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if DATABASE_URL:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    # Align SQLAlchemy with the same SQLite file used by legacy helpers (leads.db)
+    # This prevents split-brain between db.sqlite3 (ORM) and leads.db (raw sqlite3)
+    default_sqlite_name = os.getenv('SQLITE_DB_NAME', 'leads.db')
+    sqlite_path = os.path.join(os.path.dirname(__file__), default_sqlite_name)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{sqlite_path}"
+    try:
+        # Ensure the file exists early to avoid path confusion in some environments
+        if not os.path.exists(sqlite_path):
+            open(sqlite_path, 'a').close()
+    except Exception:
+        pass
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Global upload security controls
