@@ -4627,7 +4627,7 @@ def signin():
                         try:
                             new_hash = generate_password_hash(fallback_password)
                             db.session.execute(
-                                text('UPDATE leads SET password_hash = :password_hash, is_admin = 1 WHERE id = :user_id'),
+                                text('UPDATE leads SET password_hash = :password_hash, is_admin = TRUE WHERE id = :user_id'),
                                 {'password_hash': new_hash, 'user_id': result[0]}
                             )
                             db.session.commit()
@@ -4906,7 +4906,7 @@ def enable_2fa():
             return redirect(url_for('enable_2fa'))
         # Persist secret
         encrypted = encrypt_twofa_secret(secret)
-        db.session.execute(text('UPDATE leads SET twofa_secret = :s, twofa_enabled = 1 WHERE id = :i'), {'s': encrypted, 'i': session['user_id']})
+        db.session.execute(text('UPDATE leads SET twofa_secret = :s, twofa_enabled = TRUE WHERE id = :i'), {'s': encrypted, 'i': session['user_id']})
         db.session.commit()
         session.pop('provisioning_2fa_secret', None)
         session['twofa_enabled'] = True
@@ -4919,7 +4919,7 @@ def enable_2fa():
 @login_required
 def disable_2fa():
     """Disable 2FA for current user (requires being logged in)."""
-    db.session.execute(text('UPDATE leads SET twofa_enabled = 0, twofa_secret = NULL WHERE id = :i'), {'i': session['user_id']})
+    db.session.execute(text('UPDATE leads SET twofa_enabled = FALSE, twofa_secret = NULL WHERE id = :i'), {'i': session['user_id']})
     db.session.commit()
     session['twofa_enabled'] = False
     flash('Two-Factor Authentication disabled.', 'info')
