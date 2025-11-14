@@ -246,6 +246,24 @@ with app.app_context():
             # Do not block startup; just log for visibility.
             print(f'[BOOTSTRAP] 2FA column verification warning: {schema_guard_err}')
 
+        # Create user_documents table for retained bid assets (resumes, past performance, capabilities)
+        try:
+            id_type = 'SERIAL PRIMARY KEY' if is_postgres else 'INTEGER PRIMARY KEY AUTOINCREMENT'
+            ts_default = 'CURRENT_TIMESTAMP'
+            db.session.execute(text(f'''CREATE TABLE IF NOT EXISTS user_documents (
+                id {id_type},
+                user_id INTEGER NOT NULL,
+                doc_type TEXT, -- resume | past_performance | capability | other
+                original_filename TEXT,
+                stored_path TEXT,
+                file_size INTEGER,
+                extracted_text TEXT,
+                uploaded_at TIMESTAMP DEFAULT {ts_default}
+            )'''))
+            db.session.commit()
+        except Exception as _ud_err:
+            print(f"[BOOTSTRAP] user_documents table init warning: {_ud_err}")
+
         # Optional dev-only seed (controlled by SEED_TEST_USER=1)
         if os.getenv('SEED_TEST_USER', '').lower() in ('1','true','yes','on'):
             existing = db.session.execute(text('SELECT id FROM leads WHERE username = :u OR email = :e'),
@@ -19396,6 +19414,182 @@ def download_proposal_api():
         return send_file(buf, as_attachment=True, download_name='proposal.pdf', mimetype='application/pdf')
     except Exception as e:
         print(f"download_proposal_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+# -----------------------------
+# Bid / No-Bid Readiness & Document Retention
+# -----------------------------
+@app.route('/api/upload-bid-docs', methods=['POST'])
+@login_required
+def upload_bid_docs():
+    """Upload at least 3 documents (resume, past performance, capability, other) and retain for future bids."""
+    try:
+        user_id = session['user_id']
+        # Collect files from named buckets to infer doc_type
+        buckets = [
+            ('resume_files', 'resume'),
+            ('past_files', 'past_performance'),
+            ('cap_files', 'capability'),
+            ('other_files', 'other')
+        ]
+        saved = []
+        base_dir = os.path.join(os.path.dirname(__file__), 'user_docs', str(user_id))
+        os.makedirs(base_dir, exist_ok=True)
+        total_files = 0
+        for field, dtype in buckets:
+            for file in request.files.getlist(field):
+                if not file or not getattr(file, 'filename', ''):
+                    continue
+                total_files += 1
+                fname = secure_filename(file.filename)
+                path = os.path.join(base_dir, f"{int(datetime.now().timestamp())}_{fname}")
+                file.save(path)
+                # Extract text for heuristics
+                ext = (os.path.splitext(fname)[1] or '').lower()
+                text = ''
+                try:
+                    if ext == '.pdf':
+                        text = _extract_text_from_pdf(path)
+                    elif ext == '.docx':
+                        text = _extract_text_from_docx(path)
+                    else:
+                        try:
+                            text = open(path, 'r', errors='ignore').read()
+                        except:
+                            text = ''
+                except Exception as et:
+                    print(f"extract text error: {et}")
+                size = None
+                try:
+                    size = os.path.getsize(path)
+                except:
+                    size = None
+                db.session.execute(text(
+                    'INSERT INTO user_documents (user_id, doc_type, original_filename, stored_path, file_size, extracted_text) '
+                    'VALUES (:u, :t, :of, :sp, :sz, :xt)'
+                ), {'u': user_id, 't': dtype, 'of': fname, 'sp': path, 'sz': size, 'xt': text})
+                saved.append({'filename': fname, 'doc_type': dtype})
+        db.session.commit()
+        if total_files < 3:
+            return jsonify({'success': False, 'error': 'Please upload at least 3 documents (resume, past performance, capability).'}), 400
+        return jsonify({'success': True, 'saved': saved, 'count': len(saved)})
+    except Exception as e:
+        db.session.rollback()
+        print(f"upload_bid_docs error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+def _compute_bid_readiness(user_id: int):
+    """Heuristic readiness score using retained docs and keyword coverage."""
+    rows = db.session.execute(text(
+        'SELECT doc_type, length(COALESCE(extracted_text, "")) as len, extracted_text '
+        'FROM user_documents WHERE user_id = :u ORDER BY uploaded_at DESC LIMIT 50'
+    ), {'u': user_id}).fetchall()
+    counts = {'resume':0,'past_performance':0,'capability':0,'other':0}
+    coverage = {'certifications':False,'naics':False,'insurance':False,'experience':False,'past_perf_details':False}
+    for r in rows:
+        dt = r.doc_type or 'other'
+        counts[dt] = counts.get(dt,0)+1
+        txt = (r.extracted_text or '').lower()
+        if any(k in txt for k in ['cbls', 'cleaning', 'janitorial', 'porter']):
+            coverage['experience'] = True
+        if any(k in txt for k in ['naics 561720', '561720', 'naics']):
+            coverage['naics'] = True
+        if any(k in txt for k in ['insured', 'insurance', 'liability']):
+            coverage['insurance'] = True
+        if any(k in txt for k in ['certified', 'osha', 'gbac', 'cii', 'iso', 'gbac star']):
+            coverage['certifications'] = True
+        if any(k in txt for k in ['contract value', 'period of performance', 'client', 'contract number']):
+            coverage['past_perf_details'] = True
+    # Base score: presence of required doc types
+    score = 0
+    req_types = ['resume','past_performance','capability']
+    present = sum(1 for t in req_types if counts.get(t,0) > 0)
+    score += present * 25  # up to 75
+    # Coverage adds up to 25
+    score += sum(5 for ok in coverage.values() if ok)
+    score = max(0, min(100, score))
+    suggestions = []
+    if counts['resume'] == 0:
+        suggestions.append('Add at least one team resume highlighting janitorial roles and responsibilities.')
+    if counts['past_performance'] == 0:
+        suggestions.append('Upload past performance with client names, contract values, and scope details.')
+    if counts['capability'] == 0:
+        suggestions.append('Include a capability statement listing NAICS 561720 and differentiators.')
+    for key, msg in [
+        ('naics','Reference NAICS 561720 explicitly in your capability statement.'),
+        ('certifications','Add certifications (OSHA, GBAC, ISO) to strengthen compliance.'),
+        ('insurance','Include proof of insurance or mention coverage levels.'),
+        ('past_perf_details','Ensure past performance lists contract numbers/values and client references.'),
+        ('experience','Highlight relevant janitorial projects and square footage serviced.')
+    ]:
+        if not coverage[key]:
+            suggestions.append(msg)
+    target_tip = 'To reach 95-100%, ensure all three core document types are present and address any missing coverage items above.'
+    return {
+        'score': score,
+        'counts': counts,
+        'coverage': coverage,
+        'suggestions': suggestions,
+        'target_tip': target_tip
+    }
+
+@app.route('/api/bid-readiness', methods=['GET'])
+@login_required
+def bid_readiness_api():
+    try:
+        user_id = session['user_id']
+        result = _compute_bid_readiness(user_id)
+        # Enforce minimum docs
+        if sum(result['counts'].values()) < 3:
+            return jsonify({'success': False, 'error': 'Please upload at least 3 documents before evaluating readiness.'}), 400
+        return jsonify({'success': True, 'readiness': result})
+    except Exception as e:
+        print(f"bid_readiness_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@app.route('/api/generate-resume', methods=['POST'])
+@login_required
+def generate_resume_api():
+    try:
+        from io import BytesIO
+        data = request.get_json() or {}
+        text = data.get('text') or 'Professional Janitorial Technician\n\nExperience:\n- ...\n\nCertifications:\n- ...'
+        from docx import Document
+        doc = Document()
+        for para in text.split('\n\n'):
+            doc.add_paragraph(para)
+        buf = BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        return send_file(buf, as_attachment=True, download_name='resume.docx', mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    except Exception as e:
+        print(f"generate_resume_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@app.route('/api/generate-capability', methods=['POST'])
+@login_required
+def generate_capability_api():
+    try:
+        from io import BytesIO
+        data = request.get_json() or {}
+        company = data.get('companyName', 'Your Company')
+        differentiators = data.get('differentiators', 'Quality • Reliability • Safety')
+        naics = data.get('naics', '561720')
+        from docx import Document
+        doc = Document()
+        doc.add_heading(f'{company} Capability Statement', 0)
+        doc.add_paragraph(f'NAICS: {naics}')
+        doc.add_paragraph('Core Competencies:')
+        doc.add_paragraph('- Janitorial services for commercial/federal facilities')
+        doc.add_paragraph('- Floor care, window cleaning, day porter services')
+        doc.add_paragraph('Differentiators:')
+        doc.add_paragraph(f'- {differentiators}')
+        buf = BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        return send_file(buf, as_attachment=True, download_name='capability_statement.docx', mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    except Exception as e:
+        print(f"generate_capability_api error: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @app.route('/api/generate-proposal', methods=['POST'])
