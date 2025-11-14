@@ -20498,8 +20498,9 @@ def mailbox():
 
         all_users = []
         if is_admin:
+            # Use COALESCE to avoid SQLite BOOLEAN literal issues (FALSE/TRUE) and treat NULL as 0
             all_users = db.session.execute(text(
-                "SELECT id, email, company_name FROM leads WHERE is_admin = FALSE ORDER BY email"
+                "SELECT id, email, company_name FROM leads WHERE COALESCE(is_admin, 0) = 0 ORDER BY email"
             )).fetchall()
 
         return render_template('mailbox.html',
