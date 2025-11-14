@@ -4478,6 +4478,122 @@ def save_contact_message(name, email, subject, message):
             if conn:
                 conn.close()
 
+# ============================
+# Proposal reviews persistence
+# ============================
+def ensure_proposal_reviews_table():
+    """Ensure proposal_reviews table exists with all required columns for both
+    dashboard counts and admin message aggregation. Safe for repeated calls.
+    """
+    if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        try:
+            # Base table with superset of fields used across the codebase
+            db.session.execute(text('''
+                CREATE TABLE IF NOT EXISTS proposal_reviews (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER,
+                    user_email TEXT,
+                    contract_title TEXT,
+                    contract_value DECIMAL(12,2),
+                    proposal_document TEXT,
+                    status TEXT DEFAULT 'pending',
+                    reviewer_notes TEXT,
+                    score INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TIMESTAMP,
+                    -- Additional fields referenced by admin messages view
+                    contract_type TEXT,
+                    deadline DATE,
+                    proposal_value DECIMAL(12,2),
+                    agency_website TEXT
+                )
+            '''))
+            db.session.commit()
+
+            # Add any missing columns for legacy instances
+            for col_name, col_def in [
+                ('user_email', 'TEXT'),
+                ('contract_title', 'TEXT'),
+                ('contract_value', 'DECIMAL(12,2)'),
+                ('proposal_document', 'TEXT'),
+                ('reviewer_notes', 'TEXT'),
+                ('score', 'INTEGER'),
+                ('reviewed_at', 'TIMESTAMP'),
+                ('contract_type', 'TEXT'),
+                ('deadline', 'DATE'),
+                ('proposal_value', 'DECIMAL(12,2)'),
+                ('agency_website', 'TEXT'),
+                ('status', "TEXT DEFAULT 'pending'")
+            ]:
+                try:
+                    db.session.execute(text(f"ALTER TABLE proposal_reviews ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    # Ignore if already exists or cannot be added due to type mismatch
+                    pass
+
+            # Helpful indexes
+            try:
+                db.session.execute(text('CREATE INDEX IF NOT EXISTS idx_proposal_reviews_status ON proposal_reviews(status)'))
+                db.session.execute(text('CREATE INDEX IF NOT EXISTS idx_proposal_reviews_created_at ON proposal_reviews(created_at DESC)'))
+                db.session.execute(text('CREATE INDEX IF NOT EXISTS idx_proposal_reviews_user_email ON proposal_reviews(user_email)'))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+        except Exception as e:
+            db.session.rollback()
+            print(f"ensure_proposal_reviews_table() error: {e}")
+    else:
+        # SQLite fallback
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS proposal_reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    user_email TEXT,
+                    contract_title TEXT,
+                    contract_value REAL,
+                    proposal_document TEXT,
+                    status TEXT DEFAULT 'pending',
+                    reviewer_notes TEXT,
+                    score INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TIMESTAMP,
+                    contract_type TEXT,
+                    deadline DATE,
+                    proposal_value REAL,
+                    agency_website TEXT
+                )
+            ''')
+            # Best-effort add columns for legacy DBs
+            for col_name, col_def in [
+                ('user_email', 'TEXT'),
+                ('contract_title', 'TEXT'),
+                ('contract_value', 'REAL'),
+                ('proposal_document', 'TEXT'),
+                ('reviewer_notes', 'TEXT'),
+                ('score', 'INTEGER'),
+                ('reviewed_at', 'TIMESTAMP'),
+                ('contract_type', 'TEXT'),
+                ('deadline', 'DATE'),
+                ('proposal_value', 'REAL'),
+                ('agency_website', 'TEXT'),
+                ('status', "TEXT DEFAULT 'pending'")
+            ]:
+                try:
+                    c.execute(f"ALTER TABLE proposal_reviews ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    # Column likely exists
+                    pass
+            conn.commit()
+        finally:
+            if conn:
+                conn.close()
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     # Redirect GET requests to unified auth page
@@ -13051,15 +13167,43 @@ def admin_enhanced():
         
         # Helper to safely run a scalar query and avoid aborting the whole transaction chain
         def safe_scalar(query, params=None, default=0):
+            """Run a scalar SQL safely.
+            If a target table is missing, attempt to create it on-the-fly and retry once.
+            """
             try:
                 return db.session.execute(text(query), params or {}).scalar() or default
             except Exception as e:
                 print(f"[admin_enhanced] Query failed: {query} | Error: {e}")
+                # If the error is due to a missing table, try to create it and retry once
+                q_lower = query.lower()
                 try:
                     db.session.rollback()
                 except Exception as rb_err:
                     print(f"[admin_enhanced] Rollback failed: {rb_err}")
-                return default
+                try:
+                    if 'from contact_messages' in q_lower or 'contact_messages' in q_lower:
+                        try:
+                            ensure_contact_messages_table()
+                        except Exception as ce:
+                            print(f"[admin_enhanced] ensure_contact_messages_table() failed: {ce}")
+                    if 'from proposal_reviews' in q_lower or 'proposal_reviews' in q_lower:
+                        try:
+                            ensure_proposal_reviews_table()
+                        except Exception as pe:
+                            print(f"[admin_enhanced] ensure_proposal_reviews_table() failed: {pe}")
+                    # Retry once after ensuring
+                    try:
+                        return db.session.execute(text(query), params or {}).scalar() or default
+                    except Exception as e2:
+                        print(f"[admin_enhanced] Retry failed: {query} | Error: {e2}")
+                        try:
+                            db.session.rollback()
+                        except Exception:
+                            pass
+                        return default
+                except Exception as outer_e:
+                    print(f"[admin_enhanced] Recovery attempt failed: {outer_e}")
+                    return default
 
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         stats['new_users_7d'] = safe_scalar(
@@ -24538,6 +24682,11 @@ def admin_mailbox():
         
         # 2. Contact form submissions
         try:
+            # Ensure table exists (handles legacy deployments)
+            try:
+                ensure_contact_messages_table()
+            except Exception as e:
+                print(f"ensure_contact_messages_table() failed (continuing): {e}")
             contact_messages = db.session.execute(
                 text("SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
             ).fetchall()
@@ -24563,6 +24712,11 @@ def admin_mailbox():
         
         # 3. Proposal review submissions
         try:
+            # Ensure table exists before querying
+            try:
+                ensure_proposal_reviews_table()
+            except Exception as e:
+                print(f"ensure_proposal_reviews_table() failed (continuing): {e}")
             proposal_reviews = db.session.execute(
                 text("SELECT pr.id, pr.user_id, pr.contract_type, pr.deadline, pr.proposal_value, "
                      "pr.agency_website, pr.created_at, l.email, l.company_name, l.contact_name "
