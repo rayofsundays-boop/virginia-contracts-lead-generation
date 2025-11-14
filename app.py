@@ -21020,8 +21020,8 @@ def mailbox():
             count_params = {'user_id': user_id}
             exec_params = {'user_id': user_id, 'limit': per_page, 'offset': offset}
         elif folder == 'admin' and is_admin:
-            query = base_select + "WHERE m.is_admin_message = 1 ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
-            count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = 1"
+            query = base_select + "WHERE m.is_admin_message = TRUE ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+            count_query = "SELECT COUNT(*) FROM messages WHERE is_admin_message = TRUE"
             count_params = {}
             exec_params = {'limit': per_page, 'offset': offset}
         else:
@@ -21033,9 +21033,9 @@ def mailbox():
 
         all_users = []
         if is_admin:
-            # Use COALESCE to avoid SQLite BOOLEAN literal issues (FALSE/TRUE) and treat NULL as 0
+            # PostgreSQL-compatible boolean comparison
             all_users = db.session.execute(text(
-                "SELECT id, email, company_name FROM leads WHERE COALESCE(is_admin, 0) = 0 ORDER BY email"
+                "SELECT id, email, company_name FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL) ORDER BY email"
             )).fetchall()
 
         return render_template('mailbox.html',
@@ -21116,11 +21116,11 @@ def send_message():
         if is_admin and message_type in ['broadcast', 'paid_only']:
             if message_type == 'broadcast':
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 0")
+                    text("SELECT id FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL)")
                 ).fetchall()
             else:  # paid_only
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 0 AND subscription_status = 'paid'")
+                    text("SELECT id FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL) AND subscription_status = 'paid'")
                 ).fetchall()
             
             # Send to all recipients
@@ -21144,7 +21144,7 @@ def send_message():
             if recipient_id == 'admin':
                 # Send to first admin user
                 admin_user = db.session.execute(
-                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 1 LIMIT 1")
+                    text("SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1")
                 ).fetchone()
                 recipient_id = admin_user[0] if admin_user else None
             
