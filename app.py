@@ -225,6 +225,47 @@ app.config['ADMIN_SESSION_LIFETIME'] = timedelta(hours=48)  # Admin sessions las
 
 db = SQLAlchemy(app)
 
+def ensure_twofa_columns():
+    """Guarantee two-factor columns exist on the leads table (idempotent)."""
+    ctx = None
+    try:
+        if not has_app_context():
+            ctx = app.app_context()
+            ctx.push()
+
+        engine_url = str(db.engine.url)
+        is_postgres = 'postgresql' in engine_url
+        bool_type = 'BOOLEAN DEFAULT FALSE' if is_postgres else 'INTEGER DEFAULT 0'
+
+        if is_postgres:
+            result = db.session.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'leads'
+                  AND column_name IN ('twofa_enabled', 'twofa_secret')
+            """))
+            existing_cols = {row[0] for row in result}
+        else:
+            result = db.session.execute(text('PRAGMA table_info(leads)'))
+            existing_cols = {row[1] for row in result}
+
+        alterations = 0
+        if 'twofa_enabled' not in existing_cols:
+            db.session.execute(text(f'ALTER TABLE leads ADD COLUMN twofa_enabled {bool_type}'))
+            alterations += 1
+        if 'twofa_secret' not in existing_cols:
+            db.session.execute(text('ALTER TABLE leads ADD COLUMN twofa_secret TEXT'))
+            alterations += 1
+        if alterations:
+            db.session.commit()
+            print(f'✅ Added missing 2FA columns ({alterations} updates)')
+    except Exception as migration_err:
+        db.session.rollback()
+        print(f"⚠️  Two-factor column check failed (non-blocking): {migration_err}")
+    finally:
+        if ctx:
+            ctx.pop()
+
 # Auth debug toggle (set AUTH_DEBUG=1 in environment to enable verbose signin logging)
 AUTH_DEBUG = os.getenv('AUTH_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
 
@@ -363,6 +404,9 @@ with app.app_context():
     except Exception as e:
         db.session.rollback()
         print(f'⚠️  Failed to ensure leads table or seed test user: {e}')
+
+# Finalize authentication schema on import so every deployment gets the safety fix
+ensure_twofa_columns()
 
 # =============================
 # Proposal Wizard & Compliance AI Feature (Capability Statements)
@@ -10358,52 +10402,6 @@ def branding_materials():
     # except Exception as e:
     #     print(f"Error checking subscription: {e}")
     
-
-def ensure_twofa_columns():
-    """Guarantee two-factor columns exist on the leads table (idempotent)."""
-    ctx = None
-    try:
-        if not has_app_context():
-            ctx = app.app_context()
-            ctx.push()
-
-        engine_url = str(db.engine.url)
-        is_postgres = 'postgresql' in engine_url
-        bool_type = 'BOOLEAN DEFAULT FALSE' if is_postgres else 'INTEGER DEFAULT 0'
-
-        if is_postgres:
-            result = db.session.execute(text("""
-                SELECT column_name
-                FROM information_schema.columns
-                WHERE table_name = 'leads'
-                  AND column_name IN ('twofa_enabled', 'twofa_secret')
-            """))
-            existing_cols = {row[0] for row in result}
-        else:
-            result = db.session.execute(text('PRAGMA table_info(leads)'))
-            existing_cols = {row[1] for row in result}
-
-        alterations = 0
-        if 'twofa_enabled' not in existing_cols:
-            db.session.execute(text(f'ALTER TABLE leads ADD COLUMN twofa_enabled {bool_type}'))
-            alterations += 1
-        if 'twofa_secret' not in existing_cols:
-            db.session.execute(text('ALTER TABLE leads ADD COLUMN twofa_secret TEXT'))
-            alterations += 1
-        if alterations:
-            db.session.commit()
-            print(f'✅ Added missing 2FA columns ({alterations} updates)')
-    except Exception as migration_err:
-        db.session.rollback()
-        print(f"⚠️  Two-factor column check failed (non-blocking): {migration_err}")
-    finally:
-        if ctx:
-            ctx.pop()
-
-@app.before_first_request
-def run_startup_safety_checks():
-    """Critical schema checks that must run under any WSGI server."""
-    ensure_twofa_columns()
     # Define branding materials available for download
     materials = [
         {
