@@ -84,6 +84,9 @@
                         <button class="btn btn-primary" onclick="processManualEntry()">
                             <i class="fas fa-arrow-right me-2"></i>Continue with Manual Entry
                         </button>
+                        <button class="btn btn-outline-info ms-2" onclick="uploadRfp()">
+                            <i class="fas fa-file-upload me-2"></i>Upload & Check Compliance
+                        </button>
                     </div>
 
                     <div id="selectedContractPreview" style="display: none;" class="alert alert-success mt-3">
@@ -194,12 +197,16 @@
                             </div>
                             <div class="col-md-3">
                                 <small class="text-muted d-block">Compliance</small>
-                                <span class="badge bg-success" id="complianceStatus">✓ Passed</span>
+                                <span class="badge bg-secondary" id="complianceStatus">Pending</span>
                             </div>
                             <div class="col-md-3">
                                 <small class="text-muted d-block">Formatting</small>
                                 <span class="badge bg-success" id="formattingStatus">✓ Professional</span>
                             </div>
+                        </div>
+                        <div id="complianceMatrix" class="mt-3" style="display:none;">
+                            <h6 class="mb-2">Compliance Matrix</h6>
+                            <ul id="complianceList" class="mb-0"></ul>
                         </div>
                     </div>
 
@@ -257,6 +264,28 @@
 <script>
 let selectedContract = null;
 let generatedProposal = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const src = params.get('source');
+    const id = params.get('id');
+    const leadTitle = params.get('lead_title');
+    if (src && id) {
+        // Auto-load specific contract into the generator
+        document.getElementById('contractSource').value = src;
+        fetch(`/api/get-contract-by-id?source=${src}&id=${id}`)
+          .then(r=>r.json()).then(d=>{
+            if (d && d.contract) {
+                const c = d.contract;
+                selectContract({ title: c.title || 'Selected Opportunity', agency: c.agency || c.location, id: c.id }, src);
+            }
+          }).catch(()=>{});
+    } else if (leadTitle) {
+        document.getElementById('contractSource').value = 'manual';
+        document.getElementById('manualTitle').value = leadTitle;
+        document.getElementById('manualEntrySection').style.display = 'block';
+    }
+});
 
 function loadContracts() {
     const source = document.getElementById('contractSource').value;
@@ -320,6 +349,13 @@ function selectContract(contract, source) {
     document.getElementById('selectedContractPreview').style.display = 'block';
     document.getElementById('step2Card').style.display = 'block';
     document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Fetch full details and run compliance check (if description available)
+        fetch(`/api/get-contract-by-id?source=${source}&id=${contract.id}`)
+            .then(r => r.json()).then(d => {
+                if (d && d.contract && d.contract.description) {
+                    checkCompliance(d.contract.description);
+                }
+            }).catch(()=>{});
 }
 
 function processManualEntry() {
@@ -346,6 +382,58 @@ function processManualEntry() {
     document.getElementById('selectedContractPreview').style.display = 'block';
     document.getElementById('step2Card').style.display = 'block';
     document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function uploadRfp() {
+    const fileInput = document.getElementById('rfpDocument');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please choose a PDF or DOCX file to upload.');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    // Show spinner inside button? For now, simple alert state
+    fetch('/api/upload-rfp', {
+        method: 'POST',
+        body: formData
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            // Populate manual description from extracted text
+            document.getElementById('manualDescription').value = data.extracted_text || '';
+            renderCompliance(data.compliance);
+            document.getElementById('complianceMatrix').style.display = 'block';
+        } else {
+            alert('Upload failed: ' + (data.error || 'Unknown error'));
+        }
+    }).catch(() => alert('Upload failed.'));
+}
+
+function checkCompliance(text) {
+    fetch('/api/check-compliance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            renderCompliance(data.compliance);
+            document.getElementById('complianceMatrix').style.display = 'block';
+        }
+    }).catch(()=>{});
+}
+
+function renderCompliance(comp) {
+    const badge = document.getElementById('complianceStatus');
+    if (!comp) return;
+    const pct = Math.round((comp.passed / comp.total) * 100);
+    badge.className = 'badge ' + (pct >= 70 ? 'bg-success' : pct >= 40 ? 'bg-warning text-dark' : 'bg-danger');
+    badge.innerText = pct >= 70 ? '✓ Passed' : pct >= 40 ? 'Partial' : 'Needs Work';
+    const ul = document.getElementById('complianceList');
+    ul.innerHTML = '';
+    comp.matrix.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `${item.ok ? '✅' : '❌'} ${item.item}`;
+        ul.appendChild(li);
+    });
 }
 
 function generateProposal() {

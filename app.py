@@ -17,6 +17,7 @@ import schedule
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import tempfile
 from functools import wraps, lru_cache
 from lead_generator import LeadGenerator
 import paypalrestsdk
@@ -19205,6 +19206,197 @@ def get_contracts_api():
     except Exception as e:
         print(f"Get contracts error: {e}")
         return jsonify({'success': False, 'contracts': []}), 500
+
+@app.route('/api/get-contract-by-id')
+@login_required
+def get_contract_by_id_api():
+    """Return detailed contract info by source and id (connect awards to generator)."""
+    try:
+        source = request.args.get('source')
+        cid = request.args.get('id')
+        if not source or not cid:
+            return jsonify({'success': False, 'error': 'Missing source or id'}), 400
+        data = None
+        if source == 'federal':
+            row = db.session.execute(text(
+                "SELECT notice_id, agency_name, description, naics_code, posted_date, deadline, sam_gov_url "
+                "FROM federal_contracts WHERE notice_id = :i"
+            ), {'i': cid}).fetchone()
+            if row:
+                data = {
+                    'id': row.notice_id,
+                    'title': row.description[:120] + '...' if row.description else 'Federal Opportunity',
+                    'agency': row.agency_name,
+                    'description': row.description,
+                    'naics_code': row.naics_code,
+                    'posted_date': str(row.posted_date) if row.posted_date else None,
+                    'deadline': str(row.deadline) if row.deadline else None,
+                    'url': row.sam_gov_url
+                }
+        elif source == 'local':
+            row = db.session.execute(text(
+                "SELECT id, title, description, location, deadline, posted_date, website_url FROM contracts WHERE id = :i"
+            ), {'i': cid}).fetchone()
+            if row:
+                data = {
+                    'id': row.id,
+                    'title': row.title,
+                    'description': row.description,
+                    'location': row.location,
+                    'posted_date': str(row.posted_date) if row.posted_date else None,
+                    'deadline': str(row.deadline) if row.deadline else None,
+                    'url': row.website_url
+                }
+        elif source == 'commercial':
+            row = db.session.execute(text(
+                "SELECT id, business_name, project_description, city, start_date FROM commercial_lead_requests WHERE id = :i"
+            ), {'i': cid}).fetchone()
+            if row:
+                data = {
+                    'id': row.id,
+                    'title': row.business_name,
+                    'description': row.project_description,
+                    'location': row.city,
+                    'deadline': str(row.start_date) if row.start_date else None
+                }
+        return jsonify({'success': True, 'contract': data})
+    except Exception as e:
+        print(f"get_contract_by_id error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+# -----------------------------
+# RFP Upload & Compliance Check
+# -----------------------------
+def _extract_text_from_pdf(path):
+    try:
+        import PyPDF2
+        text = ''
+        with open(path, 'rb') as f:
+            reader = PyPDF2.PdfReader(f)
+            for page in reader.pages:
+                txt = page.extract_text() or ''
+                text += (txt + '\n')
+        return text
+    except Exception as e:
+        print(f"PDF extract error: {e}")
+        return ''
+
+def _extract_text_from_docx(path):
+    try:
+        from docx import Document
+        doc = Document(path)
+        return '\n'.join(p.text for p in doc.paragraphs)
+    except Exception as e:
+        print(f"DOCX extract error: {e}")
+        return ''
+
+def _check_compliance(text: str):
+    """Shallow compliance scan for common janitorial RFP requirements."""
+    lower = (text or '').lower()
+    checks = [
+        ('Scope of Work', any(k in lower for k in ['scope of work', 'statement of work', 'sow'])),
+        ('NAICS 561720 (Janitorial)', '561720' in lower or 'janitorial' in lower),
+        ('SAM.gov Registration', any(k in lower for k in ['sam.gov', 'sam registration', 'uei'])),
+        ('Insurance Requirements', any(k in lower for k in ['insurance', 'general liability', 'workers’ compensation', 'workers compensation'])),
+        ('Bonding (if required)', any(k in lower for k in ['bid bond', 'performance bond', 'payment bond'])),
+        ('Quality Control Plan', any(k in lower for k in ['quality control', 'quality assurance'])),
+        ('Safety/OSHA', any(k in lower for k in ['osha', 'safety plan', 'safety procedures'])),
+        ('Background Checks', any(k in lower for k in ['background check', 'clearance'])),
+        ('Green/Sustainable Cleaning', any(k in lower for k in ['green cleaning', 'epa safer choice', 'environmentally friendly'])),
+        ('Schedule / Hours', any(k in lower for k in ['work schedule', 'hours', 'after hours'])),
+    ]
+    passed = sum(1 for _, ok in checks if ok)
+    total = len(checks)
+    return {
+        'passed': passed,
+        'total': total,
+        'matrix': [{'item': name, 'ok': bool(ok)} for name, ok in checks]
+    }
+
+@app.route('/api/upload-rfp', methods=['POST'])
+@login_required
+def upload_rfp_api():
+    """Upload RFP document and return extracted text + compliance check."""
+    try:
+        file = request.files.get('file')
+        if not file:
+            return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+        filename = secure_filename(file.filename)
+        ext = (os.path.splitext(filename)[1] or '').lower()
+        tmpdir = tempfile.mkdtemp()
+        path = os.path.join(tmpdir, filename)
+        file.save(path)
+        text = ''
+        if ext == '.pdf':
+            text = _extract_text_from_pdf(path)
+        elif ext == '.docx':
+            text = _extract_text_from_docx(path)
+        else:
+            # Attempt raw read; many .doc files not supported
+            try:
+                text = open(path, 'r', errors='ignore').read()
+            except:
+                text = ''
+        comp = _check_compliance(text)
+        return jsonify({'success': True, 'extracted_text': text[:10000], 'compliance': comp})
+    except Exception as e:
+        print(f"upload_rfp_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@app.route('/api/check-compliance', methods=['POST'])
+@login_required
+def check_compliance_api():
+    """Check compliance from provided contract description or text."""
+    try:
+        data = request.get_json() or {}
+        text = data.get('text') or data.get('description') or ''
+        comp = _check_compliance(text)
+        return jsonify({'success': True, 'compliance': comp})
+    except Exception as e:
+        print(f"check_compliance_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@app.route('/api/download-proposal', methods=['POST'])
+@login_required
+def download_proposal_api():
+    """Generate a downloadable proposal (PDF or DOCX)."""
+    try:
+        from io import BytesIO
+        payload = request.get_json() or {}
+        proposal = payload.get('proposal', {})
+        content = proposal.get('content', '')
+        fmt = payload.get('format', 'pdf')
+        buf = BytesIO()
+        if fmt == 'word':
+            try:
+                from docx import Document
+                doc = Document()
+                for line in content.split('\n'):
+                    doc.add_paragraph(line)
+                doc.save(buf)
+                buf.seek(0)
+                return send_file(buf, as_attachment=True, download_name='proposal.docx', mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            except Exception as e:
+                print(f"DOCX generate error: {e}")
+                fmt = 'pdf'  # Fallback
+        # PDF
+        from reportlab.lib.pagesizes import LETTER
+        from reportlab.pdfgen import canvas
+        c = canvas.Canvas(buf, pagesize=LETTER)
+        width, height = LETTER
+        y = height - 72
+        for line in content.split('\n'):
+            c.drawString(72, y, line[:110])
+            y -= 14
+            if y < 72:
+                c.showPage()
+                y = height - 72
+        c.save()
+        buf.seek(0)
+        return send_file(buf, as_attachment=True, download_name='proposal.pdf', mimetype='application/pdf')
+    except Exception as e:
+        print(f"download_proposal_api error: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @app.route('/api/generate-proposal', methods=['POST'])
 @login_required
