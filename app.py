@@ -338,9 +338,9 @@ def ensure_admin2_account(force_password_reset: bool = False):
                         email_notifications)
                     VALUES (
                         :company, :contact, :email, :username, :password_hash,
-                        'paid', 999999, 1, 0,
-                        :registration_date, 'system_bootstrap', 0, 0,
-                        1
+                        'paid', 999999, TRUE, 0,
+                        :registration_date, 'system_bootstrap', FALSE, FALSE,
+                        TRUE
                     )'''),
                 {
                     'company': 'Admin Operations',
