@@ -4210,22 +4210,47 @@ def signin():
             
             # Check for admin login first (superadmin) — only if admin creds are configured
             if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+                # Ensure a persistent admin lead record exists (dynamic id instead of hard-coded 1)
+                try:
+                    admin_row = db.session.execute(text('SELECT id FROM leads WHERE email = :e OR username = :u'), {
+                        'e': 'admin@vacontracts.com', 'u': ADMIN_USERNAME
+                    }).fetchone()
+                    if not admin_row:
+                        # Create minimal admin row
+                        pw_hash = generate_password_hash(password)
+                        db.session.execute(text('''INSERT INTO leads (company_name, contact_name, email, username, password_hash, is_admin, subscription_status, credits_balance) 
+                            VALUES (:company_name, :contact_name, :email, :username, :password_hash, 1, 'paid', 999999)'''), {
+                                'company_name': 'Admin',
+                                'contact_name': 'Administrator',
+                                'email': 'admin@vacontracts.com',
+                                'username': ADMIN_USERNAME,
+                                'password_hash': pw_hash
+                            })
+                        db.session.commit()
+                        admin_row = db.session.execute(text('SELECT id FROM leads WHERE email = :e'), {'e': 'admin@vacontracts.com'}).fetchone()
+                except Exception as admin_create_err:
+                    db.session.rollback()
+                    print(f"[ADMIN LOGIN] Failed to ensure admin lead row: {admin_create_err}")
+                    # Fall back to virtual id 1 (legacy) if creation failed
+                    admin_row = (1,)
+                admin_id = admin_row[0] if admin_row else 1
+
                 # Set permanent session with extended timeout for admin
                 session.permanent = True
                 app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
-                
-                session['user_id'] = 1  # Set admin user_id
+                session['user_id'] = admin_id
                 session['is_admin'] = True
-                session['username'] = 'Admin'
+                session['username'] = ADMIN_USERNAME
                 session['name'] = 'Administrator'
                 session['user_email'] = 'admin@vacontracts.com'
                 session['email'] = 'admin@vacontracts.com'
-                session['subscription_status'] = 'paid'  # Admin has full paid subscription access
-                session['credits_balance'] = 999999  # Admin has unlimited credits
-                
-                # Log admin login
+                session['subscription_status'] = 'paid'
+                session['credits_balance'] = 999999
+                session['twofa_enabled'] = False  # Will be updated if enabled
+                if FORCE_ADMIN_2FA:
+                    flash('Administrator accounts must enable 2FA before accessing all features.', 'warning')
+                    return redirect(url_for('enable_2fa'))
                 log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
-                
                 flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
                 return redirect(url_for('contracts'))
             
@@ -4370,18 +4395,43 @@ def login():
     
     # Check for admin login first (superadmin) — only if admin creds are configured
     if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # Ensure admin lead record exists (reuse or create)
+        try:
+            admin_row = db.session.execute(text('SELECT id FROM leads WHERE email = :e OR username = :u'), {
+                'e': 'admin@vacontracts.com', 'u': ADMIN_USERNAME
+            }).fetchone()
+            if not admin_row:
+                pw_hash = generate_password_hash(password)
+                db.session.execute(text('''INSERT INTO leads (company_name, contact_name, email, username, password_hash, is_admin, subscription_status, credits_balance) 
+                    VALUES (:company_name, :contact_name, :email, :username, :password_hash, 1, 'paid', 999999)'''), {
+                        'company_name': 'Admin',
+                        'contact_name': 'Administrator',
+                        'email': 'admin@vacontracts.com',
+                        'username': ADMIN_USERNAME,
+                        'password_hash': pw_hash
+                    })
+                db.session.commit()
+                admin_row = db.session.execute(text('SELECT id FROM leads WHERE email = :e'), {'e': 'admin@vacontracts.com'}).fetchone()
+        except Exception as admin_create_err:
+            db.session.rollback()
+            print(f"[ADMIN LOGIN /login] Failed to ensure admin lead row: {admin_create_err}")
+            admin_row = (1,)
+        admin_id = admin_row[0] if admin_row else 1
+
         session.permanent = True
         app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
-        
-        session['user_id'] = 1
+        session['user_id'] = admin_id
         session['is_admin'] = True
-        session['username'] = 'Admin'
+        session['username'] = ADMIN_USERNAME
         session['name'] = 'Administrator'
         session['user_email'] = 'admin@vacontracts.com'
         session['email'] = 'admin@vacontracts.com'
-        session['subscription_status'] = 'paid'  # Admin has full paid subscription access
-        session['credits_balance'] = 999999  # Admin has unlimited credits
-        
+        session['subscription_status'] = 'paid'
+        session['credits_balance'] = 999999
+        session['twofa_enabled'] = False
+        if FORCE_ADMIN_2FA:
+            flash('Administrator accounts must enable 2FA before accessing all features.', 'warning')
+            return redirect(url_for('enable_2fa'))
         log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
         return redirect(url_for('customer_dashboard'))
