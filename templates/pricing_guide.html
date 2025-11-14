@@ -295,7 +295,119 @@
                                 </table>
                             </div>
                         </div>
+
+                        <!-- Quick Quote Button -->
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-success btn-lg px-5" onclick="showQuickQuoteModal()">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>Generate Quick Quote
+                            </button>
+                            <p class="text-muted small mt-2">Convert this calculation into a professional quote for your customer</p>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Quote Modal -->
+    <div class="modal fade" id="quickQuoteModal" tabindex="-1" aria-labelledby="quickQuoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="quickQuoteModalLabel">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Generate Quick Quote
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Enter your customer's information below. Pricing will be automatically imported from your calculation.
+                    </div>
+
+                    <form id="quickQuoteForm">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="customerBusinessName" class="form-label fw-bold">
+                                    Business Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="customerBusinessName" required 
+                                       placeholder="Example: Hampton City Hall">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="customerAddress" class="form-label fw-bold">
+                                    Address <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="customerAddress" required 
+                                       placeholder="123 Main Street, Hampton, VA 23661">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="customerPhone" class="form-label fw-bold">
+                                    Phone Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" class="form-control" id="customerPhone" required 
+                                       placeholder="(757) 555-1234">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="customerEmail" class="form-label fw-bold">
+                                    Email <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                <input type="email" class="form-control" id="customerEmail" 
+                                       placeholder="contact@customer.com">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="customerContactName" class="form-label fw-bold">
+                                    Contact Person <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                <input type="text" class="form-control" id="customerContactName" 
+                                       placeholder="John Smith">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="quoteNotes" class="form-label fw-bold">
+                                    Additional Notes <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                <textarea class="form-control" id="quoteNotes" rows="3" 
+                                          placeholder="Special requirements, start date preferences, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Quote Preview Summary -->
+                        <div class="card bg-light mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold">Quote Summary</h6>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted">Monthly</small>
+                                        <div class="fw-bold text-primary" id="previewMonthly">$0.00</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Annual</small>
+                                        <div class="fw-bold text-success" id="previewAnnual">$0.00</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Total Contract</small>
+                                        <div class="fw-bold text-danger" id="previewTotal">$0.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="generateQuotePDF()">
+                        <i class="fas fa-file-pdf me-2"></i>Download PDF
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="generateQuoteHTML()">
+                        <i class="fas fa-file-alt me-2"></i>View & Print Quote
+                    </button>
                 </div>
             </div>
         </div>
@@ -805,6 +917,112 @@ function calculatePricing() {
 
 // Auto-calculate on page load
 window.addEventListener('load', calculatePricing);
+
+// Quick Quote Functions
+let currentQuoteData = {};
+
+function showQuickQuoteModal() {
+    // Check if calculation has been done
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection.style.display === 'none') {
+        alert('Please calculate pricing first before generating a quote.');
+        return;
+    }
+
+    // Capture current calculation data
+    currentQuoteData = {
+        state: document.getElementById('state').value,
+        stateName: document.getElementById('state').options[document.getElementById('state').selectedIndex].text,
+        metroArea: document.getElementById('metroArea').options[document.getElementById('metroArea').selectedIndex].text,
+        facilityType: document.getElementById('facilityType').options[document.getElementById('facilityType').selectedIndex].text,
+        squareFootage: document.getElementById('squareFootage').value,
+        frequency: document.getElementById('frequency').options[document.getElementById('frequency').selectedIndex].text,
+        serviceLevel: document.getElementById('serviceLevel').options[document.getElementById('serviceLevel').selectedIndex].text,
+        competition: document.getElementById('competition').options[document.getElementById('competition').selectedIndex].text,
+        profitMargin: document.getElementById('profitMargin').value,
+        contractDuration: document.getElementById('contractDuration').value,
+        laborRate: document.getElementById('laborRate').value,
+        monthlyCost: document.getElementById('monthlyCost').textContent,
+        annualCost: document.getElementById('annualCost').textContent,
+        totalContractValue: document.getElementById('totalContractValue').textContent,
+        breakdownHTML: document.getElementById('breakdownTable').innerHTML,
+        additionalServices: []
+    };
+
+    // Capture selected additional services
+    if (document.getElementById('floorCare')?.checked) currentQuoteData.additionalServices.push('Floor Care');
+    if (document.getElementById('windowCleaning')?.checked) currentQuoteData.additionalServices.push('Window Cleaning');
+    if (document.getElementById('carpetCleaning')?.checked) currentQuoteData.additionalServices.push('Carpet Cleaning');
+    if (document.getElementById('specializedCleaning')?.checked) currentQuoteData.additionalServices.push('Specialized Cleaning');
+    if (document.getElementById('powerWashing')?.checked) currentQuoteData.additionalServices.push('Power Washing');
+    if (document.getElementById('greenCleaning')?.checked) currentQuoteData.additionalServices.push('Green Cleaning');
+    if (document.getElementById('afterHours')?.checked) currentQuoteData.additionalServices.push('After Hours Service');
+    if (document.getElementById('supplyRestocking')?.checked) currentQuoteData.additionalServices.push('Supply Restocking');
+
+    // Update preview in modal
+    document.getElementById('previewMonthly').textContent = currentQuoteData.monthlyCost;
+    document.getElementById('previewAnnual').textContent = currentQuoteData.annualCost;
+    document.getElementById('previewTotal').textContent = currentQuoteData.totalContractValue;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('quickQuoteModal'));
+    modal.show();
+}
+
+function generateQuoteHTML() {
+    // Validate form
+    const businessName = document.getElementById('customerBusinessName').value.trim();
+    const address = document.getElementById('customerAddress').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+
+    if (!businessName || !address || !phone) {
+        alert('Please fill in all required fields (Business Name, Address, Phone Number)');
+        return;
+    }
+
+    // Gather optional fields
+    const email = document.getElementById('customerEmail').value.trim();
+    const contactName = document.getElementById('customerContactName').value.trim();
+    const notes = document.getElementById('quoteNotes').value.trim();
+
+    // Prepare quote data
+    const quoteData = {
+        ...currentQuoteData,
+        customer: {
+            businessName,
+            address,
+            phone,
+            email,
+            contactName,
+            notes
+        },
+        quoteDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        quoteNumber: 'Q-' + Date.now()
+    };
+
+    // Create form and submit to backend
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/generate-quote';
+    form.target = '_blank';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'quote_data';
+    input.value = JSON.stringify(quoteData);
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('quickQuoteModal')).hide();
+}
+
+function generateQuotePDF() {
+    alert('PDF generation feature coming soon! For now, use "View & Print Quote" and save as PDF from your browser.');
+}
 </script>
 
 <style>

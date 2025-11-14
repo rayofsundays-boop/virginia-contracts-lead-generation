@@ -340,6 +340,82 @@
     </div>
 </div>
 
+<div class="modal fade" id="simpleQuickQuoteModal" tabindex="-1" aria-labelledby="simpleQuickQuoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="simpleQuickQuoteModalLabel">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Generate Quick Quote
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Enter your customer's details. We'll automatically pull in the estimated pricing from the basic calculator.
+                </div>
+
+                <form id="simpleQuickQuoteForm">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Business Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="simpleCustomerBusinessName" required placeholder="Example: Hampton City Hall">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Address <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="simpleCustomerAddress" required placeholder="123 Main Street, Hampton, VA 23661">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="simpleCustomerPhone" required placeholder="(757) 555-1234">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Email <span class="text-muted fw-normal">(optional)</span></label>
+                            <input type="email" class="form-control" id="simpleCustomerEmail" placeholder="contact@customer.com">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Contact Person <span class="text-muted fw-normal">(optional)</span></label>
+                            <input type="text" class="form-control" id="simpleCustomerContactName" placeholder="John Smith">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Additional Notes <span class="text-muted fw-normal">(optional)</span></label>
+                            <textarea class="form-control" id="simpleQuoteNotes" rows="3" placeholder="Special instructions or scope notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light mt-3">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold">Quote Summary</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted">Monthly / Service Total</small>
+                                    <div class="fw-bold text-primary" id="simpleQuotePreviewMonthly">$0.00</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Annual Equivalent</small>
+                                    <div class="fw-bold text-success" id="simpleQuotePreviewAnnual">$0.00</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Contract Value</small>
+                                    <div class="fw-bold text-danger" id="simpleQuotePreviewTotal">$0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" onclick="generateSimpleQuoteHTML()">
+                    <i class="fas fa-file-alt me-2"></i>View & Print Quote
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .hover-lift {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -354,6 +430,13 @@
 </style>
 
 <script>
+let basicCalculatorData = null;
+let currentSimpleQuickQuote = {};
+
+function formatCurrency(amount) {
+    return '$' + Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 function showBasicCalculator() {
     document.getElementById('toolModalTitle').textContent = 'Basic Pricing Calculator';
     document.getElementById('toolModalBody').innerHTML = `
@@ -399,6 +482,96 @@ function showBasicCalculator() {
     new bootstrap.Modal(document.getElementById('toolModal')).show();
 }
 
+function showSimpleQuickQuote() {
+    if (!basicCalculatorData || basicCalculatorData.totalCost <= 0) {
+        alert('Please complete a calculation first.');
+        return;
+    }
+
+    currentSimpleQuickQuote = {
+        squareFootage: basicCalculatorData.sqft,
+        rate: basicCalculatorData.rate,
+        baseCost: basicCalculatorData.baseCost,
+        additional: basicCalculatorData.additional,
+        totalCost: basicCalculatorData.totalCost,
+        monthlyCost: formatCurrency(basicCalculatorData.totalCost),
+        annualCost: formatCurrency(basicCalculatorData.totalCost * 12),
+        totalContract: formatCurrency(basicCalculatorData.totalCost * 12),
+        breakdownHTML: `
+            <tr><td>Base Cleaning (${basicCalculatorData.sqft.toLocaleString()} sq ft @ $${basicCalculatorData.rate.toFixed(2)}/sq ft)</td><td class="text-end">${formatCurrency(basicCalculatorData.baseCost)}</td></tr>
+            <tr><td>Additional Services</td><td class="text-end">${formatCurrency(basicCalculatorData.additional)}</td></tr>
+            <tr class="table-primary fw-bold"><td>Total Estimate</td><td class="text-end">${formatCurrency(basicCalculatorData.totalCost)}</td></tr>
+        `
+    };
+
+    document.getElementById('simpleQuotePreviewMonthly').textContent = currentSimpleQuickQuote.monthlyCost;
+    document.getElementById('simpleQuotePreviewAnnual').textContent = currentSimpleQuickQuote.annualCost;
+    document.getElementById('simpleQuotePreviewTotal').textContent = currentSimpleQuickQuote.totalContract;
+
+    const modal = new bootstrap.Modal(document.getElementById('simpleQuickQuoteModal'));
+    modal.show();
+}
+
+function generateSimpleQuoteHTML() {
+    const businessName = document.getElementById('simpleCustomerBusinessName').value.trim();
+    const address = document.getElementById('simpleCustomerAddress').value.trim();
+    const phone = document.getElementById('simpleCustomerPhone').value.trim();
+
+    if (!businessName || !address || !phone) {
+        alert('Business name, address, and phone are required.');
+        return;
+    }
+
+    const email = document.getElementById('simpleCustomerEmail').value.trim();
+    const contactName = document.getElementById('simpleCustomerContactName').value.trim();
+    const notes = document.getElementById('simpleQuoteNotes').value.trim();
+
+    const quoteData = {
+        state: 'Custom',
+        stateName: 'Custom Market',
+        metroArea: 'Custom Estimate',
+        facilityType: 'Custom Facility (Basic Calculator)',
+        squareFootage: currentSimpleQuickQuote.squareFootage,
+        frequency: 'Custom Schedule',
+        serviceLevel: 'Custom',
+        competition: 'N/A',
+        profitMargin: 'N/A',
+        contractDuration: 1,
+        monthlyCost: currentSimpleQuickQuote.monthlyCost,
+        annualCost: currentSimpleQuickQuote.annualCost,
+        totalContractValue: currentSimpleQuickQuote.totalContract,
+        breakdownHTML: currentSimpleQuickQuote.breakdownHTML,
+        additionalServices: [],
+        customer: {
+            businessName,
+            address,
+            phone,
+            email,
+            contactName,
+            notes
+        },
+        quoteDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        quoteNumber: 'Q-' + Date.now()
+    };
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/generate-quote';
+    form.target = '_blank';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'quote_data';
+    input.value = JSON.stringify(quoteData);
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    bootstrap.Modal.getInstance(document.getElementById('simpleQuickQuoteModal')).hide();
+}
+
 function calculatePrice() {
     const sqft = parseFloat(document.getElementById('sqft').value) || 0;
     const rate = parseFloat(document.getElementById('rate').value) || 0;
@@ -407,6 +580,13 @@ function calculatePrice() {
     if (sqft > 0 && rate > 0) {
         const baseCost = sqft * rate;
         const totalCost = baseCost + additional;
+        basicCalculatorData = {
+            sqft,
+            rate,
+            baseCost,
+            additional,
+            totalCost
+        };
         
         document.getElementById('baseCost').textContent = `$${baseCost.toFixed(2)}`;
         document.getElementById('additionalCost').textContent = `$${additional.toFixed(2)}`;
@@ -417,6 +597,12 @@ function calculatePrice() {
             <div class="alert alert-success">
                 <h5><i class="fas fa-check-circle me-2"></i>Calculation Complete!</h5>
                 <p class="mb-0">For ${sqft} sq ft @ $${rate}/sq ft + $${additional.toFixed(2)} services = <strong>$${totalCost.toFixed(2)}</strong></p>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn btn-success" onclick="showSimpleQuickQuote()">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Generate Quick Quote
+                </button>
+                <p class="text-muted small mt-2">Convert this estimate into a professional quote</p>
             </div>
         `;
     } else {

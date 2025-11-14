@@ -993,6 +993,16 @@ def currency_filter(value):
             return f"${value}"
         return "$0.00"
 
+@app.template_filter('format_number')
+def format_number_filter(value):
+    """Format number with comma separators"""
+    try:
+        if isinstance(value, str):
+            value = value.replace(',', '').strip()
+        return "{:,}".format(int(float(value)))
+    except (ValueError, TypeError):
+        return value
+
 @app.template_filter('safe_url')
 def safe_url_filter(url, default_system='sam.gov'):
     """Ensure URL is valid and defaults to bid management system if empty/invalid"""
@@ -10343,6 +10353,19 @@ def branding_materials():
     # except Exception as e:
     #     print(f"Error checking subscription: {e}")
     
+
+def ensure_twofa_columns():
+    """Guarantee two-factor columns exist on the leads table (idempotent)."""
+    try:
+        from add_twofa_columns import add_twofa_columns
+        add_twofa_columns()
+    except Exception as migration_err:
+        print(f"⚠️  Two-factor column check failed (non-blocking): {migration_err}")
+
+@app.before_first_request
+def run_startup_safety_checks():
+    """Critical schema checks that must run under any WSGI server."""
+    ensure_twofa_columns()
     # Define branding materials available for download
     materials = [
         {
@@ -19222,6 +19245,49 @@ def pricing_calculator():
     """Redirect to pricing guide with integrated calculator"""
     return redirect(url_for('pricing_guide'))
 
+@app.route('/generate-quote', methods=['POST'])
+@login_required
+def generate_quote():
+    """Generate professional quote from calculator data"""
+    import json
+    
+    try:
+        # Get quote data from form
+        quote_data_json = request.form.get('quote_data')
+        if not quote_data_json:
+            flash('No quote data provided', 'error')
+            return redirect(url_for('pricing_guide'))
+        
+        quote_data = json.loads(quote_data_json)
+        contractor_info = {
+            'name': session.get('name') or session.get('username') or 'Your Name',
+            'email': session.get('email') or session.get('user_email') or '',
+            'company': session.get('company_name'),
+            'phone': session.get('phone')
+        }
+
+        user_id = session.get('user_id')
+        if user_id:
+            try:
+                result = db.session.execute(text('SELECT company_name, contact_name, phone FROM leads WHERE id = :i'), {'i': user_id}).mappings().fetchone()
+                if result:
+                    contractor_info['company'] = contractor_info.get('company') or result.get('company_name') or 'Your Cleaning Company'
+                    contractor_info['name'] = contractor_info.get('name') or result.get('contact_name') or 'Your Name'
+                    contractor_info['phone'] = contractor_info.get('phone') or result.get('phone')
+            except Exception as contractor_err:
+                print(f"Contractor lookup failed: {contractor_err}")
+
+        contractor_info['company'] = contractor_info.get('company') or 'Your Cleaning Company'
+        quote_data['contractor'] = contractor_info
+        
+        # Render quote template
+        return render_template('quote_view.html', quote=quote_data)
+        
+    except Exception as e:
+        print(f"Quote generation error: {e}")
+        flash('Error generating quote. Please try again.', 'error')
+        return redirect(url_for('pricing_guide'))
+
 @app.route('/card-grid-example')
 def card_grid_example():
     """Example page demonstrating uniform height card grid system"""
@@ -24781,13 +24847,7 @@ def run_industry_days_scraper():
 
 if __name__ == '__main__':
     init_db()
-    
-    # Run 2FA column migration
-    try:
-        from add_twofa_columns import add_twofa_columns
-        add_twofa_columns()
-    except Exception as migration_err:
-        print(f"⚠️  2FA migration warning (non-critical): {migration_err}")
+    ensure_twofa_columns()
     
     import socket
     port = int(os.environ.get('PORT', 8080))
