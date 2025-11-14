@@ -1,7 +1,7 @@
 import os
 import json
 import urllib.parse
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, send_file, has_app_context
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -4399,10 +4399,15 @@ def signin():
             except Exception as e:
                 # Fallback if newer columns don't exist yet
                 print(f"⚠️ Extended auth columns not available, using legacy query: {e}")
-                legacy = db.session.execute(
-                    text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
-                    {'username': username}
-                ).fetchone()
+                db.session.rollback()  # Clear failed transaction (needed for Postgres)
+                try:
+                    legacy = db.session.execute(
+                        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+                        {'username': username}
+                    ).fetchone()
+                except Exception as legacy_err:
+                    print(f"❌ Legacy auth query also failed: {legacy_err}")
+                    legacy = None
                 if legacy:
                     # Pad values to expected tuple length (beta flags, twofa)
                     result = tuple(list(legacy) + [False, None, 0])
@@ -10356,11 +10361,44 @@ def branding_materials():
 
 def ensure_twofa_columns():
     """Guarantee two-factor columns exist on the leads table (idempotent)."""
+    ctx = None
     try:
-        from add_twofa_columns import add_twofa_columns
-        add_twofa_columns()
+        if not has_app_context():
+            ctx = app.app_context()
+            ctx.push()
+
+        engine_url = str(db.engine.url)
+        is_postgres = 'postgresql' in engine_url
+        bool_type = 'BOOLEAN DEFAULT FALSE' if is_postgres else 'INTEGER DEFAULT 0'
+
+        if is_postgres:
+            result = db.session.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'leads'
+                  AND column_name IN ('twofa_enabled', 'twofa_secret')
+            """))
+            existing_cols = {row[0] for row in result}
+        else:
+            result = db.session.execute(text('PRAGMA table_info(leads)'))
+            existing_cols = {row[1] for row in result}
+
+        alterations = 0
+        if 'twofa_enabled' not in existing_cols:
+            db.session.execute(text(f'ALTER TABLE leads ADD COLUMN twofa_enabled {bool_type}'))
+            alterations += 1
+        if 'twofa_secret' not in existing_cols:
+            db.session.execute(text('ALTER TABLE leads ADD COLUMN twofa_secret TEXT'))
+            alterations += 1
+        if alterations:
+            db.session.commit()
+            print(f'✅ Added missing 2FA columns ({alterations} updates)')
     except Exception as migration_err:
+        db.session.rollback()
         print(f"⚠️  Two-factor column check failed (non-blocking): {migration_err}")
+    finally:
+        if ctx:
+            ctx.pop()
 
 @app.before_first_request
 def run_startup_safety_checks():
