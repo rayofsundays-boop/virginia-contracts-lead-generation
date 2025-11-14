@@ -16480,16 +16480,11 @@ def industry_days_events():
                     row_count = db.session.execute(text('SELECT COUNT(*) FROM industry_days')).scalar()
                 except Exception:
                     row_count = None
-                diag = {
-                    'dialect': dialect,
-                    'row_count': row_count,
-                    'schema_version': schema_version
-                }
         except Exception:
             pass
 
         print(f"🎯 Rendering template with {len(events)} events")
-        return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state, diagnostics=diag)
+        return render_template('industry_days_events.html', events=events, schema_version=schema_version, filters=filter_state)
     
     except Exception as e:
         print(f"❌ Error in industry_days_events() route: {e}")
