@@ -1,0 +1,949 @@
+{% extends 'base.html' %}
+
+{% block title %}My Company Profile - ContractLink.ai{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 250px;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    <i class="fas fa-building me-3"></i>Company Profile
+                </h1>
+                <p class="lead text-white fs-4">
+                    Complete your profile to auto-populate quotes, proposals, and capability statements
+                </p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                    <div class="text-white mb-2">Profile Completion</div>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ profile.profile_completion_percentage or 0 }}%"
+                             id="completionProgress">
+                            <span class="fw-bold" id="completionText">{{ profile.profile_completion_percentage or 0 }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <!-- Sidebar Navigation -->
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-3">Profile Sections</h6>
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="#company-info"><i class="fas fa-building me-2"></i>Company Info</a>
+                        <a class="nav-link" href="#contact-info"><i class="fas fa-address-card me-2"></i>Contact Info</a>
+                        <a class="nav-link" href="#address-info"><i class="fas fa-map-marker-alt me-2"></i>Address</a>
+                        <a class="nav-link" href="#business-details"><i class="fas fa-briefcase me-2"></i>Business Details</a>
+                        <a class="nav-link" href="#certifications"><i class="fas fa-certificate me-2"></i>Certifications</a>
+                        <a class="nav-link" href="#insurance"><i class="fas fa-shield-alt me-2"></i>Insurance</a>
+                        <a class="nav-link" href="#past-performance"><i class="fas fa-history me-2"></i>Past Performance</a>
+                        <a class="nav-link" href="#key-personnel"><i class="fas fa-users me-2"></i>Key Personnel</a>
+                        <a class="nav-link" href="#equipment"><i class="fas fa-tools me-2"></i>Equipment</a>
+                        <a class="nav-link" href="#references"><i class="fas fa-star me-2"></i>References</a>
+                        <a class="nav-link" href="#capabilities"><i class="fas fa-check-circle me-2"></i>Capabilities</a>
+                    </nav>
+                    
+                    <hr class="my-3">
+                    
+                    <button type="button" class="btn btn-primary w-100 mb-2" onclick="saveProfile()">
+                        <i class="fas fa-save me-2"></i>Save Profile
+                    </button>
+                    
+                    <a href="{{ url_for('capability_statement') }}" class="btn btn-outline-primary w-100" target="_blank">
+                        <i class="fas fa-file-alt me-2"></i>View Capability Statement
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <form id="profileForm">
+                <!-- Company Information -->
+                <div class="card shadow-sm mb-4" id="company-info">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-building me-2"></i>Company Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Legal Company Name *</label>
+                                <input type="text" class="form-control" name="company_name" 
+                                       value="{{ profile.company_name or '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">DBA Name (if different)</label>
+                                <input type="text" class="form-control" name="dba_name" 
+                                       value="{{ profile.dba_name or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Structure</label>
+                                <select class="form-select" name="business_structure">
+                                    <option value="">Select...</option>
+                                    <option value="Sole Proprietor" {% if profile.business_structure == 'Sole Proprietor' %}selected{% endif %}>Sole Proprietor</option>
+                                    <option value="LLC" {% if profile.business_structure == 'LLC' %}selected{% endif %}>LLC</option>
+                                    <option value="Corporation" {% if profile.business_structure == 'Corporation' %}selected{% endif %}>Corporation</option>
+                                    <option value="S-Corp" {% if profile.business_structure == 'S-Corp' %}selected{% endif %}>S-Corp</option>
+                                    <option value="Partnership" {% if profile.business_structure == 'Partnership' %}selected{% endif %}>Partnership</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Year Established</label>
+                                <input type="number" class="form-control" name="year_established" 
+                                       value="{{ profile.year_established or '' }}" min="1900" max="2025">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tax ID (EIN)</label>
+                                <input type="text" class="form-control" name="tax_id" 
+                                       value="{{ profile.tax_id or '' }}" placeholder="XX-XXXXXXX">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">DUNS Number</label>
+                                <input type="text" class="form-control" name="duns_number" 
+                                       value="{{ profile.duns_number or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">CAGE Code</label>
+                                <input type="text" class="form-control" name="cage_code" 
+                                       value="{{ profile.cage_code or '' }}">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">UEI Number (SAM.gov)</label>
+                                <input type="text" class="form-control" name="uei_number" 
+                                       value="{{ profile.uei_number or '' }}">
+                                <small class="text-secondary">Required for federal contracting</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card shadow-sm mb-4" id="contact-info">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">Primary Contact</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="primary_contact_name" 
+                                       value="{{ profile.primary_contact_name or '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-control" name="primary_contact_title" 
+                                       value="{{ profile.primary_contact_title or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone *</label>
+                                <input type="tel" class="form-control" name="primary_contact_phone" 
+                                       value="{{ profile.primary_contact_phone or '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="primary_contact_email" 
+                                       value="{{ profile.primary_contact_email or '' }}" required>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="text-muted mb-3">Billing Contact (if different)</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" name="billing_contact_name" 
+                                       value="{{ profile.billing_contact_name or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="billing_contact_email" 
+                                       value="{{ profile.billing_contact_email or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" name="billing_contact_phone" 
+                                       value="{{ profile.billing_contact_phone or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="card shadow-sm mb-4" id="address-info">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">Physical Address</h6>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Street Address *</label>
+                                <input type="text" class="form-control" name="physical_address" 
+                                       value="{{ profile.physical_address or '' }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" name="physical_city" 
+                                       value="{{ profile.physical_city or '' }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">State *</label>
+                                <input type="text" class="form-control" name="physical_state" 
+                                       value="{{ profile.physical_state or '' }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">ZIP Code *</label>
+                                <input type="text" class="form-control" name="physical_zip" 
+                                       value="{{ profile.physical_zip or '' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="sameAsMailing" 
+                                   onchange="copyPhysicalToMailing(this.checked)">
+                            <label class="form-check-label" for="sameAsMailing">
+                                Mailing address is same as physical address
+                            </label>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">Mailing Address</h6>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Street Address</label>
+                                <input type="text" class="form-control" name="mailing_address" 
+                                       value="{{ profile.mailing_address or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" name="mailing_city" 
+                                       value="{{ profile.mailing_city or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">State</label>
+                                <input type="text" class="form-control" name="mailing_state" 
+                                       value="{{ profile.mailing_state or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">ZIP Code</label>
+                                <input type="text" class="form-control" name="mailing_zip" 
+                                       value="{{ profile.mailing_zip or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Details -->
+                <div class="card shadow-sm mb-4" id="business-details">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Business Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Website URL</label>
+                                <input type="url" class="form-control" name="website_url" 
+                                       value="{{ profile.website_url or '' }}" placeholder="https://">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Years in Business</label>
+                                <input type="number" class="form-control" name="years_in_business" 
+                                       value="{{ profile.years_in_business or '' }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Number of Employees</label>
+                                <input type="number" class="form-control" name="number_of_employees" 
+                                       value="{{ profile.number_of_employees or '' }}">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Annual Revenue Range</label>
+                                <select class="form-select" name="annual_revenue">
+                                    <option value="">Select...</option>
+                                    <option {% if profile.annual_revenue == 'Under $100K' %}selected{% endif %}>Under $100K</option>
+                                    <option {% if profile.annual_revenue == '$100K - $500K' %}selected{% endif %}>$100K - $500K</option>
+                                    <option {% if profile.annual_revenue == '$500K - $1M' %}selected{% endif %}>$500K - $1M</option>
+                                    <option {% if profile.annual_revenue == '$1M - $5M' %}selected{% endif %}>$1M - $5M</option>
+                                    <option {% if profile.annual_revenue == '$5M - $10M' %}selected{% endif %}>$5M - $10M</option>
+                                    <option {% if profile.annual_revenue == 'Over $10M' %}selected{% endif %}>Over $10M</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Company Description</label>
+                                <textarea class="form-control" name="company_description" rows="4" 
+                                          placeholder="Brief overview of your company and services...">{{ profile.company_description or '' }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Core Competencies</label>
+                                <textarea class="form-control" name="core_competencies" rows="3" 
+                                          placeholder="List your key strengths and areas of expertise...">{{ profile.core_competencies or '' }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Service Areas (Cities/Regions)</label>
+                                <textarea class="form-control" name="service_areas" rows="2" 
+                                          placeholder="E.g., Hampton Roads, Richmond Metro, Northern Virginia...">{{ profile.service_areas or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certifications & Licenses -->
+                <div class="card shadow-sm mb-4" id="certifications">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-certificate me-2"></i>Certifications & Licenses</h5>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addCertification()">
+                            <i class="fas fa-plus me-1"></i>Add Certification
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="certificationsList">
+                            <!-- Certifications will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insurance Information -->
+                <div class="card shadow-sm mb-4" id="insurance">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Insurance Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">General Liability</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Coverage Amount</label>
+                                <input type="text" class="form-control" name="general_liability_amount" 
+                                       value="{{ profile.general_liability_amount or '' }}" placeholder="$1,000,000">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Carrier</label>
+                                <input type="text" class="form-control" name="general_liability_carrier" 
+                                       value="{{ profile.general_liability_carrier or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" name="general_liability_expiry" 
+                                       value="{{ profile.general_liability_expiry or '' }}">
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">Workers' Compensation</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Coverage Amount</label>
+                                <input type="text" class="form-control" name="workers_comp_amount" 
+                                       value="{{ profile.workers_comp_amount or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Carrier</label>
+                                <input type="text" class="form-control" name="workers_comp_carrier" 
+                                       value="{{ profile.workers_comp_carrier or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" name="workers_comp_expiry" 
+                                       value="{{ profile.workers_comp_expiry or '' }}">
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">Auto Insurance</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Coverage Amount</label>
+                                <input type="text" class="form-control" name="auto_insurance_amount" 
+                                       value="{{ profile.auto_insurance_amount or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Carrier</label>
+                                <input type="text" class="form-control" name="auto_insurance_carrier" 
+                                       value="{{ profile.auto_insurance_carrier or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" name="auto_insurance_expiry" 
+                                       value="{{ profile.auto_insurance_expiry or '' }}">
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">Bonding</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Bonding Capacity</label>
+                                <input type="text" class="form-control" name="bonding_capacity" 
+                                       value="{{ profile.bonding_capacity or '' }}" placeholder="$500,000">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Bonding Carrier</label>
+                                <input type="text" class="form-control" name="bonding_carrier" 
+                                       value="{{ profile.bonding_carrier or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Past Performance -->
+                <div class="card shadow-sm mb-4" id="past-performance">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Past Performance</h5>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addProject()">
+                            <i class="fas fa-plus me-1"></i>Add Project
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="projectsList">
+                            <!-- Projects will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Personnel -->
+                <div class="card shadow-sm mb-4" id="key-personnel">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Key Personnel</h5>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addPersonnel()">
+                            <i class="fas fa-plus me-1"></i>Add Person
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="personnelList">
+                            <!-- Personnel will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment -->
+                <div class="card shadow-sm mb-4" id="equipment">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Equipment & Resources</h5>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addEquipment()">
+                            <i class="fas fa-plus me-1"></i>Add Equipment
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="equipmentList">
+                            <!-- Equipment will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- References -->
+                <div class="card shadow-sm mb-4" id="references">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>References</h5>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addReference()">
+                            <i class="fas fa-plus me-1"></i>Add Reference
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="referencesList">
+                            <!-- References will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capabilities -->
+                <div class="card shadow-sm mb-4" id="capabilities">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Capabilities & Services</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Facility Types Served</label>
+                                <textarea class="form-control" name="facility_types" rows="3" 
+                                          placeholder="E.g., Office buildings, Medical facilities, Schools, Retail spaces...">{{ profile.facility_types or '' }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Cleaning Methods</label>
+                                <textarea class="form-control" name="cleaning_methods" rows="3" 
+                                          placeholder="E.g., Green cleaning, Disinfection, Floor care, Window washing...">{{ profile.cleaning_methods or '' }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Specialized Services</label>
+                                <textarea class="form-control" name="specialized_services" rows="3" 
+                                          placeholder="E.g., Post-construction cleanup, Biohazard remediation, Carpet cleaning...">{{ profile.specialized_services or '' }}</textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="availability_247" 
+                                           {% if profile.availability_247 %}checked{% endif %}>
+                                    <label class="form-check-label">24/7 Availability</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="emergency_response" 
+                                           {% if profile.emergency_response %}checked{% endif %}>
+                                    <label class="form-check-label">Emergency Response Services</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="green_cleaning" 
+                                           {% if profile.green_cleaning %}checked{% endif %}>
+                                    <label class="form-check-label">Green/Eco-Friendly Cleaning</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center my-4">
+                    <button type="button" class="btn btn-primary btn-lg px-5" onclick="saveProfile()">
+                        <i class="fas fa-save me-2"></i>Save Complete Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Profile data from server
+const profileData = {{ profile | tojson | safe }};
+
+// Initialize arrays
+let certifications = profileData.certifications || [];
+let projects = profileData.past_projects || [];
+let personnel = profileData.key_personnel || [];
+let equipment = profileData.equipment_list || [];
+let references = profileData.references || [];
+
+// Render existing data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    renderCertifications();
+    renderProjects();
+    renderPersonnel();
+    renderEquipment();
+    renderReferences();
+});
+
+// Copy physical address to mailing address
+function copyPhysicalToMailing(checked) {
+    if (checked) {
+        document.querySelector('[name="mailing_address"]').value = document.querySelector('[name="physical_address"]').value;
+        document.querySelector('[name="mailing_city"]').value = document.querySelector('[name="physical_city"]').value;
+        document.querySelector('[name="mailing_state"]').value = document.querySelector('[name="physical_state"]').value;
+        document.querySelector('[name="mailing_zip"]').value = document.querySelector('[name="physical_zip"]').value;
+    }
+}
+
+// Certifications Management
+function addCertification() {
+    certifications.push({
+        name: '',
+        issuer: '',
+        number: '',
+        expiry_date: ''
+    });
+    renderCertifications();
+}
+
+function removeCertification(index) {
+    certifications.splice(index, 1);
+    renderCertifications();
+}
+
+function renderCertifications() {
+    const container = document.getElementById('certificationsList');
+    if (certifications.length === 0) {
+        container.innerHTML = '<p class="text-secondary">No certifications added yet. Click "Add Certification" to get started.</p>';
+        return;
+    }
+    
+    container.innerHTML = certifications.map((cert, index) => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-5 mb-2">
+                        <label class="form-label small">Certification Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${cert.name || ''}" 
+                               onchange="certifications[${index}].name = this.value">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Issuing Organization</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${cert.issuer || ''}" 
+                               onchange="certifications[${index}].issuer = this.value">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Number</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${cert.number || ''}" 
+                               onchange="certifications[${index}].number = this.value">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Expiry</label>
+                        <input type="date" class="form-control form-control-sm" 
+                               value="${cert.expiry_date || ''}" 
+                               onchange="certifications[${index}].expiry_date = this.value">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeCertification(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Projects Management
+function addProject() {
+    projects.push({
+        project_name: '',
+        client_name: '',
+        contract_value: '',
+        duration: '',
+        description: '',
+        completion_date: ''
+    });
+    renderProjects();
+}
+
+function removeProject(index) {
+    projects.splice(index, 1);
+    renderProjects();
+}
+
+function renderProjects() {
+    const container = document.getElementById('projectsList');
+    if (projects.length === 0) {
+        container.innerHTML = '<p class="text-secondary">No projects added yet. Click "Add Project" to showcase your experience.</p>';
+        return;
+    }
+    
+    container.innerHTML = projects.map((proj, index) => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Project Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${proj.project_name || ''}" 
+                               onchange="projects[${index}].project_name = this.value">
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Client Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${proj.client_name || ''}" 
+                               onchange="projects[${index}].client_name = this.value">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Contract Value</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${proj.contract_value || ''}" 
+                               onchange="projects[${index}].contract_value = this.value" 
+                               placeholder="$50,000">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Duration</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${proj.duration || ''}" 
+                               onchange="projects[${index}].duration = this.value" 
+                               placeholder="6 months">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Completion Date</label>
+                        <input type="date" class="form-control form-control-sm" 
+                               value="${proj.completion_date || ''}" 
+                               onchange="projects[${index}].completion_date = this.value">
+                    </div>
+                    <div class="col-md-12 mb-2">
+                        <label class="form-label small">Description</label>
+                        <textarea class="form-control form-control-sm" rows="2" 
+                                  onchange="projects[${index}].description = this.value">${proj.description || ''}</textarea>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeProject(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Personnel Management
+function addPersonnel() {
+    personnel.push({
+        name: '',
+        title: '',
+        years_experience: '',
+        qualifications: ''
+    });
+    renderPersonnel();
+}
+
+function removePersonnel(index) {
+    personnel.splice(index, 1);
+    renderPersonnel();
+}
+
+function renderPersonnel() {
+    const container = document.getElementById('personnelList');
+    if (personnel.length === 0) {
+        container.innerHTML = '<p class="text-secondary">No key personnel added yet. Click "Add Person" to list your team.</p>';
+        return;
+    }
+    
+    container.innerHTML = personnel.map((person, index) => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${person.name || ''}" 
+                               onchange="personnel[${index}].name = this.value">
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Title</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${person.title || ''}" 
+                               onchange="personnel[${index}].title = this.value">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Years of Experience</label>
+                        <input type="number" class="form-control form-control-sm" 
+                               value="${person.years_experience || ''}" 
+                               onchange="personnel[${index}].years_experience = this.value">
+                    </div>
+                    <div class="col-md-8 mb-2">
+                        <label class="form-label small">Key Qualifications</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${person.qualifications || ''}" 
+                               onchange="personnel[${index}].qualifications = this.value" 
+                               placeholder="Certifications, specialties, etc.">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removePersonnel(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Equipment Management
+function addEquipment() {
+    equipment.push({
+        item_name: '',
+        quantity: '',
+        description: ''
+    });
+    renderEquipment();
+}
+
+function removeEquipment(index) {
+    equipment.splice(index, 1);
+    renderEquipment();
+}
+
+function renderEquipment() {
+    const container = document.getElementById('equipmentList');
+    if (equipment.length === 0) {
+        container.innerHTML = '<p class="text-secondary">No equipment added yet. Click "Add Equipment" to list your resources.</p>';
+        return;
+    }
+    
+    container.innerHTML = equipment.map((item, index) => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-5 mb-2">
+                        <label class="form-label small">Equipment Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${item.item_name || ''}" 
+                               onchange="equipment[${index}].item_name = this.value">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Quantity</label>
+                        <input type="number" class="form-control form-control-sm" 
+                               value="${item.quantity || ''}" 
+                               onchange="equipment[${index}].quantity = this.value">
+                    </div>
+                    <div class="col-md-5 mb-2">
+                        <label class="form-label small">Description</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${item.description || ''}" 
+                               onchange="equipment[${index}].description = this.value">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeEquipment(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// References Management
+function addReference() {
+    references.push({
+        company_name: '',
+        contact_name: '',
+        contact_title: '',
+        phone: '',
+        email: '',
+        relationship: ''
+    });
+    renderReferences();
+}
+
+function removeReference(index) {
+    references.splice(index, 1);
+    renderReferences();
+}
+
+function renderReferences() {
+    const container = document.getElementById('referencesList');
+    if (references.length === 0) {
+        container.innerHTML = '<p class="text-secondary">No references added yet. Click "Add Reference" to include client testimonials.</p>';
+        return;
+    }
+    
+    container.innerHTML = references.map((ref, index) => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Company Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${ref.company_name || ''}" 
+                               onchange="references[${index}].company_name = this.value">
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label small">Contact Name</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${ref.contact_name || ''}" 
+                               onchange="references[${index}].contact_name = this.value">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Title</label>
+                        <input type="text" class="form-control form-control-sm" 
+                               value="${ref.contact_title || ''}" 
+                               onchange="references[${index}].contact_title = this.value">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Phone</label>
+                        <input type="tel" class="form-control form-control-sm" 
+                               value="${ref.phone || ''}" 
+                               onchange="references[${index}].phone = this.value">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Email</label>
+                        <input type="email" class="form-control form-control-sm" 
+                               value="${ref.email || ''}" 
+                               onchange="references[${index}].email = this.value">
+                    </div>
+                    <div class="col-md-12 mb-2">
+                        <label class="form-label small">Relationship/Services Provided</label>
+                        <textarea class="form-control form-control-sm" rows="2" 
+                                  onchange="references[${index}].relationship = this.value">${ref.relationship || ''}</textarea>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeReference(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Save Profile
+async function saveProfile() {
+    const form = document.getElementById('profileForm');
+    const formData = new FormData(form);
+    
+    // Build profile object
+    const profileData = {};
+    for (const [key, value] of formData.entries()) {
+        profileData[key] = value;
+    }
+    
+    // Add array data
+    profileData.certifications = certifications;
+    profileData.past_projects = projects;
+    profileData.key_personnel = personnel;
+    profileData.equipment_list = equipment;
+    profileData.references = references;
+    
+    // Convert checkboxes
+    profileData.availability_247 = form.querySelector('[name="availability_247"]').checked;
+    profileData.emergency_response = form.querySelector('[name="emergency_response"]').checked;
+    profileData.green_cleaning = form.querySelector('[name="green_cleaning"]').checked;
+    
+    try {
+        const response = await fetch('/api/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(profileData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update completion percentage
+            document.getElementById('completionProgress').style.width = result.completion + '%';
+            document.getElementById('completionText').textContent = result.completion + '%';
+            
+            // Show success message
+            showAlert('success', result.message);
+        } else {
+            showAlert('danger', result.message);
+        }
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        showAlert('danger', 'Error saving profile. Please try again.');
+    }
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+
+<style>
+.nav-link {
+    color: #666;
+    padding: 0.5rem 1rem;
+    border-left: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.nav-link:hover {
+    color: #667eea;
+    border-left-color: #667eea;
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: none;
+    transition: all 0.3s;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-header {
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+}
+</style>
+{% endblock %}

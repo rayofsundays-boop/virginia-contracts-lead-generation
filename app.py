@@ -3683,6 +3683,98 @@ def init_postgres_db():
             db.session.rollback()
             print(f"⚠️  Proposal reviews table init: {proposal_err}")
         
+        # Client profiles table for comprehensive company information
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS client_profiles
+                         (id SERIAL PRIMARY KEY,
+                          user_email TEXT NOT NULL UNIQUE,
+                          -- Company Information
+                          company_name TEXT,
+                          dba_name TEXT,
+                          business_structure TEXT,
+                          tax_id TEXT,
+                          duns_number TEXT,
+                          cage_code TEXT,
+                          uei_number TEXT,
+                          year_established INTEGER,
+                          -- Contact Information
+                          primary_contact_name TEXT,
+                          primary_contact_title TEXT,
+                          primary_contact_phone TEXT,
+                          primary_contact_email TEXT,
+                          billing_contact_name TEXT,
+                          billing_contact_email TEXT,
+                          billing_contact_phone TEXT,
+                          -- Address Information
+                          physical_address TEXT,
+                          physical_city TEXT,
+                          physical_state TEXT,
+                          physical_zip TEXT,
+                          mailing_address TEXT,
+                          mailing_city TEXT,
+                          mailing_state TEXT,
+                          mailing_zip TEXT,
+                          -- Business Details
+                          website_url TEXT,
+                          company_description TEXT,
+                          core_competencies TEXT,
+                          service_areas TEXT,
+                          years_in_business INTEGER,
+                          number_of_employees INTEGER,
+                          annual_revenue TEXT,
+                          -- Certifications (JSON array)
+                          certifications JSON,
+                          licenses JSON,
+                          -- Insurance Information
+                          general_liability_amount TEXT,
+                          general_liability_carrier TEXT,
+                          general_liability_expiry DATE,
+                          workers_comp_amount TEXT,
+                          workers_comp_carrier TEXT,
+                          workers_comp_expiry DATE,
+                          auto_insurance_amount TEXT,
+                          auto_insurance_carrier TEXT,
+                          auto_insurance_expiry DATE,
+                          bonding_capacity TEXT,
+                          bonding_carrier TEXT,
+                          -- Past Performance (JSON array of projects)
+                          past_projects JSON,
+                          -- Key Personnel (JSON array)
+                          key_personnel JSON,
+                          -- Equipment & Resources (JSON array)
+                          equipment_list JSON,
+                          -- References (JSON array)
+                          references JSON,
+                          -- Capabilities
+                          facility_types TEXT,
+                          cleaning_methods TEXT,
+                          specialized_services TEXT,
+                          availability_247 BOOLEAN DEFAULT FALSE,
+                          emergency_response BOOLEAN DEFAULT FALSE,
+                          green_cleaning BOOLEAN DEFAULT FALSE,
+                          -- Banking Information
+                          bank_name TEXT,
+                          bank_account_number TEXT,
+                          bank_routing_number TEXT,
+                          -- Social Links
+                          linkedin_url TEXT,
+                          facebook_url TEXT,
+                          -- Metadata
+                          profile_completed BOOLEAN DEFAULT FALSE,
+                          profile_completion_percentage INTEGER DEFAULT 0,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_client_profiles_user_email 
+                                       ON client_profiles(user_email)'''))
+            
+            db.session.commit()
+            print("✅ Client profiles table created successfully")
+        except Exception as profile_err:
+            db.session.rollback()
+            print(f"⚠️  Client profiles table init: {profile_err}")
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
@@ -19825,10 +19917,164 @@ def mini_toolbox():
     """Mini toolbox available to non-subscribers"""
     return render_template('mini_toolbox.html')
 
+@app.route('/client-profile', methods=['GET'])
+@login_required
+def client_profile():
+    """View and edit comprehensive client profile"""
+    try:
+        user_email = session.get('user_email')
+        
+        # Fetch existing profile or create empty structure
+        profile = db.session.execute(text('''
+            SELECT * FROM client_profiles WHERE user_email = :email
+        '''), {'email': user_email}).fetchone()
+        
+        # Get user's basic info from leads table
+        user_info = db.session.execute(text('''
+            SELECT company_name, contact_name, email, phone
+            FROM leads WHERE email = :email
+        '''), {'email': user_email}).fetchone()
+        
+        profile_data = {}
+        if profile:
+            # Convert row to dict
+            profile_data = dict(zip([col for col in profile.keys()], profile))
+            # Parse JSON fields
+            for json_field in ['certifications', 'licenses', 'past_projects', 'key_personnel', 'equipment_list', 'references']:
+                if profile_data.get(json_field):
+                    try:
+                        profile_data[json_field] = json.loads(profile_data[json_field]) if isinstance(profile_data[json_field], str) else profile_data[json_field]
+                    except:
+                        profile_data[json_field] = []
+                else:
+                    profile_data[json_field] = []
+        else:
+            # Initialize with user's basic info
+            if user_info:
+                profile_data = {
+                    'company_name': user_info[0],
+                    'primary_contact_name': user_info[1],
+                    'primary_contact_email': user_info[2],
+                    'primary_contact_phone': user_info[3],
+                    'certifications': [],
+                    'licenses': [],
+                    'past_projects': [],
+                    'key_personnel': [],
+                    'equipment_list': [],
+                    'references': []
+                }
+        
+        return render_template('client_profile.html', profile=profile_data)
+        
+    except Exception as e:
+        print(f"Error loading client profile: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading profile. Please try again.', 'error')
+        return render_template('client_profile.html', profile={})
+
+@app.route('/api/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    """Save or update client profile"""
+    try:
+        user_email = session.get('user_email')
+        data = request.get_json()
+        
+        # Calculate profile completion percentage
+        total_fields = 50  # Approximate key fields
+        completed_fields = sum(1 for v in data.values() if v)
+        completion = int((completed_fields / total_fields) * 100)
+        
+        # Check if profile exists
+        existing = db.session.execute(text('''
+            SELECT id FROM client_profiles WHERE user_email = :email
+        '''), {'email': user_email}).fetchone()
+        
+        # Convert arrays to JSON strings
+        json_fields = ['certifications', 'licenses', 'past_projects', 'key_personnel', 'equipment_list', 'references']
+        for field in json_fields:
+            if field in data and isinstance(data[field], (list, dict)):
+                data[field] = json.dumps(data[field])
+        
+        if existing:
+            # Update existing profile
+            update_fields = []
+            params = {'email': user_email}
+            
+            for key, value in data.items():
+                if key != 'user_email':
+                    update_fields.append(f"{key} = :{key}")
+                    params[key] = value
+            
+            # Add completion and updated timestamp
+            update_fields.append("profile_completion_percentage = :completion")
+            update_fields.append("updated_at = CURRENT_TIMESTAMP")
+            update_fields.append("profile_completed = :completed")
+            params['completion'] = completion
+            params['completed'] = completion >= 80
+            
+            query = f"UPDATE client_profiles SET {', '.join(update_fields)} WHERE user_email = :email"
+            db.session.execute(text(query), params)
+            message = 'Profile updated successfully!'
+        else:
+            # Insert new profile
+            data['user_email'] = user_email
+            data['profile_completion_percentage'] = completion
+            data['profile_completed'] = completion >= 80
+            
+            columns = list(data.keys())
+            placeholders = [f":{col}" for col in columns]
+            
+            query = f"""
+                INSERT INTO client_profiles ({', '.join(columns)})
+                VALUES ({', '.join(placeholders)})
+            """
+            db.session.execute(text(query), data)
+            message = 'Profile created successfully!'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'completion': completion
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating profile: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': 'Error saving profile. Please try again.'
+        }), 500
+
 @app.route('/capability-statement')
 def capability_statement():
-    """Capability statement template"""
-    return render_template('capability_statement.html')
+    """Capability statement template - auto-populated from profile if logged in"""
+    profile_data = {}
+    
+    if session.get('user_email'):
+        try:
+            profile = db.session.execute(text('''
+                SELECT * FROM client_profiles WHERE user_email = :email
+            '''), {'email': session.get('user_email')}).fetchone()
+            
+            if profile:
+                profile_data = dict(zip([col for col in profile.keys()], profile))
+                # Parse JSON fields
+                for json_field in ['certifications', 'licenses', 'past_projects', 'key_personnel']:
+                    if profile_data.get(json_field):
+                        try:
+                            profile_data[json_field] = json.loads(profile_data[json_field]) if isinstance(profile_data[json_field], str) else profile_data[json_field]
+                        except:
+                            profile_data[json_field] = []
+        except Exception as e:
+            print(f"Error loading profile for capability statement: {e}")
+    
+    return render_template('capability_statement.html', profile=profile_data)
 
 @app.route('/proposal-review', methods=['GET', 'POST'])
 @login_required
@@ -20042,8 +20288,28 @@ def federal_coming_soon():
 @app.route('/ai-proposal-generator')
 @login_required
 def ai_proposal_generator():
-    """AI-powered proposal generator with personalization"""
-    return render_template('ai_proposal_generator.html')
+    """AI-powered proposal generator with personalization - auto-populated from profile"""
+    profile_data = {}
+    
+    try:
+        user_email = session.get('user_email')
+        profile = db.session.execute(text('''
+            SELECT * FROM client_profiles WHERE user_email = :email
+        '''), {'email': user_email}).fetchone()
+        
+        if profile:
+            profile_data = dict(zip([col for col in profile.keys()], profile))
+            # Parse JSON fields
+            for json_field in ['certifications', 'licenses', 'past_projects', 'key_personnel', 'equipment_list', 'references']:
+                if profile_data.get(json_field):
+                    try:
+                        profile_data[json_field] = json.loads(profile_data[json_field]) if isinstance(profile_data[json_field], str) else profile_data[json_field]
+                    except:
+                        profile_data[json_field] = []
+    except Exception as e:
+        print(f"Error loading profile for proposal generator: {e}")
+    
+    return render_template('ai_proposal_generator.html', profile=profile_data)
 
 @app.route('/api/get-contracts')
 @login_required
