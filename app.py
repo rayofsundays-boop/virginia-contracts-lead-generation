@@ -20842,7 +20842,10 @@ def mailbox():
         per_page = 20
         offset = (page - 1) * per_page
 
-        user_id = session['user_id']
+        # Defensive: ensure user_id present in session
+        user_id = session.get('user_id')
+        if not user_id:
+            return redirect(url_for('auth'))
         is_admin = session.get('is_admin', False)
 
         # Unread count (COALESCE for portability)
@@ -20913,7 +20916,9 @@ def mailbox():
 @login_required
 def view_message(message_id):
     """View a specific message"""
-    user_id = session['user_id']
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('auth'))
     
     # Get message
     message = db.session.execute(text(
@@ -20933,11 +20938,10 @@ def view_message(message_id):
     
     # Mark as read if recipient
     if message.recipient_id == user_id and not message.is_read:
+        # Use bound boolean for cross-database compatibility
         db.session.execute(text(
-            "UPDATE messages "
-            "SET is_read = TRUE, read_at = CURRENT_TIMESTAMP "
-            "WHERE id = :message_id"
-        ), {'message_id': message_id})
+            "UPDATE messages SET is_read = :true, read_at = CURRENT_TIMESTAMP WHERE id = :message_id"
+        ), {'true': True, 'message_id': message_id})
         db.session.commit()
     
     is_sender = message.sender_id == user_id
@@ -20951,7 +20955,9 @@ def view_message(message_id):
 def send_message():
     """Send a message"""
     try:
-        user_id = session['user_id']
+        user_id = session.get('user_id')
+        if not user_id:
+            return redirect(url_for('auth'))
         is_admin = session.get('is_admin', False)
         
         message_type = request.form.get('message_type', 'individual')
@@ -20964,11 +20970,11 @@ def send_message():
         if is_admin and message_type in ['broadcast', 'paid_only']:
             if message_type == 'broadcast':
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE is_admin = FALSE")
+                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 0")
                 ).fetchall()
             else:  # paid_only
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE is_admin = FALSE AND subscription_status = 'paid'")
+                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 0 AND subscription_status = 'paid'")
                 ).fetchall()
             
             # Send to all recipients
@@ -20992,7 +20998,7 @@ def send_message():
             if recipient_id == 'admin':
                 # Send to first admin user
                 admin_user = db.session.execute(
-                    text("SELECT id FROM leads WHERE is_admin = TRUE LIMIT 1")
+                    text("SELECT id FROM leads WHERE COALESCE(is_admin, 0) = 1 LIMIT 1")
                 ).fetchone()
                 recipient_id = admin_user[0] if admin_user else None
             
@@ -21001,15 +21007,14 @@ def send_message():
                 return redirect(url_for('mailbox'))
             
             db.session.execute(text(
-                "INSERT INTO messages "
-                "(sender_id, recipient_id, subject, body, is_admin_message, parent_message_id) "
+                "INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin_message, parent_message_id) "
                 "VALUES (:sender_id, :recipient_id, :subject, :body, :is_admin_message, :parent_message_id)"
             ), {
                 'sender_id': user_id,
                 'recipient_id': recipient_id,
                 'subject': subject,
                 'body': body,
-                'is_admin_message': is_admin,
+                'is_admin_message': bool(is_admin),
                 'parent_message_id': parent_message_id
             })
             
