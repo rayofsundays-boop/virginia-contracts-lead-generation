@@ -20976,34 +20976,66 @@ def submit_bulk_request():
 @app.route('/mailbox')
 @login_required
 def mailbox():
-    """Internal messaging system mailbox (robust with fallbacks)."""
+    """Internal messaging system mailbox (HARDENED - robust with fallbacks)."""
+    # Initialize fallback values
+    messages = []
+    folder = 'inbox'
+    page = 1
+    total_pages = 1
+    unread_count = 0
+    all_users = []
+    
     try:
-        folder = request.args.get('folder', 'inbox')
-        page = max(int(request.args.get('page', 1) or 1), 1)
-        per_page = 20
-        offset = (page - 1) * per_page
-
         # Defensive: ensure user_id present in session
         user_id = session.get('user_id')
         if not user_id:
+            flash('Session expired. Please login again.', 'warning')
             return redirect(url_for('auth'))
-        is_admin = session.get('is_admin', False)
+        
+        is_admin = bool(session.get('is_admin', False))
+        
+        # Safely parse request parameters with fallbacks
+        try:
+            folder = str(request.args.get('folder', 'inbox')).lower()
+            if folder not in ['inbox', 'sent', 'admin']:
+                folder = 'inbox'
+        except:
+            folder = 'inbox'
+        
+        try:
+            page = max(int(request.args.get('page', 1) or 1), 1)
+        except (ValueError, TypeError):
+            page = 1
+        
+        per_page = 20
+        offset = (page - 1) * per_page
 
-        # Unread count (PostgreSQL-compatible boolean comparison)
-        unread_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = FALSE OR is_read IS NULL)"
-        ), {'user_id': user_id}).scalar() or 0
+        # Unread count with defensive query (PostgreSQL-compatible)
+        try:
+            unread_count = db.session.execute(text(
+                "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = FALSE OR is_read IS NULL)"
+            ), {'user_id': user_id}).scalar() or 0
+        except Exception as count_err:
+            print(f"Unread count error: {count_err}")
+            unread_count = 0
 
-        # Base select with COALESCE on created_at vs sent_at for legacy rows
+        # Base select with COALESCE on created_at vs sent_at for legacy rows (HARDENED)
         base_select = (
-            "SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, m.is_read, m.is_admin, "
-            "COALESCE(m.created_at, m.sent_at) AS created_at, m.sent_at, m.read_at, m.is_admin_message, m.parent_message_id, "
-            "COALESCE(sender.email, 'System') as sender_email, COALESCE(recipient.email, 'Admin') as recipient_email "
+            "SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, "
+            "COALESCE(m.is_read, FALSE) as is_read, "
+            "COALESCE(m.is_admin, FALSE) as is_admin, "
+            "COALESCE(m.created_at, m.sent_at, CURRENT_TIMESTAMP) AS created_at, "
+            "m.sent_at, m.read_at, "
+            "COALESCE(m.is_admin_message, FALSE) as is_admin_message, "
+            "m.parent_message_id, "
+            "COALESCE(sender.email, 'System') as sender_email, "
+            "COALESCE(recipient.email, 'Admin') as recipient_email "
             "FROM messages m "
             "LEFT JOIN leads sender ON m.sender_id = sender.id "
             "LEFT JOIN leads recipient ON m.recipient_id = recipient.id "
         )
 
+        # Build query based on folder with validation
         if folder == 'inbox':
             query = base_select + "WHERE m.recipient_id = :user_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
             count_query = "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id"
@@ -21020,18 +21052,39 @@ def mailbox():
             count_params = {}
             exec_params = {'limit': per_page, 'offset': offset}
         else:
-            return redirect(url_for('mailbox'))
+            # Invalid folder or non-admin trying admin folder
+            if folder == 'admin':
+                flash('Admin access required', 'warning')
+            return redirect(url_for('mailbox', folder='inbox'))
 
-        total_count = db.session.execute(text(count_query), count_params).scalar() or 0
-        total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-        messages = db.session.execute(text(query), exec_params).fetchall()
+        # Execute queries with error handling
+        try:
+            total_count = db.session.execute(text(count_query), count_params).scalar() or 0
+            total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+        except Exception as count_err:
+            print(f"Message count error: {count_err}")
+            total_count = 0
+            total_pages = 1
+        
+        try:
+            messages = db.session.execute(text(query), exec_params).fetchall() or []
+        except Exception as msg_err:
+            print(f"Message fetch error: {msg_err}")
+            messages = []
 
-        all_users = []
+        # Get all users for admin (with error handling)
         if is_admin:
-            # PostgreSQL-compatible boolean comparison
-            all_users = db.session.execute(text(
-                "SELECT id, email, company_name FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL) ORDER BY email"
-            )).fetchall()
+            try:
+                all_users = db.session.execute(text(
+                    "SELECT id, email, COALESCE(company_name, 'N/A') as company_name "
+                    "FROM leads "
+                    "WHERE (is_admin = FALSE OR is_admin IS NULL) "
+                    "AND email IS NOT NULL "
+                    "ORDER BY email"
+                )).fetchall() or []
+            except Exception as users_err:
+                print(f"User fetch error: {users_err}")
+                all_users = []
 
         return render_template('mailbox.html',
                                messages=messages,
@@ -21040,18 +21093,21 @@ def mailbox():
                                total_pages=total_pages,
                                unread_count=unread_count,
                                all_users=all_users)
+                               
     except Exception as e:
         import traceback
-        print(f"Mailbox route error: {e}")
+        print(f"CRITICAL - Mailbox route error: {e}")
         traceback.print_exc()
-        flash('Mailbox temporarily unavailable. Our team has been notified.', 'error')
+        flash('Mailbox temporarily unavailable. Please try refreshing.', 'error')
+        
+        # Return safe fallback render with initialized values
         return render_template('mailbox.html',
-                               messages=[],
-                               folder='inbox',
-                               page=1,
-                               total_pages=1,
-                               unread_count=0,
-                               all_users=[])
+                               messages=messages,
+                               folder=folder,
+                               page=page,
+                               total_pages=total_pages,
+                               unread_count=unread_count,
+                               all_users=all_users)
 
 @app.route('/mailbox/message/<int:message_id>')
 @login_required

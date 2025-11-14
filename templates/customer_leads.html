@@ -61,14 +61,33 @@
                 {% endif %}
                 
                 <h6 class="sidebar-heading px-3 mt-4 mb-3">
+                    <i class="fas fa-toolbox me-2"></i>Quick Tools
+                </h6>
+                
+                <div class="nav flex-column">
+                    <a href="#" class="nav-link" onclick="showBasicCalculator(); return false;">
+                        <i class="fas fa-calculator me-2"></i>Pricing Calculator
+                    </a>
+                    <a href="#" class="nav-link" onclick="showChecklists(); return false;">
+                        <i class="fas fa-tasks me-2"></i>Cleaning Checklists
+                    </a>
+                    <a href="#" class="nav-link" onclick="showCommercialCleaningChecklist(); return false;">
+                        <i class="fas fa-building me-2"></i>Commercial Guide
+                    </a>
+                    <a href="#" class="nav-link" onclick="showPostConstructionChecklist(); return false;">
+                        <i class="fas fa-hammer me-2"></i>Post-Construction
+                    </a>
+                    <a href="/resource-toolbox" class="nav-link">
+                        <i class="fas fa-layer-group me-2"></i>All Resources
+                        <span class="badge bg-primary float-end">Full</span>
+                    </a>
+                </div>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-3">
                     <i class="fas fa-tools me-2"></i>Proposal Tools
                 </h6>
                 
                 <div class="nav flex-column">
-                    <a href="/resource-toolbox" class="nav-link">
-                        <i class="fas fa-toolbox me-2"></i>Resource Toolbox
-                        <span class="badge bg-success float-end">New</span>
-                    </a>
                     <a href="https://www.canva.com/templates/business-cards/" target="_blank" class="nav-link" rel="noopener noreferrer">
                         <i class="fas fa-palette me-2"></i>Branding Materials
                         <span class="badge bg-warning float-end">Canva</span>
@@ -1481,6 +1500,29 @@ function resetApplyClickCount() {
         {% endif %}
         
         <h6 class="sidebar-heading px-3 mt-4 mb-3">
+            <i class="fas fa-toolbox me-2"></i>Quick Tools
+        </h6>
+        
+        <div class="nav flex-column">
+            <a href="#" class="nav-link" onclick="showBasicCalculator(); return false;" data-bs-dismiss="offcanvas">
+                <i class="fas fa-calculator me-2"></i>Pricing Calculator
+            </a>
+            <a href="#" class="nav-link" onclick="showChecklists(); return false;" data-bs-dismiss="offcanvas">
+                <i class="fas fa-tasks me-2"></i>Cleaning Checklists
+            </a>
+            <a href="#" class="nav-link" onclick="showCommercialCleaningChecklist(); return false;" data-bs-dismiss="offcanvas">
+                <i class="fas fa-building me-2"></i>Commercial Guide
+            </a>
+            <a href="#" class="nav-link" onclick="showPostConstructionChecklist(); return false;" data-bs-dismiss="offcanvas">
+                <i class="fas fa-hammer me-2"></i>Post-Construction
+            </a>
+            <a href="/resource-toolbox" class="nav-link">
+                <i class="fas fa-layer-group me-2"></i>All Resources
+                <span class="badge bg-primary float-end">Full</span>
+            </a>
+        </div>
+        
+        <h6 class="sidebar-heading px-3 mt-4 mb-3">
             <i class="fas fa-tools me-2"></i>Proposal Tools
         </h6>
         
@@ -2834,6 +2876,158 @@ function trackApplyClick(event, url, title) {
     // Allow the click to proceed
     return true;
 }
+
+// Resource Toolbox Functions
+function showBasicCalculator() {
+    document.getElementById('resourceToolModalTitle').textContent = 'Quick Pricing Calculator';
+    document.getElementById('resourceToolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6>Calculate cleaning costs based on square footage</h6>
+            <form id="calculatorForm">
+                <div class="mb-3">
+                    <label class="form-label">Square Footage</label>
+                    <input type="number" class="form-control" id="sqft" placeholder="Enter square footage" step="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rate per Square Foot ($)</label>
+                    <input type="number" class="form-control" id="rate" value="0.15" step="0.01" min="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Services ($)</label>
+                    <input type="number" class="form-control" id="additional" value="0" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculatePrice()">
+                    <i class="fas fa-calculator me-2"></i>Calculate
+                </button>
+            </form>
+            <div id="calculatorResult" class="mt-3"></div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('resourceToolModal')).show();
+}
+
+function calculatePrice() {
+    const sqft = parseFloat(document.getElementById('sqft').value) || 0;
+    const rate = parseFloat(document.getElementById('rate').value) || 0;
+    const additional = parseFloat(document.getElementById('additional').value) || 0;
+    
+    if (sqft > 0 && rate > 0) {
+        const baseCost = sqft * rate;
+        const totalCost = baseCost + additional;
+        
+        document.getElementById('calculatorResult').innerHTML = `
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle me-2"></i>Calculation Complete!</h5>
+                <p class="mb-2">Base Cost: <strong>$${baseCost.toFixed(2)}</strong></p>
+                <p class="mb-2">Additional Services: <strong>$${additional.toFixed(2)}</strong></p>
+                <hr>
+                <p class="mb-0">Total: <strong class="fs-4 text-success">$${totalCost.toFixed(2)}</strong></p>
+            </div>
+        `;
+    } else {
+        document.getElementById('calculatorResult').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>Please enter valid values.
+            </div>
+        `;
+    }
+}
+
+function showChecklists() {
+    document.getElementById('resourceToolModalTitle').textContent = 'Cleaning Checklists';
+    document.getElementById('resourceToolModalBody').innerHTML = `
+        <div class="p-3">
+            <h6 class="mb-3">Select a checklist type:</h6>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action" onclick="downloadChecklist('Office'); return false;">
+                    <i class="fas fa-briefcase me-2"></i>Office Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" onclick="downloadChecklist('Restroom'); return false;">
+                    <i class="fas fa-restroom me-2"></i>Restroom Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" onclick="downloadChecklist('School'); return false;">
+                    <i class="fas fa-school me-2"></i>School Cleaning Checklist
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" onclick="downloadChecklist('Warehouse'); return false;">
+                    <i class="fas fa-warehouse me-2"></i>Warehouse Cleaning Checklist
+                </a>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('resourceToolModal')).show();
+}
+
+function downloadChecklist(type) {
+    alert(`${type} Cleaning Checklist would be downloaded as PDF. Full feature available in Resource Toolbox.`);
+    window.open('/resource-toolbox', '_blank');
+}
+
+function showCommercialCleaningChecklist() {
+    document.getElementById('resourceToolModalTitle').textContent = 'Commercial Cleaning Guide';
+    document.getElementById('resourceToolModalBody').innerHTML = `
+        <div class="p-3">
+            <h5 class="mb-3">Commercial Cleaning Best Practices</h5>
+            <div class="alert alert-info">
+                <strong>Pricing Range:</strong> $0.10 - $0.25 per sq ft per cleaning
+            </div>
+            <h6>Key Areas:</h6>
+            <ul>
+                <li>Reception & Lobby Areas</li>
+                <li>Office Spaces & Cubicles</li>
+                <li>Conference Rooms</li>
+                <li>Restrooms & Break Rooms</li>
+                <li>Hallways & Common Areas</li>
+            </ul>
+            <h6 class="mt-3">Staffing:</h6>
+            <p>1 cleaner per 3,000-4,000 sq ft per hour</p>
+            <a href="/resource-toolbox" class="btn btn-primary mt-2">
+                <i class="fas fa-eye me-2"></i>View Full Guide
+            </a>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('resourceToolModal')).show();
+}
+
+function showPostConstructionChecklist() {
+    document.getElementById('resourceToolModalTitle').textContent = 'Post-Construction Cleanup';
+    document.getElementById('resourceToolModalBody').innerHTML = `
+        <div class="p-3">
+            <h5 class="mb-3">Post-Construction Cleanup Guide</h5>
+            <div class="alert alert-warning">
+                <strong>Pricing Range:</strong> $0.10 - $0.50 per sq ft (varies by debris level)
+            </div>
+            <h6>Phases:</h6>
+            <ol>
+                <li><strong>Rough Clean:</strong> Remove construction debris, dust, and large particles</li>
+                <li><strong>Detail Clean:</strong> Clean all surfaces, windows, and fixtures</li>
+                <li><strong>Final Touch:</strong> Polish, detail work, and final inspection</li>
+            </ol>
+            <h6 class="mt-3">Timeline:</h6>
+            <p>2-3 phases over 1-2 weeks depending on project size</p>
+            <a href="/resource-toolbox" class="btn btn-warning text-dark mt-2">
+                <i class="fas fa-eye me-2"></i>View Full Checklist
+            </a>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('resourceToolModal')).show();
+}
+</script>
+
+<!-- Resource Tool Modal -->
+<div class="modal fade" id="resourceToolModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resourceToolModalTitle">Resource Tool</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resourceToolModalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Shared gamification script include -->
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>{% endif %}
 {% endblock %}
