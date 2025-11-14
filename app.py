@@ -360,7 +360,7 @@ def ensure_admin2_account(force_password_reset: bool = False):
         updates = []
         params = {'user_id': lookup[0]}
         if not lookup[4]:
-            updates.append('is_admin = 1')
+            updates.append('is_admin = TRUE')
             print(f'[ADMIN2] Will promote to admin')
         if hashed_password and (force_password_reset or not lookup[3]):
             updates.append('password_hash = :password_hash')
@@ -385,7 +385,7 @@ def _fetch_user_credentials(identifier: str):
         return db.session.execute(
             text('''SELECT id, username, email, password_hash, contact_name, credits_balance,
                            is_admin, subscription_status, is_beta_tester, beta_expiry_date,
-                           COALESCE(twofa_enabled,0) as twofa_enabled
+                           COALESCE(twofa_enabled, FALSE) as twofa_enabled
                    FROM leads WHERE username = :username OR email = :username'''),
             {'username': identifier}
         ).fetchone()
