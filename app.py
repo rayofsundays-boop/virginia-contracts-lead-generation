@@ -3630,6 +3630,59 @@ def init_postgres_db():
             db.session.rollback()
             print(f"⚠️  User NAICS codes table init: {naics_err}")
         
+        # Contact messages table for form submissions
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS contact_messages
+                         (id SERIAL PRIMARY KEY,
+                          name TEXT NOT NULL,
+                          email TEXT NOT NULL,
+                          subject TEXT,
+                          message TEXT NOT NULL,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          status TEXT DEFAULT 'unread',
+                          admin_notes TEXT)'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at 
+                                       ON contact_messages(created_at DESC)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_contact_messages_status 
+                                       ON contact_messages(status)'''))
+            
+            db.session.commit()
+            print("✅ Contact messages table created successfully")
+        except Exception as contact_err:
+            db.session.rollback()
+            print(f"⚠️  Contact messages table init: {contact_err}")
+        
+        # Proposal reviews table for bid review requests
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS proposal_reviews
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          contract_title TEXT NOT NULL,
+                          contract_value DECIMAL(12,2),
+                          proposal_document TEXT,
+                          status TEXT DEFAULT 'pending',
+                          reviewer_notes TEXT,
+                          score INTEGER,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          reviewed_at TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_proposal_reviews_user_email 
+                                       ON proposal_reviews(user_email)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_proposal_reviews_status 
+                                       ON proposal_reviews(status)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_proposal_reviews_created_at 
+                                       ON proposal_reviews(created_at DESC)'''))
+            
+            db.session.commit()
+            print("✅ Proposal reviews table created successfully")
+        except Exception as proposal_err:
+            db.session.rollback()
+            print(f"⚠️  Proposal reviews table init: {proposal_err}")
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
