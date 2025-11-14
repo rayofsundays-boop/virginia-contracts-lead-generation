@@ -522,7 +522,7 @@ def inject_unread_messages():
         try:
             unread_count = db.session.execute(text('''
                 SELECT COUNT(*) FROM messages 
-                WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL OR is_read = FALSE)
+                WHERE recipient_id = :user_id AND (is_read = FALSE OR is_read IS NULL)
             '''), {'user_id': session['user_id']}).scalar() or 0
             return dict(unread_messages_count=unread_count, unread_count=unread_count)
         except:
@@ -562,22 +562,35 @@ def log_admin_action(action_type, details, target_user_id=None):
         target_user_id: ID of user affected by the action (if applicable)
     """
     try:
-        db.session.execute(text('''
-            INSERT INTO admin_actions 
-            (admin_id, action_type, target_user_id, action_details, ip_address, user_agent, timestamp)
-            VALUES (:admin_id, :action_type, :target_user_id, :details, :ip, :user_agent, NOW())
-        '''), {
-            'admin_id': session.get('user_id'),
-            'action_type': action_type,
-            'target_user_id': target_user_id,
-            'details': details,
-            'ip': request.remote_addr,
-            'user_agent': request.user_agent.string[:255] if request.user_agent else 'Unknown'
-        })
-        db.session.commit()
+        # Check if admin_actions table exists first
+        table_exists = db.session.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'admin_actions'
+            )
+        """)).scalar()
+        
+        if table_exists:
+            db.session.execute(text('''
+                INSERT INTO admin_actions 
+                (admin_id, action_type, target_user_id, action_details, ip_address, user_agent, timestamp)
+                VALUES (:admin_id, :action_type, :target_user_id, :details, :ip, :user_agent, NOW())
+            '''), {
+                'admin_id': session.get('user_id'),
+                'action_type': action_type,
+                'target_user_id': target_user_id,
+                'details': details,
+                'ip': request.remote_addr,
+                'user_agent': request.user_agent.string[:255] if request.user_agent else 'Unknown'
+            })
+            db.session.commit()
     except Exception as e:
         print(f"Admin action logging error: {e}")
         # Don't fail the main operation if logging fails
+        try:
+            db.session.rollback()
+        except:
+            pass
         db.session.rollback()
 
 @lru_cache(maxsize=10)
@@ -1371,6 +1384,11 @@ def handle_database_errors(error):
         db.session.rollback()
     except:
         pass
+    
+    # Don't re-raise 404 errors (like missing favicon.ico) as 500 errors
+    from werkzeug.exceptions import NotFound
+    if isinstance(error, NotFound):
+        return error  # Return the 404 error as-is
     
     # Re-raise the error to be handled by the route
     raise error
@@ -2300,8 +2318,17 @@ def schedule_instantmarkets_updates():
 
 def schedule_url_population():
     """Run automated URL population at 3 AM daily (off-peak)"""
+    # Use a wrapper function to avoid forward reference issues
+    # The actual function is defined later in the file (line ~15525)
+    def run_url_population():
+        try:
+            # Call the function by name from globals to avoid forward reference
+            globals()['auto_populate_missing_urls_background']()
+        except Exception as e:
+            print(f"Error in scheduled URL population: {e}")
+    
     # Schedule daily auto URL population job
-    schedule.every().day.at("03:00").do(auto_populate_missing_urls_background)
+    schedule.every().day.at("03:00").do(run_url_population)
     print("✅ Auto URL Population scheduler started - will generate missing URLs daily at 3 AM EST (off-peak)")
     while True:
         schedule.run_pending()
@@ -4197,7 +4224,7 @@ def register():
         # Check beta tester limit if user wants to be a beta tester
         if is_beta_tester:
             beta_count = db.session.execute(
-                text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE OR is_beta_tester = 1")
+                text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE")
             ).scalar()
             
             if beta_count >= 100:
@@ -4266,8 +4293,9 @@ def register():
 def beta_tester_count():
     """API endpoint to check beta tester availability"""
     try:
+        # PostgreSQL-compatible boolean comparison (use TRUE not 1)
         count = db.session.execute(
-            text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE OR is_beta_tester = 1")
+            text("SELECT COUNT(*) FROM leads WHERE is_beta_tester = TRUE")
         ).scalar()
         
         remaining = max(0, 100 - count)
@@ -20966,9 +20994,9 @@ def mailbox():
             return redirect(url_for('auth'))
         is_admin = session.get('is_admin', False)
 
-        # Unread count (COALESCE for portability)
+        # Unread count (PostgreSQL-compatible boolean comparison)
         unread_count = db.session.execute(text(
-            "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = 0 OR is_read IS NULL)"
+            "SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND (is_read = FALSE OR is_read IS NULL)"
         ), {'user_id': user_id}).scalar() or 0
 
         # Base select with COALESCE on created_at vs sent_at for legacy rows
