@@ -56,17 +56,110 @@
                             <input type="number" class="form-control" id="newCreditsBalance" name="credits_balance" value="0">
                         </div>
                         <div class="col-md-6">
-                            <div class="form-check mt-4">
-                                <input class="form-check-input" type="checkbox" id="newIsAdmin" name="is_admin">
-                                <label class="form-check-label" for="newIsAdmin">
-                                    <strong>Admin Access</strong>
-                                </label>
+                            <label for="newFreeLeadsRemaining" class="form-label">Free Leads Remaining</label>
+                            <input type="number" class="form-control" id="newFreeLeadsRemaining" name="free_leads_remaining" value="3">
+                        </div>
+                    </div>
+
+                    <!-- User Controls/Permissions Section -->
+                    <div class="mt-4">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-shield-alt me-2"></i>User Permissions & Controls
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-3 text-muted">Access Controls</h6>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newIsAdmin" name="is_admin">
+                                            <label class="form-check-label" for="newIsAdmin">
+                                                <strong>Admin Access</strong>
+                                                <small class="text-muted d-block">Full system access</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newIsBetaTester" name="is_beta_tester">
+                                            <label class="form-check-label" for="newIsBetaTester">
+                                                <strong>Beta Tester</strong>
+                                                <small class="text-muted d-block">Access to beta features</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-3 text-muted">Feature Access</h6>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newProposalSupport" name="proposal_support">
+                                            <label class="form-check-label" for="newProposalSupport">
+                                                <strong>Proposal Support</strong>
+                                                <small class="text-muted d-block">AI proposal assistance</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newTwofaEnabled" name="twofa_enabled">
+                                            <label class="form-check-label" for="newTwofaEnabled">
+                                                <strong>2FA Required</strong>
+                                                <small class="text-muted d-block">Two-factor authentication</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-3 text-muted">Notifications</h6>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newEmailNotifications" name="email_notifications" checked>
+                                            <label class="form-check-label" for="newEmailNotifications">
+                                                <strong>Email Notifications</strong>
+                                                <small class="text-muted d-block">Receive email alerts</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newSmsNotifications" name="sms_notifications">
+                                            <label class="form-check-label" for="newSmsNotifications">
+                                                <strong>SMS Notifications</strong>
+                                                <small class="text-muted d-block">Receive text alerts</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="newLowCreditsAlert" name="low_credits_alert_sent">
+                                            <label class="form-check-label" for="newLowCreditsAlert">
+                                                <strong>Low Credits Alert</strong>
+                                                <small class="text-muted d-block">Alert sent status</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-3 text-muted">Account Status</h6>
+                                        <div class="mb-2">
+                                            <label for="newLeadSource" class="form-label small">Lead Source</label>
+                                            <select class="form-select form-select-sm" id="newLeadSource" name="lead_source">
+                                                <option value="admin_created" selected>Admin Created</option>
+                                                <option value="website">Website Registration</option>
+                                                <option value="referral">Referral</option>
+                                                <option value="import">Imported</option>
+                                                <option value="api">API</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="alert alert-info mt-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> User will be created immediately and can log in with the provided credentials.
+                        <strong>Note:</strong> User will be created immediately and can log in with the provided credentials. Selected permissions will be applied instantly.
                     </div>
                 </form>
             </div>
@@ -86,13 +179,25 @@ function createNewUser() {
     const formData = new FormData(form);
     const data = {};
     
+    // Handle text inputs
     formData.forEach((value, key) => {
-        if (key === 'is_admin') {
-            data[key] = document.getElementById('newIsAdmin').checked;
-        } else {
-            data[key] = value;
+        data[key] = value;
+    });
+    
+    // Handle all checkboxes explicitly
+    const checkboxes = [
+        'is_admin', 'is_beta_tester', 'proposal_support', 'twofa_enabled',
+        'email_notifications', 'sms_notifications', 'low_credits_alert_sent'
+    ];
+    
+    checkboxes.forEach(id => {
+        const checkbox = document.getElementById('new' + id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(''));
+        if (checkbox) {
+            data[id] = checkbox.checked;
         }
     });
+    
+    console.log('Creating user with data:', data);
     
     fetch('/admin-create-user', {
         method: 'POST',

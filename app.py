@@ -11492,23 +11492,36 @@ def admin_create_user():
         company_name = data.get('company_name', 'Not Provided')
         contact_name = data.get('contact_name', username)
         subscription_status = data.get('subscription_status', 'free')
-        is_admin = data.get('is_admin', False)
+        lead_source = data.get('lead_source', 'admin_created')
+        
+        # Boolean controls
+        is_admin = bool(data.get('is_admin', False))
+        is_beta_tester = bool(data.get('is_beta_tester', False))
+        proposal_support = bool(data.get('proposal_support', False))
+        twofa_enabled = bool(data.get('twofa_enabled', False))
+        email_notifications = bool(data.get('email_notifications', True))
+        sms_notifications = bool(data.get('sms_notifications', False))
+        low_credits_alert_sent = bool(data.get('low_credits_alert_sent', False))
+        
+        # Numeric fields
         credits_balance = int(data.get('credits_balance', 0))
+        free_leads_remaining = int(data.get('free_leads_remaining', 3))
         
         # Hash the password
         password_hash = generate_password_hash(password)
         
-        # Create the user
+        # Create the user with all controls
         result = db.session.execute(
             text('''INSERT INTO leads (
                     company_name, contact_name, email, username, password_hash,
                     subscription_status, credits_balance, is_admin, free_leads_remaining,
                     registration_date, lead_source, twofa_enabled, sms_notifications,
-                    email_notifications)
+                    email_notifications, is_beta_tester, proposal_support, low_credits_alert_sent)
                 VALUES (
                     :company, :contact, :email, :username, :password_hash,
-                    :subscription, :credits, :is_admin, 3,
-                    :registration_date, 'admin_created', FALSE, FALSE, TRUE
+                    :subscription, :credits, :is_admin, :free_leads,
+                    :registration_date, :lead_source, :twofa_enabled, :sms_notifications,
+                    :email_notifications, :is_beta_tester, :proposal_support, :low_credits_alert
                 ) RETURNING id, email, username'''),
             {
                 'company': company_name,
@@ -11519,20 +11532,37 @@ def admin_create_user():
                 'subscription': subscription_status,
                 'credits': credits_balance,
                 'is_admin': is_admin,
-                'registration_date': datetime.utcnow().isoformat()
+                'free_leads': free_leads_remaining,
+                'registration_date': datetime.utcnow().isoformat(),
+                'lead_source': lead_source,
+                'twofa_enabled': twofa_enabled,
+                'sms_notifications': sms_notifications,
+                'email_notifications': email_notifications,
+                'is_beta_tester': is_beta_tester,
+                'proposal_support': proposal_support,
+                'low_credits_alert': low_credits_alert_sent
             }
         )
         new_user = result.fetchone()
         db.session.commit()
         
-        log_admin_action('create_user', f'Created user: {username} ({email}), is_admin={is_admin}')
+        # Build control summary for log
+        controls = []
+        if is_admin: controls.append('admin')
+        if is_beta_tester: controls.append('beta_tester')
+        if proposal_support: controls.append('proposal_support')
+        if twofa_enabled: controls.append('2fa_required')
+        controls_str = ', '.join(controls) if controls else 'none'
+        
+        log_admin_action('create_user', f'Created user: {username} ({email}), controls=[{controls_str}], subscription={subscription_status}')
         
         return jsonify({
             'success': True, 
-            'message': f'User {username} created successfully',
+            'message': f'User {username} created successfully with {len(controls)} permission(s)',
             'user_id': new_user[0],
             'email': new_user[1],
-            'username': new_user[2]
+            'username': new_user[2],
+            'controls_applied': controls
         })
         
     except Exception as e:
