@@ -304,11 +304,14 @@ def ensure_admin2_account(force_password_reset: bool = False):
     """Provision the fallback admin2 account so support logins never fail.
     Must be called within an active Flask app context."""
     if not ADMIN2_AUTO_PROVISION_ENABLED:
+        print('[ADMIN2] Auto-provision disabled (ADMIN2_AUTO_PROVISION not set)')
         return
     if not (ADMIN2_SEED_EMAIL and ADMIN2_SEED_USERNAME and ADMIN2_SEED_PASSWORD):
+        print(f'[ADMIN2] Missing config: email={bool(ADMIN2_SEED_EMAIL)}, username={bool(ADMIN2_SEED_USERNAME)}, password={bool(ADMIN2_SEED_PASSWORD)}')
         return
 
     try:
+        print(f'[ADMIN2] Checking for existing account: {ADMIN2_SEED_USERNAME} / {ADMIN2_SEED_EMAIL}')
         lookup = db.session.execute(
             text('''SELECT id, email, username, password_hash, is_admin
                     FROM leads
@@ -323,7 +326,9 @@ def ensure_admin2_account(force_password_reset: bool = False):
         hashed_password = generate_password_hash(provision_password) if provision_password else None
 
         if not lookup:
+            print(f'[ADMIN2] Account does not exist, creating...')
             if not hashed_password:
+                print(f'[ADMIN2] Cannot create account without password')
                 return
             db.session.execute(
                 text('''INSERT INTO leads (
@@ -347,26 +352,32 @@ def ensure_admin2_account(force_password_reset: bool = False):
                 }
             )
             db.session.commit()
-            print('[ADMIN2] Seeded admin2 account automatically.')
+            print('[ADMIN2] ✅ Successfully created admin2 account')
             return
+        else:
+            print(f'[ADMIN2] Account exists: id={lookup[0]}, is_admin={lookup[4]}, has_password={bool(lookup[3])}')
 
         updates = []
         params = {'user_id': lookup[0]}
         if not lookup[4]:
             updates.append('is_admin = 1')
+            print(f'[ADMIN2] Will promote to admin')
         if hashed_password and (force_password_reset or not lookup[3]):
             updates.append('password_hash = :password_hash')
             params['password_hash'] = hashed_password
+            print(f'[ADMIN2] Will update password hash')
         if updates:
             db.session.execute(
                 text(f"UPDATE leads SET {', '.join(updates)} WHERE id = :user_id"),
                 params
             )
             db.session.commit()
-            print('[ADMIN2] Updated existing admin2 account for consistency.')
+            print(f'[ADMIN2] ✅ Updated existing admin2 account')
     except Exception as admin_seed_err:
         db.session.rollback()
-        print(f'[ADMIN2] Unable to ensure admin2 account: {admin_seed_err}')
+        print(f'[ADMIN2] ❌ ERROR: {admin_seed_err}')
+        import traceback
+        traceback.print_exc()
 
 def _fetch_user_credentials(identifier: str):
     """Fetch authentication tuple for a username/email with legacy fallback."""
@@ -4564,9 +4575,19 @@ def signin():
             result = _fetch_user_credentials(username)
             if not result and _is_admin2_identifier(username):
                 # Automatically provision admin2 account if it drifted or was removed
-                print(f'[ADMIN2] Account not found, provisioning...')
-                ensure_admin2_account()
-                result = _fetch_user_credentials(username)
+                print(f'[ADMIN2] Account not found for {username}, provisioning...')
+                try:
+                    ensure_admin2_account()
+                    print(f'[ADMIN2] Provisioning completed, re-fetching credentials...')
+                    result = _fetch_user_credentials(username)
+                    if result:
+                        print(f'[ADMIN2] Successfully created and fetched admin2 account')
+                    else:
+                        print(f'[ADMIN2] WARNING: Provisioning succeeded but account still not found')
+                except Exception as provision_err:
+                    print(f'[ADMIN2] ERROR during provisioning: {provision_err}')
+                    import traceback
+                    traceback.print_exc()
 
             if result:
                 print(f'[AUTH] Found user: id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
