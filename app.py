@@ -312,13 +312,16 @@ def ensure_admin2_account(force_password_reset: bool = False):
 
     try:
         print(f'[ADMIN2] Checking for existing account: {ADMIN2_SEED_USERNAME} / {ADMIN2_SEED_EMAIL}')
+        normalized_email = _normalize_identifier(ADMIN2_SEED_EMAIL)
+        normalized_username = _normalize_identifier(ADMIN2_SEED_USERNAME)
+        print(f'[ADMIN2] Normalized search: email={normalized_email}, username={normalized_username}')
         lookup = db.session.execute(
             text('''SELECT id, email, username, password_hash, is_admin
                     FROM leads
                     WHERE lower(email) = :email OR lower(username) = :username'''),
             {
-                'email': _normalize_identifier(ADMIN2_SEED_EMAIL),
-                'username': _normalize_identifier(ADMIN2_SEED_USERNAME)
+                'email': normalized_email,
+                'username': normalized_username
             }
         ).fetchone()
 
@@ -330,7 +333,7 @@ def ensure_admin2_account(force_password_reset: bool = False):
             if not hashed_password:
                 print(f'[ADMIN2] Cannot create account without password')
                 return
-            db.session.execute(
+            insert_result = db.session.execute(
                 text('''INSERT INTO leads (
                         company_name, contact_name, email, username, password_hash,
                         subscription_status, credits_balance, is_admin, free_leads_remaining,
@@ -341,7 +344,7 @@ def ensure_admin2_account(force_password_reset: bool = False):
                         'paid', 999999, TRUE, 0,
                         :registration_date, 'system_bootstrap', FALSE, FALSE,
                         TRUE
-                    )'''),
+                    ) RETURNING id, email, username'''),
                 {
                     'company': 'Admin Operations',
                     'contact': 'Admin2 Support',
@@ -351,8 +354,9 @@ def ensure_admin2_account(force_password_reset: bool = False):
                     'registration_date': datetime.utcnow().isoformat()
                 }
             )
+            new_account = insert_result.fetchone()
             db.session.commit()
-            print('[ADMIN2] ✅ Successfully created admin2 account')
+            print(f'[ADMIN2] ✅ Successfully created admin2 account: id={new_account[0]}, email={new_account[1]}, username={new_account[2]}')
             return
         else:
             print(f'[ADMIN2] Account exists: id={lookup[0]}, is_admin={lookup[4]}, has_password={bool(lookup[3])}')
@@ -381,20 +385,26 @@ def ensure_admin2_account(force_password_reset: bool = False):
 
 def _fetch_user_credentials(identifier: str):
     """Fetch authentication tuple for a username/email with legacy fallback."""
+    print(f'[AUTH] Fetching credentials for: {identifier}')
     try:
-        return db.session.execute(
+        result = db.session.execute(
             text('''SELECT id, username, email, password_hash, contact_name, credits_balance,
                            is_admin, subscription_status, is_beta_tester, beta_expiry_date,
                            COALESCE(twofa_enabled, FALSE) as twofa_enabled
-                   FROM leads WHERE username = :username OR email = :username'''),
+                   FROM leads WHERE lower(username) = lower(:username) OR lower(email) = lower(:username)'''),
             {'username': identifier}
         ).fetchone()
+        if result:
+            print(f'[AUTH] Found account: id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
+        else:
+            print(f'[AUTH] No account found for: {identifier}')
+        return result
     except Exception as e:
         print(f"⚠️ Extended auth columns not available, using legacy query: {e}")
         db.session.rollback()
         try:
             legacy = db.session.execute(
-                text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
+                text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE lower(username) = lower(:username) OR lower(email) = lower(:username)'),
                 {'username': identifier}
             ).fetchone()
         except Exception as legacy_err:
