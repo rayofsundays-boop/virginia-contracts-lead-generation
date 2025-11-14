@@ -291,18 +291,14 @@ def ensure_twofa_columns():
             ctx.pop()
 
 def ensure_admin2_account(force_password_reset: bool = False):
-    """Provision the fallback admin2 account so support logins never fail."""
+    """Provision the fallback admin2 account so support logins never fail.
+    Must be called within an active Flask app context."""
     if not ADMIN2_AUTO_PROVISION_ENABLED:
         return
     if not (ADMIN2_SEED_EMAIL and ADMIN2_SEED_USERNAME and ADMIN2_SEED_PASSWORD):
         return
 
-    ctx = None
     try:
-        if not has_app_context():
-            ctx = app.app_context()
-            ctx.push()
-
         lookup = db.session.execute(
             text('''SELECT id, email, username, password_hash, is_admin
                     FROM leads
@@ -361,9 +357,6 @@ def ensure_admin2_account(force_password_reset: bool = False):
     except Exception as admin_seed_err:
         db.session.rollback()
         print(f'[ADMIN2] Unable to ensure admin2 account: {admin_seed_err}')
-    finally:
-        if ctx:
-            ctx.pop()
 
 def _fetch_user_credentials(identifier: str):
     """Fetch authentication tuple for a username/email with legacy fallback."""
@@ -531,7 +524,8 @@ with app.app_context():
 
 # Finalize authentication schema on import so every deployment gets the safety fix
 ensure_twofa_columns()
-ensure_admin2_account(force_password_reset=ADMIN2_FORCE_PASSWORD_RESET)
+with app.app_context():
+    ensure_admin2_account(force_password_reset=ADMIN2_FORCE_PASSWORD_RESET)
 
 # =============================
 # Proposal Wizard & Compliance AI Feature (Capability Statements)
