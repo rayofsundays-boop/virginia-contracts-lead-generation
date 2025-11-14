@@ -175,53 +175,115 @@
                                               rows="2" placeholder="List any relevant certifications..."></textarea>
                                 </div>
                                 
-                                <!-- Beta Tester Program -->
-                                <div class="mb-3" id="beta-tester-section">
-                                    <div class="card border-3 border-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);">
-                                        <div class="card-body">
+                                <!-- Beta Tester Program - Enhanced Visibility -->
+                                <div class="mb-4" id="beta-tester-section">
+                                    <div class="card border-0 shadow-lg beta-card" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%); border: 3px solid #ff6b35 !important; position: relative; overflow: hidden;">
+                                        <!-- Animated shine effect -->
+                                        <div class="shine-effect"></div>
+                                        
+                                        <div class="card-body p-4" style="position: relative; z-index: 2;">
+                                            <!-- Eye-catching header -->
+                                            <div class="text-center mb-3 py-2" style="background: linear-gradient(90deg, #ff6b35, #f7931e, #ff6b35); border-radius: 10px; animation: glow 2s ease-in-out infinite;">
+                                                <h4 class="mb-0 fw-bold text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-size: 1.5rem;">
+                                                    <i class="fas fa-crown me-2" style="color: #ffd700;"></i>
+                                                    🎉 VIP BETA TESTER PROGRAM 🎉
+                                                    <i class="fas fa-crown ms-2" style="color: #ffd700;"></i>
+                                                </h4>
+                                                <p class="mb-0 text-white fw-bold mt-1" style="font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                                                    <span class="badge bg-danger pulse-badge fs-5 px-3 py-2">⚡ ONLY 100 SPOTS AVAILABLE ⚡</span>
+                                                </p>
+                                            </div>
+
                                             <div class="d-flex align-items-start">
-                                                <div class="form-check me-3 mt-1">
-                                                    <input class="form-check-input" type="checkbox" id="beta_tester" name="beta_tester" style="width: 24px; height: 24px; cursor: pointer;">
+                                                <div class="form-check me-3 mt-2">
+                                                    <input class="form-check-input beta-checkbox" type="checkbox" id="beta_tester" name="beta_tester" style="width: 32px; height: 32px; cursor: pointer; border: 3px solid #ff6b35;">
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <label class="form-check-label fw-bold fs-5 mb-2" for="beta_tester" style="color: #856404; cursor: pointer;">
-                                                        <i class="fas fa-star me-2" style="color: #ffc107;"></i>Join Beta Tester Program
-                                                        <span class="badge bg-danger ms-2 pulse-badge">LIMITED: 100 Spots</span>
+                                                    <label class="form-check-label fw-bold fs-4 mb-3 d-block" for="beta_tester" style="color: #c41e3a; cursor: pointer; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">
+                                                        <i class="fas fa-gift me-2" style="color: #ff6b35; font-size: 1.5rem;"></i>
+                                                        Get 1 YEAR FREE Premium Access ($1,188 Value!)
                                                     </label>
-                                                    <div class="alert alert-success mb-2 py-2" style="background-color: #d4edda; border-color: #c3e6cb;">
-                                                        <strong style="color: #155724;"><i class="fas fa-gift me-1"></i>Get 1 Year FREE Premium Access!</strong>
+                                                    
+                                                    <!-- Benefits box -->
+                                                    <div class="p-3 mb-3" style="background: white; border-radius: 10px; border: 2px solid #ff6b35; box-shadow: 0 4px 15px rgba(255,107,53,0.3);">
+                                                        <p class="mb-2 fw-bold fs-5" style="color: #c41e3a;">
+                                                            <i class="fas fa-star-half-alt me-2" style="color: #ffd700;"></i>Your Beta Tester Benefits:
+                                                        </p>
+                                                        <ul class="mb-0 fs-6" style="color: #212529; line-height: 1.8;">
+                                                            <li><strong style="color: #ff6b35;">✓ Full Premium Platform Access</strong> - 12 months free ($1,188 value)</li>
+                                                            <li><strong style="color: #ff6b35;">✓ Unlimited Contract Leads</strong> - No restrictions, download everything</li>
+                                                            <li><strong style="color: #ff6b35;">✓ VIP Priority Support</strong> - Direct line to our team</li>
+                                                            <li><strong style="color: #ff6b35;">✓ Shape the Platform</strong> - Your feedback drives development</li>
+                                                            <li><strong style="color: #ff6b35;">✓ Exclusive Features</strong> - First access to new tools</li>
+                                                        </ul>
                                                     </div>
-                                                    <p class="mb-2 fw-semibold" style="color: #212529;">Beta testers receive:</p>
-                                                    <ul class="mb-2" style="color: #212529;">
-                                                        <li><strong>Full platform access</strong> for 12 months ($1,188 value)</li>
-                                                        <li><strong>Unlimited</strong> contract leads and downloads</li>
-                                                        <li><strong>Priority</strong> customer support</li>
-                                                        <li><strong>Exclusive</strong> ability to shape new features</li>
-                                                    </ul>
-                                                    <div class="d-flex align-items-center justify-content-between">
+                                                    
+                                                    <!-- Spots remaining counter -->
+                                                    <div class="text-center p-3" style="background: linear-gradient(135deg, #28a745, #20c997); border-radius: 10px;">
                                                         <p class="mb-0" id="beta-spots-remaining">
-                                                            <span class="badge bg-success fs-6 px-3 py-2" id="beta-badge">
-                                                                <i class="fas fa-users me-1"></i><span id="spots-count">Loading...</span> spots remaining
+                                                            <span class="badge bg-white text-success fs-4 px-4 py-3 shadow-lg pulse-badge" id="beta-badge" style="border: 3px solid #28a745;">
+                                                                <i class="fas fa-users me-2"></i>
+                                                                <strong><span id="spots-count">Loading...</span> SPOTS LEFT</strong>
+                                                                <i class="fas fa-fire ms-2" style="color: #ff6b35;"></i>
                                                             </span>
                                                         </p>
-                                                        <p class="mb-0 small text-secondary fst-italic">
-                                                            <i class="fas fa-check-circle me-1"></i>Check box to join
+                                                        <p class="mb-0 mt-2 fw-bold text-white" style="font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                                                            <i class="fas fa-hand-point-up me-2"></i>Check the box above to claim your spot!
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                     <style>
+                                        /* Pulsing animation for badges */
                                         .pulse-badge {
-                                            animation: pulse 2s infinite;
+                                            animation: pulse 1.5s ease-in-out infinite;
                                         }
                                         @keyframes pulse {
                                             0%, 100% { transform: scale(1); }
-                                            50% { transform: scale(1.05); }
+                                            50% { transform: scale(1.08); }
                                         }
+                                        
+                                        /* Glowing animation for header */
+                                        @keyframes glow {
+                                            0%, 100% { box-shadow: 0 0 20px rgba(255,107,53,0.6); }
+                                            50% { box-shadow: 0 0 40px rgba(255,107,53,0.9); }
+                                        }
+                                        
+                                        /* Shine effect animation */
+                                        .shine-effect {
+                                            position: absolute;
+                                            top: -50%;
+                                            left: -50%;
+                                            width: 200%;
+                                            height: 200%;
+                                            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+                                            animation: shine 3s infinite;
+                                            z-index: 1;
+                                        }
+                                        @keyframes shine {
+                                            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+                                            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+                                        }
+                                        
+                                        /* Beta card hover effect */
+                                        .beta-card {
+                                            transition: transform 0.3s ease, box-shadow 0.3s ease;
+                                        }
+                                        .beta-card:hover {
+                                            transform: translateY(-5px);
+                                            box-shadow: 0 15px 40px rgba(255,107,53,0.5) !important;
+                                        }
+                                        
+                                        /* Checkbox checked state */
                                         #beta_tester:checked + label {
                                             color: #155724 !important;
+                                        }
+                                        .beta-checkbox:checked {
+                                            background-color: #28a745 !important;
+                                            border-color: #28a745 !important;
                                         }
                                     </style>
                                 </div>
@@ -376,18 +438,20 @@ function checkBetaTesterAvailability() {
             spotsCount.textContent = spotsRemaining;
             
             if (spotsRemaining === 0) {
-                // Gray out and disable beta tester option
-                betaBadge.classList.remove('bg-success');
-                betaBadge.classList.add('bg-secondary');
-                betaCheckbox.disabled = true;
-                betaCheckbox.checked = false;
-                betaSection.style.opacity = '0.5';
-                spotsCount.textContent = 'Program Full - No spots available';
+                // Hide the entire beta tester section when program is full
+                betaSection.style.display = 'none';
+                console.log('Beta tester program is full (100/100 spots taken) - section hidden');
             } else if (spotsRemaining <= 10) {
-                // Change to warning color when spots are low
-                betaBadge.classList.remove('bg-success');
-                betaBadge.classList.add('bg-warning');
-                betaBadge.classList.add('text-dark');
+                // Show urgency when spots are low
+                betaBadge.classList.remove('bg-white', 'text-success');
+                betaBadge.classList.add('bg-danger', 'text-white');
+                betaBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>' + spotsRemaining + ' SPOTS LEFT - HURRY!</strong><i class="fas fa-fire ms-2"></i>';
+                betaBadge.style.animation = 'pulse 1s ease-in-out infinite';
+            } else if (spotsRemaining <= 25) {
+                // Show warning when getting close
+                betaBadge.classList.remove('bg-white', 'text-success');
+                betaBadge.classList.add('bg-warning', 'text-dark');
+                spotsCount.textContent = spotsRemaining;
             }
         })
         .catch(error => {
