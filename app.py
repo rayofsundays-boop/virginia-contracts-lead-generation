@@ -357,6 +357,16 @@ def ensure_admin2_account(force_password_reset: bool = False):
             new_account = insert_result.fetchone()
             db.session.commit()
             print(f'[ADMIN2] ✅ Successfully created admin2 account: id={new_account[0]}, email={new_account[1]}, username={new_account[2]}')
+            
+            # Verify the account is actually in the database
+            verify = db.session.execute(
+                text('SELECT id, username, email, is_admin FROM leads WHERE id = :id'),
+                {'id': new_account[0]}
+            ).fetchone()
+            if verify:
+                print(f'[ADMIN2] ✓ Verified account in database: id={verify[0]}, username={verify[1]}, email={verify[2]}, is_admin={verify[3]}')
+            else:
+                print(f'[ADMIN2] ⚠️  WARNING: Account creation succeeded but cannot find account with id={new_account[0]}')
             return
         else:
             print(f'[ADMIN2] Account exists: id={lookup[0]}, is_admin={lookup[4]}, has_password={bool(lookup[3])}')
@@ -4600,7 +4610,8 @@ def signin():
                 print(f'[ADMIN2] Account not found for {username}, provisioning...')
                 try:
                     ensure_admin2_account()
-                    print(f'[ADMIN2] Provisioning completed, re-fetching credentials...')
+                    print(f'[ADMIN2] Provisioning completed, closing session and re-fetching...')
+                    db.session.close()  # Close session to force fresh query
                     result = _fetch_user_credentials(username)
                     if result:
                         print(f'[ADMIN2] Successfully created and fetched admin2 account')
