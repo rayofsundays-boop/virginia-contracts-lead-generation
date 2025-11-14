@@ -3552,13 +3552,15 @@ def init_postgres_db():
             db.session.commit()
             print("✅ Added category column to supply_contracts table")
         except Exception as e:
+            db.session.rollback()  # Critical: rollback failed transaction
             if "already exists" in str(e) or "column" in str(e).lower():
                 print("✅ Category column already exists in supply_contracts")
             else:
                 print(f"⚠️  Could not add category column: {e}")
         
         # Invoices table for tracking user-created invoices
-        db.session.execute(text('''CREATE TABLE IF NOT EXISTS invoices
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS invoices
                      (id SERIAL PRIMARY KEY,
                       user_email TEXT NOT NULL,
                       invoice_name TEXT NOT NULL,
@@ -3573,30 +3575,40 @@ def init_postgres_db():
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       FOREIGN KEY (user_email) REFERENCES leads(email))'''))
-        
-        # Create indexes for faster invoice queries
-        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_user_email 
-                                   ON invoices(user_email)'''))
-        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_created_at 
-                                   ON invoices(created_at DESC)'''))
+            
+            # Create indexes for faster invoice queries
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_user_email 
+                                       ON invoices(user_email)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_invoices_created_at 
+                                       ON invoices(created_at DESC)'''))
+            db.session.commit()
+            print("✅ Invoices table created successfully")
+        except Exception as invoice_err:
+            db.session.rollback()
+            print(f"⚠️  Invoices table init: {invoice_err}")
         
         # User NAICS codes table for capability statement enhancement
-        db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_naics_codes
-                     (id SERIAL PRIMARY KEY,
-                      user_id INTEGER NOT NULL,
-                      user_email TEXT NOT NULL,
-                      naics_code TEXT NOT NULL,
-                      code_title TEXT NOT NULL,
-                      code_description TEXT,
-                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                      FOREIGN KEY (user_id) REFERENCES leads(id),
-                      FOREIGN KEY (user_email) REFERENCES leads(email),
-                      UNIQUE(user_email, naics_code))'''))
-        
-        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_user_naics_email 
-                                   ON user_naics_codes(user_email)'''))
-        
-        db.session.commit()
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_naics_codes
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          naics_code TEXT NOT NULL,
+                          code_title TEXT NOT NULL,
+                          code_description TEXT,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email),
+                          UNIQUE(user_email, naics_code))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_user_naics_email 
+                                       ON user_naics_codes(user_email)'''))
+            
+            db.session.commit()
+            print("✅ User NAICS codes table created successfully")
+        except Exception as naics_err:
+            db.session.rollback()
+            print(f"⚠️  User NAICS codes table init: {naics_err}")
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
