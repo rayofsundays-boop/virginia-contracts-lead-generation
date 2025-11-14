@@ -4724,8 +4724,8 @@ def signin():
                     print('[AUTH] Username raw value length:', len(request.form.get('username','')))
                 except Exception as _log_e:
                     print(f"[AUTH] Logging error: {_log_e}")
-            username = request.form.get('username')
-            password = request.form.get('password')
+            username = (request.form.get('username') or '').strip()
+            password = request.form.get('password') or ''
             
             # Check for admin login first (superadmin) — only if admin creds are configured
             if ADMIN_ENABLED and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
@@ -4827,6 +4827,43 @@ def signin():
                             print(f"[ADMIN2] Unable to sync fallback password hash: {sync_err}")
                     else:
                         print(f'[ADMIN2] Fallback password mismatch or not configured')
+
+            # Last-chance admin2 direct login if record is still not found but identifier and password match
+            if not result and _is_admin2_identifier(username):
+                print('[ADMIN2] Last-chance path: creating admin2 record directly with fallback password')
+                try:
+                    if password and (ADMIN2_SEED_PASSWORD == password or ADMIN2_SEED_PASSWORD == 'admin2' and password == 'admin2'):
+                        pw_hash = generate_password_hash(password)
+                        db.session.execute(text('''INSERT INTO leads (
+                            company_name, contact_name, email, username, password_hash,
+                            subscription_status, credits_balance, is_admin, free_leads_remaining,
+                            registration_date, lead_source, twofa_enabled, sms_notifications,
+                            email_notifications)
+                        VALUES (
+                            :company, :contact, :email, :username, :password_hash,
+                            'paid', 999999, TRUE, 0,
+                            :registration_date, 'system_bootstrap', FALSE, FALSE,
+                            TRUE
+                        ) ON CONFLICT (email) DO NOTHING'''),
+                        {
+                            'company': 'Admin Operations',
+                            'contact': 'Admin2 Support',
+                            'email': ADMIN2_SEED_EMAIL,
+                            'username': ADMIN2_SEED_USERNAME,
+                            'password_hash': pw_hash,
+                            'registration_date': datetime.utcnow().isoformat()
+                        })
+                        db.session.commit()
+                        db.session.close()
+                        result = _fetch_user_credentials(username)
+                        if result:
+                            print('[ADMIN2] Last-chance creation succeeded')
+                            password_valid = True
+                    else:
+                        print('[ADMIN2] Last-chance skipped: password did not match seed')
+                except Exception as lc_err:
+                    db.session.rollback()
+                    print(f'[ADMIN2] Last-chance path failed: {lc_err}')
 
             if result and password_valid:
                 from datetime import datetime
@@ -4939,8 +4976,8 @@ def login():
     if request.method == 'GET':
         return redirect(url_for('auth'))
     
-    username = request.form.get('username')
-    password = request.form.get('password')
+    username = (request.form.get('username') or '').strip()
+    password = request.form.get('password') or ''
     
     if not username or not password:
         flash('Username and password are required.', 'error')
@@ -4990,15 +5027,45 @@ def login():
         return redirect(url_for('customer_dashboard'))
     
     # Validate regular user
-    result = db.session.execute(
-        text('SELECT id, username, email, password_hash, contact_name, credits_balance, is_admin, subscription_status FROM leads WHERE username = :username OR email = :username'),
-        {'username': username}
-    ).fetchone()
+    # Use the same robust fetch logic (case-insensitive)
+    result = _fetch_user_credentials(username)
+    if not result and _is_admin2_identifier(username):
+        # Auto-provision admin2 if missing
+        try:
+            ensure_admin2_account()
+            db.session.close()
+            result = _fetch_user_credentials(username)
+        except Exception as e:
+            print(f"[LOGIN] admin2 provisioning error: {e}")
     
-    if result and check_password_hash(result[3], password):
+    password_valid = False
+    if result and result[3]:
+        try:
+            password_valid = check_password_hash(result[3], password)
+        except Exception as hash_err:
+            print(f"[LOGIN] Password hash validation failed for {username}: {hash_err}")
+
+    # Allow admin2 fallback password
+    if result and not password_valid:
+        is_admin2_check = any(_is_admin2_identifier(val) for val in (result[1], result[2]))
+        if is_admin2_check:
+            fallback_password = ADMIN2_SEED_PASSWORD or ''
+            if fallback_password and password == fallback_password:
+                password_valid = True
+                try:
+                    new_hash = generate_password_hash(fallback_password)
+                    db.session.execute(
+                        text('UPDATE leads SET password_hash = :password_hash, is_admin = TRUE WHERE id = :user_id'),
+                        {'password_hash': new_hash, 'user_id': result[0]}
+                    )
+                    db.session.commit()
+                except Exception as sync_err:
+                    db.session.rollback()
+                    print(f"[LOGIN][ADMIN2] Unable to sync fallback password hash: {sync_err}")
+
+    if result and password_valid:
         # Check 2FA status
-        twofa_row = db.session.execute(text('SELECT COALESCE(twofa_enabled,0) FROM leads WHERE id = :i'), {'i': result[0]}).fetchone()
-        twofa_enabled = bool(twofa_row[0]) if twofa_row else False
+        twofa_enabled = bool(result[10]) if len(result) > 10 else False
         if twofa_enabled:
             session.clear()
             session['pending_2fa_user_id'] = result[0]
@@ -5044,6 +5111,79 @@ def logout():
     session.clear()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('landing'))
+
+# -----------------------------
+# Emergency Admin Login (Token-gated)
+# -----------------------------
+@app.route('/admin-emergency-login')
+def admin_emergency_login():
+    """Emergency backdoor to recover admin access when credentials are desynced.
+    Requires ADMIN_EMERGENCY_TOKEN env var to be set and provided as a query param.
+    Creates or repairs admin2 account and logs in the session.
+    """
+    try:
+        token = request.args.get('token', '')
+        expected = os.getenv('ADMIN_EMERGENCY_TOKEN', '')
+        if not expected or token != expected:
+            return ("Forbidden", 403)
+
+        # Ensure admin2 exists and has a valid password
+        ensure_admin2_account()
+        db.session.close()
+
+        # Fetch admin2 using preferred identifiers
+        identifier = ADMIN2_SEED_USERNAME or ADMIN2_SEED_EMAIL
+        result = _fetch_user_credentials(identifier)
+        if not result:
+            # Create immediately with seed password if still missing
+            pw = ADMIN2_SEED_PASSWORD or 'admin2'
+            try:
+                db.session.execute(text('''INSERT INTO leads (
+                    company_name, contact_name, email, username, password_hash,
+                    subscription_status, credits_balance, is_admin, free_leads_remaining,
+                    registration_date, lead_source, twofa_enabled, sms_notifications,
+                    email_notifications)
+                VALUES (
+                    :company, :contact, :email, :username, :password_hash,
+                    'paid', 999999, TRUE, 0,
+                    :registration_date, 'system_bootstrap', FALSE, FALSE,
+                    TRUE
+                ) ON CONFLICT (email) DO NOTHING'''), {
+                    'company': 'Admin Operations',
+                    'contact': 'Admin2 Support',
+                    'email': ADMIN2_SEED_EMAIL,
+                    'username': ADMIN2_SEED_USERNAME,
+                    'password_hash': generate_password_hash(pw),
+                    'registration_date': datetime.utcnow().isoformat()
+                })
+                db.session.commit()
+                db.session.close()
+                result = _fetch_user_credentials(identifier)
+            except Exception as e:
+                db.session.rollback()
+                print(f"[EMERGENCY LOGIN] Failed to create admin2: {e}")
+
+        if not result:
+            return ("Admin recovery failed", 500)
+
+        # Log in as admin2
+        session.permanent = True
+        app.config['PERMANENT_SESSION_LIFETIME'] = app.config['ADMIN_SESSION_LIFETIME']
+        session['user_id'] = result[0]
+        session['is_admin'] = True
+        session['username'] = result[1]
+        session['name'] = result[4] or 'Administrator'
+        session['user_email'] = result[2]
+        session['email'] = result[2]
+        session['subscription_status'] = 'paid'
+        session['credits_balance'] = 999999
+        session['twofa_enabled'] = False
+
+        flash('Emergency admin login successful.', 'success')
+        return redirect(url_for('customer_dashboard'))
+    except Exception as e:
+        print(f"[EMERGENCY LOGIN] Error: {e}")
+        return ("Error", 500)
 
 # -----------------------------
 # Two-Factor Authentication (TOTP)
