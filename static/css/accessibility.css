@@ -16,7 +16,10 @@
 }
 
 /* Text & Muted Adjustments */
-body, p, li, td, th { color: var(--color-text); }
+body, p, li, td, th { 
+  color: var(--color-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
 .text-muted, .small, small { color: var(--color-text-muted) !important; }
 
 /* Buttons */

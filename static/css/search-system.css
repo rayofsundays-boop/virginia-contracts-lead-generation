@@ -1,5 +1,9 @@
 /* Global Search System Styles */
 
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
 .global-search-container {
     position: relative;
     max-width: 600px;
