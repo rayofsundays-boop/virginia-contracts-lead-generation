@@ -4564,32 +4564,46 @@ def signin():
             result = _fetch_user_credentials(username)
             if not result and _is_admin2_identifier(username):
                 # Automatically provision admin2 account if it drifted or was removed
+                print(f'[ADMIN2] Account not found, provisioning...')
                 ensure_admin2_account()
                 result = _fetch_user_credentials(username)
+
+            if result:
+                print(f'[AUTH] Found user: id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
+            else:
+                print(f'[AUTH] User not found: {username}')
 
             password_valid = False
             if result and result[3]:
                 try:
                     password_valid = check_password_hash(result[3], password)
+                    print(f'[AUTH] Password hash check for {username}: {password_valid}')
                 except Exception as hash_err:
                     print(f"[AUTH] Password hash validation failed for {username}: {hash_err}")
 
             # Allow admin2 fallback password defined via environment to avoid lockouts
-            if result and not password_valid and any(_is_admin2_identifier(val) for val in (result[1], result[2])):
-                fallback_password = ADMIN2_SEED_PASSWORD or ''
-                if fallback_password and password == fallback_password:
-                    password_valid = True
-                    try:
-                        new_hash = generate_password_hash(fallback_password)
-                        db.session.execute(
-                            text('UPDATE leads SET password_hash = :password_hash, is_admin = 1 WHERE id = :user_id'),
-                            {'password_hash': new_hash, 'user_id': result[0]}
-                        )
-                        db.session.commit()
-                        print('[ADMIN2] Synced fallback password hash for admin2 account.')
-                    except Exception as sync_err:
-                        db.session.rollback()
-                        print(f"[ADMIN2] Unable to sync fallback password hash: {sync_err}")
+            if result and not password_valid:
+                is_admin2_check = any(_is_admin2_identifier(val) for val in (result[1], result[2]))
+                print(f'[ADMIN2] Checking fallback for {username}: is_admin2={is_admin2_check}, password_valid={password_valid}')
+                if is_admin2_check:
+                    fallback_password = ADMIN2_SEED_PASSWORD or ''
+                    print(f'[ADMIN2] Fallback password configured: {bool(fallback_password)}')
+                    if fallback_password and password == fallback_password:
+                        password_valid = True
+                        print('[ADMIN2] Fallback password accepted, syncing hash...')
+                        try:
+                            new_hash = generate_password_hash(fallback_password)
+                            db.session.execute(
+                                text('UPDATE leads SET password_hash = :password_hash, is_admin = 1 WHERE id = :user_id'),
+                                {'password_hash': new_hash, 'user_id': result[0]}
+                            )
+                            db.session.commit()
+                            print('[ADMIN2] Synced fallback password hash for admin2 account.')
+                        except Exception as sync_err:
+                            db.session.rollback()
+                            print(f"[ADMIN2] Unable to sync fallback password hash: {sync_err}")
+                    else:
+                        print(f'[ADMIN2] Fallback password mismatch or not configured')
 
             if result and password_valid:
                 from datetime import datetime
