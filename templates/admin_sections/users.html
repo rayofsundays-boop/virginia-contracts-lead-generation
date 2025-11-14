@@ -1,8 +1,121 @@
 <!-- Users Management Section -->
-<div class="users-header mb-4">
-    <h2><i class="fas fa-users me-2"></i>User Management</h2>
-    <p class="text-muted">Manage user accounts, reset passwords, and modify subscriptions</p>
+<div class="users-header mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-users me-2"></i>User Management</h2>
+        <p class="text-muted mb-0">Manage user accounts, reset passwords, and modify subscriptions</p>
+    </div>
+    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <i class="fas fa-user-plus me-2"></i>Create New User
+    </button>
 </div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="createUserModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Create New User Account
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createUserForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="newEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="newEmail" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newUsername" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newUsername" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newPassword" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newPassword" name="password" required value="Welcome2024!">
+                            <small class="text-muted">Default: Welcome2024!</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newContactName" class="form-label">Contact Name</label>
+                            <input type="text" class="form-control" id="newContactName" name="contact_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newCompanyName" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="newCompanyName" name="company_name" value="Not Provided">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newSubscriptionStatus" class="form-label">Subscription Status</label>
+                            <select class="form-select" id="newSubscriptionStatus" name="subscription_status">
+                                <option value="free">Free</option>
+                                <option value="paid">Paid</option>
+                                <option value="trial">Trial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newCreditsBalance" class="form-label">Credits Balance</label>
+                            <input type="number" class="form-control" id="newCreditsBalance" name="credits_balance" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="newIsAdmin" name="is_admin">
+                                <label class="form-check-label" for="newIsAdmin">
+                                    <strong>Admin Access</strong>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> User will be created immediately and can log in with the provided credentials.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="createNewUser()">
+                    <i class="fas fa-check me-2"></i>Create User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createNewUser() {
+    const form = document.getElementById('createUserForm');
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+        if (key === 'is_admin') {
+            data[key] = document.getElementById('newIsAdmin').checked;
+        } else {
+            data[key] = value;
+        }
+    });
+    
+    fetch('/admin-create-user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('✓ ' + result.message + '\n\nUser ID: ' + result.user_id + '\nEmail: ' + result.email + '\nUsername: ' + result.username);
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        alert('Error creating user: ' + error);
+        console.error('Error:', error);
+    });
+}
+</script>
 
 <!-- Search and Filter -->
 <div class="card mb-4">

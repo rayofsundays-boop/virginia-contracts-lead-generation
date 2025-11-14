@@ -11464,6 +11464,84 @@ def admin_update_user():
         print(f"Error updating user: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/admin-create-user', methods=['POST'])
+@admin_required
+def admin_create_user():
+    """Admin function to create a new user account"""
+    try:
+        data = request.get_json() if request.is_json else request.form
+        
+        # Required fields
+        email = data.get('email', '').strip()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not email or not username or not password:
+            return jsonify({'success': False, 'error': 'Email, username, and password are required'}), 400
+        
+        # Check if user already exists
+        existing = db.session.execute(
+            text('SELECT id FROM leads WHERE lower(email) = lower(:email) OR lower(username) = lower(:username)'),
+            {'email': email, 'username': username}
+        ).fetchone()
+        
+        if existing:
+            return jsonify({'success': False, 'error': 'User with this email or username already exists'}), 400
+        
+        # Optional fields with defaults
+        company_name = data.get('company_name', 'Not Provided')
+        contact_name = data.get('contact_name', username)
+        subscription_status = data.get('subscription_status', 'free')
+        is_admin = data.get('is_admin', False)
+        credits_balance = int(data.get('credits_balance', 0))
+        
+        # Hash the password
+        password_hash = generate_password_hash(password)
+        
+        # Create the user
+        result = db.session.execute(
+            text('''INSERT INTO leads (
+                    company_name, contact_name, email, username, password_hash,
+                    subscription_status, credits_balance, is_admin, free_leads_remaining,
+                    registration_date, lead_source, twofa_enabled, sms_notifications,
+                    email_notifications)
+                VALUES (
+                    :company, :contact, :email, :username, :password_hash,
+                    :subscription, :credits, :is_admin, 3,
+                    :registration_date, 'admin_created', FALSE, FALSE, TRUE
+                ) RETURNING id, email, username'''),
+            {
+                'company': company_name,
+                'contact': contact_name,
+                'email': email,
+                'username': username,
+                'password_hash': password_hash,
+                'subscription': subscription_status,
+                'credits': credits_balance,
+                'is_admin': is_admin,
+                'registration_date': datetime.utcnow().isoformat()
+            }
+        )
+        new_user = result.fetchone()
+        db.session.commit()
+        
+        log_admin_action('create_user', f'Created user: {username} ({email}), is_admin={is_admin}')
+        
+        return jsonify({
+            'success': True, 
+            'message': f'User {username} created successfully',
+            'user_id': new_user[0],
+            'email': new_user[1],
+            'username': new_user[2]
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating user: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin-upload-lead', methods=['POST'])
 def admin_upload_lead():
     """Admin function to manually upload a contract lead"""
