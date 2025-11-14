@@ -24781,6 +24781,14 @@ def run_industry_days_scraper():
 
 if __name__ == '__main__':
     init_db()
+    
+    # Run 2FA column migration
+    try:
+        from add_twofa_columns import add_twofa_columns
+        add_twofa_columns()
+    except Exception as migration_err:
+        print(f"⚠️  2FA migration warning (non-critical): {migration_err}")
+    
     import socket
     port = int(os.environ.get('PORT', 8080))
     # Attempt to bind to desired port; if unavailable (local dev only), choose a fallback.
