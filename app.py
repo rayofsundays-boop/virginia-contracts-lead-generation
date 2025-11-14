@@ -5641,6 +5641,12 @@ def client_dashboard():
         commercial_requests = []
         residential_requests = []
 
+        # Rollback any existing failed transaction before proceeding
+        try:
+            db.session.rollback()
+        except:
+            pass
+
         try:
             # Try federal_contracts first (primary table)
             government_leads = db.session.execute(text('''
@@ -5653,6 +5659,7 @@ def client_dashboard():
             print(f"✅ Federal contracts query returned {len(government_leads)} leads")
         except Exception as e:
             print(f"❌ Federal contracts error: {e}")
+            db.session.rollback()  # Critical: rollback failed transaction
             try:
                 # Fallback to contracts table
                 government_leads = db.session.execute(text('''
@@ -5665,6 +5672,7 @@ def client_dashboard():
                 print(f"✅ Contracts fallback returned {len(government_leads)} leads")
             except Exception as e2:
                 print(f"❌ Fallback contracts table error: {e2}")
+                db.session.rollback()  # Rollback fallback failure too
         try:
             supply_leads = db.session.execute(text('''
                 SELECT id, title, agency, location, description, estimated_value as contract_value, bid_deadline as deadline,
@@ -5673,6 +5681,7 @@ def client_dashboard():
                 ORDER BY created_at DESC''')).fetchall()
         except Exception as e:
             print(f"Supply leads error: {e}")
+            db.session.rollback()  # Rollback to prevent cascade
         try:
             commercial_opps = db.session.execute(text('''
                 SELECT id, business_name, business_type, location, description, monthly_value, 'Ongoing' as deadline,
@@ -5680,6 +5689,7 @@ def client_dashboard():
                 FROM commercial_opportunities ORDER BY id DESC''')).fetchall()
         except Exception as e:
             print(f"Commercial opps error: {e}")
+            db.session.rollback()  # Rollback to prevent cascade
         try:
             commercial_requests = db.session.execute(text('''
                 SELECT id, business_name, contact_name, email, phone, address, city, zip_code,
@@ -5688,6 +5698,7 @@ def client_dashboard():
                 FROM commercial_lead_requests WHERE status='open' ORDER BY created_at DESC''')).fetchall()
         except Exception as e:
             print(f"Commercial requests error: {e}")
+            db.session.rollback()  # Rollback to prevent cascade
         try:
             residential_requests = db.session.execute(text('''
                 SELECT id, homeowner_name, address, city, zip_code, property_type, bedrooms, bathrooms, square_footage,
@@ -5696,6 +5707,7 @@ def client_dashboard():
                 FROM residential_leads WHERE status='new' ORDER BY created_at DESC''')).fetchall()
         except Exception as e:
             print(f"Residential requests error: {e}")
+            db.session.rollback()  # Rollback to prevent cascade
 
         all_leads = []
         for lead in government_leads:
@@ -5800,6 +5812,7 @@ def client_dashboard():
             
         except Exception as e:
             print(f"Gamification data error: {e}")
+            db.session.rollback()  # Rollback failed transaction
             streak_days = 1
             user_level = 1
             activity_score = 0
@@ -14176,9 +14189,9 @@ def forgot_password():
         if not email:
             return jsonify({'success': False, 'error': 'Email is required'}), 400
         
-        # Look up user
+        # Look up user (use contact_name instead of first_name/last_name)
         user = db.session.execute(text(
-            "SELECT id, email, first_name, last_name FROM leads WHERE LOWER(email) = LOWER(:email)"
+            "SELECT id, email, contact_name FROM leads WHERE LOWER(email) = LOWER(:email)"
         ), {'email': email}).fetchone()
         
         if not user:
@@ -14188,14 +14201,26 @@ def forgot_password():
         # Generate reset token (valid for 1 hour)
         import secrets
         reset_token = secrets.token_urlsafe(32)
+        from datetime import datetime, timedelta
+        expiry = datetime.utcnow() + timedelta(hours=1)
         
-        # Store token in database with expiry
-        db.session.execute(text(
-            "UPDATE leads SET reset_token = :token, "
-            "    reset_token_expires = NOW() + INTERVAL '1 hour' "
-            "WHERE id = :user_id"
-        ), {'token': reset_token, 'user_id': user.id})
-        db.session.commit()
+        # Store token in password_reset_tokens table (not leads table)
+        try:
+            # Delete any existing tokens for this email
+            db.session.execute(text(
+                "DELETE FROM password_reset_tokens WHERE email = :email"
+            ), {'email': email})
+            
+            # Insert new token
+            db.session.execute(text(
+                "INSERT INTO password_reset_tokens (email, token, expiry, used) "
+                "VALUES (:email, :token, :expiry, FALSE)"
+            ), {'email': email, 'token': reset_token, 'expiry': expiry})
+            db.session.commit()
+        except Exception as token_err:
+            db.session.rollback()
+            print(f"Error storing reset token: {token_err}")
+            raise
         
         # Send reset email to user
         if mail:
@@ -14203,7 +14228,7 @@ def forgot_password():
                 from flask_mail import Message
                 
                 reset_url = f"https://virginia-contracts-lead-generation.onrender.com/reset-password/{reset_token}"
-                user_name = f"{user.first_name} {user.last_name}" if user.first_name else "User"
+                user_name = user[2] if user[2] else "User"  # contact_name from query
                 
                 msg = Message(
                     subject="Password Reset Request - VA Contracts Lead Generation",
@@ -14289,12 +14314,23 @@ VA Contracts Lead Generation Team
 def reset_password_with_token(token):
     """Reset password using token from email"""
     if request.method == 'GET':
-        # Verify token is valid
-        user = db.session.execute(text(
-            "SELECT id, email, first_name FROM leads WHERE reset_token = :token AND reset_token_expires > NOW()"
-        ), {'token': token}).fetchone()
-        
-        if not user:
+        # Verify token is valid (check password_reset_tokens table)
+        try:
+            token_record = db.session.execute(text(
+                "SELECT email, expiry, used FROM password_reset_tokens WHERE token = :token"
+            ), {'token': token}).fetchone()
+            
+            if not token_record:
+                flash('This password reset link is invalid or has expired.', 'error')
+                return redirect(url_for('auth'))
+            
+            from datetime import datetime
+            if token_record[2] or token_record[1] < datetime.utcnow():  # used or expired
+                flash('This password reset link is invalid or has expired.', 'error')
+                return redirect(url_for('auth'))
+        except Exception as e:
+            print(f"Token verification error: {e}")
+            db.session.rollback()
             flash('This password reset link is invalid or has expired.', 'error')
             return redirect(url_for('auth'))
         
@@ -14317,24 +14353,32 @@ def reset_password_with_token(token):
             flash('Password must be at least 8 characters', 'error')
             return redirect(url_for('reset_password_with_token', token=token))
         
-        # Verify token again
-        user = db.session.execute(text(
-            "SELECT id, email FROM leads WHERE reset_token = :token AND reset_token_expires > NOW()"
+        # Verify token again from password_reset_tokens table
+        from datetime import datetime
+        token_record = db.session.execute(text(
+            "SELECT email, expiry, used FROM password_reset_tokens WHERE token = :token"
         ), {'token': token}).fetchone()
         
-        if not user:
+        if not token_record or token_record[2] or token_record[1] < datetime.utcnow():
             flash('This password reset link is invalid or has expired.', 'error')
             return redirect(url_for('auth'))
+        
+        email = token_record[0]
         
         # Hash and update password
         from werkzeug.security import generate_password_hash
         hashed_password = generate_password_hash(new_password)
         
         db.session.execute(text(
-            "UPDATE leads SET password = :password, "
-            "    reset_token = NULL, reset_token_expires = NULL "
-            "WHERE id = :user_id"
-        ), {'password': hashed_password, 'user_id': user.id})
+            "UPDATE leads SET password_hash = :password "
+            "WHERE email = :email"
+        ), {'password': hashed_password, 'email': email})
+        
+        # Mark token as used
+        db.session.execute(text(
+            "UPDATE password_reset_tokens SET used = TRUE WHERE token = :token"
+        ), {'token': token})
+        
         db.session.commit()
         
         flash('✅ Your password has been reset successfully! Please log in.', 'success')
