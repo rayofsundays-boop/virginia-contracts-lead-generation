@@ -21094,7 +21094,7 @@ def view_message(message_id):
 @app.route('/send-message', methods=['POST'])
 @login_required
 def send_message():
-    """Send a message"""
+    """Send a message (internal or external email for admins)"""
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -21103,22 +21103,83 @@ def send_message():
         
         message_type = request.form.get('message_type', 'individual')
         recipient_id = request.form.get('recipient_id')
+        external_email = request.form.get('external_email', '').strip()  # NEW: External email field
         subject = request.form.get('subject')
         body = request.form.get('body')
         parent_message_id = request.form.get('parent_message_id')
+        
+        # Admin-only: Send external email to personal addresses
+        if is_admin and message_type == 'external' and external_email:
+            try:
+                # Validate email format
+                import re
+                email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not re.match(email_regex, external_email):
+                    flash('Invalid email address format', 'error')
+                    return redirect(url_for('mailbox'))
+                
+                # Send external email using Flask-Mail
+                from flask_mail import Message
+                sender_info = db.session.execute(
+                    text("SELECT email, first_name, last_name FROM leads WHERE id = :user_id"),
+                    {'user_id': user_id}
+                ).fetchone()
+                
+                sender_name = f"{sender_info.first_name} {sender_info.last_name}" if sender_info else "ContractLink.ai Admin"
+                
+                msg = Message(
+                    subject=subject,
+                    recipients=[external_email],
+                    sender=(sender_name, sender_info.email if sender_info else os.environ.get('MAIL_USERNAME', 'noreply@contractlink.ai'))
+                )
+                msg.body = body
+                msg.html = f"""
+                <html>
+                    <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                            {body.replace(chr(10), '<br>')}
+                            <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                            <p style="color: #666; font-size: 12px;">
+                                Sent from <strong>ContractLink.ai</strong> by {sender_name}
+                            </p>
+                        </div>
+                    </body>
+                </html>
+                """
+                
+                mail.send(msg)
+                flash(f'✅ External email sent successfully to {external_email}', 'success')
+                
+                # Log the external email in messages table for record keeping
+                db.session.execute(text(
+                    "INSERT INTO messages (sender_id, recipient_id, subject, body, is_admin_message, created_at) "
+                    "VALUES (:sender_id, NULL, :subject, :body, TRUE, CURRENT_TIMESTAMP)"
+                ), {
+                    'sender_id': user_id,
+                    'subject': f"[External] {subject} → {external_email}",
+                    'body': body
+                })
+                db.session.commit()
+                
+            except Exception as email_err:
+                print(f"External email send error: {email_err}")
+                flash(f'⚠️ Failed to send external email: {str(email_err)}', 'error')
+                return redirect(url_for('mailbox'))
+                
+            return redirect(url_for('mailbox', folder='sent'))
         
         # Admin broadcast messages
         if is_admin and message_type in ['broadcast', 'paid_only']:
             if message_type == 'broadcast':
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL)")
+                    text("SELECT id, email FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL)")
                 ).fetchall()
             else:  # paid_only
                 recipients = db.session.execute(
-                    text("SELECT id FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL) AND subscription_status = 'paid'")
+                    text("SELECT id, email FROM leads WHERE (is_admin = FALSE OR is_admin IS NULL) AND subscription_status = 'paid'")
                 ).fetchall()
             
-            # Send to all recipients
+            # Send to all recipients (internal messages)
             for recipient in recipients:
                 db.session.execute(text(
                     "INSERT INTO messages "
@@ -21133,9 +21194,9 @@ def send_message():
                 })
             
             db.session.commit()
-            flash(f'Broadcast message sent to {len(recipients)} users', 'success')
+            flash(f'✅ Broadcast message sent to {len(recipients)} users', 'success')
         else:
-            # Individual message
+            # Individual internal message
             if recipient_id == 'admin':
                 # Send to first admin user
                 admin_user = db.session.execute(
@@ -21160,7 +21221,7 @@ def send_message():
             })
             
             db.session.commit()
-            flash('Message sent successfully', 'success')
+            flash('✅ Message sent successfully', 'success')
         
         return redirect(url_for('mailbox', folder='sent'))
         

@@ -139,7 +139,8 @@
                     <div class="mb-3">
                         <label class="form-label">Message Type</label>
                         <select class="form-select" name="message_type" id="messageType">
-                            <option value="individual">Individual User</option>
+                            <option value="individual">Individual User (Internal)</option>
+                            <option value="external">External Email Address</option>
                             <option value="broadcast">Broadcast to All Users</option>
                             <option value="paid_only">Paid Subscribers Only</option>
                         </select>
@@ -160,6 +161,16 @@
                         <input type="hidden" name="recipient_id" value="admin">
                         {% endif %}
                     </div>
+                    
+                    {% if session.get('is_admin') %}
+                    <div class="mb-3" id="externalEmailField" style="display: none;">
+                        <label for="externalEmail" class="form-label">External Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="external_email" id="externalEmail" placeholder="recipient@example.com">
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Send to any email address outside the platform
+                        </small>
+                    </div>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
@@ -194,12 +205,26 @@
 // Show/hide recipient field based on message type
 document.getElementById('messageType').addEventListener('change', function() {
     const recipientField = document.getElementById('recipientField');
+    const externalEmailField = document.getElementById('externalEmailField');
+    const recipientSelect = document.getElementById('recipient');
+    const externalEmailInput = document.getElementById('externalEmail');
+    
     if (this.value === 'individual') {
         recipientField.style.display = 'block';
-        document.getElementById('recipient').required = true;
-    } else {
+        externalEmailField.style.display = 'none';
+        recipientSelect.required = true;
+        externalEmailInput.required = false;
+    } else if (this.value === 'external') {
         recipientField.style.display = 'none';
-        document.getElementById('recipient').required = false;
+        externalEmailField.style.display = 'block';
+        recipientSelect.required = false;
+        externalEmailInput.required = true;
+    } else {
+        // broadcast or paid_only
+        recipientField.style.display = 'none';
+        externalEmailField.style.display = 'none';
+        recipientSelect.required = false;
+        externalEmailInput.required = false;
     }
 });
 {% endif %}
