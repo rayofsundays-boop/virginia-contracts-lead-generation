@@ -4647,9 +4647,9 @@ else:
 
 @app.route('/')
 def index():
-    """High-conversion hero homepage with modern SaaS design - accessible to all users"""
-    # Show the modern hero homepage to everyone (both logged-in and public visitors)
-    return render_template('home_hero_modern.html')
+    """Cinematic homepage with modern design - accessible to all users"""
+    # Show the cinematic homepage to everyone (both logged-in and public visitors)
+    return render_template('home_cinematic.html')
 
 @app.route('/home')
 def home():
