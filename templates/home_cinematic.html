@@ -759,7 +759,8 @@ section, .container, .row {
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
-    color: rgba(255, 255, 255, 0.6);
+    /* Increased contrast for small text to meet WCAG AA */
+    color: rgba(255, 255, 255, 0.85);
     z-index: 10;
     animation: bounce-indicator 2s infinite;
 }
@@ -771,7 +772,7 @@ section, .container, .row {
 }
 
 .scroll-indicator span {
-    font-size: 0.9rem;
+    font-size: 0.95rem; /* Slightly larger for readability */
 }
 
 @keyframes bounce-indicator {
@@ -790,12 +791,13 @@ section, .container, .row {
     display: inline-block;
     padding: 0.5rem 1.5rem;
     background: rgba(168, 85, 247, 0.1);
-    color: var(--color-neon-purple);
+    /* Use high-contrast text with accent border for accessibility */
+    color: #ffffff;
     border-radius: 50px;
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    border: 1px solid rgba(168, 85, 247, 0.5);
 }
 
 .section-title {
@@ -1260,7 +1262,8 @@ section, .container, .row {
 }
 
 .partner-location {
-    color: #10b981;
+    /* Ensure location text meets contrast; keep icon accent color */
+    color: var(--color-gray-100);
     font-size: 0.95rem;
     font-weight: 600;
     margin-top: 0.75rem;
@@ -1308,10 +1311,11 @@ section, .container, .row {
 
 .service-badge {
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    border: 1px solid rgba(16, 185, 129, 0.5);
     padding: 10px 20px;
     border-radius: 50px;
-    color: #10b981;
+    /* Use high-contrast text; maintain green accent via icon */
+    color: var(--color-gray-100);
     font-weight: 600;
     font-size: 0.95rem;
     display: flex;
@@ -1321,10 +1325,13 @@ section, .container, .row {
 }
 
 .service-badge:hover {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.25);
     border-color: #10b981;
     transform: translateY(-2px);
 }
+
+/* Keep accent color on icons within badges while text stays high-contrast */
+.service-badge i { color: #10b981; }
 
 .partner-cta-box {
     background: rgba(255, 215, 0, 0.05);
