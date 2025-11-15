@@ -107,6 +107,26 @@
                     </div>
 
                     <div id="manualEntrySection" style="display: none;">
+                        <!-- URL Import Option -->
+                        <div class="alert alert-info border-info mb-4">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-link me-2"></i>Import from URL</h6>
+                            <p class="mb-3 small">Provide a contract URL and AI will automatically extract requirements, deadlines, and contact information.</p>
+                            <div class="input-group mb-2">
+                                <input type="url" class="form-control" id="contractUrl" 
+                                       placeholder="https://sam.gov/opp/... or government procurement URL">
+                                <button class="btn btn-primary" onclick="importFromUrl()">
+                                    <i class="fas fa-download me-2"></i>Import from URL
+                                </button>
+                            </div>
+                            <small class="text-muted">Supports: SAM.gov, state procurement portals, government bid sites</small>
+                            <div id="urlImportStatus" class="mt-2" style="display: none;"></div>
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <span class="badge bg-secondary">OR</span>
+                        </div>
+
+                        <!-- Manual Entry Fields -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">RFP/Solicitation Number</label>
                             <input type="text" class="form-control" id="manualSolicitationNumber" 
@@ -118,9 +138,25 @@
                                    placeholder="e.g., Janitorial Services - VA Medical Center">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-bold">Contracting Agency/Organization</label>
+                            <input type="text" class="form-control" id="manualAgency" 
+                                   placeholder="e.g., VA Medical Center - Hampton">
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-bold">Contract Description</label>
                             <textarea class="form-control" id="manualDescription" rows="4" 
                                       placeholder="Paste key requirements from the RFP..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Deadline</label>
+                                <input type="date" class="form-control" id="manualDeadline">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Estimated Value</label>
+                                <input type="text" class="form-control" id="manualValue" 
+                                       placeholder="e.g., $50,000 - $100,000">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Upload RFP Document (Optional)</label>
@@ -332,6 +368,74 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('manualEntrySection').style.display = 'block';
     }
 });
+
+function importFromUrl() {
+    const url = document.getElementById('contractUrl').value.trim();
+    if (!url) {
+        alert('Please enter a contract URL');
+        return;
+    }
+    
+    // Validate URL format
+    try {
+        new URL(url);
+    } catch {
+        alert('Please enter a valid URL');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('urlImportStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Importing contract data from URL...';
+    statusDiv.className = 'alert alert-info mt-2';
+    
+    // Call backend API to scrape and extract contract data
+    fetch('/api/import-contract-from-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Auto-populate form fields with extracted data
+            document.getElementById('manualSolicitationNumber').value = data.data.solicitation_number || '';
+            document.getElementById('manualTitle').value = data.data.title || '';
+            document.getElementById('manualAgency').value = data.data.agency || '';
+            document.getElementById('manualDescription').value = data.data.description || '';
+            document.getElementById('manualDeadline').value = data.data.deadline || '';
+            document.getElementById('manualValue').value = data.data.value || '';
+            
+            statusDiv.className = 'alert alert-success mt-2';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>Contract data imported successfully! Review and edit fields below.';
+            
+            // Store full extracted data
+            selectedContract = {
+                title: data.data.title,
+                agency: data.data.agency,
+                description: data.data.description,
+                deadline: data.data.deadline,
+                value: data.data.value,
+                solicitation_number: data.data.solicitation_number,
+                url: url
+            };
+            
+            // Show next step button
+            setTimeout(() => {
+                document.getElementById('step2Card').style.display = 'block';
+                document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth' });
+            }, 1000);
+            
+        } else {
+            statusDiv.className = 'alert alert-danger mt-2';
+            statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>Error: ${data.error || 'Could not import contract data. Please enter manually.'}`;
+        }
+    })
+    .catch(error => {
+        statusDiv.className = 'alert alert-danger mt-2';
+        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error connecting to server. Please try again or enter manually.';
+    });
+}
 
 function loadContracts() {
     const source = document.getElementById('contractSource').value;

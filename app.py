@@ -21301,6 +21301,164 @@ def get_contract_by_id_api():
         print(f"get_contract_by_id error: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
+@app.route('/api/import-contract-from-url', methods=['POST'])
+@login_required
+def import_contract_from_url():
+    """Import contract data from external URL (SAM.gov, state portals, etc.)"""
+    try:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        
+        if not url:
+            return jsonify({'success': False, 'error': 'URL is required'}), 400
+        
+        # Import required libraries
+        import requests
+        from bs4 import BeautifulSoup
+        import re
+        from datetime import datetime
+        
+        # Fetch the page
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Extract contract data (multiple patterns for different sites)
+        extracted_data = {
+            'title': '',
+            'agency': '',
+            'solicitation_number': '',
+            'description': '',
+            'deadline': '',
+            'value': ''
+        }
+        
+        # Try to extract title
+        title_selectors = [
+            'h1', 'h2', 
+            {'class': 'title'}, {'class': 'solicitation-title'},
+            {'id': 'title'}, {'id': 'solicitationTitle'}
+        ]
+        for selector in title_selectors:
+            if isinstance(selector, str):
+                elem = soup.find(selector)
+            else:
+                elem = soup.find(**selector)
+            if elem and elem.get_text(strip=True):
+                extracted_data['title'] = elem.get_text(strip=True)[:500]
+                break
+        
+        # Try to extract solicitation number
+        sol_num_patterns = [
+            r'Solicitation\s*(?:Number|ID|#)?\s*:?\s*([A-Z0-9\-]+)',
+            r'RFP\s*(?:Number|ID|#)?\s*:?\s*([A-Z0-9\-]+)',
+            r'Award\s*(?:Number|ID|#)?\s*:?\s*([A-Z0-9\-]+)',
+            r'Contract\s*(?:Number|ID|#)?\s*:?\s*([A-Z0-9\-]+)'
+        ]
+        text_content = soup.get_text()
+        for pattern in sol_num_patterns:
+            match = re.search(pattern, text_content, re.IGNORECASE)
+            if match:
+                extracted_data['solicitation_number'] = match.group(1)
+                break
+        
+        # Try to extract agency
+        agency_selectors = [
+            {'class': 'agency'}, {'class': 'organization'},
+            {'id': 'agency'}, {'id': 'organization'}
+        ]
+        for selector in agency_selectors:
+            elem = soup.find(**selector)
+            if elem and elem.get_text(strip=True):
+                extracted_data['agency'] = elem.get_text(strip=True)[:200]
+                break
+        
+        if not extracted_data['agency']:
+            # Look for agency in text patterns
+            agency_pattern = r'(?:Agency|Organization|Department)\s*:?\s*([A-Za-z0-9\s\-,\.]+)'
+            match = re.search(agency_pattern, text_content, re.IGNORECASE)
+            if match:
+                extracted_data['agency'] = match.group(1).strip()[:200]
+        
+        # Try to extract description
+        desc_selectors = [
+            {'class': 'description'}, {'class': 'solicitation-description'},
+            {'id': 'description'}, {'id': 'synopsis'}
+        ]
+        for selector in desc_selectors:
+            elem = soup.find(**selector)
+            if elem and elem.get_text(strip=True):
+                extracted_data['description'] = elem.get_text(strip=True)[:2000]
+                break
+        
+        if not extracted_data['description']:
+            # Get first few paragraphs as description
+            paragraphs = soup.find_all('p', limit=5)
+            extracted_data['description'] = ' '.join([p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)])[:2000]
+        
+        # Try to extract deadline
+        deadline_patterns = [
+            r'(?:Deadline|Due\s*Date|Response\s*Date|Closing\s*Date)\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+            r'(?:Deadline|Due\s*Date|Response\s*Date|Closing\s*Date)\s*:?\s*(\w+\s+\d{1,2},?\s+\d{4})'
+        ]
+        for pattern in deadline_patterns:
+            match = re.search(pattern, text_content, re.IGNORECASE)
+            if match:
+                date_str = match.group(1)
+                # Try to parse and format as YYYY-MM-DD
+                try:
+                    for fmt in ['%m/%d/%Y', '%m-%d-%Y', '%B %d, %Y', '%b %d, %Y']:
+                        try:
+                            dt = datetime.strptime(date_str, fmt)
+                            extracted_data['deadline'] = dt.strftime('%Y-%m-%d')
+                            break
+                        except:
+                            continue
+                except:
+                    extracted_data['deadline'] = date_str
+                break
+        
+        # Try to extract value/amount
+        value_patterns = [
+            r'\$\s*([\d,]+(?:\.\d{2})?)\s*(?:million|M)?',
+            r'(?:Value|Amount|Price)\s*:?\s*\$\s*([\d,]+(?:\.\d{2})?)'
+        ]
+        for pattern in value_patterns:
+            match = re.search(pattern, text_content, re.IGNORECASE)
+            if match:
+                value = match.group(1)
+                if 'million' in match.group(0).lower() or ' M' in match.group(0):
+                    value += ' million'
+                extracted_data['value'] = '$' + value
+                break
+        
+        # If no data was extracted, return error
+        if not any([extracted_data['title'], extracted_data['agency'], extracted_data['description']]):
+            return jsonify({
+                'success': False,
+                'error': 'Could not extract contract data from URL. The page format may not be supported. Please enter data manually.'
+            }), 400
+        
+        return jsonify({
+            'success': True,
+            'data': extracted_data
+        })
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'success': False, 'error': 'Request timed out. Please try again.'}), 500
+    except requests.exceptions.RequestException as e:
+        return jsonify({'success': False, 'error': f'Could not fetch URL: {str(e)}'}), 500
+    except Exception as e:
+        print(f"Import from URL error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'Server error processing URL'}), 500
+
 # -----------------------------
 # RFP Upload & Compliance Check
 # -----------------------------
