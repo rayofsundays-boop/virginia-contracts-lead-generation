@@ -588,6 +588,228 @@ a:not(.btn):hover { color: #0b5ed7 !important; }
 
 /* Removed empty placeholder rulesets for dark gradient sections and gradient divider */
 
+/* =====================
+   UNIVERSAL DARK BACKGROUND TEXT CONTRAST
+   Ensures all text on ANY dark background is bright and readable
+   ===================== */
+
+/* Dark backgrounds: Navy, Purple, Dark Blue, Black, Dark Gray */
+[style*="background: #0b1026"],
+[style*="background: #11165a"],
+[style*="background: #5b2aa8"],
+[style*="background: #1e3a8a"],
+[style*="background: #111827"],
+[style*="background: rgb(11, 16, 38)"],
+[style*="background: rgb(17, 22, 90)"],
+[style*="background: rgb(91, 42, 168)"],
+[class*="bg-dark"],
+[class*="bg-navy"],
+[class*="bg-purple"],
+.hero-surface,
+.hero-modern,
+.hero-cinematic {
+    color: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* All headings on dark backgrounds */
+[style*="background: #0b1026"] h1,
+[style*="background: #0b1026"] h2,
+[style*="background: #0b1026"] h3,
+[style*="background: #0b1026"] h4,
+[style*="background: #0b1026"] h5,
+[style*="background: #0b1026"] h6,
+[style*="background: #11165a"] h1,
+[style*="background: #11165a"] h2,
+[style*="background: #11165a"] h3,
+[style*="background: #11165a"] h4,
+[style*="background: #11165a"] h5,
+[style*="background: #11165a"] h6,
+[style*="background: #5b2aa8"] h1,
+[style*="background: #5b2aa8"] h2,
+[style*="background: #5b2aa8"] h3,
+[style*="background: #5b2aa8"] h4,
+[style*="background: #5b2aa8"] h5,
+[style*="background: #5b2aa8"] h6,
+[class*="bg-dark"] h1,
+[class*="bg-dark"] h2,
+[class*="bg-dark"] h3,
+[class*="bg-dark"] h4,
+[class*="bg-dark"] h5,
+[class*="bg-dark"] h6,
+.hero-surface h1,
+.hero-surface h2,
+.hero-surface h3,
+.hero-surface h4,
+.hero-surface h5,
+.hero-surface h6,
+.hero-modern h1,
+.hero-modern h2,
+.hero-modern h3,
+.hero-modern h4,
+.hero-modern h5,
+.hero-modern h6 {
+    color: #ffffff !important;
+}
+
+/* All paragraphs and text elements on dark backgrounds */
+[style*="background: #0b1026"] p,
+[style*="background: #0b1026"] span,
+[style*="background: #0b1026"] li,
+[style*="background: #0b1026"] a:not(.btn),
+[style*="background: #11165a"] p,
+[style*="background: #11165a"] span,
+[style*="background: #11165a"] li,
+[style*="background: #11165a"] a:not(.btn),
+[style*="background: #5b2aa8"] p,
+[style*="background: #5b2aa8"] span,
+[style*="background: #5b2aa8"] li,
+[style*="background: #5b2aa8"] a:not(.btn),
+[class*="bg-dark"] p,
+[class*="bg-dark"] span,
+[class*="bg-dark"] li,
+[class*="bg-dark"] a:not(.btn),
+.hero-surface p,
+.hero-surface span,
+.hero-surface li,
+.hero-surface a:not(.btn),
+.hero-modern p,
+.hero-modern span,
+.hero-modern li,
+.hero-modern a:not(.btn) {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark gradient backgrounds */
+[style*="background: linear-gradient(135deg, #0b1026"],
+[style*="background: linear-gradient(135deg, #11165a"],
+[style*="background: linear-gradient(135deg, #5b2aa8"] {
+    color: rgba(255, 255, 255, 0.98) !important;
+}
+
+[style*="background: linear-gradient(135deg, #0b1026"] h1,
+[style*="background: linear-gradient(135deg, #0b1026"] h2,
+[style*="background: linear-gradient(135deg, #0b1026"] h3,
+[style*="background: linear-gradient(135deg, #0b1026"] h4,
+[style*="background: linear-gradient(135deg, #0b1026"] h5,
+[style*="background: linear-gradient(135deg, #0b1026"] h6,
+[style*="background: linear-gradient(135deg, #11165a"] h1,
+[style*="background: linear-gradient(135deg, #11165a"] h2,
+[style*="background: linear-gradient(135deg, #11165a"] h3,
+[style*="background: linear-gradient(135deg, #11165a"] h4,
+[style*="background: linear-gradient(135deg, #11165a"] h5,
+[style*="background: linear-gradient(135deg, #11165a"] h6,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h1,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h2,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h3,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h4,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h5,
+[style*="background: linear-gradient(135deg, #5b2aa8"] h6 {
+    color: #ffffff !important;
+}
+
+[style*="background: linear-gradient(135deg, #0b1026"] p,
+[style*="background: linear-gradient(135deg, #0b1026"] span,
+[style*="background: linear-gradient(135deg, #0b1026"] li,
+[style*="background: linear-gradient(135deg, #11165a"] p,
+[style*="background: linear-gradient(135deg, #11165a"] span,
+[style*="background: linear-gradient(135deg, #11165a"] li,
+[style*="background: linear-gradient(135deg, #5b2aa8"] p,
+[style*="background: linear-gradient(135deg, #5b2aa8"] span,
+[style*="background: linear-gradient(135deg, #5b2aa8"] li {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Navbar on dark hero backgrounds - force white */
+.hero-modern .navbar .nav-link,
+.hero-surface .navbar .nav-link,
+.hero-cinematic .navbar .nav-link,
+header[style*="background: linear-gradient"] .nav-link,
+nav[style*="background: linear-gradient"] .nav-link {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.hero-modern .navbar .nav-link:hover,
+.hero-modern .navbar .nav-link:focus,
+.hero-surface .navbar .nav-link:hover,
+.hero-surface .navbar .nav-link:focus,
+.hero-cinematic .navbar .nav-link:hover,
+.hero-cinematic .navbar .nav-link:focus {
+    color: #f3f4f6 !important;
+}
+
+/* Hero points/lists on dark backgrounds */
+.hero-points li,
+.hero-modern ul li,
+.hero-surface ul li {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Preview cards on dark hero backgrounds */
+.preview-card h5,
+.preview-card .badge,
+.hero-modern .preview-card *:not(.chip) {
+    color: #ffffff !important;
+}
+
+.preview-card p,
+.preview-card span:not(.chip) {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Ensure lead/subheadline text is readable */
+.text-hero-subhead,
+.lead.text-hero-subhead,
+.hero-modern .lead,
+.hero-surface .lead {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark cards with transparent/glass backgrounds */
+[style*="background: rgba(255, 255, 255, 0.06)"],
+[style*="background: rgba(0, 0, 0, 0.3)"],
+.preview-card,
+.glass-card {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[style*="background: rgba(255, 255, 255, 0.06)"] h1,
+[style*="background: rgba(255, 255, 255, 0.06)"] h2,
+[style*="background: rgba(255, 255, 255, 0.06)"] h3,
+[style*="background: rgba(255, 255, 255, 0.06)"] h4,
+[style*="background: rgba(255, 255, 255, 0.06)"] h5,
+[style*="background: rgba(255, 255, 255, 0.06)"] h6,
+.preview-card h1,
+.preview-card h2,
+.preview-card h3,
+.preview-card h4,
+.preview-card h5,
+.preview-card h6 {
+    color: #ffffff !important;
+}
+
+/* Footer on dark backgrounds */
+footer[style*="background: #0b1026"],
+footer[style*="background: #11165a"],
+footer[class*="bg-dark"],
+.footer-dark {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+footer[style*="background: #0b1026"] a,
+footer[style*="background: #11165a"] a,
+footer[class*="bg-dark"] a,
+.footer-dark a {
+    color: #ffffff !important;
+}
+
+footer[style*="background: #0b1026"] a:hover,
+footer[style*="background: #11165a"] a:hover,
+footer[class*="bg-dark"] a:hover,
+.footer-dark a:hover {
+    color: #f3f4f6 !important;
+}
+
 /* =========================================
    END WCAG AA FIXES
    ========================================= */
