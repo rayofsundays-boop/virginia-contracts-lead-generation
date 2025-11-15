@@ -7983,6 +7983,225 @@ def portal_registration_status():
         print(f"Portal registration status error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/find-city-rfps-custom', methods=['POST'])
+@login_required
+def find_city_rfps_custom():
+    """Search user-specified cities for RFPs using AI
+    
+    Allows users to manually specify which cities to search when the
+    automatic top-3 search returns no results.
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        import json
+        
+        data = request.get_json() or {}
+        state_name = data.get('state_name', '')
+        state_code = data.get('state_code', '')
+        custom_cities = data.get('custom_cities', [])
+        
+        if not state_name or not state_code:
+            return jsonify({'success': False, 'error': 'State name and code required'}), 400
+        
+        if not custom_cities or not isinstance(custom_cities, list):
+            return jsonify({'success': False, 'error': 'City list required'}), 400
+        
+        # Limit to 10 cities for performance
+        custom_cities = custom_cities[:10]
+        
+        # Initialize OpenAI client
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
+        
+        user_email = session.get('user_email')
+        print(f"🤖 Custom city search for {state_name}: {', '.join(custom_cities)}")
+        
+        discovered_rfps = []
+        cities_checked = []
+        
+        # For each custom city, get procurement URL and search
+        for city_name in custom_cities:
+            city_name = city_name.strip()
+            if not city_name:
+                continue
+                
+            cities_checked.append(city_name)
+            
+            try:
+                # Use AI to find the city's procurement URL
+                url_prompt = f"""For {city_name}, {state_name}, provide the most likely procurement/purchasing website URL.
+
+Return ONLY a JSON object with no explanations:
+{{
+  "procurement_url": "https://www.cityname.gov/procurement",
+  "alternate_url": "https://www.cityname.gov/bids"
+}}
+
+If unsure, provide best guesses for typical city government procurement pages."""
+
+                url_response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": url_prompt}],
+                    temperature=0.3,
+                    max_tokens=300
+                )
+                
+                url_text = url_response.choices[0].message.content.strip()
+                if '```json' in url_text:
+                    url_text = url_text.split('```json')[1].split('```')[0].strip()
+                elif '```' in url_text:
+                    url_text = url_text.split('```')[1].split('```')[0].strip()
+                
+                url_data = json.loads(url_text)
+                procurement_url = url_data.get('procurement_url', '')
+                alternate_url = url_data.get('alternate_url', '')
+                
+                # Try primary URL first
+                for try_url in [procurement_url, alternate_url]:
+                    if not try_url:
+                        continue
+                        
+                    try:
+                        print(f"  🔍 Checking {city_name} at {try_url}")
+                        
+                        headers = {'User-Agent': 'ContractLink.ai Bot/1.0 (Procurement Intelligence)'}
+                        webpage_response = requests.get(try_url, headers=headers, timeout=15)
+                        
+                        if webpage_response.status_code != 200:
+                            print(f"    ⚠️  HTTP {webpage_response.status_code} for {city_name}")
+                            continue
+                        
+                        # Parse HTML
+                        soup = BeautifulSoup(webpage_response.text, 'html.parser')
+                        page_text = soup.get_text(separator='\n', strip=True)[:10000]
+                        
+                        # Use GPT-4 to extract RFPs
+                        rfp_prompt = f"""You are analyzing a procurement webpage for {city_name}, {state_name}.
+
+Extract any active janitorial, cleaning, or facilities maintenance RFPs/bids from this text. For each opportunity found, provide:
+- rfp_title: Title of the RFP
+- rfp_number: Solicitation/RFP number (if available)
+- description: Brief description
+- deadline: Deadline date (YYYY-MM-DD format if possible, or raw text)
+- estimated_value: Contract value or budget (if mentioned)
+- department: Department or agency
+- contact_email: Contact email (if found)
+- contact_phone: Contact phone (if found)
+
+Return ONLY a JSON array, no explanations. If no relevant RFPs found, return empty array []:
+[
+  {{"rfp_title": "...", "rfp_number": "...", "description": "...", "deadline": "...", "estimated_value": "...", "department": "...", "contact_email": "...", "contact_phone": "..."}},
+  ...
+]
+
+WEBPAGE TEXT:
+{page_text}"""
+
+                        rfp_response = client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[{"role": "user", "content": rfp_prompt}],
+                            temperature=0.2,
+                            max_tokens=2000
+                        )
+                        
+                        rfps_text = rfp_response.choices[0].message.content.strip()
+                        if '```json' in rfps_text:
+                            rfps_text = rfps_text.split('```json')[1].split('```')[0].strip()
+                        elif '```' in rfps_text:
+                            rfps_text = rfps_text.split('```')[1].split('```')[0].strip()
+                        
+                        city_rfps = json.loads(rfps_text)
+                        
+                        if city_rfps:
+                            print(f"    ✅ Found {len(city_rfps)} RFPs in {city_name}")
+                            
+                            # Save to database
+                            for rfp in city_rfps:
+                                try:
+                                    rfp_number = rfp.get('rfp_number', '')
+                                    existing = db.session.execute(text(
+                                        '''SELECT id FROM city_rfps 
+                                           WHERE state_code = :sc AND city_name = :cn AND rfp_number = :num'''
+                                    ), {
+                                        'sc': state_code.upper(),
+                                        'cn': city_name,
+                                        'num': rfp_number
+                                    }).fetchone()
+                                    
+                                    if existing:
+                                        print(f"    ℹ️  RFP {rfp_number} already exists, skipping")
+                                        continue
+                                    
+                                    # Insert new RFP
+                                    db.session.execute(text(
+                                        '''INSERT INTO city_rfps 
+                                           (state_code, state_name, city_name, rfp_title, rfp_number, 
+                                            description, deadline, estimated_value, department, 
+                                            contact_email, contact_phone, rfp_url, data_source)
+                                           VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                                                   :email, :phone, :url, :source)'''
+                                    ), {
+                                        'sc': state_code.upper(),
+                                        'sn': state_name,
+                                        'cn': city_name,
+                                        'title': rfp.get('rfp_title', 'Untitled RFP'),
+                                        'num': rfp_number,
+                                        'desc': rfp.get('description', ''),
+                                        'dl': rfp.get('deadline', ''),
+                                        'val': rfp.get('estimated_value', ''),
+                                        'dept': rfp.get('department', ''),
+                                        'email': rfp.get('contact_email', ''),
+                                        'phone': rfp.get('contact_phone', ''),
+                                        'url': try_url,
+                                        'source': 'openai_gpt4_custom_search'
+                                    })
+                                    
+                                    rfp['city_name'] = city_name
+                                    discovered_rfps.append(rfp)
+                                    
+                                except Exception as db_err:
+                                    print(f"    ⚠️  Database insert error: {db_err}")
+                                    continue
+                            
+                            break  # Found RFPs, don't try alternate URL
+                        else:
+                            print(f"    ℹ️  No cleaning RFPs found in {city_name}")
+                        
+                    except requests.exceptions.Timeout:
+                        print(f"    ⏱️  Timeout fetching {city_name} webpage")
+                        continue
+                    except requests.exceptions.RequestException as req_err:
+                        print(f"    🌐 Request error for {city_name}: {req_err}")
+                        continue
+                    except json.JSONDecodeError as json_err:
+                        print(f"    ❌ JSON parse error for {city_name}: {json_err}")
+                        continue
+                        
+            except Exception as city_err:
+                print(f"    ❌ Error processing {city_name}: {city_err}")
+                continue
+        
+        db.session.commit()
+        
+        print(f"🎉 Custom search complete: {len(discovered_rfps)} RFPs found across {len(cities_checked)} cities")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Found {len(discovered_rfps)} RFPs in custom city search',
+            'cities_checked': cities_checked,
+            'rfps': discovered_rfps,
+            'cities_searched': len(cities_checked),
+            'state': state_name
+        })
+        
+    except Exception as e:
+        print(f"❌ Custom city RFP search error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/educational-contracts')
 def educational_contracts():
     """College and university procurement opportunities"""
