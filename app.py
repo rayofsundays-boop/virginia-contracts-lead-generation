@@ -4266,6 +4266,37 @@ def init_db():
         c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_city ON city_rfps(city_name)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_active ON city_rfps(is_active)')
         
+        # Create aviation cleaning leads table for airline, private jet, and aircraft cleaning opportunities
+        c.execute('''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      company_name TEXT NOT NULL,
+                      company_type TEXT NOT NULL,
+                      aircraft_types TEXT,
+                      fleet_size INTEGER,
+                      city TEXT NOT NULL,
+                      state TEXT NOT NULL,
+                      address TEXT,
+                      contact_name TEXT,
+                      contact_title TEXT,
+                      contact_email TEXT,
+                      contact_phone TEXT,
+                      website_url TEXT,
+                      services_needed TEXT,
+                      estimated_monthly_value TEXT,
+                      current_contract_status TEXT,
+                      notes TEXT,
+                      discovered_via TEXT DEFAULT 'ai_scraper',
+                      discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      last_verified TIMESTAMP,
+                      is_active BOOLEAN DEFAULT 1,
+                      data_source TEXT,
+                      UNIQUE(company_name, city, state))''')
+        
+        c.execute('CREATE INDEX IF NOT EXISTS idx_aviation_leads_state ON aviation_cleaning_leads(state)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_aviation_leads_city ON aviation_cleaning_leads(city)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_aviation_leads_type ON aviation_cleaning_leads(company_type)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_aviation_leads_active ON aviation_cleaning_leads(is_active)')
+        
         conn.commit()
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API
@@ -21773,6 +21804,422 @@ def construction_cleanup_leads():
                          state_filter=state_filter,
                          min_sqft=min_sqft,
                          total_in_db=count)
+
+@app.route('/aviation-cleaning-leads')
+@login_required
+def aviation_cleaning_leads():
+    """Aviation cleaning opportunities: Airlines, Private Jets, FBOs, Aircraft Maintenance
+    
+    Includes:
+    - Commercial airlines (cabin cleaning, exterior washing, deep cleaning)
+    - Private jet operators (charter, fractional ownership)
+    - Fixed Base Operators (FBOs) at airports
+    - Aircraft maintenance facilities
+    - Cargo airlines
+    """
+    
+    # Get filters from query params
+    state_filter = request.args.get('state', '')
+    city_filter = request.args.get('city', '')
+    company_type_filter = request.args.get('company_type', '')
+    
+    # Fetch aviation leads from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Check if table has data
+    try:
+        cursor.execute("SELECT COUNT(*) FROM aviation_cleaning_leads WHERE is_active = 1")
+        count = cursor.fetchone()[0]
+    except:
+        count = 0
+    
+    # Build query with filters
+    query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = 1"
+    params = []
+    
+    if state_filter:
+        query += " AND state = ?"
+        params.append(state_filter)
+    
+    if city_filter:
+        query += " AND city LIKE ?"
+        params.append(f'%{city_filter}%')
+    
+    if company_type_filter:
+        query += " AND company_type = ?"
+        params.append(company_type_filter)
+    
+    query += " ORDER BY state, city, company_name"
+    
+    try:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        rows = cursor.fetchall()
+        
+        aviation_leads = []
+        for row in rows:
+            aviation_leads.append({
+                'id': row['id'],
+                'company_name': row['company_name'],
+                'company_type': row['company_type'],
+                'aircraft_types': row['aircraft_types'],
+                'fleet_size': row['fleet_size'],
+                'city': row['city'],
+                'state': row['state'],
+                'address': row['address'],
+                'contact_name': row['contact_name'],
+                'contact_title': row['contact_title'],
+                'contact_email': row['contact_email'],
+                'contact_phone': row['contact_phone'],
+                'website_url': row['website_url'],
+                'services_needed': row['services_needed'],
+                'estimated_monthly_value': row['estimated_monthly_value'],
+                'current_contract_status': row['current_contract_status'],
+                'notes': row['notes'],
+                'data_source': row['data_source']
+            })
+    except Exception as e:
+        print(f"Error fetching aviation leads: {e}")
+        aviation_leads = []
+    
+    conn.close()
+    
+    # Get unique values for filters
+    all_states = sorted(list(set([lead['state'] for lead in aviation_leads])))
+    all_cities = sorted(list(set([lead['city'] for lead in aviation_leads])))
+    all_company_types = sorted(list(set([lead['company_type'] for lead in aviation_leads])))
+    
+    return render_template('aviation_cleaning_leads.html',
+                         leads=aviation_leads,
+                         total_leads=len(aviation_leads),
+                         all_states=all_states,
+                         all_cities=all_cities,
+                         all_company_types=all_company_types,
+                         state_filter=state_filter,
+                         city_filter=city_filter,
+                         company_type_filter=company_type_filter,
+                         total_in_db=count)
+
+@app.route('/api/scrape-aviation-leads', methods=['POST'])
+@login_required
+@admin_required
+def scrape_aviation_leads():
+    """Use OpenAI to intelligently find aviation cleaning opportunities
+    
+    Searches for:
+    - Commercial airlines at major airports
+    - Private jet operators and charter companies
+    - FBOs (Fixed Base Operators)
+    - Aircraft maintenance facilities
+    - Cargo airlines
+    """
+    try:
+        import openai
+        import requests
+        from bs4 import BeautifulSoup
+        import json
+        
+        data = request.get_json() or {}
+        state = data.get('state', 'All')
+        
+        # Check OpenAI API key
+        openai_key = os.environ.get('OPENAI_API_KEY')
+        if not openai_key:
+            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
+        
+        openai.api_key = openai_key
+        
+        print(f"🛫 Scraping aviation cleaning leads for {state}...")
+        
+        # Step 1: Use GPT-4 to identify aviation companies
+        aviation_prompt = f"""You are an aviation industry intelligence assistant. Identify major aviation cleaning opportunities in {"the United States" if state == "All" else state}.
+
+For each opportunity, provide:
+- company_name: Full company name
+- company_type: One of: "Commercial Airline", "Private Jet Operator", "FBO", "Aircraft Maintenance", "Cargo Airline", "Charter Company"
+- aircraft_types: Types of aircraft (e.g., "Boeing 737, Airbus A320")
+- fleet_size: Estimated number of aircraft
+- city: City location
+- state: State (2-letter code)
+- contact_phone: Best phone number (if known)
+- contact_email: Email address (if known)
+- website_url: Company website
+- services_needed: Cleaning services they likely need
+
+Return ONLY valid JSON array format (top 20 opportunities), no explanations:
+[
+  {{"company_name": "...", "company_type": "...", "aircraft_types": "...", "fleet_size": 50, "city": "...", "state": "...", "contact_phone": "...", "contact_email": "...", "website_url": "...", "services_needed": "..."}},
+  ...
+]"""
+
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": aviation_prompt}],
+                temperature=0.3,
+                max_tokens=3000
+            )
+            
+            companies_text = response.choices[0].message.content.strip()
+            # Extract JSON from response
+            if '```json' in companies_text:
+                companies_text = companies_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in companies_text:
+                companies_text = companies_text.split('```')[1].split('```')[0].strip()
+            
+            companies = json.loads(companies_text)
+            print(f"✅ AI identified {len(companies)} aviation companies")
+            
+        except Exception as e:
+            print(f"❌ Error getting aviation companies from AI: {e}")
+            return jsonify({'success': False, 'error': f'AI discovery failed: {str(e)}'}), 500
+        
+        # Step 2: Save to database and validate URLs with OpenAI
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        saved_count = 0
+        
+        for company in companies:
+            try:
+                # Validate website URL using OpenAI
+                website_url = company.get('website_url', '')
+                if website_url:
+                    validated_url = validate_url_with_openai(website_url, company.get('company_name', ''))
+                    if validated_url:
+                        company['website_url'] = validated_url
+                
+                # Insert into database
+                cursor.execute('''INSERT OR IGNORE INTO aviation_cleaning_leads
+                                 (company_name, company_type, aircraft_types, fleet_size, city, state,
+                                  contact_phone, contact_email, website_url, services_needed,
+                                  discovered_via, data_source)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                             (company.get('company_name', ''),
+                              company.get('company_type', ''),
+                              company.get('aircraft_types', ''),
+                              company.get('fleet_size', 0),
+                              company.get('city', ''),
+                              company.get('state', ''),
+                              company.get('contact_phone', ''),
+                              company.get('contact_email', ''),
+                              company.get('website_url', ''),
+                              company.get('services_needed', ''),
+                              'openai_gpt4_scraper',
+                              'ai_aviation_discovery'))
+                
+                if cursor.rowcount > 0:
+                    saved_count += 1
+                    
+            except Exception as db_err:
+                print(f"⚠️ Database insert error: {db_err}")
+                continue
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"🎉 Aviation scraping complete: {saved_count} new leads saved")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Found {len(companies)} aviation companies, saved {saved_count} new leads',
+            'companies_found': len(companies),
+            'leads_saved': saved_count
+        })
+        
+    except Exception as e:
+        print(f"❌ Aviation scraper error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def validate_url_with_openai(url, company_name):
+    """Use OpenAI to validate and correct broken URLs
+    
+    Returns corrected URL or None if invalid
+    """
+    try:
+        import openai
+        import requests
+        
+        # First, try a simple HTTP check
+        try:
+            response = requests.head(url, timeout=10, allow_redirects=True)
+            if response.status_code == 200:
+                return url  # URL is valid
+        except:
+            pass  # URL might be broken, use AI to fix
+        
+        # Use GPT-4 to find the correct URL
+        url_prompt = f"""The following URL appears to be broken or returns a 404 error:
+URL: {url}
+Company: {company_name}
+
+Please provide the correct, working website URL for this company. Search your knowledge and provide ONLY the URL, nothing else. If you cannot find a valid URL, respond with "INVALID".
+
+Correct URL:"""
+
+        openai_key = os.environ.get('OPENAI_API_KEY')
+        if not openai_key:
+            return url  # Return original if no API key
+        
+        openai.api_key = openai_key
+        
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": url_prompt}],
+            temperature=0.1,
+            max_tokens=100
+        )
+        
+        corrected_url = response.choices[0].message.content.strip()
+        
+        if corrected_url == "INVALID" or not corrected_url.startswith('http'):
+            print(f"  ⚠️ Could not find valid URL for {company_name}")
+            return None
+        
+        # Verify the corrected URL works
+        try:
+            verify_response = requests.head(corrected_url, timeout=10, allow_redirects=True)
+            if verify_response.status_code == 200:
+                print(f"  ✅ Corrected URL for {company_name}: {corrected_url}")
+                return corrected_url
+        except:
+            pass
+        
+        return None  # Could not validate
+        
+    except Exception as e:
+        print(f"  ❌ URL validation error: {e}")
+        return url  # Return original on error
+
+@app.route('/api/validate-equipment-urls', methods=['POST'])
+@login_required
+@admin_required
+def validate_equipment_urls():
+    """Validate and fix broken equipment repair/maintenance URLs using OpenAI
+    
+    Checks URLs from mini toolbox equipment repair section and corrects 404 errors
+    """
+    try:
+        import requests
+        
+        # Equipment repair URLs to validate
+        equipment_urls = {
+            'Bissell Commercial': 'https://www.bissellclean.com/en-us/commercial',
+            'ProTeam Support': 'https://www.proteamusa.com/support',
+            'Google Maps Equipment Repair': 'https://www.google.com/maps/search/equipment+repair+near+me'
+        }
+        
+        results = []
+        fixed_count = 0
+        broken_count = 0
+        
+        print("🔧 Validating equipment repair URLs...")
+        
+        for company_name, url in equipment_urls.items():
+            print(f"  Checking {company_name}...")
+            
+            try:
+                # Check if URL is valid
+                response = requests.head(url, timeout=10, allow_redirects=True)
+                
+                if response.status_code == 404:
+                    print(f"    ❌ 404 ERROR: {company_name}")
+                    broken_count += 1
+                    
+                    # Use OpenAI to fix the URL
+                    corrected_url = validate_url_with_openai(url, company_name)
+                    
+                    if corrected_url and corrected_url != url:
+                        fixed_count += 1
+                        results.append({
+                            'company': company_name,
+                            'original_url': url,
+                            'corrected_url': corrected_url,
+                            'status': 'fixed',
+                            'message': f'✅ Corrected URL: {corrected_url}'
+                        })
+                    else:
+                        results.append({
+                            'company': company_name,
+                            'original_url': url,
+                            'corrected_url': None,
+                            'status': 'broken',
+                            'message': '❌ Could not find valid URL'
+                        })
+                        
+                elif response.status_code >= 400:
+                    print(f"    ⚠️  HTTP {response.status_code}: {company_name}")
+                    broken_count += 1
+                    
+                    # Try to fix
+                    corrected_url = validate_url_with_openai(url, company_name)
+                    
+                    if corrected_url and corrected_url != url:
+                        fixed_count += 1
+                        results.append({
+                            'company': company_name,
+                            'original_url': url,
+                            'corrected_url': corrected_url,
+                            'status': 'fixed',
+                            'message': f'✅ Fixed HTTP {response.status_code} error'
+                        })
+                    else:
+                        results.append({
+                            'company': company_name,
+                            'original_url': url,
+                            'corrected_url': None,
+                            'status': 'broken',
+                            'message': f'❌ HTTP {response.status_code} - Could not fix'
+                        })
+                else:
+                    print(f"    ✅ OK: {company_name}")
+                    results.append({
+                        'company': company_name,
+                        'original_url': url,
+                        'corrected_url': url,
+                        'status': 'valid',
+                        'message': f'✅ URL is valid (HTTP {response.status_code})'
+                    })
+                    
+            except requests.exceptions.Timeout:
+                print(f"    ⏱️  TIMEOUT: {company_name}")
+                results.append({
+                    'company': company_name,
+                    'original_url': url,
+                    'corrected_url': None,
+                    'status': 'timeout',
+                    'message': '⏱️ Request timeout - site may be slow'
+                })
+            except requests.exceptions.RequestException as e:
+                print(f"    🌐 CONNECTION ERROR: {company_name}")
+                results.append({
+                    'company': company_name,
+                    'original_url': url,
+                    'corrected_url': None,
+                    'status': 'error',
+                    'message': f'🌐 Connection error: {str(e)[:100]}'
+                })
+        
+        print(f"🎉 Validation complete: {broken_count} broken, {fixed_count} fixed")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Checked {len(equipment_urls)} URLs: {broken_count} broken, {fixed_count} fixed',
+            'total_checked': len(equipment_urls),
+            'broken_count': broken_count,
+            'fixed_count': fixed_count,
+            'results': results
+        })
+        
+    except Exception as e:
+        print(f"❌ Equipment URL validation error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/admin/scrape-construction', methods=['GET', 'POST'])
 @login_required

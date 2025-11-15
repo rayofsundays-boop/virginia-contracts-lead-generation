@@ -674,7 +674,16 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 
-                                <li class="dropdown-header">Supply Opportunities</li>
+                                <li class="dropdown-header">Specialized Opportunities</li>
+                                <li>
+                                    <a class="dropdown-item lead-link" 
+                                       href="{{ url_for('aviation_cleaning_leads') }}"
+                                       data-lead-category="aviation"
+                                       data-requires-subscription="true">
+                                        <i class="fas fa-plane me-2 text-info"></i>Aviation Cleaning
+                                        <small class="text-muted d-block ms-4">Airlines, Private Jets, FBOs</small>
+                                    </a>
+                                </li>
                                 <li>
                                     <a class="dropdown-item lead-link" 
                                        href="{{ url_for('construction_cleanup_leads') }}"

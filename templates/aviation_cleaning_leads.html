@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Aviation Cleaning Leads - Airlines, Private Jets, Aircraft{% endblock %}
+
+{% block content %}
+<div class="aviation-cleaning-page">
+
+<!-- Hero Section -->
+<div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
+    <div class="container">
+        <h1 class="display-2 fw-bold text-white mb-3">✈️ Aviation Cleaning Leads</h1>
+        <p class="lead text-white fs-3">Airlines, Private Jets, FBOs, and Aircraft Maintenance Facilities</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="badge bg-light p-3 fs-6 w-100" style="background-color: #ffffff !important; color: #000000 !important; border: 1px solid #d1d1d1;">
+                            <i class="fas fa-plane"></i><br>
+                            <strong>{{ total_leads }}</strong> Active Opportunities
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-warning p-3 fs-6 w-100" style="background-color: #facc15 !important; color: #1f1f1f !important;">
+                            <i class="fas fa-map-marked-alt"></i><br>
+                            <strong>All States</strong> Nationwide
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-success text-white p-3 fs-6 w-100">
+                            <i class="fas fa-robot"></i><br>
+                            <strong>AI-Powered</strong> Discovery
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="badge bg-danger text-white p-3 fs-6 w-100">
+                            <i class="fas fa-dollar-sign"></i><br>
+                            <strong>High-Value</strong> Contracts
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white;">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Aviation Companies</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('aviation_cleaning_leads') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="state" class="form-label fw-bold">State</label>
+                        <select name="state" id="state" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All States</option>
+                            {% for state in all_states %}
+                            <option value="{{ state }}" {% if state_filter == state %}selected{% endif %}>{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="city" class="form-label fw-bold">City</label>
+                        <select name="city" id="city" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Cities</option>
+                            {% for city in all_cities %}
+                            <option value="{{ city }}" {% if city_filter == city %}selected{% endif %}>{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="company_type" class="form-label fw-bold">Company Type</label>
+                        <select name="company_type" id="company_type" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">All Types</option>
+                            {% for ctype in all_company_types %}
+                            <option value="{{ ctype }}" {% if company_type_filter == ctype %}selected{% endif %}>{{ ctype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ url_for('aviation_cleaning_leads') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Leads Section -->
+<div class="container my-4">
+    {% if total_leads > 0 %}
+    <div class="row g-4">
+        {% for lead in leads %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-lift border-primary" style="border-width: 2px;">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plane-departure me-2"></i>{{ lead.company_name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Company Type Badge -->
+                    <div class="mb-3">
+                        {% if lead.company_type == 'Commercial Airline' %}
+                        <span class="badge bg-primary">{{ lead.company_type }}</span>
+                        {% elif lead.company_type == 'Private Jet Operator' %}
+                        <span class="badge bg-success">{{ lead.company_type }}</span>
+                        {% elif lead.company_type == 'FBO' %}
+                        <span class="badge bg-warning text-dark">{{ lead.company_type }}</span>
+                        {% elif lead.company_type == 'Aircraft Maintenance' %}
+                        <span class="badge bg-info">{{ lead.company_type }}</span>
+                        {% elif lead.company_type == 'Cargo Airline' %}
+                        <span class="badge bg-secondary">{{ lead.company_type }}</span>
+                        {% else %}
+                        <span class="badge bg-dark">{{ lead.company_type }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Location -->
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                        <strong>{{ lead.city }}, {{ lead.state }}</strong>
+                    </p>
+
+                    <!-- Fleet Size -->
+                    {% if lead.fleet_size %}
+                    <p class="mb-2">
+                        <i class="fas fa-plane text-primary me-2"></i>
+                        <strong>Fleet:</strong> {{ lead.fleet_size }} aircraft
+                    </p>
+                    {% endif %}
+
+                    <!-- Aircraft Types -->
+                    {% if lead.aircraft_types %}
+                    <p class="mb-2 small" style="color: #4a5568;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {{ lead.aircraft_types }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Services Needed -->
+                    {% if lead.services_needed %}
+                    <p class="mb-3 small" style="color: #4a5568;">
+                        <strong>Services:</strong> {{ lead.services_needed }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Estimated Value -->
+                    {% if lead.estimated_monthly_value %}
+                    <div class="alert alert-success small mb-3">
+                        <strong>💰 Est. Value:</strong> {{ lead.estimated_monthly_value }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Contact Information -->
+                    <hr>
+                    <h6 class="mb-2">Contact Information:</h6>
+                    
+                    {% if lead.contact_name %}
+                    <p class="mb-1 small">
+                        <i class="fas fa-user me-2"></i>{{ lead.contact_name }}
+                        {% if lead.contact_title %} - {{ lead.contact_title }}{% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if lead.contact_phone %}
+                    <p class="mb-1 small">
+                        <i class="fas fa-phone me-2 text-success"></i>
+                        <a href="tel:{{ lead.contact_phone }}" class="text-decoration-none">{{ lead.contact_phone }}</a>
+                    </p>
+                    {% endif %}
+
+                    {% if lead.contact_email %}
+                    <p class="mb-1 small">
+                        <i class="fas fa-envelope me-2 text-primary"></i>
+                        <a href="mailto:{{ lead.contact_email }}" class="text-decoration-none">{{ lead.contact_email }}</a>
+                    </p>
+                    {% endif %}
+
+                    {% if lead.website_url %}
+                    <p class="mb-2 small">
+                        <i class="fas fa-globe me-2 text-info"></i>
+                        <a href="{{ lead.website_url }}" target="_blank" class="text-decoration-none">Visit Website</a>
+                    </p>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-primary btn-sm" onclick="saveToMyLeads('{{ lead.id }}', '{{ lead.company_name }}')">
+                            <i class="fas fa-bookmark me-2"></i>Save to My Leads
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="generateProposal('{{ lead.company_name }}', '{{ lead.services_needed }}')">
+                            <i class="fas fa-file-alt me-2"></i>Generate Proposal
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Footer with Data Source -->
+                <div class="card-footer bg-light small" style="color: #4a5568;">
+                    <i class="fas fa-robot me-1"></i>{{ lead.data_source or 'AI Discovery' }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Leads Message -->
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-plane-slash" style="font-size: 5rem; color: #cbd5e1;"></i>
+        </div>
+        <h3 class="mb-3">No Aviation Cleaning Leads Found</h3>
+        <p class="text-muted mb-4">Try adjusting your filters or contact an admin to run the AI scraper.</p>
+        <p class="small text-muted">Aviation leads are discovered using AI-powered web scraping across airlines, private jet operators, and FBOs nationwide.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-plane-departure fa-3x text-primary mb-3"></i>
+                    <h5>Commercial Airlines</h5>
+                    <p class="small" style="color: #4a5568;">
+                        Major carriers requiring cabin cleaning, exterior washing, deep cleaning between flights
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-fighter-jet fa-3x text-success mb-3"></i>
+                    <h5>Private Jet Operators</h5>
+                    <p class="small" style="color: #4a5568;">
+                        Charter companies, fractional ownership, corporate flight departments
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-wrench fa-3x text-warning mb-3"></i>
+                    <h5>FBOs & Maintenance</h5>
+                    <p class="small" style="color: #4a5568;">
+                        Fixed Base Operators at airports, aircraft maintenance facilities, hangars
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+</style>
+
+<script>
+function saveToMyLeads(leadId, companyName) {
+    // TODO: Implement save to my leads functionality
+    alert(`Saving "${companyName}" to your leads...`);
+    // Make API call to save lead
+}
+
+function generateProposal(companyName, services) {
+    // Redirect to AI proposal generator
+    const url = `/ai-proposal-generator?lead_title=${encodeURIComponent(companyName + ' - ' + services)}`;
+    window.location.href = url;
+}
+</script>
+
+{% endblock %}
