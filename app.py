@@ -22625,6 +22625,123 @@ def scrape_aviation_leads():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/generate-google-leads', methods=['POST'])
+@login_required
+@admin_required
+def generate_google_leads():
+    """Generate commercial cleaning leads using Google Places API
+    
+    Finds real businesses that need cleaning services:
+    - Office buildings, medical facilities, shopping centers
+    - Property management companies
+    - Hotels, gyms, restaurants
+    """
+    try:
+        from google_lead_generator import GoogleLeadGenerator
+        
+        data = request.get_json() or {}
+        city = data.get('city', 'Virginia Beach')
+        state = data.get('state', 'VA')
+        radius = data.get('radius_miles', 15)
+        include_property_managers = data.get('include_property_managers', True)
+        
+        print(f"🔍 Generating Google leads for {city}, {state} (radius: {radius} miles)")
+        
+        generator = GoogleLeadGenerator()
+        
+        # Find commercial properties
+        leads = generator.find_commercial_properties(city, state, radius)
+        
+        # Find property managers if requested
+        if include_property_managers:
+            property_managers = generator.find_property_managers(city, state, radius)
+            leads.extend(property_managers)
+        
+        if not leads:
+            return jsonify({
+                'success': False,
+                'message': 'No leads found. Check your Google API key configuration.'
+            }), 404
+        
+        print(f"✅ Found {len(leads)} Google leads")
+        
+        # Save to database (commercial_lead_requests table)
+        saved_count = 0
+        for lead in leads:
+            try:
+                # Check if lead already exists
+                existing = db.session.execute(text("""
+                    SELECT id FROM commercial_lead_requests 
+                    WHERE company_name = :company_name AND city = :city
+                """), {
+                    'company_name': lead['company_name'],
+                    'city': lead['city']
+                }).fetchone()
+                
+                if existing:
+                    continue  # Skip duplicates
+                
+                # Insert new lead
+                db.session.execute(text("""
+                    INSERT INTO commercial_lead_requests
+                    (company_name, contact_name, email, phone, address, city, state,
+                     property_type, square_footage, services_requested, notes,
+                     status, priority, data_source, created_at)
+                    VALUES
+                    (:company_name, :contact_name, :email, :phone, :address, :city, :state,
+                     :property_type, :square_footage, :services_requested, :notes,
+                     'new', 'medium', :data_source, CURRENT_TIMESTAMP)
+                """), {
+                    'company_name': lead['company_name'],
+                    'contact_name': 'Google Places Lead',
+                    'email': '',
+                    'phone': lead.get('phone', ''),
+                    'address': lead.get('address', ''),
+                    'city': lead['city'],
+                    'state': lead['state'],
+                    'property_type': lead.get('category', 'Commercial Property'),
+                    'square_footage': lead.get('estimated_sqft', ''),
+                    'services_requested': 'Commercial Cleaning',
+                    'notes': f"Rating: {lead.get('rating', 'N/A')}/5 ({lead.get('total_ratings', 0)} reviews). Website: {lead.get('website', 'N/A')}. Google Place ID: {lead.get('place_id', 'N/A')}",
+                    'data_source': 'google_places_api'
+                })
+                db.session.commit()
+                saved_count += 1
+                
+            except Exception as e:
+                print(f"⚠️  Error saving lead {lead['company_name']}: {e}")
+                db.session.rollback()
+                continue
+        
+        return jsonify({
+            'success': True,
+            'message': f'Found {len(leads)} leads, saved {saved_count} new opportunities',
+            'leads_found': len(leads),
+            'leads_saved': saved_count,
+            'duplicates_skipped': len(leads) - saved_count,
+            'location': f"{city}, {state}",
+            'radius_miles': radius,
+            'sample_leads': [
+                {
+                    'company_name': lead['company_name'],
+                    'category': lead.get('category', 'Unknown'),
+                    'city': lead['city'],
+                    'phone': lead.get('phone', 'N/A'),
+                    'rating': lead.get('rating', 'N/A')
+                }
+                for lead in leads[:10]  # Show first 10
+            ]
+        })
+        
+    except ImportError as e:
+        print(f"❌ Google lead generator module not found: {e}")
+        return jsonify({'success': False, 'error': 'Google API lead generator not configured'}), 500
+    except Exception as e:
+        print(f"❌ Google lead generation error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 def validate_url_with_openai(url, company_name):
     """Use OpenAI to validate and correct broken URLs
     
