@@ -3917,8 +3917,8 @@ def init_postgres_db():
                           key_personnel JSON,
                           -- Equipment & Resources (JSON array)
                           equipment_list JSON,
-                          -- References (JSON array)
-                          references JSON,
+                          -- Reference list (JSON array)
+                          reference_list JSON,
                           -- Capabilities
                           facility_types TEXT,
                           cleaning_methods TEXT,
@@ -4448,7 +4448,7 @@ def init_db():
                       past_projects TEXT,
                       key_personnel TEXT,
                       equipment_list TEXT,
-                      references TEXT,
+                      reference_list TEXT,
                       capabilities_summary TEXT,
                       profile_completion_percentage INTEGER DEFAULT 0,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -20921,7 +20921,7 @@ def client_profile():
                           past_projects TEXT,
                           key_personnel TEXT,
                           equipment_list TEXT,
-                          references TEXT,
+                          reference_list TEXT,
                           capabilities_summary TEXT,
                           profile_completion_percentage INTEGER DEFAULT 0,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -22368,29 +22368,44 @@ def aviation_cleaning_leads():
         state_filter = request.args.get('state', '')
         city_filter = request.args.get('city', '')
         company_type_filter = request.args.get('company_type', '')
-        
-        # Build query with filters using SQLAlchemy (use TRUE for PostgreSQL boolean)
-        query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = TRUE"
+
+        # Build query with filters using SQLAlchemy and DB-aware syntax
+        if is_postgres():
+            active_clause = 'is_active = TRUE'
+            city_like = 'city ILIKE :city'
+        else:
+            # SQLite compatibility
+            active_clause = 'is_active = 1'
+            city_like = 'LOWER(city) LIKE LOWER(:city)'
+
+        # Select explicit columns to avoid index drift when schema evolves
+        query = (
+            "SELECT id, company_name, company_type, aircraft_types, fleet_size, "
+            "city, state, address, contact_name, contact_title, contact_email, contact_phone, "
+            "website_url, services_needed, estimated_monthly_value, current_contract_status, "
+            "notes, data_source, is_active "
+            "FROM aviation_cleaning_leads WHERE " + active_clause
+        )
         params = {}
-        
+
         if state_filter:
             query += " AND state = :state"
             params['state'] = state_filter
-        
+
         if city_filter:
-            query += " AND city ILIKE :city"
+            query += f" AND {city_like}"
             params['city'] = f'%{city_filter}%'
-        
+
         if company_type_filter:
             query += " AND company_type = :company_type"
             params['company_type'] = company_type_filter
-        
+
         query += " ORDER BY state, city, company_name"
-        
+
         # Execute query using SQLAlchemy
         result = db.session.execute(text(query), params)
         rows = result.fetchall()
-        
+
         aviation_leads = []
         for row in rows:
             aviation_leads.append({
@@ -22411,10 +22426,10 @@ def aviation_cleaning_leads():
                 'estimated_monthly_value': row[14],
                 'current_contract_status': row[15],
                 'notes': row[16],
-                'data_source': row[17] if len(row) > 17 else 'Unknown',
-                'is_active': row[18] if len(row) > 18 else 1
+                'data_source': row[17],
+                'is_active': row[18]
             })
-        
+
         # Get unique values for filters
         all_states = sorted(list(set([lead['state'] for lead in aviation_leads]))) if aviation_leads else []
         all_cities = sorted(list(set([lead['city'] for lead in aviation_leads]))) if aviation_leads else []
