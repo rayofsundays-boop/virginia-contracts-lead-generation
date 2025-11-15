@@ -22310,11 +22310,6 @@ def construction_cleanup_leads():
                          min_sqft=min_sqft,
                          total_in_db=count)
 
-@app.route('/aviation-cleaning-leads')
-@login_required
-def aviation_cleaning_leads():
-    
-
 # ========================================
 # AVIATION LEADS DIAGNOSTIC ROUTE
 # ========================================
@@ -22356,6 +22351,10 @@ def api_aviation_health():
             'error': str(e),
             'traceback': traceback.format_exc()
         }), 500
+
+@app.route('/aviation-cleaning-leads')
+@login_required
+def aviation_cleaning_leads():
     """Aviation cleaning opportunities: Airlines, Private Jets, FBOs, Aircraft Maintenance
     
     Includes:
