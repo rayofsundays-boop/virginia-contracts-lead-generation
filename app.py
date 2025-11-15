@@ -20143,6 +20143,65 @@ def client_profile():
     try:
         user_email = session.get('user_email')
         
+        # First, ensure the client_profiles table exists
+        try:
+            db.session.execute(text('SELECT 1 FROM client_profiles LIMIT 1'))
+        except Exception as table_check_error:
+            print(f"client_profiles table doesn't exist, creating it now: {table_check_error}")
+            # Create the table if it doesn't exist
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS client_profiles
+                         (id SERIAL PRIMARY KEY,
+                          user_email TEXT NOT NULL UNIQUE,
+                          company_name TEXT,
+                          dba_name TEXT,
+                          business_structure TEXT,
+                          year_established INTEGER,
+                          tax_id TEXT,
+                          duns_number TEXT,
+                          cage_code TEXT,
+                          uei_number TEXT,
+                          primary_contact_name TEXT,
+                          primary_contact_title TEXT,
+                          primary_contact_email TEXT,
+                          primary_contact_phone TEXT,
+                          billing_contact_name TEXT,
+                          billing_contact_email TEXT,
+                          billing_contact_phone TEXT,
+                          physical_address TEXT,
+                          physical_city TEXT,
+                          physical_state TEXT,
+                          physical_zip TEXT,
+                          mailing_address TEXT,
+                          mailing_city TEXT,
+                          mailing_state TEXT,
+                          mailing_zip TEXT,
+                          annual_revenue TEXT,
+                          employee_count INTEGER,
+                          certifications TEXT,
+                          licenses TEXT,
+                          naics_codes TEXT,
+                          liability_insurance_carrier TEXT,
+                          liability_coverage_amount TEXT,
+                          liability_expiration_date TEXT,
+                          workers_comp_carrier TEXT,
+                          workers_comp_policy TEXT,
+                          workers_comp_expiration TEXT,
+                          auto_insurance_carrier TEXT,
+                          auto_coverage_amount TEXT,
+                          auto_expiration_date TEXT,
+                          bonding_company TEXT,
+                          bonding_capacity TEXT,
+                          past_projects TEXT,
+                          key_personnel TEXT,
+                          equipment_list TEXT,
+                          references TEXT,
+                          capabilities_summary TEXT,
+                          profile_completion_percentage INTEGER DEFAULT 0,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+            db.session.commit()
+            print("✅ client_profiles table created successfully")
+        
         # Fetch existing profile or create empty structure
         profile = db.session.execute(text('''
             SELECT * FROM client_profiles WHERE user_email = :email
