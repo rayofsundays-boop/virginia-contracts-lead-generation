@@ -39,13 +39,18 @@ def generate_and_import_google_leads():
             
             try:
                 leads = generator.find_commercial_properties(city, state, radius_miles=radius)
-                print(f"   ✅ Found {len(leads)} leads")
+                print(f"   ✅ Found {len(leads)} commercial properties")
                 all_leads.extend(leads)
                 
                 # Also get property managers
                 pm_leads = generator.find_property_managers(city, state, radius_miles=radius)
                 print(f"   ✅ Found {len(pm_leads)} property management companies")
                 all_leads.extend(pm_leads)
+                
+                # Get aviation facilities (use larger radius)
+                aviation_leads = generator.find_aviation_facilities(city, state, radius_miles=radius*2)
+                print(f"   ✅ Found {len(aviation_leads)} aviation facilities")
+                all_leads.extend(aviation_leads)
                 
             except Exception as e:
                 print(f"   ⚠️  Error searching {city}: {e}")

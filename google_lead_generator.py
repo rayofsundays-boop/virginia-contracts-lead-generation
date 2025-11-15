@@ -45,6 +45,7 @@ class GoogleLeadGenerator:
         
         # Property types to search
         property_types = [
+            ('airport', 'Airport/Aviation Facility'),
             ('office', 'Corporate Office Building'),
             ('hospital', 'Medical Facility'),
             ('shopping_mall', 'Shopping Center'),
@@ -218,6 +219,68 @@ class GoogleLeadGenerator:
             }
             
             leads.append(lead)
+        
+        return leads
+    
+    def find_aviation_facilities(self, city: str, state: str, radius_miles: int = 50) -> List[Dict]:
+        """
+        Find aviation facilities: airports, FBOs, hangars, airline offices
+        Uses larger radius since airports are less common
+        """
+        location = f"{city}, {state}"
+        geocode_result = self.gmaps.geocode(location)
+        
+        if not geocode_result:
+            return []
+        
+        lat_lng = geocode_result[0]['geometry']['location']
+        radius_meters = radius_miles * 1609.34
+        
+        leads = []
+        
+        # Search types specific to aviation
+        aviation_searches = [
+            ('airport', 'Airport Terminal'),
+            ('airline', 'Airline Office'),
+            ('aviation', 'Aviation Service'),
+            ('hangar', 'Aircraft Hangar'),
+            ('FBO', 'Fixed Base Operator')
+        ]
+        
+        for search_term, category in aviation_searches:
+            try:
+                places_result = self.gmaps.places_nearby(
+                    location=lat_lng,
+                    radius=radius_meters,
+                    keyword=search_term
+                )
+                
+                for place in places_result.get('results', []):
+                    place_id = place.get('place_id')
+                    details = self.gmaps.place(place_id=place_id)['result']
+                    
+                    lead = {
+                        'company_name': details.get('name', 'Unknown'),
+                        'category': category,
+                        'address': details.get('formatted_address', ''),
+                        'city': city,
+                        'state': state,
+                        'phone': details.get('formatted_phone_number', ''),
+                        'website': details.get('website', ''),
+                        'rating': details.get('rating', 0),
+                        'total_ratings': details.get('user_ratings_total', 0),
+                        'place_id': place_id,
+                        'estimated_sqft': 50000,  # Airports typically large
+                        'data_source': 'google_places_api',
+                        'lead_type': 'aviation',
+                        'discovered_at': datetime.now().isoformat()
+                    }
+                    
+                    leads.append(lead)
+                    
+            except Exception as e:
+                print(f"   ⚠️  Error searching {search_term}: {e}")
+                continue
         
         return leads
 
