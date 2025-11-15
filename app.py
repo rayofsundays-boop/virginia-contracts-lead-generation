@@ -1704,6 +1704,8 @@ def login_required(f):
         if session.get('is_admin'):
             return f(*args, **kwargs)
         if 'user_id' not in session:
+            # Store the intended destination before redirecting to auth
+            session['next_url'] = request.url
             flash('Please sign in to access the Customer Portal.', 'warning')
             return redirect(url_for('auth'))
         return f(*args, **kwargs)
@@ -4789,10 +4791,10 @@ def manual_init_db():
 @app.route('/auth')
 def auth():
     """Unified authentication page (sign in or register)"""
-    # If user is already logged in, redirect to appropriate dashboard
+    # If user is already logged in, redirect to intended page or dashboard
     if 'user_id' in session:
-        # All users (including admins) go to customer dashboard
-        return redirect(url_for('customer_dashboard'))
+        next_url = session.pop('next_url', None)
+        return redirect(next_url if next_url else url_for('customer_dashboard'))
     
     return render_template('auth.html')
 
@@ -5625,7 +5627,9 @@ def login():
             return redirect(url_for('enable_2fa'))
         log_admin_action('admin_login', f'Admin logged in from {request.remote_addr}')
         flash('Welcome, Administrator! You have full Premium access to all features. 🔑', 'success')
-        return redirect(url_for('customer_dashboard'))
+        # Redirect to intended page if stored, otherwise dashboard
+        next_url = session.pop('next_url', None)
+        return redirect(next_url if next_url else url_for('customer_dashboard'))
     
     # Validate regular user
     # Use the same robust fetch logic (case-insensitive)
@@ -5697,12 +5701,14 @@ def login():
         else:
             session['subscription_status'] = result[7] or 'free'  # Regular users use their actual status
         
+        # Redirect to intended page if stored, otherwise dashboard
+        next_url = session.pop('next_url', None)
         if session['is_admin']:
             flash(f'Welcome back, {result[4]}! You have Premium admin access. 🔑', 'success')
-            return redirect(url_for('customer_dashboard'))
+            return redirect(next_url if next_url else url_for('customer_dashboard'))
         else:
             flash(f'Welcome back, {result[4]}! 🎉', 'success')
-            return redirect(url_for('customer_dashboard'))
+            return redirect(next_url if next_url else url_for('customer_dashboard'))
     else:
         flash('Invalid username or password. Please try again.', 'error')
         return redirect(url_for('auth'))
