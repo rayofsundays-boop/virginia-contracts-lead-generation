@@ -178,7 +178,7 @@
                             </div>
                             <div class="d-flex align-items-end mb-2">
                                 <span class="display-6 fw-bold text-success me-2">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
-                                <span class="text-muted mb-1">urgent leads</span>
+                                <span class="text-secondary mb-1">urgent leads</span>
                             </div>
                             <a href="#" onclick="filterUrgent(); return false;" class="btn btn-success btn-sm w-100">
                                 <i class="fas fa-rocket me-1"></i> View Now
@@ -202,7 +202,7 @@
                             <div class="progress mb-1" style="height: 8px;">
                                 <div class="progress-bar" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
                             </div>
-                            <small class="text-muted">150 pts to Level 3 🏆</small>
+                            <small class="text-secondary">150 pts to Level 3 🏆</small>
                         </div>
                     </div>
                 </div>
@@ -426,11 +426,11 @@
                                 data-lead-title="{{ lead.title }}"
                                 onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
                                 title="Save lead">
-                            <i class="far fa-bookmark text-muted" style="font-size: 1.2rem;"></i>
+                            <i class="far fa-bookmark text-secondary" style="font-size: 1.2rem;"></i>
                         </button>
                     </div>
                     <h6 class="card-title mb-1">{{ lead.title[:70] }}{% if lead.title|length > 70 %}...{% endif %}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
+                    <p class="text-secondary small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
                 </div>
                 
                 <div class="card-body pt-2 p-3">
@@ -440,24 +440,24 @@
                     
                     <div class="row g-2 small my-3">
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
+                            <div class="text-secondary"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
                             <strong class="text-success">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong>
                         </div>
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
+                            <div class="text-secondary"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
                             <strong>{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong>
                         </div>
                     </div>
                     
                     <div class="row g-2 small">
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
+                            <div class="text-secondary"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
                             <strong class="text-danger">
                                 {{ lead.deadline[:15] if lead.deadline else 'N/A' }}
                             </strong>
                         </div>
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-tools me-1 text-info"></i>Services</div>
+                            <div class="text-secondary"><i class="fas fa-tools me-1 text-info"></i>Services</div>
                             <strong class="text-info">{{ lead.services_needed[:25] if lead.services_needed else 'N/A' }}</strong>
                         </div>
                     </div>
@@ -489,9 +489,9 @@
         <div class="col-12">
             <div class="card text-center p-5">
                 <div class="card-body">
-                    <i class="fas fa-search-dollar fa-3x text-muted mb-3"></i>
+                    <i class="fas fa-search-dollar fa-3x text-secondary mb-3"></i>
                     <h5 class="card-title">No Leads Found</h5>
-                    <p class="card-text text-muted">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
+                    <p class="card-text text-secondary">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
                     <button class="btn btn-primary" onclick="clearAllFilters()">
                         <i class="fas fa-undo me-1"></i> Clear Filters
                     </button>
@@ -550,10 +550,10 @@
                         <div class="card h-100 border-warning">
                             <div class="card-body text-center">
                                 <h5 class="text-warning">💰 Amazing Value</h5>
-                                <div class="display-4 text-primary my-3">$99<small class="fs-5 text-muted">/month</small></div>
+                                <div class="display-4 text-primary my-3">$99<small class="fs-5 text-secondary">/month</small></div>
                                 <p class="text-success mb-3"><strong>Or $950/year (Save $238)</strong></p>
                                 <p class="mb-2"><strong>Just $0.83/day</strong></p>
-                                <p class="text-muted">Less than a cup of coffee!</p>
+                                <p class="text-secondary">Less than a cup of coffee!</p>
                                 <div class="alert alert-success mt-3 mb-0">
                                     <strong>Typical ROI:</strong> 6,000%<br>
                                     <small>Average contract: $150K</small>
@@ -576,7 +576,7 @@
                     </button>
                 </div>
 
-                <p class="text-center text-muted small mt-3 mb-0">
+                <p class="text-center text-secondary small mt-3 mb-0">
                     By subscribing, you agree to our <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
                 </p>
             </div>
@@ -1585,7 +1585,7 @@ function resetApplyClickCount() {
                             </div>
                             <div class="d-flex align-items-end mb-2">
                                 <span class="display-6 fw-bold text-success me-2">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
-                                <span class="text-muted mb-1">urgent leads</span>
+                                <span class="text-secondary mb-1">urgent leads</span>
                             </div>
                             <a href="#" onclick="filterUrgent(); return false;" class="btn btn-success btn-sm w-100">
                                 <i class="fas fa-rocket me-1"></i> View Now
@@ -1609,7 +1609,7 @@ function resetApplyClickCount() {
                             <div class="progress mb-1" style="height: 8px;">
                                 <div class="progress-bar" role="progressbar" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
                             </div>
-                            <small class="text-muted">150 pts to Level 3 🏆</small>
+                            <small class="text-secondary">150 pts to Level 3 🏆</small>
                         </div>
                     </div>
                 </div>
@@ -1811,7 +1811,7 @@ function resetApplyClickCount() {
                         </span>
                         <span>Active Opportunities</span>
                     </h5>
-                    <small class="text-muted">
+                    <small class="text-secondary">
                         <i class="fas fa-sync-alt fa-spin me-1"></i> Updated <span id="lastUpdate">just now</span>
                     </small>
                 </div>
@@ -1868,11 +1868,11 @@ function resetApplyClickCount() {
                                 data-lead-title="{{ lead.title }}"
                                 onclick="toggleSaveLead(this, '{{ lead.lead_type }}', '{{ lead.id }}', '{{ lead.title|e }}')"
                                 title="Save lead">
-                            <i class="far fa-bookmark text-muted" style="font-size: 1.2rem;"></i>
+                            <i class="far fa-bookmark text-secondary" style="font-size: 1.2rem;"></i>
                         </button>
                     </div>
                     <h6 class="card-title mb-1">{{ lead.title[:70] }}{% if lead.title|length > 70 %}...{% endif %}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
+                    <p class="text-secondary small mb-2"><i class="fas fa-building me-1"></i> {{ lead.agency }}</p>
                 </div>
                 
                 <div class="card-body pt-2 p-3">
@@ -1882,24 +1882,24 @@ function resetApplyClickCount() {
                     
                     <div class="row g-2 small my-3">
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
+                            <div class="text-secondary"><i class="fas fa-dollar-sign me-1 text-success"></i>Value</div>
                             <strong class="text-success">{{ (lead.contract_value|string)[:30] if lead.contract_value else 'N/A' }}</strong>
                         </div>
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
+                            <div class="text-secondary"><i class="fas fa-map-marker-alt me-1 text-primary"></i>Location</div>
                             <strong>{{ (lead.location|string)[:20] if lead.location else 'N/A' }}</strong>
                         </div>
                     </div>
                     
                     <div class="row g-2 small">
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
+                            <div class="text-secondary"><i class="fas fa-calendar-times me-1 text-danger"></i>Deadline</div>
                             <strong class="text-danger">
                                 {{ lead.deadline[:15] if lead.deadline else 'N/A' }}
                             </strong>
                         </div>
                         <div class="col-6">
-                            <div class="text-muted"><i class="fas fa-tools me-1 text-info"></i>Services</div>
+                            <div class="text-secondary"><i class="fas fa-tools me-1 text-info"></i>Services</div>
                             <strong class="text-info">{{ lead.services_needed[:25] if lead.services_needed else 'N/A' }}</strong>
                         </div>
                     </div>
@@ -1931,9 +1931,9 @@ function resetApplyClickCount() {
         <div class="col-12">
             <div class="card text-center p-5">
                 <div class="card-body">
-                    <i class="fas fa-search-dollar fa-3x text-muted mb-3"></i>
+                    <i class="fas fa-search-dollar fa-3x text-secondary mb-3"></i>
                     <h5 class="card-title">No Leads Found</h5>
-                    <p class="card-text text-muted">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
+                    <p class="card-text text-secondary">Your search and filter combination did not return any results. Try adjusting your criteria.</p>
                     <button class="btn btn-primary" onclick="clearAllFilters()">
                         <i class="fas fa-undo me-1"></i> Clear Filters
                     </button>
@@ -1992,10 +1992,10 @@ function resetApplyClickCount() {
                         <div class="card h-100 border-warning">
                             <div class="card-body text-center">
                                 <h5 class="text-warning">💰 Amazing Value</h5>
-                                <div class="display-4 text-primary my-3">$99<small class="fs-5 text-muted">/month</small></div>
+                                <div class="display-4 text-primary my-3">$99<small class="fs-5 text-secondary">/month</small></div>
                                 <p class="text-success mb-3"><strong>Or $950/year (Save $238)</strong></p>
                                 <p class="mb-2"><strong>Just $0.83/day</strong></p>
-                                <p class="text-muted">Less than a cup of coffee!</p>
+                                <p class="text-secondary">Less than a cup of coffee!</p>
                                 <div class="alert alert-success mt-3 mb-0">
                                     <strong>Typical ROI:</strong> 6,000%<br>
                                     <small>Average contract: $150K</small>
@@ -2018,7 +2018,7 @@ function resetApplyClickCount() {
                     </button>
                 </div>
 
-                <p class="text-center text-muted small mt-3 mb-0">
+                <p class="text-center text-secondary small mt-3 mb-0">
                     By subscribing, you agree to our <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>
                 </p>
             </div>
@@ -2364,7 +2364,7 @@ function applyFilters() {
         if (search) {
             const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
             const description = card.querySelector('.card-text')?.textContent.toLowerCase() || '';
-            const agency = card.querySelector('.text-muted')?.textContent.toLowerCase() || '';
+            const agency = card.querySelector('.text-secondary')?.textContent.toLowerCase() || '';
             if (!title.includes(search) && !description.includes(search) && !agency.includes(search)) show = false;
         }
         
