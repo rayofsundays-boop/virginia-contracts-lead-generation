@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container-fluid py-4">
     <!-- Hero Section -->
-    <div class="row mb-5">
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card bg-gradient text-white shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-center py-5">
@@ -14,6 +14,37 @@
                     </h1>
                     <p class="lead mb-4">Connect with government programs, get certified, and unlock more contracting opportunities</p>
                     <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Free information and best practices to help you succeed in government contracting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- State Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-0">
+                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>Select Your State:
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select form-select-lg" id="stateFilter" onchange="filterByState()">
+                                {% for state in all_states %}
+                                <option value="{{ state }}" {% if state == selected_state %}selected{% endif %}>
+                                    {{ state }}{% if state == 'DC' %} (Washington DC){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="alert alert-info mb-0 py-2">
+                                <small><i class="fas fa-info-circle me-1"></i>Showing resources for <strong>{{ state_data.name }}</strong></small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -60,31 +91,18 @@
                         <strong>What is PTAC?</strong> PTACs provide free or low-cost assistance to businesses that want to sell to federal, state, and local governments.
                     </div>
 
-                    <h4 class="mt-4 mb-3">Virginia PTAC Locations</h4>
+                    <h4 class="mt-4 mb-3">{{ state_data.name }} PTAC Location</h4>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="card h-100">
+                        <div class="col-12">
+                            <div class="card border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title text-primary">
-                                        <i class="fas fa-map-marker-alt me-2"></i>Hampton Roads APEX Accelerator
+                                        <i class="fas fa-map-marker-alt me-2"></i>{{ state_data.ptac.name }}
                                     </h5>
-                                    <p><strong>Coverage:</strong> Norfolk, Virginia Beach, Hampton, Newport News, Suffolk</p>
-                                    <p><strong>Phone:</strong> (757) 825-2957</p>
-                                    <p><strong>Website:</strong> <a href="https://virginiaapex.org" target="_blank">virginiaapex.org</a></p>
-                                    <p class="mb-0"><strong>Note:</strong> Formerly Virginia PTAC - Provides government procurement assistance statewide</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title text-primary">
-                                        <i class="fas fa-map-marker-alt me-2"></i>Central Virginia PTAC
-                                    </h5>
-                                    <p><strong>Coverage:</strong> Richmond, Williamsburg, and surrounding areas</p>
-                                    <p><strong>Phone:</strong> (804) 771-5150</p>
-                                    <p><strong>Website:</strong> <a href="https://virginiaapex.org" target="_blank">virginiaapex.org</a></p>
-                                    <p class="mb-0"><strong>Address:</strong> 600 East Main Street, Suite 301, Richmond, VA 23219</p>
+                                    <p><strong>Coverage:</strong> {{ state_data.ptac.coverage }}</p>
+                                    <p><strong>Phone:</strong> {{ state_data.ptac.phone }}</p>
+                                    <p><strong>Website:</strong> <a href="{{ state_data.ptac.website }}" target="_blank">{{ state_data.ptac.website|replace('https://', '')|replace('http://', '') }}</a></p>
+                                    <p class="mb-0"><strong>Address:</strong> {{ state_data.ptac.address }}</p>
                                 </div>
                             </div>
                         </div>
@@ -134,34 +152,19 @@
                         <strong>What is SBDC?</strong> Virginia's Small Business Development Centers provide free, confidential business consulting and low-cost training to help entrepreneurs start, grow, and succeed in their businesses.
                     </div>
 
-                    <h4 class="mt-4 mb-3">Hampton Roads SBDC Locations</h4>
+                    <h4 class="mt-4 mb-3">{{ state_data.name }} SBDC Location</h4>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="card h-100 border-info">
+                        <div class="col-12">
+                            <div class="card border-info">
                                 <div class="card-body">
                                     <h5 class="card-title">
-                                        <i class="fas fa-map-marker-alt text-info me-2"></i>Virginia SBDC - Hampton Roads
+                                        <i class="fas fa-map-marker-alt text-info me-2"></i>{{ state_data.sbdc.name }}
                                     </h5>
-                                    <p class="mb-2"><strong>Address:</strong> 6001 Thurston Avenue, Virginia Beach, VA 23455</p>
-                                    <p class="mb-2"><strong>Phone:</strong> (757) 825-2957</p>
-                                    <p class="mb-2"><strong>Email:</strong> sbdc@hrchamber.com</p>
-                                    <a href="https://www.virginiasbdc.org" target="_blank" class="btn btn-sm btn-info mt-2">
-                                        Visit Virginia SBDC <i class="fas fa-external-link-alt ms-1"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card h-100 border-info">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="fas fa-map-marker-alt text-info me-2"></i>Richmond SBDC
-                                    </h5>
-                                    <p class="mb-2"><strong>Address:</strong> 1 West Broad Street, Suite 1400, Richmond, VA 23219</p>
-                                    <p class="mb-2"><strong>Phone:</strong> (804) 648-7838</p>
-                                    <p class="mb-2"><strong>Email:</strong> rvasbdc@richmondsbdc.com</p>
-                                    <a href="https://www.virginiasbdc.org/locations/" target="_blank" class="btn btn-sm btn-info mt-2">
-                                        Visit Website <i class="fas fa-external-link-alt ms-1"></i>
+                                    <p class="mb-2"><strong>Address:</strong> {{ state_data.sbdc.address }}</p>
+                                    <p class="mb-2"><strong>Phone:</strong> {{ state_data.sbdc.phone }}</p>
+                                    <p class="mb-2"><strong>Email:</strong> {{ state_data.sbdc.email }}</p>
+                                    <a href="{{ state_data.sbdc.website }}" target="_blank" class="btn btn-sm btn-info mt-2">
+                                        Visit {{ state_data.name }} SBDC <i class="fas fa-external-link-alt ms-1"></i>
                                     </a>
                                 </div>
                             </div>
@@ -193,41 +196,21 @@
                         <strong>Success Tip:</strong> SBDC counselors can help you prepare for government contracting, develop capability statements, and connect you with procurement opportunities. All services are completely free and confidential!
                     </div>
 
-                    <h4 class="mt-4 mb-3">Virginia State Procurement Office</h4>
+                    <h4 class="mt-4 mb-3">{{ state_data.name }} State Procurement Portal</h4>
                     <div class="card border-info">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <i class="fas fa-university text-info me-2"></i>Virginia Department of General Services - Division of Purchases & Supply (DGS-DPS)
+                                <i class="fas fa-university text-info me-2"></i>{{ state_data.procurement_portal.name }}
                             </h5>
-                            <p class="mb-2"><strong>Main Office:</strong> 1111 East Main Street, Suite 500, Richmond, VA 23219</p>
-                            <p class="mb-2"><strong>Phone:</strong> (804) 786-3842</p>
-                            <p class="mb-2"><strong>Vendor Support:</strong> (804) 786-6585</p>
-                            <p class="mb-3"><strong>Email:</strong> dgs.dps@dgs.virginia.gov</p>
+                            <p class="mb-3"><strong>Description:</strong> {{ state_data.procurement_portal.description }}</p>
                             
-                            <h6 class="mt-3">Key Resources:</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <a href="https://eva.virginia.gov" target="_blank" class="text-decoration-none">
-                                        <i class="fas fa-globe text-info me-2"></i>eVA (Virginia's eProcurement Portal)
-                                        <i class="fas fa-external-link-alt ms-1 small"></i>
-                                    </a>
-                                </li>
-                                <li class="mb-2">
-                                    <a href="https://www.dgs.virginia.gov/division-of-purchases-and-supply/small-business-and-procurement-opportunities/" target="_blank" class="text-decoration-none">
-                                        <i class="fas fa-briefcase text-info me-2"></i>Small Business & Procurement Opportunities
-                                        <i class="fas fa-external-link-alt ms-1 small"></i>
-                                    </a>
-                                </li>
-                                <li class="mb-2">
-                                    <a href="https://www.dgs.virginia.gov/vendors/" target="_blank" class="text-decoration-none">
-                                        <i class="fas fa-user-tie text-info me-2"></i>Vendor Information & Registration
-                                        <i class="fas fa-external-link-alt ms-1 small"></i>
-                                    </a>
-                                </li>
-                            </ul>
+                            <a href="{{ state_data.procurement_portal.url }}" target="_blank" class="btn btn-info">
+                                <i class="fas fa-globe me-2"></i>Visit {{ state_data.procurement_portal.name }}
+                                <i class="fas fa-external-link-alt ms-2"></i>
+                            </a>
 
                             <div class="alert alert-info mt-3 mb-0">
-                                <strong><i class="fas fa-info-circle me-2"></i>Important:</strong> Register on eVA to access all Virginia state government procurement opportunities. All state agencies are required to post solicitations on eVA.
+                                <strong><i class="fas fa-info-circle me-2"></i>Important:</strong> Register on {{ state_data.procurement_portal.name }} to access all {{ state_data.name }} state government procurement opportunities.
                             </div>
                         </div>
                     </div>
@@ -333,13 +316,11 @@
 
                     <div class="card bg-light mt-4">
                         <div class="card-body">
-                            <h5><i class="fas fa-phone me-2"></i>Contact Virginia SBA</h5>
-                            <p><strong>Richmond District Office</strong></p>
-                            <p>Federal Reserve Bank Building<br>
-                            701 East Byrd Street, Suite 300<br>
-                            Richmond, VA 23219</p>
-                            <p><strong>Phone:</strong> (804) 771-2400<br>
-                            <strong>Website:</strong> <a href="https://www.sba.gov/local-assistance/district-offices/va/richmond" target="_blank">sba.gov/local-assistance</a></p>
+                            <h5><i class="fas fa-phone me-2"></i>Contact {{ state_data.name }} SBA</h5>
+                            <p><strong>{{ state_data.sba.office }}</strong></p>
+                            <p>{{ state_data.sba.address }}</p>
+                            <p><strong>Phone:</strong> {{ state_data.sba.phone }}<br>
+                            <strong>Website:</strong> <a href="{{ state_data.sba.website }}" target="_blank">{{ state_data.sba.website|replace('https://', '')|replace('http://', '') }}</a></p>
                         </div>
                     </div>
                 </div>
@@ -815,6 +796,12 @@
 }
 </style>
 <script>
+// State filter function
+function filterByState() {
+    const state = document.getElementById('stateFilter').value;
+    window.location.href = '/partnerships?state=' + state;
+}
+
 // Ensure security best practices for external links opened in a new tab
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('a[target="_blank"]').forEach(function (a) {

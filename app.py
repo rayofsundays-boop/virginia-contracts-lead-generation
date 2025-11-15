@@ -19498,7 +19498,112 @@ def proposal_templates():
 @app.route('/partnerships')
 def partnerships():
     """Partnership resources - PTAC, SBA, GSA certification guides - Public access"""
-    return render_template('partnerships.html')
+    # Get state filter from query parameter
+    selected_state = request.args.get('state', 'VA')
+    
+    # State-specific partnership data (PTAC, SBDC, SBA offices)
+    state_data = {
+        'VA': {
+            'name': 'Virginia',
+            'ptac': {
+                'name': 'Hampton Roads APEX Accelerator',
+                'coverage': 'Norfolk, Virginia Beach, Hampton, Newport News, Suffolk',
+                'phone': '(757) 825-2957',
+                'website': 'https://virginiaapex.org',
+                'address': '6001 Thurston Avenue, Virginia Beach, VA 23455'
+            },
+            'sbdc': {
+                'name': 'Virginia SBDC - Hampton Roads',
+                'address': '6001 Thurston Avenue, Virginia Beach, VA 23455',
+                'phone': '(757) 825-2957',
+                'email': 'sbdc@hrchamber.com',
+                'website': 'https://www.virginiasbdc.org'
+            },
+            'sba': {
+                'office': 'Richmond District Office',
+                'address': '701 East Byrd Street, Suite 300, Richmond, VA 23219',
+                'phone': '(804) 771-2400',
+                'website': 'https://www.sba.gov/local-assistance/district-offices/va/richmond'
+            },
+            'procurement_portal': {
+                'name': 'eVA',
+                'url': 'https://eva.virginia.gov',
+                'description': "Virginia's eProcurement Portal"
+            }
+        },
+        # Add more states with their specific resources
+        'MD': {
+            'name': 'Maryland',
+            'ptac': {
+                'name': 'Maryland APEX Accelerator',
+                'coverage': 'Baltimore, Annapolis, Silver Spring, Rockville',
+                'phone': '(410) 767-6617',
+                'website': 'https://mdptac.org',
+                'address': '217 East Redwood Street, Baltimore, MD 21202'
+            },
+            'sbdc': {
+                'name': 'Maryland SBDC',
+                'address': '6950 Columbia Gateway Drive, Columbia, MD 21046',
+                'phone': '(410) 767-6552',
+                'email': 'mdsbdc@umd.edu',
+                'website': 'https://www.mdsbdc.umd.edu'
+            },
+            'sba': {
+                'office': 'Baltimore District Office',
+                'address': '10 South Howard Street, Suite 6220, Baltimore, MD 21201',
+                'phone': '(410) 962-6195',
+                'website': 'https://www.sba.gov/local-assistance/district-offices/md/baltimore'
+            },
+            'procurement_portal': {
+                'name': 'eMMA',
+                'url': 'https://emma.maryland.gov',
+                'description': 'Maryland Procurement Portal'
+            }
+        },
+        'DC': {
+            'name': 'Washington DC',
+            'ptac': {
+                'name': 'DC APEX Accelerator',
+                'coverage': 'Washington DC Metro Area',
+                'phone': '(202) 698-1000',
+                'website': 'https://dmped.dc.gov/service/small-business-resources',
+                'address': '1100 4th Street SW, Suite E650, Washington, DC 20024'
+            },
+            'sbdc': {
+                'name': 'DC Small Business Development Center',
+                'address': '2600 6th Street NW, Room 128, Washington, DC 20059',
+                'phone': '(202) 806-1550',
+                'email': 'dcsbdc@howard.edu',
+                'website': 'https://dcsbdc.edc.org'
+            },
+            'sba': {
+                'office': 'Washington DC District Office',
+                'address': '740 15th Street NW, Suite 300, Washington, DC 20005',
+                'phone': '(202) 272-0345',
+                'website': 'https://www.sba.gov/local-assistance/district-offices/dc/washington'
+            },
+            'procurement_portal': {
+                'name': 'PASS',
+                'url': 'https://app.dcpass.com',
+                'description': 'DC Procurement Automated Support System'
+            }
+        }
+    }
+    
+    # Get current state data or default to Virginia
+    current_state = state_data.get(selected_state, state_data['VA'])
+    
+    # List of all states for dropdown
+    all_states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
+                  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+                  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+                  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+                  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC']
+    
+    return render_template('partnerships.html',
+                         selected_state=selected_state,
+                         state_data=current_state,
+                         all_states=all_states)
 
 @app.route('/subscription')
 def subscription():
