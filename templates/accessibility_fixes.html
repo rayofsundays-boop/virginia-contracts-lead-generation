@@ -379,6 +379,77 @@ small, .small {
     color: #ffffff !important;
 }
 
+/* Home page cinematic - gradient text visibility */
+.hero-cinematic .text-gradient {
+    /* Gradient text is intentional - ensure good contrast on dark bg */
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Ensure all buttons on gradients maintain visibility */
+.btn-primary-glow,
+.btn-ai-glow,
+.btn-primary-solid,
+.btn-cta-large {
+    color: #ffffff !important;
+}
+
+/* Featured partner section gradient card */
+.featured-partner-card {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%) !important;
+}
+
+.featured-partner-card .partner-description,
+.featured-partner-card .partner-cta-text {
+    color: #f3f4f6 !important; /* Light gray on dark gradient bg */
+}
+
+/* Partner badge on gradient background */
+.partner-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+    color: #000000 !important; /* Black text on yellow gradient */
+}
+
+/* Service cards with icon gradients */
+.btn-service-residential {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+}
+
+.btn-service-commercial {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+}
+
+.btn-partner-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+}
+
+/* All sections with dark gradient backgrounds */
+.discover-section,
+.ai-intelligence-section,
+.features-grid-section,
+.stats-cta-section,
+.cleaning-services-section,
+.cinematic-footer {
+    /* Already have dark backgrounds, ensure text stays white */
+}
+
+.discover-section *:not(.btn):not(a):not(.badge),
+.ai-intelligence-section *:not(.btn):not(a):not(.badge),
+.features-grid-section *:not(.btn):not(a):not(.badge),
+.stats-cta-section *:not(.btn):not(a):not(.badge) {
+    /* Text should be white/light on dark sections */
+}
+
+/* Gradient divider - decorative only, no text */
+.gradient-divider {
+    /* No text content, contrast not applicable */
+}
+
 /* =========================================
    END WCAG AA FIXES
    ========================================= */
