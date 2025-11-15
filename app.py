@@ -21907,89 +21907,84 @@ def aviation_cleaning_leads():
 @login_required
 @admin_required
 def scrape_aviation_leads():
-    """Use OpenAI to intelligently find aviation cleaning opportunities
+    """Scrape real aviation cleaning opportunities from web sources
     
-    Searches for:
-    - Commercial airlines at major airports
-    - Private jet operators and charter companies
-    - FBOs (Fixed Base Operators)
-    - Aircraft maintenance facilities
-    - Cargo airlines
+    Uses aviation_scraper.py module to search:
+    - Airport procurement portals (IAD, DCA, RIC, ORF, BWI, etc.)
+    - Airline vendor registration (Delta, American, United, Southwest, etc.)
+    - Ground handling companies (Swissport, GAT, ABM, PrimeFlight, etc.)
+    
+    Returns actual RFPs, RFQs, and contract opportunities found online.
     """
     try:
-        import openai
-        import requests
-        from bs4 import BeautifulSoup
+        from aviation_scraper import scrape_all, scrape_by_category
         import json
         
         data = request.get_json() or {}
-        state = data.get('state', 'All')
+        category = data.get('category', 'all')  # all, airport, airline, ground_handler
+        max_results = data.get('max_results', 3)
         
-        # Check OpenAI API key
-        openai_key = os.environ.get('OPENAI_API_KEY')
-        if not openai_key:
-            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
+        print(f"🛫 Scraping aviation cleaning leads (category: {category})...")
         
-        openai.api_key = openai_key
+        # Run scraper
+        if category == 'all':
+            opportunities = scrape_all(max_results_per_category=max_results)
+        else:
+            opportunities = scrape_by_category(category=category, max_results=max_results)
         
-        print(f"🛫 Scraping aviation cleaning leads for {state}...")
+        if not opportunities:
+            return jsonify({
+                'success': False,
+                'message': 'No opportunities found. Try again later or adjust search parameters.',
+                'opportunities_found': 0,
+                'leads_saved': 0
+            })
         
-        # Step 1: Use GPT-4 to identify aviation companies
-        aviation_prompt = f"""You are an aviation industry intelligence assistant. Identify major aviation cleaning opportunities in {"the United States" if state == "All" else state}.
-
-For each opportunity, provide:
-- company_name: Full company name
-- company_type: One of: "Commercial Airline", "Private Jet Operator", "FBO", "Aircraft Maintenance", "Cargo Airline", "Charter Company"
-- aircraft_types: Types of aircraft (e.g., "Boeing 737, Airbus A320")
-- fleet_size: Estimated number of aircraft
-- city: City location
-- state: State (2-letter code)
-- contact_phone: Best phone number (if known)
-- contact_email: Email address (if known)
-- website_url: Company website
-- services_needed: Cleaning services they likely need
-
-Return ONLY valid JSON array format (top 20 opportunities), no explanations:
-[
-  {{"company_name": "...", "company_type": "...", "aircraft_types": "...", "fleet_size": 50, "city": "...", "state": "...", "contact_phone": "...", "contact_email": "...", "website_url": "...", "services_needed": "..."}},
-  ...
-]"""
-
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": aviation_prompt}],
-                temperature=0.3,
-                max_tokens=3000
-            )
-            
-            companies_text = response.choices[0].message.content.strip()
-            # Extract JSON from response
-            if '```json' in companies_text:
-                companies_text = companies_text.split('```json')[1].split('```')[0].strip()
-            elif '```' in companies_text:
-                companies_text = companies_text.split('```')[1].split('```')[0].strip()
-            
-            companies = json.loads(companies_text)
-            print(f"✅ AI identified {len(companies)} aviation companies")
-            
-        except Exception as e:
-            print(f"❌ Error getting aviation companies from AI: {e}")
-            return jsonify({'success': False, 'error': f'AI discovery failed: {str(e)}'}), 500
+        print(f"✅ Found {len(opportunities)} opportunities from web scraping")
         
-        # Step 2: Save to database and validate URLs with OpenAI
+        # Step 2: Save to database
         conn = get_db_connection()
         cursor = conn.cursor()
         saved_count = 0
         
-        for company in companies:
+        for opp in opportunities:
             try:
-                # Validate website URL using OpenAI
-                website_url = company.get('website_url', '')
-                if website_url:
-                    validated_url = validate_url_with_openai(website_url, company.get('company_name', ''))
-                    if validated_url:
-                        company['website_url'] = validated_url
+                # Map scraped data to database fields
+                company_name = opp.get('title', 'Unknown')[:200]
+                company_type = opp.get('category', 'Unknown').title()
+                website_url = opp.get('url', '')
+                contact_email = opp.get('contact_email', '')
+                contact_phone = opp.get('contact_phone', '')
+                services_needed = ', '.join(opp.get('detected_keywords', []))
+                search_query = opp.get('search_query', '')
+                
+                # Extract location from search query if available
+                state = 'Unknown'
+                city = 'Unknown'
+                if 'Virginia' in search_query or ' VA ' in search_query:
+                    state = 'VA'
+                elif 'Maryland' in search_query or ' MD ' in search_query:
+                    state = 'MD'
+                elif 'Washington' in search_query or ' DC ' in search_query:
+                    state = 'DC'
+                elif 'North Carolina' in search_query or ' NC ' in search_query:
+                    state = 'NC'
+                
+                # Extract city from common airport codes
+                if 'IAD' in search_query or 'Dulles' in search_query:
+                    city = 'Washington'
+                elif 'DCA' in search_query or 'Reagan' in search_query:
+                    city = 'Arlington'
+                elif 'RIC' in search_query or 'Richmond' in search_query:
+                    city = 'Richmond'
+                elif 'ORF' in search_query or 'Norfolk' in search_query:
+                    city = 'Norfolk'
+                elif 'BWI' in search_query or 'Baltimore' in search_query:
+                    city = 'Baltimore'
+                elif 'CLT' in search_query or 'Charlotte' in search_query:
+                    city = 'Charlotte'
+                elif 'RDU' in search_query or 'Raleigh' in search_query:
+                    city = 'Raleigh'
                 
                 # Insert into database
                 cursor.execute('''INSERT OR IGNORE INTO aviation_cleaning_leads
@@ -21997,21 +21992,22 @@ Return ONLY valid JSON array format (top 20 opportunities), no explanations:
                                   contact_phone, contact_email, website_url, services_needed,
                                   discovered_via, data_source)
                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                             (company.get('company_name', ''),
-                              company.get('company_type', ''),
-                              company.get('aircraft_types', ''),
-                              company.get('fleet_size', 0),
-                              company.get('city', ''),
-                              company.get('state', ''),
-                              company.get('contact_phone', ''),
-                              company.get('contact_email', ''),
-                              company.get('website_url', ''),
-                              company.get('services_needed', ''),
-                              'openai_gpt4_scraper',
-                              'ai_aviation_discovery'))
+                             (company_name,
+                              company_type,
+                              'Various',  # aircraft_types
+                              0,  # fleet_size (unknown from scraping)
+                              city,
+                              state,
+                              contact_phone,
+                              contact_email,
+                              website_url,
+                              services_needed,
+                              'web_scraper',
+                              'aviation_scraper_py'))
                 
                 if cursor.rowcount > 0:
                     saved_count += 1
+                    print(f"  ✅ Saved: {company_name[:50]}")
                     
             except Exception as db_err:
                 print(f"⚠️ Database insert error: {db_err}")
@@ -22020,15 +22016,19 @@ Return ONLY valid JSON array format (top 20 opportunities), no explanations:
         conn.commit()
         conn.close()
         
-        print(f"🎉 Aviation scraping complete: {saved_count} new leads saved")
+        print(f"🎉 Aviation scraping complete: {saved_count}/{len(opportunities)} new leads saved")
         
         return jsonify({
             'success': True,
-            'message': f'Found {len(companies)} aviation companies, saved {saved_count} new leads',
-            'companies_found': len(companies),
-            'leads_saved': saved_count
+            'message': f'Found {len(opportunities)} opportunities via web scraping, saved {saved_count} new leads',
+            'opportunities_found': len(opportunities),
+            'leads_saved': saved_count,
+            'opportunities': opportunities[:5]  # Preview first 5
         })
         
+    except ImportError as e:
+        print(f"❌ Aviation scraper module not found: {e}")
+        return jsonify({'success': False, 'error': 'Aviation scraper module not installed'}), 500
     except Exception as e:
         print(f"❌ Aviation scraper error: {e}")
         import traceback

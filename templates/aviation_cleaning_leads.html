@@ -47,7 +47,14 @@
 <div class="container my-4">
     <div class="card shadow-sm">
         <div class="card-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white;">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Aviation Companies</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Aviation Companies</h5>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <button class="btn btn-light btn-sm" onclick="showScraperModal()">
+                    <i class="fas fa-robot me-1"></i> Run Scraper
+                </button>
+                {% endif %}
+            </div>
         </div>
         <div class="card-body">
             <form method="get" action="{{ url_for('aviation_cleaning_leads') }}" id="filterForm">
@@ -283,6 +290,139 @@ function generateProposal(companyName, services) {
     const url = `/ai-proposal-generator?lead_title=${encodeURIComponent(companyName + ' - ' + services)}`;
     window.location.href = url;
 }
+
+function showScraperModal() {
+    const modal = new bootstrap.Modal(document.getElementById('scraperModal'));
+    modal.show();
+}
+
+function runAviationScraper() {
+    const category = document.getElementById('scraperCategory').value;
+    const maxResults = document.getElementById('scraperMaxResults').value;
+    const statusDiv = document.getElementById('scraperStatus');
+    const progressBar = document.getElementById('scraperProgress');
+    const runButton = document.getElementById('runScraperBtn');
+    
+    // Update UI
+    statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Scraping aviation leads from ${category === 'all' ? 'all categories' : category}...</div>`;
+    progressBar.style.width = '50%';
+    runButton.disabled = true;
+    
+    // Make API call
+    fetch('/api/scrape-aviation-leads', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            category: category,
+            max_results: parseInt(maxResults)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        progressBar.style.width = '100%';
+        
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Success!</strong> Found ${data.opportunities_found} opportunities, saved ${data.leads_saved} new leads.
+                </div>
+            `;
+            
+            // Show preview if available
+            if (data.opportunities && data.opportunities.length > 0) {
+                let preview = '<h6>Sample Opportunities Found:</h6><ul class="small">';
+                data.opportunities.forEach(opp => {
+                    preview += `<li><strong>${opp.title.substring(0, 60)}</strong> - ${opp.category}</li>`;
+                });
+                preview += '</ul>';
+                statusDiv.innerHTML += preview;
+            }
+            
+            // Reload page after 3 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Error:</strong> ${data.message || data.error}
+                </div>
+            `;
+            runButton.disabled = false;
+        }
+    })
+    .catch(error => {
+        progressBar.style.width = '100%';
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Error:</strong> ${error.message}
+            </div>
+        `;
+        runButton.disabled = false;
+    });
+}
 </script>
+
+<!-- Scraper Modal (Admin Only) -->
+<div class="modal fade" id="scraperModal" tabindex="-1" aria-labelledby="scraperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white;">
+                <h5 class="modal-title" id="scraperModalLabel">
+                    <i class="fas fa-robot me-2"></i>Aviation Lead Scraper
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary">
+                    Scrape real aviation cleaning opportunities from airport procurement portals, airline vendor portals, and ground handling companies.
+                </p>
+                
+                <div class="mb-3">
+                    <label for="scraperCategory" class="form-label fw-bold">Category to Scrape</label>
+                    <select class="form-select" id="scraperCategory">
+                        <option value="all">All Categories (Airports, Airlines, Ground Handlers)</option>
+                        <option value="airport">Airports Only</option>
+                        <option value="airline">Airlines Only</option>
+                        <option value="ground_handler">Ground Handlers Only</option>
+                    </select>
+                    <div class="form-text">
+                        <strong>All Categories:</strong> Searches 8 airports, 7 airlines, 8 ground handlers (23 total searches)<br>
+                        <strong>Individual:</strong> Focused search on selected category only
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="scraperMaxResults" class="form-label fw-bold">Results Per Search</label>
+                    <select class="form-select" id="scraperMaxResults">
+                        <option value="3" selected>3 (Recommended - Fast)</option>
+                        <option value="5">5 (Balanced)</option>
+                        <option value="10">10 (Thorough - Slower)</option>
+                    </select>
+                    <div class="form-text">
+                        More results = better coverage but longer scraping time (2-3 seconds per result)
+                    </div>
+                </div>
+                
+                <div id="scraperStatus"></div>
+                
+                <div class="progress mb-3" style="height: 5px; display: none;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="scraperProgress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="runScraperBtn" onclick="runAviationScraper()">
+                    <i class="fas fa-play me-2"></i>Start Scraping
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
