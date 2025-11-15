@@ -4139,6 +4139,61 @@ def init_db():
         
         c.execute('CREATE INDEX IF NOT EXISTS idx_user_naics_email ON user_naics_codes(user_email)')
         
+        # Create client_profiles table for comprehensive company profiles
+        c.execute('''CREATE TABLE IF NOT EXISTS client_profiles
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL UNIQUE,
+                      company_name TEXT,
+                      dba_name TEXT,
+                      business_structure TEXT,
+                      year_established INTEGER,
+                      tax_id TEXT,
+                      duns_number TEXT,
+                      cage_code TEXT,
+                      uei_number TEXT,
+                      primary_contact_name TEXT,
+                      primary_contact_title TEXT,
+                      primary_contact_email TEXT,
+                      primary_contact_phone TEXT,
+                      billing_contact_name TEXT,
+                      billing_contact_email TEXT,
+                      billing_contact_phone TEXT,
+                      physical_address TEXT,
+                      physical_city TEXT,
+                      physical_state TEXT,
+                      physical_zip TEXT,
+                      mailing_address TEXT,
+                      mailing_city TEXT,
+                      mailing_state TEXT,
+                      mailing_zip TEXT,
+                      annual_revenue TEXT,
+                      employee_count INTEGER,
+                      certifications TEXT,
+                      licenses TEXT,
+                      naics_codes TEXT,
+                      liability_insurance_carrier TEXT,
+                      liability_coverage_amount TEXT,
+                      liability_expiration_date TEXT,
+                      workers_comp_carrier TEXT,
+                      workers_comp_policy TEXT,
+                      workers_comp_expiration TEXT,
+                      auto_insurance_carrier TEXT,
+                      auto_coverage_amount TEXT,
+                      auto_expiration_date TEXT,
+                      bonding_company TEXT,
+                      bonding_capacity TEXT,
+                      past_projects TEXT,
+                      key_personnel TEXT,
+                      equipment_list TEXT,
+                      references TEXT,
+                      capabilities_summary TEXT,
+                      profile_completion_percentage INTEGER DEFAULT 0,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_email) REFERENCES leads(email))''')
+        
+        c.execute('CREATE INDEX IF NOT EXISTS idx_client_profiles_email ON client_profiles(user_email)')
+        
         conn.commit()
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API
@@ -14517,7 +14572,6 @@ def send_admin_password_reset_notification(user_email, user_name):
     
     try:
         from flask_mail import Message
-        from datetime import datetime as dt
         
         admin_email = 'rayofsundays@gmail.com'  # Your admin email
         
@@ -14531,7 +14585,7 @@ def send_admin_password_reset_notification(user_email, user_name):
 
 User: {user_name}
 Email: {user_email}
-Time: {dt.now().strftime('%Y-%m-%d %I:%M %p EST')}
+Time: {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}
 
 A user has requested a password reset. They have been sent a secure reset link.
 
@@ -14553,7 +14607,7 @@ VA Contracts Lead Generation Admin System
         <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
             <p><strong>User:</strong> {user_name}</p>
             <p><strong>Email:</strong> {user_email}</p>
-            <p><strong>Time:</strong> {dt.now().strftime('%Y-%m-%d %I:%M %p EST')}</p>
+            <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}</p>
         </div>
         
         <p>A user has requested a password reset. They have been sent a secure reset link (valid for 1 hour).</p>
