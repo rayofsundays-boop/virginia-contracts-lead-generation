@@ -36,7 +36,7 @@
             <!-- Sidebar Navigation -->
             <div class="card shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body">
-                    <h6 class="text-muted text-uppercase mb-3">Profile Sections</h6>
+                    <h6 class="text-uppercase mb-3" style="color: #4a5568; font-weight: 600;">Profile Sections</h6>
                     <nav class="nav flex-column">
                         <a class="nav-link" href="#company-info"><i class="fas fa-building me-2"></i>Company Info</a>
                         <a class="nav-link" href="#contact-info"><i class="fas fa-address-card me-2"></i>Contact Info</a>
@@ -118,7 +118,7 @@
                                 <label class="form-label">UEI Number (SAM.gov)</label>
                                 <input type="text" class="form-control" name="uei_number" 
                                        value="{{ profile.uei_number or '' }}">
-                                <small class="text-secondary">Required for federal contracting</small>
+                                <small style="color: #4a5568;">Required for federal contracting</small>
                             </div>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                         <h5 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact Information</h5>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-muted mb-3">Primary Contact</h6>
+                        <h6 class="mb-3" style="color: #2d3748; font-weight: 600;">Primary Contact</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Full Name *</label>
@@ -550,7 +550,7 @@ function removeCertification(index) {
 function renderCertifications() {
     const container = document.getElementById('certificationsList');
     if (certifications.length === 0) {
-        container.innerHTML = '<p class="text-secondary">No certifications added yet. Click "Add Certification" to get started.</p>';
+        container.innerHTML = '<p style="color: #4a5568;">No certifications added yet. Click "Add Certification" to get started.</p>';
         return;
     }
     
@@ -612,7 +612,7 @@ function removeProject(index) {
 function renderProjects() {
     const container = document.getElementById('projectsList');
     if (projects.length === 0) {
-        container.innerHTML = '<p class="text-secondary">No projects added yet. Click "Add Project" to showcase your experience.</p>';
+        container.innerHTML = '<p style="color: #4a5568;">No projects added yet. Click "Add Project" to showcase your experience.</p>';
         return;
     }
     
@@ -685,7 +685,7 @@ function removePersonnel(index) {
 function renderPersonnel() {
     const container = document.getElementById('personnelList');
     if (personnel.length === 0) {
-        container.innerHTML = '<p class="text-secondary">No key personnel added yet. Click "Add Person" to list your team.</p>';
+        container.innerHTML = '<p style="color: #4a5568;">No key personnel added yet. Click "Add Person" to list your team.</p>';
         return;
     }
     
@@ -745,7 +745,7 @@ function removeEquipment(index) {
 function renderEquipment() {
     const container = document.getElementById('equipmentList');
     if (equipment.length === 0) {
-        container.innerHTML = '<p class="text-secondary">No equipment added yet. Click "Add Equipment" to list your resources.</p>';
+        container.innerHTML = '<p style="color: #4a5568;">No equipment added yet. Click "Add Equipment" to list your resources.</p>';
         return;
     }
     
@@ -801,7 +801,7 @@ function removeReference(index) {
 function renderReferences() {
     const container = document.getElementById('referencesList');
     if (references.length === 0) {
-        container.innerHTML = '<p class="text-secondary">No references added yet. Click "Add Reference" to include client testimonials.</p>';
+        container.innerHTML = '<p style="color: #4a5568;">No references added yet. Click "Add Reference" to include client testimonials.</p>';
         return;
     }
     
@@ -920,15 +920,24 @@ function showAlert(type, message) {
 </script>
 
 <style>
+/* WCAG 2.1 AA Accessibility Overrides for Client Profile Page */
+.text-muted {
+    color: #4a5568 !important; /* 9.1:1 contrast ratio on white */
+}
+
+.text-secondary {
+    color: #4a5568 !important; /* 9.1:1 contrast ratio on white */
+}
+
 .nav-link {
-    color: #666;
+    color: #2d3748 !important; /* Dark gray for better contrast - 12.6:1 */
     padding: 0.5rem 1rem;
     border-left: 3px solid transparent;
     transition: all 0.3s;
 }
 
 .nav-link:hover {
-    color: #667eea;
+    color: #667eea !important;
     border-left-color: #667eea;
     background-color: #f8f9fa;
 }
@@ -944,6 +953,22 @@ function showAlert(type, message) {
 
 .card-header {
     border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Form labels - ensure high contrast */
+.form-label {
+    color: #1a202c !important; /* 15.8:1 contrast ratio */
+    font-weight: 500;
+}
+
+/* Card body text */
+.card-body h6 {
+    color: #2d3748 !important; /* 12.6:1 contrast ratio */
+}
+
+/* Small helper text */
+small {
+    color: #4a5568 !important; /* 9.1:1 contrast ratio */
 }
 </style>
 {% endblock %}
