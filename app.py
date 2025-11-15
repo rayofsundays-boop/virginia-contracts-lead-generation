@@ -45,6 +45,18 @@ except Exception:
 from hashlib import sha256
 from cryptography.fernet import Fernet, InvalidToken
 
+# Email notification system imports
+try:
+    from src.routes.notifications import notifications as notifications_blueprint
+    from src.scheduler import start_scheduler, stop_scheduler
+    _EMAIL_NOTIFICATIONS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Email notifications not available: {e}")
+    notifications_blueprint = None
+    start_scheduler = None
+    stop_scheduler = None
+    _EMAIL_NOTIFICATIONS_AVAILABLE = False
+
 # In-memory tracking for 2FA attempts (user_id -> timestamps)
 TWOFA_ATTEMPTS = {}
 FORCE_ADMIN_2FA = os.getenv('FORCE_ADMIN_2FA', '').lower() in ('1','true','yes','on')
@@ -4166,6 +4178,21 @@ def init_db():
     except Exception as e:
         print(f"Database initialization error: {e}")
         # Continue anyway - app might still work
+
+# Register email notifications blueprint
+if _EMAIL_NOTIFICATIONS_AVAILABLE and notifications_blueprint:
+    app.register_blueprint(notifications_blueprint)
+    print("✅ Email notifications blueprint registered")
+    
+    # Start the scheduler for daily briefings
+    if start_scheduler:
+        try:
+            start_scheduler()
+            print("✅ Daily email scheduler started (8 AM EST briefings)")
+        except Exception as e:
+            print(f"⚠️ Failed to start email scheduler: {e}")
+else:
+    print("⚠️ Email notifications not available. Install apscheduler to enable.")
 
 @app.route('/')
 def index():
