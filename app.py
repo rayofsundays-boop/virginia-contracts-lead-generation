@@ -7742,7 +7742,7 @@ Return ONLY valid JSON array format, no explanations:
 
         try:
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": city_prompt}],
                 temperature=0.3,
                 max_tokens=1500
@@ -7810,7 +7810,7 @@ WEBPAGE TEXT:
 {page_text}"""
 
                 rfp_response = client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-4o-mini",
                     messages=[{"role": "user", "content": rfp_prompt}],
                     temperature=0.2,
                     max_tokens=2000
@@ -15729,7 +15729,7 @@ Only respond with the JSON array, no other text."""
             return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
         
         response = client.chat.completions.create(
-            model="gpt-4",  # or gpt-3.5-turbo for cost savings
+            model="gpt-4o-mini",  # or gpt-3.5-turbo for cost savings
             messages=[
                 {"role": "system", "content": "You are a data validation expert specializing in government contract URLs."},
                 {"role": "user", "content": prompt}
@@ -15918,7 +15918,7 @@ Only respond with the JSON array, no other text."""
             return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
         
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a procurement expert analyzing supply contract opportunities and URLs."},
                 {"role": "user", "content": prompt}
@@ -16211,7 +16211,7 @@ Only respond with the JSON array, no other text."""
             return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
         
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a comprehensive procurement and lead analysis expert."},
                 {"role": "user", "content": prompt}
@@ -17168,7 +17168,7 @@ Only respond with the JSON array, no other text."""
             return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
         
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a procurement research expert specializing in finding contract opportunities online."},
                 {"role": "user", "content": prompt}
@@ -17363,7 +17363,7 @@ Only respond with the JSON array, no other text."""
                 return
             
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a procurement research expert."},
                     {"role": "user", "content": prompt}
@@ -17513,7 +17513,7 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
 Return JSON array: [{{"lead_id": int, "lead_type": str, "suggested_url": str, "confidence": str}}]"""
 
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "Generate procurement URLs."},
                     {"role": "user", "content": prompt}
@@ -22857,7 +22857,7 @@ Correct URL:"""
             return url  # Return original if no API key
         
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": url_prompt}],
             temperature=0.1,
             max_tokens=100

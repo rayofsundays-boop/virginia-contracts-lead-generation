@@ -59,7 +59,7 @@ Return ONLY the URL, nothing else. Make it realistic and functional."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are an expert at finding and generating appropriate event registration URLs for government contracting events. Return only the URL, nothing else."},
                 {"role": "user", "content": prompt}
