@@ -315,56 +315,76 @@ def ensure_admin2_account(force_password_reset: bool = False):
         normalized_email = _normalize_identifier(ADMIN2_SEED_EMAIL)
         normalized_username = _normalize_identifier(ADMIN2_SEED_USERNAME)
         print(f'[ADMIN2] Normalized search: email={normalized_email}, username={normalized_username}')
+        
+        # Try users table first
         lookup = db.session.execute(
             text('''SELECT id, email, username, password_hash, is_admin
-                    FROM leads
-                    WHERE lower(email) = :email OR lower(username) = :username'''),
+                    FROM users
+                    WHERE (lower(email) = :email OR lower(username) = :username)
+                    AND is_deleted = 0'''),
             {
                 'email': normalized_email,
                 'username': normalized_username
             }
         ).fetchone()
+        
+        # Fallback to leads table if not in users
+        if not lookup:
+            lookup = db.session.execute(
+                text('''SELECT id, email, username, password_hash, is_admin
+                        FROM leads
+                        WHERE lower(email) = :email OR lower(username) = :username'''),
+                {
+                    'email': normalized_email,
+                    'username': normalized_username
+                }
+            ).fetchone()
 
         provision_password = ADMIN2_SEED_PASSWORD or ''
         hashed_password = generate_password_hash(provision_password) if provision_password else None
 
         if not lookup:
-            print(f'[ADMIN2] Account does not exist, creating...')
+            print(f'[ADMIN2] Account does not exist, creating in users table...')
             if not hashed_password:
                 print(f'[ADMIN2] Cannot create account without password')
                 return
             insert_result = db.session.execute(
-                text('''INSERT INTO leads (
-                        company_name, contact_name, email, username, password_hash,
-                        subscription_status, credits_balance, is_admin, free_leads_remaining,
-                        registration_date, lead_source, twofa_enabled, sms_notifications,
-                        email_notifications)
+                text('''INSERT INTO users (
+                        username, email, password_hash, full_name, company_name,
+                        is_active, is_verified, is_admin, is_superuser,
+                        subscription_status, subscription_tier, credits_balance,
+                        free_credits_remaining, lead_source, 
+                        email_notifications, sms_notifications,
+                        created_at, updated_at)
                     VALUES (
-                        :company, :contact, :email, :username, :password_hash,
-                        'paid', 999999, TRUE, 0,
-                        :registration_date, 'system_bootstrap', FALSE, FALSE,
-                        TRUE
+                        :username, :email, :password_hash, :full_name, :company,
+                        1, 1, TRUE, TRUE,
+                        'paid', 'premium', 999999,
+                        0, 'system_bootstrap',
+                        TRUE, FALSE,
+                        :created_at, :updated_at
                     ) RETURNING id, email, username'''),
                 {
-                    'company': 'Admin Operations',
-                    'contact': 'Admin2 Support',
-                    'email': ADMIN2_SEED_EMAIL,
                     'username': ADMIN2_SEED_USERNAME,
+                    'email': ADMIN2_SEED_EMAIL,
                     'password_hash': hashed_password,
-                    'registration_date': datetime.utcnow().isoformat()
+                    'full_name': 'Admin2 Support',
+                    'company': 'Admin Operations',
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow()
                 }
             )
             new_account = insert_result.fetchone()
             db.session.commit()
-            print(f'[ADMIN2] ✅ Successfully created admin2 account: id={new_account[0]}, email={new_account[1]}, username={new_account[2]}')
+            print(f'[ADMIN2] ✅ Successfully created admin2 account in users table: id={new_account[0]}, email={new_account[1]}, username={new_account[2]}')
             
             # Verify the account is actually in the database
             verify = db.session.execute(
-                text('SELECT id, username, email, is_admin FROM leads WHERE id = :id'),
+                text('SELECT id, username, email, is_admin FROM users WHERE id = :id'),
                 {'id': new_account[0]}
             ).fetchone()
             if verify:
-                print(f'[ADMIN2] ✓ Verified account in database: id={verify[0]}, username={verify[1]}, email={verify[2]}, is_admin={verify[3]}')
+                print(f'[ADMIN2] ✓ Verified account in users table: id={verify[0]}, username={verify[1]}, email={verify[2]}, is_admin={verify[3]}')
             else:
                 print(f'[ADMIN2] ⚠️  WARNING: Account creation succeeded but cannot find account with id={new_account[0]}')
             return
@@ -381,12 +401,24 @@ def ensure_admin2_account(force_password_reset: bool = False):
             params['password_hash'] = hashed_password
             print(f'[ADMIN2] Will update password hash')
         if updates:
-            db.session.execute(
-                text(f"UPDATE leads SET {', '.join(updates)} WHERE id = :user_id"),
-                params
-            )
-            db.session.commit()
-            print(f'[ADMIN2] ✅ Updated existing admin2 account')
+            # Update in users table first
+            try:
+                db.session.execute(
+                    text(f"UPDATE users SET {', '.join(updates)}, updated_at = :updated_at WHERE id = :user_id"),
+                    {**params, 'updated_at': datetime.utcnow()}
+                )
+                db.session.commit()
+                print(f'[ADMIN2] ✅ Updated existing admin2 account in users table')
+            except Exception as users_update_err:
+                # Fallback to leads table
+                db.session.rollback()
+                print(f'[ADMIN2] Users table update failed, trying leads table: {users_update_err}')
+                db.session.execute(
+                    text(f"UPDATE leads SET {', '.join(updates)} WHERE id = :user_id"),
+                    params
+                )
+                db.session.commit()
+                print(f'[ADMIN2] ✅ Updated existing admin2 account in leads table')
     except Exception as admin_seed_err:
         db.session.rollback()
         print(f'[ADMIN2] ❌ ERROR: {admin_seed_err}')
@@ -394,8 +426,28 @@ def ensure_admin2_account(force_password_reset: bool = False):
         traceback.print_exc()
 
 def _fetch_user_credentials(identifier: str):
-    """Fetch authentication tuple for a username/email with legacy fallback."""
+    """Fetch authentication tuple for a username/email from users table with leads fallback."""
     print(f'[AUTH] Fetching credentials for: {identifier}')
+    
+    # Try users table first (new system)
+    try:
+        result = db.session.execute(
+            text('''SELECT id, username, email, password_hash, full_name, credits_balance,
+                           is_admin, subscription_status, 0 as is_beta_tester, subscription_end_date,
+                           COALESCE(twofa_enabled, 0) as twofa_enabled
+                   FROM users 
+                   WHERE (LOWER(username) = LOWER(:username) OR LOWER(email) = LOWER(:username))
+                   AND is_active = 1 AND is_deleted = 0'''),
+            {'username': identifier}
+        ).fetchone()
+        if result:
+            print(f'[AUTH] Found in users table: id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
+            return result
+    except Exception as e:
+        print(f"[AUTH] Users table query failed, trying leads table: {e}")
+        db.session.rollback()
+    
+    # Fallback to leads table (legacy system)
     try:
         result = db.session.execute(
             text('''SELECT id, username, email, password_hash, contact_name, credits_balance,
@@ -405,7 +457,7 @@ def _fetch_user_credentials(identifier: str):
             {'username': identifier}
         ).fetchone()
         if result:
-            print(f'[AUTH] Found account: id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
+            print(f'[AUTH] Found in leads table (legacy): id={result[0]}, username={result[1]}, email={result[2]}, is_admin={result[6]}')
         else:
             print(f'[AUTH] No account found for: {identifier}')
         return result
