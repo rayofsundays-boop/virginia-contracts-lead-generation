@@ -22491,6 +22491,11 @@ def aviation_cleaning_leads():
         city_filter = ''
         company_type_filter = ''
     
+    # Debug logging
+    print(f"🔍 Aviation route returning {len(aviation_leads)} leads")
+    print(f"🔍 States: {all_states}")
+    print(f"🔍 Cities: {all_cities}")
+    
     return render_template('aviation_cleaning_leads.html',
                          leads=aviation_leads,
                          total_leads=len(aviation_leads),
