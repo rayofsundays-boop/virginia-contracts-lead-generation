@@ -9,26 +9,27 @@ import os
 import sqlite3
 from datetime import datetime
 
-# Try to import OpenAI - use old API style for compatibility with app.py
+# Try to import OpenAI - use new API (openai >= 1.0.0)
 try:
-    import openai
+    from openai import OpenAI
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
     if OPENAI_API_KEY:
-        openai.api_key = OPENAI_API_KEY
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
         print("✓ OpenAI API configured")
     else:
         print("⚠ No OpenAI API key found. Set OPENAI_API_KEY environment variable.")
         print("Continuing with manual URL generation...")
         OPENAI_API_KEY = None
+        openai_client = None
 except ImportError:
     print("⚠ OpenAI package not installed")
     OPENAI_API_KEY = None
-    openai = None
+    openai_client = None
 
 def analyze_and_fix_event_url(event):
     """Use OpenAI to generate a proper URL for an event"""
     
-    if not OPENAI_API_KEY or not openai:
+    if not OPENAI_API_KEY or not openai_client:
         # Manual fallback - generate logical URLs
         return generate_url_manually(event)
     
@@ -57,7 +58,7 @@ Task: Generate a realistic, working event registration URL. Follow these rules:
 Return ONLY the URL, nothing else. Make it realistic and functional."""
 
     try:
-        response = openai.ChatCompletion.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are an expert at finding and generating appropriate event registration URLs for government contracting events. Return only the URL, nothing else."},
