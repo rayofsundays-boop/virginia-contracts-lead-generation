@@ -20060,7 +20060,7 @@ def client_profile():
 
 @app.route('/api/update-profile', methods=['POST'])
 @login_required
-def update_profile():
+def update_client_profile():
     """Save or update client profile"""
     try:
         user_email = session.get('user_email')
