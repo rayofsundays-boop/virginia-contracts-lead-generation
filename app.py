@@ -7765,7 +7765,7 @@ Return ONLY valid JSON array format, no explanations:
         # Step 2: For each city, use GPT-4 to extract RFPs from their webpage
         discovered_rfps = []
         
-        for city_info in cities[:5]:  # Limit to 5 cities to avoid rate limits
+        for city_info in cities[:3]:  # Limit to 3 cities for faster response
             city_name = city_info.get('city_name', '')
             procurement_url = city_info.get('procurement_url', '')
             
@@ -7785,7 +7785,7 @@ Return ONLY valid JSON array format, no explanations:
                 
                 # Parse HTML
                 soup = BeautifulSoup(webpage_response.text, 'html.parser')
-                page_text = soup.get_text(separator='\n', strip=True)[:15000]  # Limit to 15K chars
+                page_text = soup.get_text(separator='\n', strip=True)[:10000]  # Limit to 10K chars for faster processing
                 
                 # Use GPT-4 to extract RFPs from the page content
                 rfp_prompt = f"""You are analyzing a procurement webpage for {city_name}, {state_name}.
@@ -7893,10 +7893,10 @@ WEBPAGE TEXT:
         
         db.session.commit()
         
-        print(f"🎉 Discovery complete: {len(discovered_rfps)} RFPs found across {len(cities[:5])} cities")
+        print(f"🎉 Discovery complete: {len(discovered_rfps)} RFPs found across {len(cities[:3])} cities")
         
         # Include cities checked for better user feedback
-        cities_checked = [city.get('city_name', '') for city in cities[:5]]
+        cities_checked = [city.get('city_name', '') for city in cities[:3]]
         
         return jsonify({
             'success': True,

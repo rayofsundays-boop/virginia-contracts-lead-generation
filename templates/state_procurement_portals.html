@@ -1278,8 +1278,8 @@ function findCityRFPs(stateName, stateCode) {
                     <div class="modal-body text-center py-5">
                         <div class="spinner-border text-primary mb-3" style="width: 4rem; height: 4rem;"></div>
                         <h5>🤖 AI is searching for local city RFPs...</h5>
-                        <p class="text-muted">Scanning major cities, procurement portals, and active bids</p>
-                        <p class="small">This may take 30-60 seconds</p>
+                        <p class="text-muted">Scanning top 3 cities and procurement portals</p>
+                        <p class="small">This may take 30-45 seconds</p>
                     </div>
                 </div>
             </div>
@@ -1294,16 +1294,26 @@ function findCityRFPs(stateName, stateCode) {
     const modal = new bootstrap.Modal(document.getElementById('cityRfpModal'));
     modal.show();
     
-    // Call AI endpoint
+    // Call AI endpoint with extended timeout (90 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+    
     fetch('/api/find-city-rfps', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
             state_name: stateName,
             state_code: stateCode
-        })
+        }),
+        signal: controller.signal
     })
-    .then(r => r.json())
+    .then(r => {
+        clearTimeout(timeoutId);
+        if (!r.ok) {
+            throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        }
+        return r.json();
+    })
     .then(data => {
         if (data.success) {
             displayCityRFPs(data.rfps, stateName, data.message, data.cities_checked);
@@ -1312,8 +1322,13 @@ function findCityRFPs(stateName, stateCode) {
         }
     })
     .catch(err => {
+        clearTimeout(timeoutId);
         console.error('City RFP error:', err);
-        displayError('Network error. Please try again.');
+        if (err.name === 'AbortError') {
+            displayError('Request timeout (90s). The AI is still processing - results may appear in your account shortly. Try refreshing the page.');
+        } else {
+            displayError(`Network error: ${err.message}. Please check your connection and try again.`);
+        }
     });
 }
 
