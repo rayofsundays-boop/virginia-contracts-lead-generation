@@ -598,7 +598,7 @@ section, .container, .row {
 
 .hero-subtext {
     font-size: clamp(1.1rem, 2vw, 1.5rem);
-    color: var(--color-gray-200);
+    color: #ffffff !important;
     margin-bottom: 3rem;
     max-width: 700px;
     margin-left: auto;
@@ -1772,6 +1772,122 @@ section, .container, .row {
     .mockup-glow {
         display: none;
     }
+}
+
+/* ==================== CONTRAST FIXES FOR DARK BACKGROUNDS ==================== */
+/* Override all gray text colors to white on dark sections for WCAG compliance */
+
+/* Hero section - force all text to white */
+.hero-cinematic,
+.hero-cinematic * {
+    color: #ffffff !important;
+}
+
+.hero-headline,
+.hero-headline * {
+    color: #ffffff !important;
+}
+
+/* Preserve gradient text effect on headline span */
+.text-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Discover section - white text on dark background */
+.discover-section {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.discover-section .section-label,
+.discover-section .section-title,
+.discover-section .feature-content h4,
+.discover-section .feature-content p,
+.discover-section p {
+    color: #ffffff !important;
+}
+
+/* AI Intelligence section - white text */
+.ai-intelligence-section .section-label,
+.ai-intelligence-section .section-title,
+.ai-intelligence-section p,
+.ai-intelligence-section .lead,
+.ai-intelligence-section .ai-capabilities li,
+.ai-intelligence-section .ai-stat-label {
+    color: #ffffff !important;
+}
+
+/* Features grid section - white text on dark cards */
+.features-grid-section .feature-card-title,
+.features-grid-section .feature-card-description {
+    color: #ffffff !important;
+}
+
+/* Stats section - white text */
+.stats-section .cta-headline,
+.stats-section .cta-subtext,
+.stats-section .stat-number,
+.stats-section .stat-label {
+    color: #ffffff !important;
+}
+
+/* Featured partner section - white text */
+.featured-partner-section .partner-company-name,
+.featured-partner-section .partner-tagline,
+.featured-partner-section .partner-location,
+.featured-partner-section .partner-welcome,
+.featured-partner-section .partner-description,
+.featured-partner-section .partner-service-item,
+.featured-partner-section .partner-cta-text {
+    color: #ffffff !important;
+}
+
+/* Cleaning services section - white text */
+.cleaning-services-section .section-label,
+.cleaning-services-section .section-title,
+.cleaning-services-section .service-card-title,
+.cleaning-services-section .service-card-description {
+    color: #ffffff !important;
+}
+
+/* Footer - white text */
+.cinematic-footer,
+.cinematic-footer * {
+    color: #ffffff !important;
+}
+
+.footer-description {
+    color: #ffffff !important;
+}
+
+/* Section labels - ensure visibility on all backgrounds */
+.section-label {
+    color: #ffffff !important;
+    background: rgba(168, 85, 247, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    border: 1px solid rgba(168, 85, 247, 0.5);
+}
+
+/* Section titles - force white */
+.section-title {
+    color: #ffffff !important;
+}
+
+/* All paragraphs and text in dark sections */
+section[class*="section"] p,
+section[class*="section"] li,
+section[class*="section"] span {
+    color: #ffffff !important;
+}
+
+/* Scroll indicator - white */
+.scroll-indicator,
+.scroll-indicator i,
+.scroll-indicator span {
+    color: #ffffff !important;
 }
 </style>
 
