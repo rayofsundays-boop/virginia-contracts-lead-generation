@@ -3694,6 +3694,43 @@ def init_postgres_db():
                       analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(contract_id, contract_type))'''))
         
+        # Aviation cleaning leads table (airlines, FBOs, private jets, maintenance facilities)
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
+                     (id SERIAL PRIMARY KEY,
+                      company_name TEXT NOT NULL,
+                      company_type TEXT NOT NULL,
+                      aircraft_types TEXT,
+                      fleet_size INTEGER,
+                      city TEXT NOT NULL,
+                      state TEXT NOT NULL,
+                      address TEXT,
+                      contact_name TEXT,
+                      contact_title TEXT,
+                      contact_email TEXT,
+                      contact_phone TEXT,
+                      website_url TEXT,
+                      services_needed TEXT,
+                      estimated_monthly_value TEXT,
+                      current_contract_status TEXT,
+                      notes TEXT,
+                      data_source TEXT,
+                      discovered_via TEXT DEFAULT 'ai_scraper',
+                      discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      last_verified TIMESTAMP,
+                      is_active BOOLEAN DEFAULT TRUE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      UNIQUE(company_name, city, state))'''))
+        
+        # Create indexes for aviation_cleaning_leads
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_aviation_leads_state 
+                                   ON aviation_cleaning_leads(state)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_aviation_leads_city 
+                                   ON aviation_cleaning_leads(city)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_aviation_leads_type 
+                                   ON aviation_cleaning_leads(company_type)'''))
+        db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_aviation_leads_active 
+                                   ON aviation_cleaning_leads(is_active)'''))
+        
         db.session.commit()
         
         # Add category column to supply_contracts if it doesn't exist (migration)
@@ -21818,79 +21855,74 @@ def aviation_cleaning_leads():
     - Cargo airlines
     """
     
-    # Get filters from query params
-    state_filter = request.args.get('state', '')
-    city_filter = request.args.get('city', '')
-    company_type_filter = request.args.get('company_type', '')
-    
-    # Fetch aviation leads from database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Check if table has data
     try:
-        cursor.execute("SELECT COUNT(*) FROM aviation_cleaning_leads WHERE is_active = 1")
-        count = cursor.fetchone()[0]
-    except:
-        count = 0
-    
-    # Build query with filters
-    query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = 1"
-    params = []
-    
-    if state_filter:
-        query += " AND state = ?"
-        params.append(state_filter)
-    
-    if city_filter:
-        query += " AND city LIKE ?"
-        params.append(f'%{city_filter}%')
-    
-    if company_type_filter:
-        query += " AND company_type = ?"
-        params.append(company_type_filter)
-    
-    query += " ORDER BY state, city, company_name"
-    
-    try:
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-        rows = cursor.fetchall()
+        # Get filters from query params
+        state_filter = request.args.get('state', '')
+        city_filter = request.args.get('city', '')
+        company_type_filter = request.args.get('company_type', '')
+        
+        # Build query with filters using SQLAlchemy
+        query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = 1"
+        params = {}
+        
+        if state_filter:
+            query += " AND state = :state"
+            params['state'] = state_filter
+        
+        if city_filter:
+            query += " AND city ILIKE :city"
+            params['city'] = f'%{city_filter}%'
+        
+        if company_type_filter:
+            query += " AND company_type = :company_type"
+            params['company_type'] = company_type_filter
+        
+        query += " ORDER BY state, city, company_name"
+        
+        # Execute query using SQLAlchemy
+        result = db.session.execute(text(query), params)
+        rows = result.fetchall()
         
         aviation_leads = []
         for row in rows:
             aviation_leads.append({
-                'id': row['id'],
-                'company_name': row['company_name'],
-                'company_type': row['company_type'],
-                'aircraft_types': row['aircraft_types'],
-                'fleet_size': row['fleet_size'],
-                'city': row['city'],
-                'state': row['state'],
-                'address': row['address'],
-                'contact_name': row['contact_name'],
-                'contact_title': row['contact_title'],
-                'contact_email': row['contact_email'],
-                'contact_phone': row['contact_phone'],
-                'website_url': row['website_url'],
-                'services_needed': row['services_needed'],
-                'estimated_monthly_value': row['estimated_monthly_value'],
-                'current_contract_status': row['current_contract_status'],
-                'notes': row['notes'],
-                'data_source': row['data_source']
+                'id': row[0],
+                'company_name': row[1],
+                'company_type': row[2],
+                'aircraft_types': row[3],
+                'fleet_size': row[4],
+                'city': row[5],
+                'state': row[6],
+                'address': row[7],
+                'contact_name': row[8],
+                'contact_title': row[9],
+                'contact_email': row[10],
+                'contact_phone': row[11],
+                'website_url': row[12],
+                'services_needed': row[13],
+                'estimated_monthly_value': row[14],
+                'current_contract_status': row[15],
+                'notes': row[16],
+                'data_source': row[17] if len(row) > 17 else 'Unknown',
+                'is_active': row[18] if len(row) > 18 else 1
             })
+        
+        # Get unique values for filters
+        all_states = sorted(list(set([lead['state'] for lead in aviation_leads]))) if aviation_leads else []
+        all_cities = sorted(list(set([lead['city'] for lead in aviation_leads]))) if aviation_leads else []
+        all_company_types = sorted(list(set([lead['company_type'] for lead in aviation_leads]))) if aviation_leads else []
+        
     except Exception as e:
-        print(f"Error fetching aviation leads: {e}")
+        print(f"❌ Error fetching aviation leads: {e}")
+        import traceback
+        traceback.print_exc()
         aviation_leads = []
-    
-    conn.close()
-    
-    # Get unique values for filters
-    all_states = sorted(list(set([lead['state'] for lead in aviation_leads])))
-    all_cities = sorted(list(set([lead['city'] for lead in aviation_leads])))
-    all_company_types = sorted(list(set([lead['company_type'] for lead in aviation_leads])))
+        all_states = []
+        all_cities = []
+        all_company_types = []
+        state_filter = ''
+        city_filter = ''
+        company_type_filter = ''
     
     return render_template('aviation_cleaning_leads.html',
                          leads=aviation_leads,
@@ -21901,7 +21933,7 @@ def aviation_cleaning_leads():
                          state_filter=state_filter,
                          city_filter=city_filter,
                          company_type_filter=company_type_filter,
-                         total_in_db=count)
+                         total_in_db=len(aviation_leads))
 
 @app.route('/api/scrape-aviation-leads', methods=['POST'])
 @login_required
