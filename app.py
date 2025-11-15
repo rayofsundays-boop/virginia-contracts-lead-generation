@@ -21907,40 +21907,38 @@ def aviation_cleaning_leads():
 @login_required
 @admin_required
 def scrape_aviation_leads():
-    """Scrape real aviation cleaning opportunities from web sources
+    """Scrape airline hub opportunities from public airline websites
     
-    Uses aviation_scraper.py module to search:
-    - Airport procurement portals (IAD, DCA, RIC, ORF, BWI, etc.)
-    - Airline vendor registration (Delta, American, United, Southwest, etc.)
-    - Ground handling companies (Swissport, GAT, ABM, PrimeFlight, etc.)
+    Smart approach: Instead of searching Google or procurement portals,
+    we use known airline hub/base locations from public career/about pages.
     
-    Returns actual RFPs, RFQs, and contract opportunities found online.
+    Scrapes 8 major airlines:
+    - Delta, American, United, Southwest, JetBlue, Spirit, Frontier, Alaska
+    
+    Creates opportunities for each hub/base (50+ total locations).
+    Much more reliable than Google scraping.
     """
     try:
-        from aviation_scraper import scrape_all, scrape_by_category
+        from aviation_airline_scraper import scrape_all_airlines
         import json
         
         data = request.get_json() or {}
-        category = data.get('category', 'all')  # all, airport, airline, ground_handler
-        max_results = data.get('max_results', 3)
+        airlines_list = data.get('airlines', None)  # None = all airlines
         
-        print(f"🛫 Scraping aviation cleaning leads (category: {category})...")
+        print(f"🛫 Scraping airline hub opportunities...")
         
-        # Run scraper
-        if category == 'all':
-            opportunities = scrape_all(max_results_per_category=max_results)
-        else:
-            opportunities = scrape_by_category(category=category, max_results=max_results)
+        # Run airline scraper
+        opportunities = scrape_all_airlines(airlines_list=airlines_list)
         
         if not opportunities:
             return jsonify({
                 'success': False,
-                'message': 'No opportunities found. Try again later or adjust search parameters.',
+                'message': 'No opportunities found. Check airline website availability.',
                 'opportunities_found': 0,
                 'leads_saved': 0
             })
         
-        print(f"✅ Found {len(opportunities)} opportunities from web scraping")
+        print(f"✅ Found {len(opportunities)} airline hub opportunities")
         
         # Step 2: Save to database
         conn = get_db_connection()
@@ -21949,42 +21947,19 @@ def scrape_aviation_leads():
         
         for opp in opportunities:
             try:
-                # Map scraped data to database fields
-                company_name = opp.get('title', 'Unknown')[:200]
-                company_type = opp.get('category', 'Unknown').title()
-                website_url = opp.get('url', '')
-                contact_email = opp.get('contact_email', '')
-                contact_phone = opp.get('contact_phone', '')
-                services_needed = ', '.join(opp.get('detected_keywords', []))
-                search_query = opp.get('search_query', '')
-                
-                # Extract location from search query if available
-                state = 'Unknown'
-                city = 'Unknown'
-                if 'Virginia' in search_query or ' VA ' in search_query:
-                    state = 'VA'
-                elif 'Maryland' in search_query or ' MD ' in search_query:
-                    state = 'MD'
-                elif 'Washington' in search_query or ' DC ' in search_query:
-                    state = 'DC'
-                elif 'North Carolina' in search_query or ' NC ' in search_query:
-                    state = 'NC'
-                
-                # Extract city from common airport codes
-                if 'IAD' in search_query or 'Dulles' in search_query:
-                    city = 'Washington'
-                elif 'DCA' in search_query or 'Reagan' in search_query:
-                    city = 'Arlington'
-                elif 'RIC' in search_query or 'Richmond' in search_query:
-                    city = 'Richmond'
-                elif 'ORF' in search_query or 'Norfolk' in search_query:
-                    city = 'Norfolk'
-                elif 'BWI' in search_query or 'Baltimore' in search_query:
-                    city = 'Baltimore'
-                elif 'CLT' in search_query or 'Charlotte' in search_query:
-                    city = 'Charlotte'
-                elif 'RDU' in search_query or 'Raleigh' in search_query:
-                    city = 'Raleigh'
+                # Map airline data to database fields
+                company_name = opp.get('company_name', 'Unknown')[:200]
+                company_type = opp.get('company_type', 'Commercial Airline')
+                city = opp.get('city', 'Unknown')
+                state = opp.get('state', 'Unknown')
+                aircraft_types = opp.get('aircraft_types', 'Various')
+                fleet_size = opp.get('fleet_size', 'Multiple')
+                contact_email = opp.get('contact_email') or ''
+                contact_phone = opp.get('contact_phone') or ''
+                website_url = opp.get('website_url', '')
+                services_needed = opp.get('services_needed', 'Airline facility cleaning')
+                base_code = opp.get('base_code', '')
+                facilities = opp.get('facilities_mentioned', '')
                 
                 # Insert into database
                 cursor.execute('''INSERT OR IGNORE INTO aviation_cleaning_leads
@@ -21994,8 +21969,8 @@ def scrape_aviation_leads():
                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                              (company_name,
                               company_type,
-                              'Various',  # aircraft_types
-                              0,  # fleet_size (unknown from scraping)
+                              aircraft_types,
+                              fleet_size,
                               city,
                               state,
                               contact_phone,
@@ -22016,21 +21991,29 @@ def scrape_aviation_leads():
         conn.commit()
         conn.close()
         
-        print(f"🎉 Aviation scraping complete: {saved_count}/{len(opportunities)} new leads saved")
+        print(f"🎉 Airline scraping complete: {saved_count}/{len(opportunities)} new hub opportunities saved")
+        
+        # Create summary
+        airlines_summary = {}
+        for opp in opportunities:
+            airline = opp['company_name'].split(' - ')[0]
+            airlines_summary[airline] = airlines_summary.get(airline, 0) + 1
         
         return jsonify({
             'success': True,
-            'message': f'Found {len(opportunities)} opportunities via web scraping, saved {saved_count} new leads',
+            'message': f'Found {len(opportunities)} airline hub opportunities, saved {saved_count} new leads',
             'opportunities_found': len(opportunities),
             'leads_saved': saved_count,
+            'airlines_scraped': len(airlines_summary),
+            'airlines_summary': airlines_summary,
             'opportunities': opportunities[:5]  # Preview first 5
         })
         
     except ImportError as e:
-        print(f"❌ Aviation scraper module not found: {e}")
-        return jsonify({'success': False, 'error': 'Aviation scraper module not installed'}), 500
+        print(f"❌ Airline scraper module not found: {e}")
+        return jsonify({'success': False, 'error': 'Airline scraper module (aviation_airline_scraper.py) not found'}), 500
     except Exception as e:
-        print(f"❌ Aviation scraper error: {e}")
+        print(f"❌ Airline scraper error: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500

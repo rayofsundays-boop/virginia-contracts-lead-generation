@@ -297,15 +297,14 @@ function showScraperModal() {
 }
 
 function runAviationScraper() {
-    const category = document.getElementById('scraperCategory').value;
-    const maxResults = document.getElementById('scraperMaxResults').value;
     const statusDiv = document.getElementById('scraperStatus');
     const progressBar = document.getElementById('scraperProgress');
     const runButton = document.getElementById('runScraperBtn');
     
     // Update UI
-    statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Scraping aviation leads from ${category === 'all' ? 'all categories' : category}...</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Scraping airline hub locations from 8 major carriers...</div>`;
     progressBar.style.width = '50%';
+    progressBar.parentElement.style.display = 'block';
     runButton.disabled = true;
     
     // Make API call
@@ -314,28 +313,35 @@ function runAviationScraper() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            category: category,
-            max_results: parseInt(maxResults)
-        })
+        body: JSON.stringify({})
     })
     .then(response => response.json())
     .then(data => {
         progressBar.style.width = '100%';
         
         if (data.success) {
+            let summary = '';
+            if (data.airlines_summary) {
+                summary = '<h6>Airlines Scraped:</h6><ul class="small">';
+                for (const [airline, count] of Object.entries(data.airlines_summary)) {
+                    summary += `<li><strong>${airline}</strong>: ${count} hubs/bases</li>`;
+                }
+                summary += '</ul>';
+            }
+            
             statusDiv.innerHTML = `
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle me-2"></i>
-                    <strong>Success!</strong> Found ${data.opportunities_found} opportunities, saved ${data.leads_saved} new leads.
+                    <strong>Success!</strong> Found ${data.opportunities_found} airline hub opportunities, saved ${data.leads_saved} new leads.
+                    ${summary}
                 </div>
             `;
             
-            // Show preview if available
+            // Show sample opportunities
             if (data.opportunities && data.opportunities.length > 0) {
-                let preview = '<h6>Sample Opportunities Found:</h6><ul class="small">';
+                let preview = '<h6>Sample Hub Opportunities:</h6><ul class="small">';
                 data.opportunities.forEach(opp => {
-                    preview += `<li><strong>${opp.title.substring(0, 60)}</strong> - ${opp.category}</li>`;
+                    preview += `<li><strong>${opp.company_name}</strong> - ${opp.city}, ${opp.state}</li>`;
                 });
                 preview += '</ul>';
                 statusDiv.innerHTML += preview;
@@ -379,33 +385,32 @@ function runAviationScraper() {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Smart Approach:</strong> Scrapes known airline hub/base locations from public airline websites. 
+                    No Google search needed - reliable and fast!
+                </div>
+                
                 <p class="text-secondary">
-                    Scrape real aviation cleaning opportunities from airport procurement portals, airline vendor portals, and ground handling companies.
+                    <strong>What gets scraped:</strong><br>
+                    • Delta Airlines: 8 hub locations (ATL, DTW, MSP, SLC, SEA, LAX, JFK, BOS)<br>
+                    • American Airlines: 8 hubs (DFW, CLT, PHX, MIA, ORD, LAX, DCA, JFK)<br>
+                    • United Airlines: 7 hubs (EWR, ORD, IAH, DEN, SFO, LAX, IAD)<br>
+                    • Southwest: 7 bases (DAL, MDW, PHX, LAS, DEN, BWI, OAK)<br>
+                    • JetBlue: 5 bases (JFK, BOS, FLL, LAX, MCO)<br>
+                    • Spirit: 5 hubs (FLL, DTW, ORD, LAS, DFW)<br>
+                    • Frontier: 5 bases (DEN, LAS, MIA, ORD, PHX)<br>
+                    • Alaska: 5 bases (SEA, PDX, ANC, SFO, LAX)
                 </p>
                 
                 <div class="mb-3">
-                    <label for="scraperCategory" class="form-label fw-bold">Category to Scrape</label>
-                    <select class="form-select" id="scraperCategory">
-                        <option value="all">All Categories (Airports, Airlines, Ground Handlers)</option>
-                        <option value="airport">Airports Only</option>
-                        <option value="airline">Airlines Only</option>
-                        <option value="ground_handler">Ground Handlers Only</option>
-                    </select>
-                    <div class="form-text">
-                        <strong>All Categories:</strong> Searches 8 airports, 7 airlines, 8 ground handlers (23 total searches)<br>
-                        <strong>Individual:</strong> Focused search on selected category only
+                    <label class="form-label fw-bold">Airlines to Scrape</label>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>All 8 Major Airlines</strong> - Creates ~50 hub/base opportunities
                     </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="scraperMaxResults" class="form-label fw-bold">Results Per Search</label>
-                    <select class="form-select" id="scraperMaxResults">
-                        <option value="3" selected>3 (Recommended - Fast)</option>
-                        <option value="5">5 (Balanced)</option>
-                        <option value="10">10 (Thorough - Slower)</option>
-                    </select>
                     <div class="form-text">
-                        More results = better coverage but longer scraping time (2-3 seconds per result)
+                        Scraping all airlines is fast (30-60 seconds) and creates comprehensive lead list
                     </div>
                 </div>
                 
