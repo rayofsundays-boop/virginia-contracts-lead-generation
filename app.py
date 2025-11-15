@@ -363,7 +363,7 @@ def ensure_admin2_account(force_password_reset: bool = False):
             text('''SELECT id, email, username, password_hash, is_admin
                     FROM users
                     WHERE (lower(email) = :email OR lower(username) = :username)
-                    AND is_deleted = 0'''),
+                    AND is_deleted = FALSE'''),
             {
                 'email': normalized_email,
                 'username': normalized_username
@@ -479,7 +479,7 @@ def _fetch_user_credentials(identifier: str):
                            COALESCE(twofa_enabled, 0) as twofa_enabled
                    FROM users 
                    WHERE (LOWER(username) = LOWER(:username) OR LOWER(email) = LOWER(:username))
-                   AND is_active = 1 AND is_deleted = 0'''),
+                   AND is_active = TRUE AND is_deleted = FALSE'''),
             {'username': identifier}
         ).fetchone()
         if result:
@@ -22369,8 +22369,8 @@ def aviation_cleaning_leads():
         city_filter = request.args.get('city', '')
         company_type_filter = request.args.get('company_type', '')
         
-        # Build query with filters using SQLAlchemy
-        query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = 1"
+        # Build query with filters using SQLAlchemy (use TRUE for PostgreSQL boolean)
+        query = "SELECT * FROM aviation_cleaning_leads WHERE is_active = TRUE"
         params = {}
         
         if state_filter:
