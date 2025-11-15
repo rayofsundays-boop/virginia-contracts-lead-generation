@@ -3,6 +3,7 @@
 {% block title %}Post-Construction Cleanup Leads - Builder Opportunities{% endblock %}
 
 {% block content %}
+<div class="construction-cleanup-page">
 
 <!-- Hero Section -->
 <div class="hero-section text-center py-5" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
@@ -13,13 +14,13 @@
             <div class="col-md-10">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="badge bg-light text-dark p-3 fs-6 w-100">
+                        <div class="badge bg-light p-3 fs-6 w-100" style="background-color: #ffffff !important; color: #000000 !important; border: 1px solid #d1d1d1;">
                             <i class="fas fa-building"></i><br>
                             <strong>{{ total_leads }}</strong> Active Projects
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="badge bg-warning text-dark p-3 fs-6 w-100">
+                        <div class="badge bg-warning p-3 fs-6 w-100" style="background-color: #facc15 !important; color: #1f1f1f !important;">
                             <i class="fas fa-map-marked-alt"></i><br>
                             <strong>50 States</strong> Nationwide
                         </div>
@@ -101,13 +102,13 @@
                     <span class="badge bg-primary ms-2">State: {{ state_filter }}</span>
                     {% endif %}
                     {% if location_filter %}
-                    <span class="badge bg-info ms-2">Location: {{ location_filter }}</span>
+                    <span class="badge bg-info ms-2" style="background-color: #38bdf8 !important; color: #06283D !important;">Location: {{ location_filter }}</span>
                     {% endif %}
                     {% if project_type_filter %}
-                    <span class="badge bg-info ms-2">Type: {{ project_type_filter }}</span>
+                    <span class="badge bg-info ms-2" style="background-color: #38bdf8 !important; color: #06283D !important;">Type: {{ project_type_filter }}</span>
                     {% endif %}
                     {% if min_sqft %}
-                    <span class="badge bg-info ms-2">Min Size: {{ min_sqft }}+ sq ft</span>
+                    <span class="badge bg-info ms-2" style="background-color: #38bdf8 !important; color: #06283D !important;">Min Size: {{ min_sqft }}+ sq ft</span>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -123,15 +124,15 @@
             {% for lead in leads %}
             <div class="col-md-6">
                 <div class="card h-100 shadow-sm hover-lift border-start border-4 border-warning">
-                    <div class="card-header bg-light">
+                    <div class="card-header" style="background-color: #f8f9fa !important;">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h5 class="card-title mb-1">{{ lead.project_name }}</h5>
-                                <p class="text-muted mb-0 small">
+                                <h5 class="card-title mb-1" style="color: #111111 !important;">{{ lead.project_name }}</h5>
+                                <p class="mb-0 small" style="color: #4a5568 !important;">
                                     <i class="fas fa-building me-1"></i>{{ lead.builder }}
                                 </p>
                                 {% if lead.data_source %}
-                                <span class="badge bg-info text-white mt-1" style="font-size: 0.7rem;">
+                                <span class="badge mt-1" style="background-color: #38bdf8 !important; color: #06283D !important; font-size: 0.7rem;">
                                     <i class="fas fa-globe me-1"></i>{{ lead.data_source }}
                                 </span>
                                 {% endif %}
@@ -149,58 +150,58 @@
                         <!-- Project Details -->
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <small class="text-muted">Project Type</small>
-                                <p class="mb-0 fw-bold">{{ lead.project_type }}</p>
+                                <small style="color: #4a5568 !important;">Project Type</small>
+                                <p class="mb-0 fw-bold" style="color: #1a202c !important;">{{ lead.project_type }}</p>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted">Location</small>
-                                <p class="mb-0 fw-bold">
+                                <small style="color: #4a5568 !important;">Location</small>
+                                <p class="mb-0 fw-bold" style="color: #1a202c !important;">
                                     <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ lead.location }}
                                 </p>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted">Size</small>
-                                <p class="mb-0 fw-bold text-primary">{{ lead.square_footage }}</p>
+                                <small style="color: #4a5568 !important;">Size</small>
+                                <p class="mb-0 fw-bold text-primary" style="color: #2563eb !important;">{{ lead.square_footage }}</p>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted">Estimated Value</small>
-                                <p class="mb-0 fw-bold text-success">{{ lead.estimated_value }}</p>
+                                <small style="color: #4a5568 !important;">Estimated Value</small>
+                                <p class="mb-0 fw-bold text-success" style="color: #16a34a !important;">{{ lead.estimated_value }}</p>
                             </div>
                         </div>
 
                         <!-- Description -->
-                        <p class="card-text small mb-3">{{ lead.description }}</p>
+                        <p class="card-text small mb-3" style="color: #1a202c !important;">{{ lead.description }}</p>
 
                         <!-- Services Needed -->
                         <div class="mb-3">
-                            <small class="text-muted d-block mb-1"><strong>Services Needed:</strong></small>
-                            <p class="small mb-0 text-muted">{{ lead.services_needed }}</p>
+                            <small class="d-block mb-1" style="color: #4a5568 !important;"><strong>Services Needed:</strong></small>
+                            <p class="small mb-0" style="color: #4a5568 !important;">{{ lead.services_needed }}</p>
                         </div>
 
                         <!-- Timeline -->
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <small class="text-muted">Completion Date</small>
-                                <p class="mb-0">{{ lead.completion_date }}</p>
+                                <small style="color: #4a5568 !important;">Completion Date</small>
+                                <p class="mb-0" style="color: #1a202c !important;">{{ lead.completion_date }}</p>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted">Bid Deadline</small>
-                                <p class="mb-0 text-danger fw-bold">⏰ {{ lead.bid_deadline }}</p>
+                                <small style="color: #4a5568 !important;">Bid Deadline</small>
+                                <p class="mb-0 text-danger fw-bold" style="color: #dc2626 !important;">⏰ {{ lead.bid_deadline }}</p>
                             </div>
                         </div>
 
                         <!-- Requirements -->
-                        <div class="alert alert-info py-2 mb-3">
-                            <small><strong>Requirements:</strong> {{ lead.requirements }}</small>
+                        <div class="alert py-2 mb-3" style="background-color: #dbeafe !important; color: #1e3a8a !important; border-color: #93c5fd !important;">
+                            <small style="color: #1e3a8a !important;"><strong>Requirements:</strong> {{ lead.requirements }}</small>
                         </div>
 
                         <!-- Contact Information -->
-                        <div class="bg-light p-3 rounded mb-3">
-                            <h6 class="mb-2">Contact Information</h6>
-                            <p class="mb-1 small"><i class="fas fa-user me-2"></i>{{ lead.contact_name }}</p>
-                            <p class="mb-1 small"><i class="fas fa-phone me-2"></i>{{ lead.contact_phone }}</p>
-                            <p class="mb-1 small"><i class="fas fa-envelope me-2"></i>{{ lead.contact_email }}</p>
-                            <p class="mb-0 small"><i class="fas fa-globe me-2"></i><a href="{{ lead.website }}" target="_blank">{{ lead.website }}</a></p>
+                        <div class="p-3 rounded mb-3" style="background-color: #f8f9fa !important;">
+                            <h6 class="mb-2" style="color: #111111 !important;">Contact Information</h6>
+                            <p class="mb-1 small" style="color: #1a202c !important;"><i class="fas fa-user me-2"></i>{{ lead.contact_name }}</p>
+                            <p class="mb-1 small" style="color: #1a202c !important;"><i class="fas fa-phone me-2"></i>{{ lead.contact_phone }}</p>
+                            <p class="mb-1 small" style="color: #1a202c !important;"><i class="fas fa-envelope me-2"></i>{{ lead.contact_email }}</p>
+                            <p class="mb-0 small" style="color: #1a202c !important;"><i class="fas fa-globe me-2"></i><a href="{{ lead.website }}" target="_blank" style="color: #2563eb !important;">{{ lead.website }}</a></p>
                         </div>
 
                         <!-- Action Buttons -->
@@ -213,7 +214,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="card-footer bg-light text-muted small">
+                    <div class="card-footer small" style="background-color: #f8f9fa !important; color: #4a5568 !important;">
                         <i class="fas fa-info-circle me-1"></i>Project ID: {{ lead.id }}
                     </div>
                 </div>
@@ -237,8 +238,8 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <h6 class="fw-bold">Typical Pricing Range</h6>
-                    <ul class="small">
+                    <h6 class="fw-bold" style="color: #111111 !important;">Typical Pricing Range</h6>
+                    <ul class="small" style="color: #1a202c !important;">
                         <li><strong>$0.50 - $0.75/sq ft</strong> for standard post-construction cleanup</li>
                         <li><strong>$0.75 - $1.00/sq ft</strong> for medical facilities or high-end projects</li>
                         <li><strong>$0.40 - $0.60/sq ft</strong> for large industrial/warehouse projects</li>
@@ -246,8 +247,8 @@
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <h6 class="fw-bold">Common Requirements</h6>
-                    <ul class="small">
+                    <h6 class="fw-bold" style="color: #111111 !important;">Common Requirements</h6>
+                    <ul class="small" style="color: #1a202c !important;">
                         <li>Commercial general liability insurance ($1M-$2M)</li>
                         <li>Workers' compensation insurance</li>
                         <li>Construction cleanup experience (references required)</li>
@@ -260,6 +261,8 @@
         </div>
     </div>
 </div>
+
+</div><!-- /.construction-cleanup-page -->
 
 <style>
 .hover-lift {

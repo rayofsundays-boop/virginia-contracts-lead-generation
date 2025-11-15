@@ -149,8 +149,78 @@ body.portal-enabled {
   background-color: #4a5568 !important;
 }
 .badge.bg-warning {
-  color: #0a0a0a !important;
+  color: #1f1f1f !important;
+  background-color: #facc15 !important;
 }
 .badge.bg-info {
-  color: #0a0a0a !important;
+  color: #06283D !important;
+  background-color: #38bdf8 !important;
+}
+
+/* Construction Cleanup Page - High Contrast Overrides */
+.construction-cleanup-page .badge.bg-light {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d1d1d1 !important;
+}
+
+.construction-cleanup-page .badge.bg-warning {
+  background-color: #facc15 !important;
+  color: #1f1f1f !important;
+}
+
+.construction-cleanup-page .badge.bg-info {
+  background-color: #38bdf8 !important;
+  color: #06283D !important;
+}
+
+.construction-cleanup-page .badge.bg-secondary {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+.construction-cleanup-page .nav-tabs .nav-link {
+  color: #111111 !important;
+}
+
+.construction-cleanup-page .nav-tabs .nav-link.active {
+  background-color: #4F46E5 !important;
+  color: white !important;
+}
+
+.construction-cleanup-page .card-title,
+.construction-cleanup-page .card-text,
+.construction-cleanup-page .filter-label,
+.construction-cleanup-page .form-label {
+  color: #111111 !important;
+}
+
+.construction-cleanup-page .card-header {
+  color: #111111 !important;
+}
+
+.construction-cleanup-page .card-header.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.construction-cleanup-page .text-muted {
+  color: #4a5568 !important;
+}
+
+.construction-cleanup-page small.text-muted {
+  color: #4a5568 !important;
+}
+
+/* Ensure all card text is high contrast */
+.construction-cleanup-page .card-body p,
+.construction-cleanup-page .card-body small,
+.construction-cleanup-page .card-body .small {
+  color: #1a202c !important;
+}
+
+/* Fix alert contrast */
+.construction-cleanup-page .alert-info {
+  background-color: #dbeafe !important;
+  color: #1e3a8a !important;
+  border-color: #93c5fd !important;
 }

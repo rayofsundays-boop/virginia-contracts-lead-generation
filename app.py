@@ -21254,8 +21254,20 @@ def construction_cleanup_leads():
     all_locations = sorted(set(l['location'] for l in construction_leads))
     all_project_types = sorted(set(l['project_type'] for l in construction_leads))
     
-    # Extract all states from locations
-    all_states = sorted(set(l['location'].split(', ')[-1] for l in construction_leads if ', ' in l['location']))
+    # Extract states from actual leads
+    states_from_leads = sorted(set(l['location'].split(', ')[-1] for l in construction_leads if ', ' in l['location']))
+    
+    # Always show all 50 states in dropdown (even if no leads yet)
+    all_50_states = [
+        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+        'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+        'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+        'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+        'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+    ]
+    
+    # Use all 50 states for dropdown (prioritize actual leads, then fill with all states)
+    all_states = all_50_states
     
     return render_template('construction_cleanup_leads.html',
                          leads=filtered_leads,
