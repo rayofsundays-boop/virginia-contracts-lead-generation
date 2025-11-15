@@ -107,3 +107,32 @@ body.portal-enabled {
   .portal-grid {grid-template-columns:1fr;}
   .quick-actions-grid {grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
 }
+
+/* High contrast overrides */
+.portal-sidebar .nav-link {
+  color: #0a0a0a;
+  background: #ffffff;
+}
+.portal-sidebar .nav-link:hover {
+  background: #e2e8f0;
+  color: #0a0a0a;
+}
+.portal-subnav a {
+  background: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid #cbd5e0;
+}
+.portal-subnav a:hover {
+  background: #5C3AFF;
+  color: #ffffff;
+}
+.portal-card .meta {
+  color: #4a5568;
+}
+.quick-action {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.quick-action span.label {
+  color: #4a5568;
+}
