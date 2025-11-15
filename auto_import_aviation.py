@@ -6,11 +6,13 @@ This runs automatically when the app starts if aviation table is empty
 
 import json
 import os
-from app import app, db
-from sqlalchemy import text
 
 def auto_import_aviation_leads():
     """Import aviation leads if table is empty"""
+    # Import inside function to avoid circular import
+    from app import app, db, DATABASE_URL
+    from sqlalchemy import text
+    
     with app.app_context():
         try:
             # Check if table exists and has data
@@ -26,7 +28,6 @@ def auto_import_aviation_leads():
                 print("🔧 Creating aviation_cleaning_leads table...")
                 
                 # Detect database type for correct PRIMARY KEY syntax
-                from app import DATABASE_URL
                 if DATABASE_URL and 'postgresql' in DATABASE_URL:
                     pk_syntax = 'id SERIAL PRIMARY KEY'
                 else:
