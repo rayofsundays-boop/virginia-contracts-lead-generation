@@ -22318,7 +22318,9 @@ def construction_cleanup_leads():
 def api_aviation_health():
     """Temporary diagnostic endpoint to check aviation data layer"""
     try:
-        if is_postgres():
+        # Check database type directly
+        is_pg = 'postgresql' in str(db.engine.url)
+        if is_pg:
             active_clause = 'is_active = TRUE'
         else:
             active_clause = 'is_active = 1'
