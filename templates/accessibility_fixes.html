@@ -427,6 +427,106 @@ small, .small {
     color: #ffffff !important;
 }
 
+/* =====================
+   GLOBAL HIGH-CONTRAST THEME (ContractLink.ai)
+   Ensures readable defaults on light UI while preserving existing dark/gradient sections
+   ===================== */
+
+/* Text defaults on light UI elements */
+.card, .panel, .dashboard-card, .resource-section, .admin-panel, .admin-enhanced,
+.modal-body, .list-group-item, .table, .table td, .table th,
+.lead-card, .all-leads .card, .education-leads .card, .commercial-leads .card {
+    color: #1c1c1c !important;
+}
+
+/* Generic element defaults within light containers */
+.card :where(p, span, a, li, div),
+.panel :where(p, span, a, li, div),
+.dashboard-card :where(p, span, a, li, div),
+.resource-section :where(p, span, a, li, div),
+.admin-panel :where(p, span, a, li, div),
+.admin-enhanced :where(p, span, a, li, div),
+.modal-body :where(p, span, a, li, div),
+.list-group-item :where(p, span, a, li, div) {
+    color: #1c1c1c !important;
+}
+
+/* Light backgrounds for key containers */
+.card, .panel, .dashboard-card, .resource-section,
+.admin-panel .card, .admin-enhanced .card, .all-leads .card,
+.education-leads .card, .commercial-leads .card,
+.list-group-item, .modal-content {
+    background: #ffffff !important;
+}
+
+/* Navbar and sidebar contrast */
+.navbar-light .navbar-nav .nav-link, .navbar .nav-link {
+    color: #1c1c1c !important;
+}
+.navbar-light .navbar-nav .nav-link:hover, .navbar .nav-link:hover {
+    color: #111111 !important;
+}
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Sidebar links (generic) */
+.sidebar a, .sidebar .nav-link, .offcanvas .nav-link {
+    color: #1c1c1c !important;
+}
+.sidebar a:hover, .sidebar .nav-link:hover, .offcanvas .nav-link:hover {
+    color: #111111 !important;
+}
+
+/* Buttons: dark background with white text for readability */
+button, .btn {
+    color: #ffffff !important;
+    background-color: #1c1c1c !important;
+    border-color: #1c1c1c !important;
+}
+button:hover, .btn:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+}
+/* Keep warning buttons readable */
+.btn-warning { color: #1c1c1c !important; }
+
+/* Inputs and placeholders */
+::placeholder { color: #6c757d !important; opacity: 1 !important; }
+input, textarea, select { color: #1c1c1c !important; background-color: #ffffff !important; }
+
+/* Links */
+a:not(.btn) { color: #0d6efd !important; }
+a:not(.btn):hover { color: #0b5ed7 !important; }
+
+/* Ensure muted/low-opacity text remains readable on light backgrounds */
+.text-muted { color: #495057 !important; }
+.text-white-50 { color: rgba(255, 255, 255, 0.95) !important; }
+.opacity-50 { opacity: 0.85 !important; }
+
+/* Admin2 / dashboards */
+.admin2 .card, .admin2 .panel, .dashboard .card, .dashboard .panel {
+    background: #ffffff !important;
+    color: #1c1c1c !important;
+}
+.admin2 .card .text-muted, .dashboard .card .text-muted { color: #495057 !important; }
+
+/* All Leads and lists */
+.all-leads .card .card-title, .lead-card .card-title,
+.education-leads .card .card-title, .commercial-leads .card .card-title { color: #1c1c1c !important; }
+.all-leads .card .card-text, .lead-card .card-text,
+.education-leads .card .card-text, .commercial-leads .card .card-text { color: #1c1c1c !important; }
+
+/* Resource sections */
+.resources, .resource-section, .resources .card {
+    background: #ffffff !important;
+    color: #1c1c1c !important;
+}
+
+/* Hover state readability in cards */
+.card:hover .card-title, .card:hover .card-text { color: #1c1c1c !important; }
+
+
 /* Home page: ensure card subtitles/descriptions have strong contrast */
 /* Feature cards (dark glass over dark gradient) */
 .features-grid-section .feature-card-description {
