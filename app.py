@@ -149,6 +149,31 @@ def _allowed_extension(filename: str) -> bool:
     ext = (os.path.splitext(filename)[1] or '').lower()
     return ext in ALLOWED_UPLOAD_EXTENSIONS
 
+def add_contractlink_branding(canvas_obj, width, height):
+    """
+    Add ContractLink.ai branding to PDF pages
+    
+    Args:
+        canvas_obj: ReportLab canvas object
+        width: Page width
+        height: Page height
+    """
+    from reportlab.lib import colors
+    
+    # Footer branding
+    canvas_obj.setFillColor(colors.HexColor('#667eea'))
+    canvas_obj.setFont('Helvetica-Bold', 10)
+    canvas_obj.drawString(72, 36, 'ContractLink.ai')
+    
+    canvas_obj.setFillColor(colors.HexColor('#4a5568'))
+    canvas_obj.setFont('Helvetica', 8)
+    canvas_obj.drawString(72, 24, 'Virginia Contracts Lead Generation Platform')
+    
+    # Website URL
+    canvas_obj.setFillColor(colors.HexColor('#667eea'))
+    canvas_obj.setFont('Helvetica', 8)
+    canvas_obj.drawRightString(width - 72, 24, 'www.contractlink.ai')
+
 def _sniff_filetype_and_rewind(file_storage, peek_bytes: int = 8) -> str:
     """Best-effort lightweight magic sniff: returns 'pdf', 'docx', 'zip', or ''. Rewinds stream."""
     try:
@@ -20829,7 +20854,10 @@ def download_proposal_api():
             y -= 14
             if y < 72:
                 c.showPage()
+                add_contractlink_branding(c, width, height)
                 y = height - 72
+        # Add branding to last page
+        add_contractlink_branding(c, width, height)
         c.save()
         buf.seek(0)
         return send_file(buf, as_attachment=True, download_name='proposal.pdf', mimetype='application/pdf')
@@ -26074,6 +26102,27 @@ def generate_invoice_pdf():
         if data.get('notes'):
             story.append(Paragraph('<b>Notes:</b>', styles['Normal']))
             story.append(Paragraph(data.get('notes', ''), styles['Normal']))
+        
+        story.append(Spacer(1, 0.5*inch))
+        
+        # ContractLink.ai Branding
+        branding_style = ParagraphStyle(
+            'Branding',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.HexColor('#667eea'),
+            alignment=1  # Center
+        )
+        story.append(Paragraph('<b>ContractLink.ai</b>', branding_style))
+        
+        subtext_style = ParagraphStyle(
+            'Subtext',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.HexColor('#4a5568'),
+            alignment=1  # Center
+        )
+        story.append(Paragraph('Virginia Contracts Lead Generation Platform | www.contractlink.ai', subtext_style))
         
         # Build PDF
         doc.build(story)
