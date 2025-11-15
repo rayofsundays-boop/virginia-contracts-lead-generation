@@ -3434,6 +3434,47 @@ def init_postgres_db():
                       used BOOLEAN DEFAULT FALSE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
         
+        # Migration: Fix password_reset_tokens constraints (if table already exists with old schema)
+        try:
+            # Check if the old UNIQUE constraint exists on email column
+            constraint_check = db.session.execute(text("""
+                SELECT constraint_name 
+                FROM information_schema.table_constraints 
+                WHERE table_name = 'password_reset_tokens' 
+                AND constraint_type = 'UNIQUE'
+                AND constraint_name LIKE '%email%'
+            """)).fetchone()
+            
+            if constraint_check:
+                # Drop the old constraint on email
+                db.session.execute(text(f"""
+                    ALTER TABLE password_reset_tokens 
+                    DROP CONSTRAINT IF EXISTS {constraint_check[0]}
+                """))
+                print(f"✅ Dropped old email UNIQUE constraint: {constraint_check[0]}")
+            
+            # Ensure token has UNIQUE constraint
+            token_constraint_check = db.session.execute(text("""
+                SELECT constraint_name 
+                FROM information_schema.table_constraints 
+                WHERE table_name = 'password_reset_tokens' 
+                AND constraint_type = 'UNIQUE'
+                AND constraint_name LIKE '%token%'
+            """)).fetchone()
+            
+            if not token_constraint_check:
+                # Add UNIQUE constraint to token if it doesn't exist
+                db.session.execute(text("""
+                    ALTER TABLE password_reset_tokens 
+                    ADD CONSTRAINT password_reset_tokens_token_key UNIQUE (token)
+                """))
+                print("✅ Added UNIQUE constraint to token column")
+            
+            db.session.commit()
+        except Exception as migration_error:
+            print(f"⚠️ Password reset tokens migration error (non-critical): {migration_error}")
+            db.session.rollback()
+        
         db.session.commit()
         
         # User activity tracking table
