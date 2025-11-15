@@ -24,9 +24,17 @@ def auto_import_aviation_leads():
             except Exception:
                 # Table doesn't exist, create it
                 print("🔧 Creating aviation_cleaning_leads table...")
-                db.session.execute(text("""
+                
+                # Detect database type for correct PRIMARY KEY syntax
+                from app import DATABASE_URL
+                if DATABASE_URL and 'postgresql' in DATABASE_URL:
+                    pk_syntax = 'id SERIAL PRIMARY KEY'
+                else:
+                    pk_syntax = 'id INTEGER PRIMARY KEY AUTOINCREMENT'
+                
+                create_sql = f"""
                     CREATE TABLE IF NOT EXISTS aviation_cleaning_leads (
-                        id SERIAL PRIMARY KEY,
+                        {pk_syntax},
                         company_name TEXT NOT NULL,
                         company_type TEXT NOT NULL,
                         aircraft_types TEXT,
@@ -51,7 +59,8 @@ def auto_import_aviation_leads():
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         UNIQUE(company_name, city, state)
                     )
-                """))
+                """
+                db.session.execute(text(create_sql))
                 db.session.commit()
                 print("✅ Table created")
             

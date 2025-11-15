@@ -129,6 +129,11 @@ else:
         pass
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Database type detection helper
+def is_postgres():
+    """Check if we're using PostgreSQL (True) or SQLite (False)"""
+    return DATABASE_URL and 'postgresql' in DATABASE_URL
+
 # Global upload security controls
 def _env_int(name: str, default: int) -> int:
     try:
@@ -22320,8 +22325,14 @@ def aviation_cleaning_leads():
     
     # Ensure table exists (safety check for production)
     try:
-        db.session.execute(text('''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
-                     (id SERIAL PRIMARY KEY,
+        # Use appropriate PRIMARY KEY syntax for database type
+        if is_postgres():
+            pk_syntax = 'id SERIAL PRIMARY KEY'
+        else:
+            pk_syntax = 'id INTEGER PRIMARY KEY AUTOINCREMENT'
+        
+        create_table_sql = f'''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
+                     ({pk_syntax},
                       company_name TEXT NOT NULL,
                       company_type TEXT NOT NULL,
                       aircraft_types TEXT,
@@ -22344,7 +22355,9 @@ def aviation_cleaning_leads():
                       last_verified TIMESTAMP,
                       is_active BOOLEAN DEFAULT TRUE,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                      UNIQUE(company_name, city, state))'''))
+                      UNIQUE(company_name, city, state))'''
+        
+        db.session.execute(text(create_table_sql))
         db.session.commit()
     except Exception as table_error:
         print(f"⚠️  Table creation check: {table_error}")
