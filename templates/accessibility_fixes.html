@@ -427,6 +427,30 @@ small, .small {
     color: #ffffff !important;
 }
 
+/* Home page: ensure card subtitles/descriptions have strong contrast */
+/* Feature cards (dark glass over dark gradient) */
+.features-grid-section .feature-card-description {
+    color: rgba(255, 255, 255, 0.95) !important; /* near-white for AA/AAA on dark */
+}
+
+/* Service cards (dark glass over dark gradient) */
+.cleaning-services-section .service-card-description,
+.cleaning-services-section .service-features li {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Generic Bootstrap card subtitles on light vs gradient backgrounds */
+.card-subtitle,
+.card .card-subtitle,
+.card .subtitle {
+    color: #495057 !important; /* dark slate on light cards */
+}
+[style*="background: linear-gradient"] .card-subtitle,
+[style*="background: radial-gradient"] .card-subtitle,
+[class*="gradient"] .card-subtitle {
+    color: rgba(255, 255, 255, 0.95) !important; /* white on gradient cards */
+}
+
 /* Removed empty placeholder rulesets for dark gradient sections and gradient divider */
 
 /* =========================================
