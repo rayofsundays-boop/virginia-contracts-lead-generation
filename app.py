@@ -22370,7 +22370,8 @@ def aviation_cleaning_leads():
     # Ensure table exists (safety check for production)
     try:
         # Use appropriate PRIMARY KEY syntax for database type
-        if is_postgres():
+        is_pg = 'postgresql' in str(db.engine.url)
+        if is_pg:
             pk_syntax = 'id SERIAL PRIMARY KEY'
         else:
             pk_syntax = 'id INTEGER PRIMARY KEY AUTOINCREMENT'
@@ -22414,7 +22415,9 @@ def aviation_cleaning_leads():
         company_type_filter = request.args.get('company_type', '')
 
         # Build query with filters using SQLAlchemy and DB-aware syntax
-        if is_postgres():
+        # Check database type directly to avoid callable issues
+        is_pg = 'postgresql' in str(db.engine.url)
+        if is_pg:
             active_clause = 'is_active = TRUE'
             city_like = 'city ILIKE :city'
         else:
