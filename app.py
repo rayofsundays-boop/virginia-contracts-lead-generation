@@ -7473,8 +7473,7 @@ def paypal_webhook():
 
 @app.route('/contracts')
 def contracts():
-    # Page retired: redirect users to federal contracts (primary government feed)
-    flash('Local & State Contracts page has been retired. Federal contracts are available.', 'success')
+    # Redirect to federal contracts (primary government feed)
     return redirect(url_for('federal_contracts'))
 
 @app.route('/state-procurement-portals')
