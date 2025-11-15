@@ -317,8 +317,6 @@ small, .small {
     color: #ffffff !important;
 }
 
-</style>
-
 /* Ensure sufficient contrast for all text on gradient backgrounds */
 [style*="background: linear-gradient"],
 [style*="background: radial-gradient"],
@@ -429,27 +427,7 @@ small, .small {
     color: #ffffff !important;
 }
 
-/* All sections with dark gradient backgrounds */
-.discover-section,
-.ai-intelligence-section,
-.features-grid-section,
-.stats-cta-section,
-.cleaning-services-section,
-.cinematic-footer {
-    /* Already have dark backgrounds, ensure text stays white */
-}
-
-.discover-section *:not(.btn):not(a):not(.badge),
-.ai-intelligence-section *:not(.btn):not(a):not(.badge),
-.features-grid-section *:not(.btn):not(a):not(.badge),
-.stats-cta-section *:not(.btn):not(a):not(.badge) {
-    /* Text should be white/light on dark sections */
-}
-
-/* Gradient divider - decorative only, no text */
-.gradient-divider {
-    /* No text content, contrast not applicable */
-}
+/* Removed empty placeholder rulesets for dark gradient sections and gradient divider */
 
 /* =========================================
    END WCAG AA FIXES
