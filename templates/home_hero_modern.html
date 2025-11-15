@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}ContractLink.ai — The Future of Contract Opportunities{% endblock %}
+
+{% block content %}
+<div class="hero-modern" role="banner" aria-label="Homepage hero">
+  <!-- Promotional banner with deeper red and bold white text -->
+  <div class="promo-banner-high-contrast" role="note">
+    <div class="container d-flex flex-wrap align-items-center justify-content-between py-2">
+      <div class="d-flex align-items-center gap-2 text-wrap">
+        <i class="fas fa-bullhorn" aria-hidden="true"></i>
+        <strong>Limited-time: 50% off your first month</strong>
+      </div>
+      <a href="{{ url_for('subscription') }}" class="btn btn-sm promo-cta" aria-label="Start your discounted subscription">Subscribe Now →</a>
+    </div>
+  </div>
+
+  <!-- Gradient hero section -->
+  <section class="hero-surface">
+    <div class="container position-relative">
+      <!-- Minimal, futuristic line-art shapes (decorative) -->
+      <div class="bg-shape bg-shape-1" aria-hidden="true"></div>
+      <div class="bg-shape bg-shape-2" aria-hidden="true"></div>
+      <div class="bg-shape bg-shape-3" aria-hidden="true"></div>
+
+      <div class="row align-items-center py-5">
+        <div class="col-lg-7">
+          <h1 class="display-4 fw-extrabold gradient-headline">
+            The Future of Contract Opportunities
+          </h1>
+          <p class="lead text-hero-subhead">
+            AI-driven platform connecting cleaning businesses with high-value contracts
+          </p>
+
+          <div class="d-flex flex-wrap gap-3 mt-4" role="group" aria-label="Primary actions">
+            <a href="{{ url_for('subscription') }}" class="btn btn-lg cta-purple" aria-label="Start Free Trial">
+              <i class="fas fa-rocket me-2" aria-hidden="true"></i>Start Free Trial
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-lg cta-dark" aria-label="Register or Sign In">
+              <i class="fas fa-user-shield me-2" aria-hidden="true"></i>Register / Sign In
+            </a>
+            <a href="{{ url_for('landing') }}#ai-assessment" class="btn btn-lg cta-gold" aria-label="Start AI Assessment">
+              <i class="fas fa-magic me-2" aria-hidden="true"></i>AI Assessment
+            </a>
+          </div>
+
+          <!-- Trust and quick pointers -->
+          <ul class="hero-points mt-4" aria-label="Platform highlights">
+            <li><i class="fas fa-check-circle" aria-hidden="true"></i> Government, commercial, and aviation contracts nationwide</li>
+            <li><i class="fas fa-check-circle" aria-hidden="true"></i> Accessible design with high-contrast text and clear focus states</li>
+            <li><i class="fas fa-check-circle" aria-hidden="true"></i> Built for speed: instant search, AI matching, and real-time alerts</li>
+          </ul>
+        </div>
+        <div class="col-lg-5 mt-5 mt-lg-0">
+          <div class="preview-card shadow-lg">
+            <div class="preview-glow" aria-hidden="true"></div>
+            <div class="preview-body">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="badge bg-success-subtle text-white fw-bold border-0">Live Preview</div>
+                <span class="text-white-50 small">Demo</span>
+              </div>
+              <h5 class="text-white mb-2">AI Opportunity Matching</h5>
+              <p class="text-white-50 mb-4">We analyze thousands of postings to surface the best-fit cleaning contracts for you.</p>
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="chip chip-green">Janitorial</span>
+                <span class="chip chip-blue">Post-Construction</span>
+                <span class="chip chip-gold">Aviation</span>
+                <span class="chip chip-purple">Medical</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  /* Container behavior */
+  .hero-modern { position: relative; isolation: isolate; }
+
+  /* Promo banner - deeper red with white bold text */
+  .promo-banner-high-contrast {
+    background: #b91c1c; /* deep red */
+    color: #ffffff;
+  }
+  .promo-banner-high-contrast strong { font-weight: 800; }
+  .promo-banner-high-contrast .promo-cta {
+    background: #10b981; /* emerald */
+    color: #ffffff;
+    border-color: #10b981;
+  }
+  .promo-banner-high-contrast .promo-cta:hover { background: #059669; border-color: #059669; }
+
+  /* Ensure navbar links are readable over dark hero */
+  .hero-modern .navbar .nav-link { color: #ffffff !important; font-weight: 600; }
+  .hero-modern .navbar .nav-link:hover, .hero-modern .navbar .nav-link:focus { color: #f3f4f6 !important; }
+
+  /* Gradient hero background */
+  .hero-surface {
+    background: linear-gradient(135deg, #0b1026 0%, #11165a 45%, #5b2aa8 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 3rem 0 4rem 0;
+  }
+
+  /* Subtle glowing shapes */
+  .bg-shape { position: absolute; filter: blur(40px); opacity: 0.35; }
+  .bg-shape-1 { width: 320px; height: 320px; background: radial-gradient(circle, #7c3aed, transparent 70%); top: -80px; left: -80px; }
+  .bg-shape-2 { width: 420px; height: 420px; background: radial-gradient(circle, #2563eb, transparent 70%); bottom: -120px; right: -100px; }
+  .bg-shape-3 { width: 260px; height: 260px; background: radial-gradient(circle, #f59e0b, transparent 70%); top: 30%; right: 30%; }
+
+  /* Headline and subheadline */
+  .gradient-headline {
+    background: linear-gradient(135deg, #a78bfa 0%, #f0abfc 50%, #f97316 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .text-hero-subhead { color: rgba(255, 255, 255, 0.95); font-size: 1.25rem; }
+
+  /* Primary CTAs */
+  .cta-purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: #ffffff; border: 0; box-shadow: 0 12px 30px rgba(124, 58, 237, 0.35);
+  }
+  .cta-purple:hover { filter: brightness(1.05); box-shadow: 0 16px 40px rgba(124, 58, 237, 0.45); }
+
+  .cta-dark { background: #1e3a8a; color: #ffffff; border: 0; box-shadow: 0 12px 30px rgba(30, 58, 138, 0.35); }
+  .cta-dark:hover { background: #1e40af; }
+
+  .cta-gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: #111827; border: 0; font-weight: 700; box-shadow: 0 12px 30px rgba(249, 115, 22, 0.35);
+  }
+  .cta-gold:hover { filter: brightness(1.05); }
+
+  /* Keyboard focus visibility */
+  .cta-purple:focus-visible, .cta-dark:focus-visible, .cta-gold:focus-visible, .promo-cta:focus-visible {
+    outline: 3px solid #ffd700; outline-offset: 3px;
+  }
+
+  /* Points list */
+  .hero-points { list-style: none; padding: 0; margin: 0; }
+  .hero-points li { color: rgba(255, 255, 255, 0.95); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .hero-points i { color: #10b981; }
+
+  /* Preview card with glowing edges */
+  .preview-card {
+    position: relative; border-radius: 16px; overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  .preview-glow { position: absolute; inset: -2px; pointer-events: none; box-shadow: 0 0 120px rgba(124, 58, 237, 0.45) inset; }
+  .preview-body { padding: 1.5rem; }
+
+  .chip { display: inline-block; padding: 6px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; }
+  .chip-green { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+  .chip-blue { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+  .chip-gold { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+  .chip-purple { background: rgba(124, 58, 237, 0.2); color: #c4b5fd; }
+
+  /* Responsive adjustments */
+  @media (max-width: 991.98px) {
+    .gradient-headline { font-size: 2.25rem; }
+  }
+</style>
+{% endblock %}

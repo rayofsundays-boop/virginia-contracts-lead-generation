@@ -129,6 +129,15 @@ else:
         pass
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Modern high-conversion hero route
+@app.route('/home-hero')
+def home_hero_modern():
+    """High-conversion homepage hero for ContractLink.ai.
+    Visual style: deep navy-to-purple gradient with glowing shapes,
+    accessible high-contrast text, and conversion-focused CTAs.
+    """
+    return render_template('home_hero_modern.html')
+
 # Database type detection helper
 def is_postgres():
     """Check if we're using PostgreSQL (True) or SQLite (False)"""
