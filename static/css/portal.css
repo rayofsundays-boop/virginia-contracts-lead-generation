@@ -136,3 +136,21 @@ body.portal-enabled {
 .quick-action span.label {
   color: #4a5568;
 }
+
+/* High contrast overrides for K-12 badges */
+.badge.bg-light,
+.badge.bg-white {
+  color: #0a0a0a !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e0 !important;
+}
+.badge.bg-secondary {
+  color: #ffffff !important;
+  background-color: #4a5568 !important;
+}
+.badge.bg-warning {
+  color: #0a0a0a !important;
+}
+.badge.bg-info {
+  color: #0a0a0a !important;
+}
