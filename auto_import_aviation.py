@@ -83,10 +83,23 @@ def auto_import_aviation_leads():
             inserted = 0
             for lead in leads:
                 try:
-                    # Convert is_active from integer (0/1) to boolean for PostgreSQL
+                    # Clean and convert data types for PostgreSQL
                     lead_data = lead.copy()
+                    
+                    # Convert is_active from integer (0/1) to boolean
                     if 'is_active' in lead_data:
                         lead_data['is_active'] = bool(lead_data['is_active'])
+                    
+                    # Convert fleet_size to NULL if it's a string (PostgreSQL expects INTEGER or NULL)
+                    if 'fleet_size' in lead_data and isinstance(lead_data['fleet_size'], str):
+                        lead_data['fleet_size'] = None
+                    
+                    # Convert empty strings to None for optional fields
+                    for field in ['estimated_monthly_value', 'notes', 'aircraft_types', 
+                                  'address', 'contact_name', 'contact_title', 
+                                  'contact_email', 'contact_phone', 'current_contract_status']:
+                        if field in lead_data and lead_data[field] == '':
+                            lead_data[field] = None
                     
                     db.session.execute(text("""
                         INSERT INTO aviation_cleaning_leads
