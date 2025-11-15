@@ -4047,6 +4047,42 @@ def init_postgres_db():
             db.session.rollback()
             print(f"⚠️  Construction cleanup leads table init: {construction_err}")
         
+        # City RFPs table for AI-discovered local government opportunities
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS city_rfps
+                         (id SERIAL PRIMARY KEY,
+                          state_code TEXT NOT NULL,
+                          state_name TEXT NOT NULL,
+                          city_name TEXT NOT NULL,
+                          rfp_title TEXT NOT NULL,
+                          rfp_number TEXT,
+                          description TEXT,
+                          deadline DATE,
+                          estimated_value TEXT,
+                          department TEXT,
+                          contact_name TEXT,
+                          contact_email TEXT,
+                          contact_phone TEXT,
+                          rfp_url TEXT,
+                          discovered_via TEXT DEFAULT 'ai_scraper',
+                          discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          last_verified TIMESTAMP,
+                          is_active BOOLEAN DEFAULT TRUE,
+                          data_source TEXT,
+                          UNIQUE(state_code, city_name, rfp_number))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_state 
+                                       ON city_rfps(state_code)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_city 
+                                       ON city_rfps(city_name)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_active 
+                                       ON city_rfps(is_active)'''))
+            db.session.commit()
+            print("✅ City RFPs table created successfully")
+        except Exception as city_rfps_err:
+            db.session.rollback()
+            print(f"⚠️  City RFPs table init: {city_rfps_err}")
+        
         # System settings table for global configuration
         try:
             db.session.execute(text('''CREATE TABLE IF NOT EXISTS system_settings
@@ -7788,8 +7824,24 @@ WEBPAGE TEXT:
                     # Save to database
                     for rfp in city_rfps:
                         try:
+                            # Check if already exists
+                            rfp_number = rfp.get('rfp_number', '')
+                            existing = db.session.execute(text(
+                                '''SELECT id FROM city_rfps 
+                                   WHERE state_code = :sc AND city_name = :cn AND rfp_number = :num'''
+                            ), {
+                                'sc': state_code.upper(),
+                                'cn': city_name,
+                                'num': rfp_number
+                            }).fetchone()
+                            
+                            if existing:
+                                print(f"    ℹ️  RFP {rfp_number} already exists, skipping")
+                                continue
+                            
+                            # Insert new RFP
                             db.session.execute(text(
-                                '''INSERT OR IGNORE INTO city_rfps 
+                                '''INSERT INTO city_rfps 
                                    (state_code, state_name, city_name, rfp_title, rfp_number, 
                                     description, deadline, estimated_value, department, 
                                     contact_email, contact_phone, rfp_url, data_source)
@@ -7800,7 +7852,7 @@ WEBPAGE TEXT:
                                 'sn': state_name,
                                 'cn': city_name,
                                 'title': rfp.get('rfp_title', 'Untitled RFP'),
-                                'num': rfp.get('rfp_number', ''),
+                                'num': rfp_number,
                                 'desc': rfp.get('description', ''),
                                 'dl': rfp.get('deadline', ''),
                                 'val': rfp.get('estimated_value', ''),
