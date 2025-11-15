@@ -124,13 +124,16 @@
                     <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>California</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">State procurement portal for California government contracts</p>
-                    <button onclick="showStateDetails('california')" class="btn btn-primary btn-sm w-100 mb-2">
-                        <i class="fas fa-building me-2"></i>View CA Opportunities
+                    <p style="color: #4a5568;" class="small mb-3">State procurement portal for California government contracts</p>
+                    <button onclick="findCityRFPs('California', 'CA')" class="btn btn-success btn-sm w-100 mb-2">
+                        <i class="fas fa-robot me-2"></i>Find City RFPs (AI)
                     </button>
-                    <a href="https://www.dgs.ca.gov/PD" target="_blank" class="btn btn-outline-primary btn-sm w-100">
-                        <i class="fas fa-external-link-alt me-2"></i>Official Portal
+                    <a href="https://www.dgs.ca.gov/PD" target="_blank" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-external-link-alt me-2"></i>State Portal
                     </a>
+                    <button onclick="updateRegistrationStatus('California', 'CA')" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-user-check me-2"></i>Track Registration
+                    </button>
                 </div>
             </div>
         </div>
@@ -862,13 +865,16 @@
                     <h5 class="mb-0"><i class="fas fa-star me-2"></i>Virginia</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3"><strong>Your State!</strong> Virginia procurement portal for state government contracts</p>
-                    <button onclick="showStateDetails('virginia')" class="btn btn-success btn-sm w-100 mb-2">
-                        <i class="fas fa-building me-2"></i>View VA Opportunities
+                    <p style="color: #4a5568;" class="small mb-3"><strong>Your State!</strong> Virginia procurement portal for state government contracts</p>
+                    <button onclick="findCityRFPs('Virginia', 'VA')" class="btn btn-success btn-sm w-100 mb-2">
+                        <i class="fas fa-robot me-2"></i>Find City RFPs (AI)
                     </button>
-                    <a href="https://eva.virginia.gov" target="_blank" class="btn btn-outline-success btn-sm w-100">
+                    <a href="https://eva.virginia.gov" target="_blank" class="btn btn-outline-success btn-sm w-100 mb-2">
                         <i class="fas fa-external-link-alt me-2"></i>Official eVA Portal
                     </a>
+                    <button onclick="updateRegistrationStatus('Virginia', 'VA')" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-user-check me-2"></i>Track Registration
+                    </button>
                 </div>
             </div>
         </div>
@@ -1051,6 +1057,241 @@
 </style>
 
 <script>
+// Global state registration data
+let userRegistrations = {};
+
+// Load user registration status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRegistrationStatus();
+});
+
+// Load registration status from backend
+function loadRegistrationStatus() {
+    fetch('/api/portal-registration-status')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                userRegistrations = data.registrations;
+                updateCardColors();
+            }
+        })
+        .catch(err => console.error('Error loading registration status:', err));
+}
+
+// Update card colors based on registration status
+function updateCardColors() {
+    document.querySelectorAll('.state-card').forEach(card => {
+        const stateName = card.getAttribute('data-state');
+        const stateCode = stateName.substring(0, 2).toUpperCase();
+        const registration = userRegistrations[stateCode];
+        
+        const cardHeader = card.querySelector('.card-header');
+        
+        if (registration) {
+            if (registration.status === 'registered') {
+                // Green - Registered
+                cardHeader.classList.remove('bg-primary', 'bg-warning', 'bg-secondary');
+                cardHeader.classList.add('bg-success');
+                card.querySelector('.card').style.borderLeft = '5px solid #28a745';
+            } else if (registration.status === 'in_progress') {
+                // Yellow - In Progress
+                cardHeader.classList.remove('bg-primary', 'bg-success', 'bg-secondary');
+                cardHeader.classList.add('bg-warning');
+                cardHeader.classList.add('text-dark');
+                cardHeader.querySelector('h5').classList.remove('text-white');
+                card.querySelector('.card').style.borderLeft = '5px solid #ffc107';
+            } else {
+                // Gray - Not Started
+                cardHeader.classList.remove('bg-primary', 'bg-success', 'bg-warning');
+                cardHeader.classList.add('bg-secondary');
+                card.querySelector('.card').style.borderLeft = '5px solid #6c757d';
+            }
+        } else {
+            // Default - No registration data
+            cardHeader.classList.remove('bg-success', 'bg-warning', 'bg-secondary');
+            cardHeader.classList.add('bg-primary');
+            card.querySelector('.card').style.borderLeft = 'none';
+        }
+    });
+}
+
+// Find City RFPs using AI
+function findCityRFPs(stateName, stateCode) {
+    // Show loading modal
+    const loadingHtml = `
+        <div class="modal fade" id="cityRfpModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-robot me-2"></i>AI City RFP Finder - ${stateName}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary mb-3" style="width: 4rem; height: 4rem;"></div>
+                        <h5>🤖 AI is searching for local city RFPs...</h5>
+                        <p class="text-muted">Scanning major cities, procurement portals, and active bids</p>
+                        <p class="small">This may take 30-60 seconds</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('cityRfpModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', loadingHtml);
+    const modal = new bootstrap.Modal(document.getElementById('cityRfpModal'));
+    modal.show();
+    
+    // Call AI endpoint
+    fetch('/api/find-city-rfps', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            state_name: stateName,
+            state_code: stateCode
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            displayCityRFPs(data.rfps, stateName, data.message);
+        } else {
+            displayError(data.error || 'Failed to find city RFPs');
+        }
+    })
+    .catch(err => {
+        console.error('City RFP error:', err);
+        displayError('Network error. Please try again.');
+    });
+}
+
+// Display found city RFPs in modal
+function displayCityRFPs(rfps, stateName, message) {
+    let rfpsHtml = '';
+    
+    if (rfps && rfps.length > 0) {
+        rfpsHtml = rfps.map(rfp => `
+            <div class="card mb-3 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">
+                            <i class="fas fa-building text-primary me-2"></i>${rfp.city_name}
+                        </h6>
+                        ${rfp.estimated_value ? `<span class="badge bg-success">${rfp.estimated_value}</span>` : ''}
+                    </div>
+                    <h5 class="mb-2">${rfp.rfp_title}</h5>
+                    ${rfp.rfp_number ? `<p class="text-muted small mb-2"><strong>RFP #:</strong> ${rfp.rfp_number}</p>` : ''}
+                    ${rfp.description ? `<p class="mb-2">${rfp.description}</p>` : ''}
+                    <div class="row g-2 small">
+                        ${rfp.department ? `<div class="col-md-6"><i class="fas fa-sitemap me-1"></i> <strong>Dept:</strong> ${rfp.department}</div>` : ''}
+                        ${rfp.deadline ? `<div class="col-md-6"><i class="fas fa-calendar me-1"></i> <strong>Deadline:</strong> ${rfp.deadline}</div>` : ''}
+                        ${rfp.contact_email ? `<div class="col-md-6"><i class="fas fa-envelope me-1"></i> ${rfp.contact_email}</div>` : ''}
+                        ${rfp.contact_phone ? `<div class="col-md-6"><i class="fas fa-phone me-1"></i> ${rfp.contact_phone}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        rfpsHtml = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No active cleaning/janitorial RFPs found at this time. Try checking the state portal directly or check back later.
+            </div>
+        `;
+    }
+    
+    const successHtml = `
+        <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-check-circle me-2"></i>City RFPs Found - ${stateName}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-success mb-3">
+                <strong>✅ ${message}</strong>
+            </div>
+            <div style="max-height: 500px; overflow-y: auto;">
+                ${rfpsHtml}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+    `;
+    
+    document.querySelector('#cityRfpModal .modal-content').innerHTML = successHtml;
+}
+
+// Display error in modal
+function displayError(errorMsg) {
+    const errorHtml = `
+        <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-exclamation-triangle me-2"></i>Error
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-danger mb-0">
+                <i class="fas fa-exclamation-circle me-2"></i>${errorMsg}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+    `;
+    
+    document.querySelector('#cityRfpModal .modal-content').innerHTML = errorHtml;
+}
+
+// Update registration status
+function updateRegistrationStatus(stateName, stateCode, newStatus) {
+    const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
+    document.getElementById('regStateName').textContent = stateName;
+    document.getElementById('regStateCode').value = stateCode;
+    document.getElementById('regStateNameInput').value = stateName;
+    document.getElementById('regStatus').value = newStatus || 'not_started';
+    modal.show();
+}
+
+// Save registration status
+function saveRegistrationStatus() {
+    const stateCode = document.getElementById('regStateCode').value;
+    const stateName = document.getElementById('regStateNameInput').value;
+    const status = document.getElementById('regStatus').value;
+    const vendorId = document.getElementById('regVendorId').value;
+    const notes = document.getElementById('regNotes').value;
+    
+    fetch('/api/portal-registration-status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            state_code: stateCode,
+            state_name: stateName,
+            status: status,
+            vendor_id: vendorId,
+            notes: notes
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Registration status updated for ${stateName}`);
+            loadRegistrationStatus(); // Reload and update colors
+            bootstrap.Modal.getInstance(document.getElementById('registrationModal')).hide();
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(err => alert('Network error. Please try again.'));
+}
+
 // Search functionality
 document.getElementById('stateSearch').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
@@ -1270,5 +1511,54 @@ function showStateDetails(stateKey) {
     modal.show();
 }
 </script>
+
+<!-- Registration Status Modal -->
+<div class="modal fade" id="registrationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-check me-2"></i>Track Portal Registration - <span id="regStateName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="regStateCode">
+                <input type="hidden" id="regStateNameInput">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Registration Status</label>
+                    <select class="form-select" id="regStatus">
+                        <option value="not_started">Not Started</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="registered">✅ Registered</option>
+                    </select>
+                    <small style="color: #4a5568;">Card color: Gray (Not Started), Yellow (In Progress), Green (Registered)</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Vendor ID (Optional)</label>
+                    <input type="text" class="form-control" id="regVendorId" placeholder="Your vendor/supplier ID for this portal">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Notes</label>
+                    <textarea class="form-control" id="regNotes" rows="3" placeholder="Registration date, contact person, next steps, etc."></textarea>
+                </div>
+                
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tracking your registration status helps you stay organized across all 50 states. Card colors update automatically!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveRegistrationStatus()">
+                    <i class="fas fa-save me-2"></i>Save Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

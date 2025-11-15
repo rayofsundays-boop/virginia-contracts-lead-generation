@@ -4219,6 +4219,53 @@ def init_db():
         
         c.execute('CREATE INDEX IF NOT EXISTS idx_client_profiles_email ON client_profiles(user_email)')
         
+        # Create portal registrations table for tracking user registration status
+        c.execute('''CREATE TABLE IF NOT EXISTS user_portal_registrations
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_email TEXT NOT NULL,
+                      state_code TEXT NOT NULL,
+                      state_name TEXT NOT NULL,
+                      portal_name TEXT,
+                      portal_url TEXT,
+                      registration_status TEXT DEFAULT 'not_started',
+                      vendor_id TEXT,
+                      registration_date DATE,
+                      notes TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_email) REFERENCES leads(email),
+                      UNIQUE(user_email, state_code))''')
+        
+        c.execute('CREATE INDEX IF NOT EXISTS idx_portal_reg_email ON user_portal_registrations(user_email)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_portal_reg_status ON user_portal_registrations(registration_status)')
+        
+        # Create city RFPs table for AI-discovered local opportunities
+        c.execute('''CREATE TABLE IF NOT EXISTS city_rfps
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      state_code TEXT NOT NULL,
+                      state_name TEXT NOT NULL,
+                      city_name TEXT NOT NULL,
+                      rfp_title TEXT NOT NULL,
+                      rfp_number TEXT,
+                      description TEXT,
+                      deadline DATE,
+                      estimated_value TEXT,
+                      department TEXT,
+                      contact_name TEXT,
+                      contact_email TEXT,
+                      contact_phone TEXT,
+                      rfp_url TEXT,
+                      discovered_via TEXT DEFAULT 'ai_scraper',
+                      discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      last_verified TIMESTAMP,
+                      is_active BOOLEAN DEFAULT 1,
+                      data_source TEXT,
+                      UNIQUE(state_code, city_name, rfp_number))''')
+        
+        c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_state ON city_rfps(state_code)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_city ON city_rfps(city_name)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_active ON city_rfps(is_active)')
+        
         conn.commit()
         
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API
@@ -7326,6 +7373,279 @@ def test_procurement_urls():
         print(f"Error testing procurement URLs: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/find-city-rfps', methods=['POST'])
+@login_required
+def find_city_rfps():
+    """Use OpenAI to intelligently find and extract local city RFPs from procurement portals
+    
+    This endpoint uses GPT-4 to:
+    1. Identify major cities in the selected state
+    2. Find their procurement website URLs
+    3. Navigate to active RFP pages
+    4. Extract current cleaning/janitorial opportunities
+    5. Parse contact info, deadlines, and requirements
+    """
+    try:
+        import openai
+        import requests
+        from bs4 import BeautifulSoup
+        import json
+        
+        data = request.get_json() or {}
+        state_name = data.get('state_name', '')
+        state_code = data.get('state_code', '')
+        
+        if not state_name or not state_code:
+            return jsonify({'success': False, 'error': 'State name and code required'}), 400
+        
+        # Check OpenAI API key
+        openai_key = os.environ.get('OPENAI_API_KEY')
+        if not openai_key:
+            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
+        
+        openai.api_key = openai_key
+        user_email = session.get('user_email')
+        
+        print(f"🤖 Finding city RFPs for {state_name} using AI...")
+        
+        # Step 1: Use GPT-4 to identify major cities and their procurement URLs
+        city_prompt = f"""You are a procurement intelligence assistant. For the state of {state_name}, provide a JSON list of the top 5-10 major cities that likely have active procurement portals for janitorial/cleaning contracts.
+
+For each city, provide:
+- city_name: Full city name
+- estimated_population: Approximate population
+- procurement_url: Best guess for their procurement/purchasing website URL (format: https://www.cityname.gov/procurement or similar)
+- search_query: Google search query to find their RFP page
+
+Return ONLY valid JSON array format, no explanations:
+[
+  {{"city_name": "City Name", "estimated_population": 100000, "procurement_url": "https://...", "search_query": "City Name procurement active bids"}},
+  ...
+]"""
+
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": city_prompt}],
+                temperature=0.3,
+                max_tokens=1500
+            )
+            
+            cities_text = response.choices[0].message.content.strip()
+            # Extract JSON from response (handle markdown code blocks)
+            if '```json' in cities_text:
+                cities_text = cities_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in cities_text:
+                cities_text = cities_text.split('```')[1].split('```')[0].strip()
+            
+            cities = json.loads(cities_text)
+            print(f"✅ AI identified {len(cities)} cities in {state_name}")
+            
+        except Exception as e:
+            print(f"❌ Error getting cities from AI: {e}")
+            return jsonify({'success': False, 'error': f'AI city discovery failed: {str(e)}'}), 500
+        
+        # Step 2: For each city, use GPT-4 to extract RFPs from their webpage
+        discovered_rfps = []
+        
+        for city_info in cities[:5]:  # Limit to 5 cities to avoid rate limits
+            city_name = city_info.get('city_name', '')
+            procurement_url = city_info.get('procurement_url', '')
+            
+            if not procurement_url:
+                continue
+            
+            try:
+                print(f"  🔍 Checking {city_name} at {procurement_url}")
+                
+                # Fetch the webpage
+                headers = {'User-Agent': 'ContractLink.ai Bot/1.0 (Procurement Intelligence)'}
+                webpage_response = requests.get(procurement_url, headers=headers, timeout=15)
+                
+                if webpage_response.status_code != 200:
+                    print(f"    ⚠️  HTTP {webpage_response.status_code} for {city_name}")
+                    continue
+                
+                # Parse HTML
+                soup = BeautifulSoup(webpage_response.text, 'html.parser')
+                page_text = soup.get_text(separator='\n', strip=True)[:15000]  # Limit to 15K chars
+                
+                # Use GPT-4 to extract RFPs from the page content
+                rfp_prompt = f"""You are analyzing a procurement webpage for {city_name}, {state_name}.
+
+Extract any active janitorial, cleaning, or facilities maintenance RFPs/bids from this text. For each opportunity found, provide:
+- rfp_title: Title of the RFP
+- rfp_number: Solicitation/RFP number (if available)
+- description: Brief description
+- deadline: Deadline date (YYYY-MM-DD format if possible, or raw text)
+- estimated_value: Contract value or budget (if mentioned)
+- department: Department or agency
+- contact_email: Contact email (if found)
+- contact_phone: Contact phone (if found)
+
+Return ONLY a JSON array, no explanations. If no relevant RFPs found, return empty array []:
+[
+  {{"rfp_title": "...", "rfp_number": "...", "description": "...", "deadline": "...", "estimated_value": "...", "department": "...", "contact_email": "...", "contact_phone": "..."}},
+  ...
+]
+
+WEBPAGE TEXT:
+{page_text}"""
+
+                rfp_response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[{"role": "user", "content": rfp_prompt}],
+                    temperature=0.2,
+                    max_tokens=2000
+                )
+                
+                rfps_text = rfp_response.choices[0].message.content.strip()
+                if '```json' in rfps_text:
+                    rfps_text = rfps_text.split('```json')[1].split('```')[0].strip()
+                elif '```' in rfps_text:
+                    rfps_text = rfps_text.split('```')[1].split('```')[0].strip()
+                
+                city_rfps = json.loads(rfps_text)
+                
+                if city_rfps:
+                    print(f"    ✅ Found {len(city_rfps)} RFPs in {city_name}")
+                    
+                    # Save to database
+                    for rfp in city_rfps:
+                        try:
+                            db.session.execute(text(
+                                '''INSERT OR IGNORE INTO city_rfps 
+                                   (state_code, state_name, city_name, rfp_title, rfp_number, 
+                                    description, deadline, estimated_value, department, 
+                                    contact_email, contact_phone, rfp_url, data_source)
+                                   VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                                           :email, :phone, :url, :source)'''
+                            ), {
+                                'sc': state_code.upper(),
+                                'sn': state_name,
+                                'cn': city_name,
+                                'title': rfp.get('rfp_title', 'Untitled RFP'),
+                                'num': rfp.get('rfp_number', ''),
+                                'desc': rfp.get('description', ''),
+                                'dl': rfp.get('deadline', ''),
+                                'val': rfp.get('estimated_value', ''),
+                                'dept': rfp.get('department', ''),
+                                'email': rfp.get('contact_email', ''),
+                                'phone': rfp.get('contact_phone', ''),
+                                'url': procurement_url,
+                                'source': 'openai_gpt4_scraper'
+                            })
+                            
+                            rfp['city_name'] = city_name
+                            discovered_rfps.append(rfp)
+                            
+                        except Exception as db_err:
+                            print(f"    ⚠️  Database insert error: {db_err}")
+                            continue
+                else:
+                    print(f"    ℹ️  No cleaning RFPs found in {city_name}")
+                
+            except requests.exceptions.Timeout:
+                print(f"    ⏱️  Timeout fetching {city_name} webpage")
+                continue
+            except requests.exceptions.RequestException as req_err:
+                print(f"    🌐 Request error for {city_name}: {req_err}")
+                continue
+            except json.JSONDecodeError as json_err:
+                print(f"    ❌ JSON parse error for {city_name}: {json_err}")
+                continue
+            except Exception as city_err:
+                print(f"    ❌ Error processing {city_name}: {city_err}")
+                continue
+        
+        db.session.commit()
+        
+        print(f"🎉 Discovery complete: {len(discovered_rfps)} RFPs found across {len(cities[:5])} cities")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Found {len(discovered_rfps)} RFPs in {state_name}',
+            'rfps': discovered_rfps,
+            'cities_searched': len(cities[:5]),
+            'state': state_name
+        })
+        
+    except Exception as e:
+        print(f"❌ City RFP finder error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/portal-registration-status', methods=['GET', 'POST'])
+@login_required
+def portal_registration_status():
+    """Get or update user's registration status for state procurement portals"""
+    try:
+        user_email = session.get('user_email')
+        
+        if request.method == 'GET':
+            # Return all registration statuses for this user
+            registrations = db.session.execute(text(
+                '''SELECT state_code, state_name, portal_name, portal_url, 
+                          registration_status, vendor_id, registration_date, notes
+                   FROM user_portal_registrations 
+                   WHERE user_email = :email 
+                   ORDER BY state_name'''
+            ), {'email': user_email}).fetchall()
+            
+            status_map = {}
+            for reg in registrations:
+                status_map[reg.state_code.upper()] = {
+                    'status': reg.registration_status,
+                    'portal_name': reg.portal_name,
+                    'vendor_id': reg.vendor_id,
+                    'registration_date': str(reg.registration_date) if reg.registration_date else None,
+                    'notes': reg.notes
+                }
+            
+            return jsonify({'success': True, 'registrations': status_map})
+        
+        elif request.method == 'POST':
+            # Update registration status
+            data = request.get_json() or {}
+            state_code = data.get('state_code', '').upper()
+            state_name = data.get('state_name', '')
+            status = data.get('status', 'not_started')  # not_started, in_progress, registered
+            vendor_id = data.get('vendor_id', '')
+            notes = data.get('notes', '')
+            
+            if not state_code or not state_name:
+                return jsonify({'success': False, 'error': 'State code and name required'}), 400
+            
+            # Upsert registration status
+            db.session.execute(text(
+                '''INSERT INTO user_portal_registrations 
+                   (user_email, state_code, state_name, registration_status, vendor_id, notes, updated_at)
+                   VALUES (:email, :sc, :sn, :status, :vid, :notes, CURRENT_TIMESTAMP)
+                   ON CONFLICT(user_email, state_code) 
+                   DO UPDATE SET registration_status = :status, vendor_id = :vid, 
+                                 notes = :notes, updated_at = CURRENT_TIMESTAMP'''
+            ), {
+                'email': user_email,
+                'sc': state_code,
+                'sn': state_name,
+                'status': status,
+                'vid': vendor_id,
+                'notes': notes
+            })
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': f'Registration status updated for {state_name}'
+            })
+            
+    except Exception as e:
+        db.session.rollback()
+        print(f"Portal registration status error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/educational-contracts')
