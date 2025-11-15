@@ -212,7 +212,7 @@ def _env_str(name: str, default: str = '') -> str:
 
 ADMIN2_SEED_EMAIL = _env_str('ADMIN2_SEED_EMAIL', 'admin2@vacontracts.com')
 ADMIN2_SEED_USERNAME = _env_str('ADMIN2_SEED_USERNAME', 'admin2')
-ADMIN2_SEED_PASSWORD = os.getenv('ADMIN2_SEED_PASSWORD', 'admin2')
+ADMIN2_SEED_PASSWORD = os.getenv('ADMIN2_SEED_PASSWORD', 'Admin2!Secure123')
 ADMIN2_AUTO_PROVISION_ENABLED = os.getenv('ADMIN2_AUTO_PROVISION', '1').lower() in ('1', 'true', 'yes', 'on')
 ADMIN2_FORCE_PASSWORD_RESET = os.getenv('ADMIN2_FORCE_RESET', '').lower() in ('1', 'true', 'yes', 'on')
 
