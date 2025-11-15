@@ -24467,10 +24467,27 @@ try:
             else:
                 print(f"⚠️  PostgreSQL init returned: {result}")
                 print("⚠️  Continuing anyway - app will use existing database state")
+            
+            # Force admin2 account provisioning/update on every startup
+            print("🔐 Ensuring admin2 account is provisioned with current credentials...")
+            try:
+                ensure_admin2_account(force_password_reset=True)
+                print("✅ Admin2 account provisioned successfully")
+            except Exception as admin2_err:
+                print(f"⚠️  Admin2 provisioning error: {admin2_err}")
     else:
         print("💾 Using SQLite - using init_db()")
         init_db()
         print("✅ SQLite database initialized")
+        
+        # Provision admin2 for local development too
+        with app.app_context():
+            print("🔐 Ensuring admin2 account is provisioned...")
+            try:
+                ensure_admin2_account(force_password_reset=True)
+                print("✅ Admin2 account provisioned successfully")
+            except Exception as admin2_err:
+                print(f"⚠️  Admin2 provisioning error: {admin2_err}")
     
     # Auto-populate supply contracts only if table is empty
     # This runs on every app startup/restart to ensure data is always available
