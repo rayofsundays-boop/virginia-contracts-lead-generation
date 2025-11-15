@@ -14517,6 +14517,7 @@ def send_admin_password_reset_notification(user_email, user_name):
     
     try:
         from flask_mail import Message
+        from datetime import datetime as dt
         
         admin_email = 'rayofsundays@gmail.com'  # Your admin email
         
@@ -14530,7 +14531,7 @@ def send_admin_password_reset_notification(user_email, user_name):
 
 User: {user_name}
 Email: {user_email}
-Time: {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}
+Time: {dt.now().strftime('%Y-%m-%d %I:%M %p EST')}
 
 A user has requested a password reset. They have been sent a secure reset link.
 
@@ -14552,7 +14553,7 @@ VA Contracts Lead Generation Admin System
         <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
             <p><strong>User:</strong> {user_name}</p>
             <p><strong>Email:</strong> {user_email}</p>
-            <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %I:%M %p EST')}</p>
+            <p><strong>Time:</strong> {dt.now().strftime('%Y-%m-%d %I:%M %p EST')}</p>
         </div>
         
         <p>A user has requested a password reset. They have been sent a secure reset link (valid for 1 hour).</p>
