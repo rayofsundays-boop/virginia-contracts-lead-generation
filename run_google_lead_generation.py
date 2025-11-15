@@ -73,9 +73,9 @@ def generate_and_import_google_leads():
                 # Check if lead already exists
                 existing = db.session.execute(text("""
                     SELECT id FROM commercial_lead_requests 
-                    WHERE company_name = :company_name AND city = :city
+                    WHERE business_name = :business_name AND city = :city
                 """), {
-                    'company_name': lead['company_name'],
+                    'business_name': lead['company_name'],
                     'city': lead['city']
                 }).fetchone()
                 
@@ -86,26 +86,26 @@ def generate_and_import_google_leads():
                 # Insert new lead
                 db.session.execute(text("""
                     INSERT INTO commercial_lead_requests
-                    (company_name, contact_name, email, phone, address, city, state,
-                     property_type, square_footage, services_requested, notes,
-                     status, priority, data_source, created_at)
+                    (business_name, contact_name, email, phone, address, city, state,
+                     business_type, square_footage, frequency, services_needed, special_requirements,
+                     status, created_at)
                     VALUES
-                    (:company_name, :contact_name, :email, :phone, :address, :city, :state,
-                     :property_type, :square_footage, :services_requested, :notes,
-                     'new', 'medium', :data_source, CURRENT_TIMESTAMP)
+                    (:business_name, :contact_name, :email, :phone, :address, :city, :state,
+                     :business_type, :square_footage, :frequency, :services_needed, :special_requirements,
+                     'open', CURRENT_TIMESTAMP)
                 """), {
-                    'company_name': lead['company_name'],
-                    'contact_name': 'Google Places Lead',
-                    'email': '',
-                    'phone': lead.get('phone', ''),
-                    'address': lead.get('address', ''),
+                    'business_name': lead['company_name'],
+                    'contact_name': 'Google Places',
+                    'email': 'google-lead@contractlink.ai',
+                    'phone': lead.get('phone', 'N/A'),
+                    'address': lead.get('address', 'N/A'),
                     'city': lead['city'],
                     'state': lead['state'],
-                    'property_type': lead.get('category', 'Commercial Property'),
-                    'square_footage': lead.get('estimated_sqft', ''),
-                    'services_requested': 'Commercial Cleaning',
-                    'notes': f"Rating: {lead.get('rating', 'N/A')}/5 ({lead.get('total_ratings', 0)} reviews). Website: {lead.get('website', 'N/A')}. Google Place ID: {lead.get('place_id', 'N/A')}",
-                    'data_source': 'google_places_api'
+                    'business_type': lead.get('category', 'Commercial Property'),
+                    'square_footage': lead.get('estimated_sqft', 0),
+                    'frequency': 'To Be Determined',
+                    'services_needed': 'Commercial Cleaning Services',
+                    'special_requirements': f"Rating: {lead.get('rating', 'N/A')}/5 ({lead.get('total_ratings', 0)} reviews). Website: {lead.get('website', 'N/A')}. Google Place ID: {lead.get('place_id', 'N/A')}"
                 })
                 db.session.commit()
                 saved_count += 1
