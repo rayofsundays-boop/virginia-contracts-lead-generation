@@ -47,14 +47,7 @@
 <div class="container my-4">
     <div class="card shadow-sm">
         <div class="card-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white;">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Aviation Companies</h5>
-                {% if session.get('is_admin') %}
-                <button class="btn btn-light btn-sm" onclick="showScraperModal()">
-                    <i class="fas fa-robot me-1"></i> Run Scraper
-                </button>
-                {% endif %}
-            </div>
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Aviation Companies</h5>
         </div>
         <div class="card-body">
             <form method="get" action="{{ url_for('aviation_cleaning_leads') }}" id="filterForm">
@@ -222,8 +215,8 @@
             <i class="fas fa-plane-slash" style="font-size: 5rem; color: #cbd5e1;"></i>
         </div>
         <h3 class="mb-3">No Aviation Cleaning Leads Found</h3>
-        <p class="text-muted mb-4">Try adjusting your filters or contact an admin to run the AI scraper.</p>
-        <p class="small text-muted">Aviation leads are discovered using AI-powered web scraping across airlines, private jet operators, and FBOs nationwide.</p>
+        <p class="text-muted mb-4">Try adjusting your filters or check back later for new opportunities.</p>
+        <p class="small text-muted">Aviation leads are discovered through AI-powered research across airlines, private jet operators, and FBOs nationwide.</p>
     </div>
     {% endif %}
 </div>
@@ -291,144 +284,6 @@ function generateProposal(companyName, services) {
     const url = `/ai-proposal-generator?lead_title=${encodeURIComponent(companyName + ' - ' + services)}`;
     window.location.href = url;
 }
-
-function showScraperModal() {
-    const modal = new bootstrap.Modal(document.getElementById('scraperModal'));
-    modal.show();
-}
-
-function runAviationScraper() {
-    const statusDiv = document.getElementById('scraperStatus');
-    const progressBar = document.getElementById('scraperProgress');
-    const runButton = document.getElementById('runScraperBtn');
-    
-    // Update UI
-    statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Scraping airline hub locations from 8 major carriers...</div>`;
-    progressBar.style.width = '50%';
-    progressBar.parentElement.style.display = 'block';
-    runButton.disabled = true;
-    
-    // Make API call
-    fetch('/api/scrape-aviation-leads', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        progressBar.style.width = '100%';
-        
-        if (data.success) {
-            let summary = '';
-            if (data.airlines_summary) {
-                summary = '<h6>Airlines Scraped:</h6><ul class="small">';
-                for (const [airline, count] of Object.entries(data.airlines_summary)) {
-                    summary += `<li><strong>${airline}</strong>: ${count} hubs/bases</li>`;
-                }
-                summary += '</ul>';
-            }
-            
-            statusDiv.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <strong>Success!</strong> Found ${data.opportunities_found} airline hub opportunities, saved ${data.leads_saved} new leads.
-                    ${summary}
-                </div>
-            `;
-            
-            // Show sample opportunities
-            if (data.opportunities && data.opportunities.length > 0) {
-                let preview = '<h6>Sample Hub Opportunities:</h6><ul class="small">';
-                data.opportunities.forEach(opp => {
-                    preview += `<li><strong>${opp.company_name}</strong> - ${opp.city}, ${opp.state}</li>`;
-                });
-                preview += '</ul>';
-                statusDiv.innerHTML += preview;
-            }
-            
-            // Reload page after 3 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
-        } else {
-            statusDiv.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>Error:</strong> ${data.message || data.error}
-                </div>
-            `;
-            runButton.disabled = false;
-        }
-    })
-    .catch(error => {
-        progressBar.style.width = '100%';
-        statusDiv.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <strong>Error:</strong> ${error.message}
-            </div>
-        `;
-        runButton.disabled = false;
-    });
-}
 </script>
-
-<!-- Scraper Modal (Admin Only) -->
-<div class="modal fade" id="scraperModal" tabindex="-1" aria-labelledby="scraperModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white;">
-                <h5 class="modal-title" id="scraperModalLabel">
-                    <i class="fas fa-robot me-2"></i>Aviation Lead Scraper
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-lightbulb me-2"></i>
-                    <strong>Smart Approach:</strong> Scrapes known airline hub/base locations from public airline websites. 
-                    No Google search needed - reliable and fast!
-                </div>
-                
-                <p class="text-secondary">
-                    <strong>What gets scraped:</strong><br>
-                    • Delta Airlines: 8 hub locations (ATL, DTW, MSP, SLC, SEA, LAX, JFK, BOS)<br>
-                    • American Airlines: 8 hubs (DFW, CLT, PHX, MIA, ORD, LAX, DCA, JFK)<br>
-                    • United Airlines: 7 hubs (EWR, ORD, IAH, DEN, SFO, LAX, IAD)<br>
-                    • Southwest: 7 bases (DAL, MDW, PHX, LAS, DEN, BWI, OAK)<br>
-                    • JetBlue: 5 bases (JFK, BOS, FLL, LAX, MCO)<br>
-                    • Spirit: 5 hubs (FLL, DTW, ORD, LAS, DFW)<br>
-                    • Frontier: 5 bases (DEN, LAS, MIA, ORD, PHX)<br>
-                    • Alaska: 5 bases (SEA, PDX, ANC, SFO, LAX)
-                </p>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Airlines to Scrape</label>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>All 8 Major Airlines</strong> - Creates ~50 hub/base opportunities
-                    </div>
-                    <div class="form-text">
-                        Scraping all airlines is fast (30-60 seconds) and creates comprehensive lead list
-                    </div>
-                </div>
-                
-                <div id="scraperStatus"></div>
-                
-                <div class="progress mb-3" style="height: 5px; display: none;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="scraperProgress" role="progressbar" style="width: 0%"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="runScraperBtn" onclick="runAviationScraper()">
-                    <i class="fas fa-play me-2"></i>Start Scraping
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
