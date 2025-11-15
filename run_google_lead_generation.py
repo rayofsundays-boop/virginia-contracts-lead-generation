@@ -22,41 +22,78 @@ def generate_and_import_google_leads():
             print("⚠️  Make sure GOOGLE_API_KEY is set in environment variables")
             return
         
-        # Cities to search
+        # Cities to search - expanded to cover all major VA markets
         cities = [
+            # Hampton Roads / Tidewater Region
             ('Virginia Beach', 'VA', 15),
-            ('Norfolk', 'VA', 10),
+            ('Norfolk', 'VA', 12),
+            ('Chesapeake', 'VA', 12),
             ('Hampton', 'VA', 10),
             ('Newport News', 'VA', 10),
-            ('Chesapeake', 'VA', 10)
+            ('Portsmouth', 'VA', 8),
+            ('Suffolk', 'VA', 10),
+            
+            # Northern Virginia / DC Metro
+            ('Arlington', 'VA', 12),
+            ('Alexandria', 'VA', 12),
+            ('Fairfax', 'VA', 12),
+            ('Reston', 'VA', 10),
+            ('Tysons', 'VA', 8),
+            ('Manassas', 'VA', 10),
+            
+            # Richmond Metro
+            ('Richmond', 'VA', 15),
+            ('Henrico', 'VA', 10),
+            ('Chesterfield', 'VA', 10),
+            
+            # Other Major Cities
+            ('Charlottesville', 'VA', 12),
+            ('Roanoke', 'VA', 12),
+            ('Lynchburg', 'VA', 10),
+            ('Williamsburg', 'VA', 8),
+            ('Fredericksburg', 'VA', 10),
+            ('Blacksburg', 'VA', 8),
+            ('Winchester', 'VA', 10)
         ]
         
         all_leads = []
+        commercial_count = 0
+        property_mgmt_count = 0
+        aviation_count = 0
         
         # Generate leads for each city
-        for city, state, radius in cities:
-            print(f"\n🔍 Searching {city}, {state} (radius: {radius} miles)...")
+        total_cities = len(cities)
+        for idx, (city, state, radius) in enumerate(cities, 1):
+            print(f"\n🔍 [{idx}/{total_cities}] Searching {city}, {state} (radius: {radius} miles)...")
             
             try:
                 leads = generator.find_commercial_properties(city, state, radius_miles=radius)
-                print(f"   ✅ Found {len(leads)} commercial properties")
+                print(f"   ✅ Commercial properties: {len(leads)}")
                 all_leads.extend(leads)
+                commercial_count += len(leads)
                 
                 # Also get property managers
                 pm_leads = generator.find_property_managers(city, state, radius_miles=radius)
-                print(f"   ✅ Found {len(pm_leads)} property management companies")
+                print(f"   ✅ Property managers: {len(pm_leads)}")
                 all_leads.extend(pm_leads)
+                property_mgmt_count += len(pm_leads)
                 
                 # Get aviation facilities (use larger radius)
                 aviation_leads = generator.find_aviation_facilities(city, state, radius_miles=radius*2)
-                print(f"   ✅ Found {len(aviation_leads)} aviation facilities")
+                print(f"   ✅ Aviation facilities: {len(aviation_leads)}")
                 all_leads.extend(aviation_leads)
+                aviation_count += len(aviation_leads)
+                
+                print(f"   📊 City total: {len(leads) + len(pm_leads) + len(aviation_leads)} leads")
                 
             except Exception as e:
                 print(f"   ⚠️  Error searching {city}: {e}")
                 continue
         
-        print(f"\n📊 Total leads found: {len(all_leads)}")
+        print(f"\n📊 TOTAL LEADS FOUND: {len(all_leads)}")
+        print(f"   🏢 Commercial properties: {commercial_count}")
+        print(f"   🏘️  Property managers: {property_mgmt_count}")
+        print(f"   ✈️  Aviation facilities: {aviation_count}")
         print("=" * 60)
         
         # Show sample leads
