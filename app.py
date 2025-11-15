@@ -7706,7 +7706,6 @@ def find_city_rfps():
     5. Parse contact info, deadlines, and requirements
     """
     try:
-        import openai
         import requests
         from bs4 import BeautifulSoup
         import json
@@ -7718,14 +7717,10 @@ def find_city_rfps():
         if not state_name or not state_code:
             return jsonify({'success': False, 'error': 'State name and code required'}), 400
         
-        # Check OpenAI API key
-        openai_key = os.environ.get('OPENAI_API_KEY')
-        if not openai_key:
-            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
-        
         # Initialize OpenAI client (new API)
-        from openai import OpenAI
-        client = OpenAI(api_key=openai_key)
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
         user_email = session.get('user_email')
         
         print(f"🤖 Finding city RFPs for {state_name} using AI...")
@@ -15918,7 +15913,11 @@ Respond with a JSON array of objects with these fields:
 Only respond with the JSON array, no other text."""
 
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
+        
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a procurement expert analyzing supply contract opportunities and URLs."},
@@ -15929,7 +15928,7 @@ Only respond with the JSON array, no other text."""
         )
         
         # Parse AI response
-        ai_content = response['choices'][0]['message']['content']
+        ai_content = response.choices[0].message.content
         
         # Extract JSON from response (handle markdown code blocks)
         if '```json' in ai_content:
@@ -16207,7 +16206,11 @@ Respond with a JSON array with these fields for each lead:
 Only respond with the JSON array, no other text."""
 
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
+        
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a comprehensive procurement and lead analysis expert."},
@@ -16218,7 +16221,7 @@ Only respond with the JSON array, no other text."""
         )
         
         # Parse AI response
-        ai_content = response['choices'][0]['message']['content']
+        ai_content = response.choices[0].message.content
         
         if '```json' in ai_content:
             ai_content = ai_content.split('```json')[1].split('```')[0].strip()
@@ -17160,7 +17163,11 @@ Respond with a JSON array with these fields:
 Only respond with the JSON array, no other text."""
 
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
+        
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a procurement research expert specializing in finding contract opportunities online."},
@@ -17171,7 +17178,7 @@ Only respond with the JSON array, no other text."""
         )
         
         # Parse AI response
-        ai_content = response['choices'][0]['message']['content']
+        ai_content = response.choices[0].message.content
         
         if '```json' in ai_content:
             ai_content = ai_content.split('```json')[1].split('```')[0].strip()
@@ -17350,7 +17357,12 @@ Respond with a JSON array with these fields:
 
 Only respond with the JSON array, no other text."""
 
-            response = openai.ChatCompletion.create(
+            client = get_openai_client()
+            if not client:
+                print("❌ OpenAI client not available")
+                return
+            
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a procurement research expert."},
@@ -17360,7 +17372,7 @@ Only respond with the JSON array, no other text."""
                 max_tokens=2000
             )
             
-            ai_content = response['choices'][0]['message']['content']
+            ai_content = response.choices[0].message.content
             if '```json' in ai_content:
                 ai_content = ai_content.split('```json')[1].split('```')[0].strip()
             elif '```' in ai_content:
@@ -17489,13 +17501,18 @@ def populate_urls_for_new_leads(lead_type, lead_ids):
             print(f"🤖 Auto-generating URLs for {len(leads_data)} new {lead_type} leads...")
             
             # Generate URLs with OpenAI (abbreviated prompt for speed)
+            client = get_openai_client()
+            if not client:
+                print("❌ OpenAI client not available for URL generation")
+                return
+            
             prompt = f"""Generate URLs for these procurement leads:
 
 {json.dumps(leads_data, indent=2)}
 
 Return JSON array: [{{"lead_id": int, "lead_type": str, "suggested_url": str, "confidence": str}}]"""
 
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "Generate procurement URLs."},
@@ -17505,7 +17522,7 @@ Return JSON array: [{{"lead_id": int, "lead_type": str, "suggested_url": str, "c
                 max_tokens=1500
             )
             
-            ai_content = response['choices'][0]['message']['content']
+            ai_content = response.choices[0].message.content
             if '```' in ai_content:
                 ai_content = ai_content.split('```')[1].replace('json', '').strip()
             
@@ -22815,7 +22832,6 @@ def validate_url_with_openai(url, company_name):
     Returns corrected URL or None if invalid
     """
     try:
-        import openai
         import requests
         
         # First, try a simple HTTP check
@@ -22835,13 +22851,12 @@ Please provide the correct, working website URL for this company. Search your kn
 
 Correct URL:"""
 
-        openai_key = os.environ.get('OPENAI_API_KEY')
-        if not openai_key:
+        client = get_openai_client()
+        if not client:
+            print(f"  ⚠️ OpenAI client not available for URL validation")
             return url  # Return original if no API key
         
-        openai.api_key = openai_key
-        
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": url_prompt}],
             temperature=0.1,
