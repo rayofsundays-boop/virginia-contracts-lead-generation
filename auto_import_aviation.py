@@ -83,6 +83,11 @@ def auto_import_aviation_leads():
             inserted = 0
             for lead in leads:
                 try:
+                    # Convert is_active from integer (0/1) to boolean for PostgreSQL
+                    lead_data = lead.copy()
+                    if 'is_active' in lead_data:
+                        lead_data['is_active'] = bool(lead_data['is_active'])
+                    
                     db.session.execute(text("""
                         INSERT INTO aviation_cleaning_leads
                         (company_name, company_type, aircraft_types, fleet_size,
@@ -97,12 +102,13 @@ def auto_import_aviation_leads():
                          :estimated_monthly_value, :current_contract_status, :notes,
                          :data_source, :is_active)
                         ON CONFLICT (company_name, city, state) DO NOTHING
-                    """), lead)
+                    """), lead_data)
+                    db.session.commit()  # Commit each lead individually to avoid transaction rollback
                     inserted += 1
                 except Exception as e:
-                    print(f"  ⚠️  Skipped 1 lead: {str(e)[:50]}")
+                    db.session.rollback()  # Rollback failed insert
+                    print(f"  ⚠️  Skipped 1 lead: {str(e)[:80]}")
             
-            db.session.commit()
             print(f"✅ Imported {inserted} aviation leads")
             
         except Exception as e:
