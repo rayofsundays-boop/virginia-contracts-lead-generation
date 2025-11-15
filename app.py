@@ -27633,6 +27633,13 @@ if __name__ == '__main__':
     init_db()
     ensure_twofa_columns()
     
+    # Auto-import aviation leads if table is empty
+    try:
+        from auto_import_aviation import auto_import_aviation_leads
+        auto_import_aviation_leads()
+    except Exception as e:
+        print(f"⚠️  Aviation auto-import: {e}")
+    
     import socket
     port = int(os.environ.get('PORT', 8080))
     # Attempt to bind to desired port; if unavailable (local dev only), choose a fallback.
