@@ -1391,7 +1391,7 @@ function findCityRFPs(stateName, stateCode) {
     })
     .then(data => {
         if (data.success) {
-            displayCityRFPs(data.rfps, stateName, data.message, data.cities_checked);
+            displayCityRFPs(data.rfps, stateName, stateCode, data.message, data.cities_checked);
         } else {
             displayError(data.error || 'Failed to find city RFPs');
         }
@@ -1413,7 +1413,7 @@ function findCityRFPs(stateName, stateCode) {
 }
 
 // Display found city RFPs in modal
-function displayCityRFPs(rfps, stateName, message, citiesChecked) {
+function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked) {
     let rfpsHtml = '';
     
     if (rfps && rfps.length > 0) {
@@ -1620,7 +1620,7 @@ function executeCustomCitySearch(stateName, stateCode) {
     })
     .then(data => {
         if (data.success) {
-            displayCityRFPs(data.rfps, stateName, data.message, data.cities_checked);
+            displayCityRFPs(data.rfps, stateName, stateCode, data.message, data.cities_checked);
         } else {
             displayError(data.error || 'Failed to search custom cities');
         }
