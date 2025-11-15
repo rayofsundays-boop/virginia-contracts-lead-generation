@@ -3942,6 +3942,200 @@ def init_postgres_db():
             db.session.rollback()
             print(f"⚠️  Client profiles table init: {profile_err}")
         
+        # User preferences table for customized dashboard settings
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_preferences
+                         (id SERIAL PRIMARY KEY,
+                          user_email TEXT NOT NULL UNIQUE,
+                          dashboard_layout TEXT DEFAULT 'default',
+                          email_notifications BOOLEAN DEFAULT TRUE,
+                          sms_notifications BOOLEAN DEFAULT FALSE,
+                          notification_frequency TEXT DEFAULT 'daily',
+                          preferred_contract_types TEXT,
+                          preferred_locations TEXT,
+                          min_contract_value INTEGER DEFAULT 0,
+                          auto_save_searches BOOLEAN DEFAULT TRUE,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_user_preferences_email 
+                                       ON user_preferences(user_email)'''))
+            db.session.commit()
+            print("✅ User preferences table created successfully")
+        except Exception as pref_err:
+            db.session.rollback()
+            print(f"⚠️  User preferences table init: {pref_err}")
+        
+        # Saved searches table for quick access to favorite filters
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS saved_searches
+                         (id SERIAL PRIMARY KEY,
+                          user_email TEXT NOT NULL,
+                          search_name TEXT NOT NULL,
+                          search_filters JSON NOT NULL,
+                          alert_enabled BOOLEAN DEFAULT FALSE,
+                          last_alerted_at TIMESTAMP,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_saved_searches_user_email 
+                                       ON saved_searches(user_email)'''))
+            db.session.commit()
+            print("✅ Saved searches table created successfully")
+        except Exception as search_err:
+            db.session.rollback()
+            print(f"⚠️  Saved searches table init: {search_err}")
+        
+        # 2FA recovery codes table
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS twofa_recovery_codes
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          code_hash TEXT NOT NULL,
+                          used BOOLEAN DEFAULT FALSE,
+                          used_at TIMESTAMP,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_twofa_recovery_user_id 
+                                       ON twofa_recovery_codes(user_id)'''))
+            db.session.commit()
+            print("✅ 2FA recovery codes table created successfully")
+        except Exception as twofa_err:
+            db.session.rollback()
+            print(f"⚠️  2FA recovery codes table init: {twofa_err}")
+        
+        # Construction cleanup leads table
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS construction_cleanup_leads
+                         (id SERIAL PRIMARY KEY,
+                          project_name TEXT NOT NULL,
+                          builder_name TEXT NOT NULL,
+                          project_type TEXT NOT NULL,
+                          city TEXT NOT NULL,
+                          state TEXT NOT NULL,
+                          square_footage INTEGER,
+                          estimated_cleanup_value TEXT,
+                          completion_date DATE,
+                          bid_deadline DATE,
+                          contact_name TEXT,
+                          contact_phone TEXT,
+                          contact_email TEXT,
+                          contact_website TEXT,
+                          requirements TEXT,
+                          services_needed TEXT,
+                          data_source TEXT,
+                          discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          is_active BOOLEAN DEFAULT TRUE,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_construction_cleanup_state 
+                                       ON construction_cleanup_leads(state)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_construction_cleanup_active 
+                                       ON construction_cleanup_leads(is_active)'''))
+            db.session.commit()
+            print("✅ Construction cleanup leads table created successfully")
+        except Exception as construction_err:
+            db.session.rollback()
+            print(f"⚠️  Construction cleanup leads table init: {construction_err}")
+        
+        # System settings table for global configuration
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS system_settings
+                         (id SERIAL PRIMARY KEY,
+                          key TEXT NOT NULL UNIQUE,
+                          value TEXT NOT NULL,
+                          description TEXT,
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'''))
+            db.session.commit()
+            print("✅ System settings table created successfully")
+        except Exception as settings_err:
+            db.session.rollback()
+            print(f"⚠️  System settings table init: {settings_err}")
+        
+        # Capability statements table for proposal generation
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS capability_statements
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          parsed_text TEXT NOT NULL,
+                          sector TEXT,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_capability_statements_user_id 
+                                       ON capability_statements(user_id)'''))
+            db.session.commit()
+            print("✅ Capability statements table created successfully")
+        except Exception as cap_err:
+            db.session.rollback()
+            print(f"⚠️  Capability statements table init: {cap_err}")
+        
+        # AI generated proposals table
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS ai_generated_proposals
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          contract_title TEXT NOT NULL,
+                          proposal_text TEXT NOT NULL,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_ai_proposals_user_id 
+                                       ON ai_generated_proposals(user_id)'''))
+            db.session.commit()
+            print("✅ AI generated proposals table created successfully")
+        except Exception as proposal_err:
+            db.session.rollback()
+            print(f"⚠️  AI generated proposals table init: {proposal_err}")
+        
+        # Compliance reports table
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS compliance_reports
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          report_type TEXT NOT NULL,
+                          report_data JSON NOT NULL,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_compliance_reports_user_id 
+                                       ON compliance_reports(user_id)'''))
+            db.session.commit()
+            print("✅ Compliance reports table created successfully")
+        except Exception as compliance_err:
+            db.session.rollback()
+            print(f"⚠️  Compliance reports table init: {compliance_err}")
+        
+        # User documents table for file uploads
+        try:
+            db.session.execute(text('''CREATE TABLE IF NOT EXISTS user_documents
+                         (id SERIAL PRIMARY KEY,
+                          user_id INTEGER NOT NULL,
+                          user_email TEXT NOT NULL,
+                          document_name TEXT NOT NULL,
+                          document_type TEXT NOT NULL,
+                          file_path TEXT NOT NULL,
+                          file_size INTEGER,
+                          uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          FOREIGN KEY (user_id) REFERENCES leads(id),
+                          FOREIGN KEY (user_email) REFERENCES leads(email))'''))
+            
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_user_documents_user_id 
+                                       ON user_documents(user_id)'''))
+            db.session.commit()
+            print("✅ User documents table created successfully")
+        except Exception as doc_err:
+            db.session.rollback()
+            print(f"⚠️  User documents table init: {doc_err}")
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
