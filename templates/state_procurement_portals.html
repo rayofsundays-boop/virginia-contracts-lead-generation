@@ -30,15 +30,76 @@
         </div>
     </div>
 
-    <!-- Search Bar -->
+    <!-- State Selector -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <div class="input-group">
-                <span class="input-group-text bg-primary text-white">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input type="text" class="form-control form-control-lg" id="stateSearch" 
-                       placeholder="Search for a state...">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="stateDropdown" class="form-label fw-bold">
+                        <i class="fas fa-map-marked-alt me-2"></i>Select State
+                    </label>
+                    <select class="form-select form-select-lg" id="stateDropdown" onchange="scrollToState(this.value)">
+                        <option value="">-- Choose a state --</option>
+                        <option value="alabama">Alabama</option>
+                        <option value="alaska">Alaska</option>
+                        <option value="arizona">Arizona</option>
+                        <option value="arkansas">Arkansas</option>
+                        <option value="california">California</option>
+                        <option value="colorado">Colorado</option>
+                        <option value="connecticut">Connecticut</option>
+                        <option value="delaware">Delaware</option>
+                        <option value="florida">Florida</option>
+                        <option value="georgia">Georgia</option>
+                        <option value="hawaii">Hawaii</option>
+                        <option value="idaho">Idaho</option>
+                        <option value="illinois">Illinois</option>
+                        <option value="indiana">Indiana</option>
+                        <option value="iowa">Iowa</option>
+                        <option value="kansas">Kansas</option>
+                        <option value="kentucky">Kentucky</option>
+                        <option value="louisiana">Louisiana</option>
+                        <option value="maine">Maine</option>
+                        <option value="maryland">Maryland</option>
+                        <option value="massachusetts">Massachusetts</option>
+                        <option value="michigan">Michigan</option>
+                        <option value="minnesota">Minnesota</option>
+                        <option value="mississippi">Mississippi</option>
+                        <option value="missouri">Missouri</option>
+                        <option value="montana">Montana</option>
+                        <option value="nebraska">Nebraska</option>
+                        <option value="nevada">Nevada</option>
+                        <option value="new-hampshire">New Hampshire</option>
+                        <option value="new-jersey">New Jersey</option>
+                        <option value="new-mexico">New Mexico</option>
+                        <option value="new-york">New York</option>
+                        <option value="north-carolina">North Carolina</option>
+                        <option value="north-dakota">North Dakota</option>
+                        <option value="ohio">Ohio</option>
+                        <option value="oklahoma">Oklahoma</option>
+                        <option value="oregon">Oregon</option>
+                        <option value="pennsylvania">Pennsylvania</option>
+                        <option value="rhode-island">Rhode Island</option>
+                        <option value="south-carolina">South Carolina</option>
+                        <option value="south-dakota">South Dakota</option>
+                        <option value="tennessee">Tennessee</option>
+                        <option value="texas">Texas</option>
+                        <option value="utah">Utah</option>
+                        <option value="vermont">Vermont</option>
+                        <option value="virginia">Virginia</option>
+                        <option value="washington">Washington</option>
+                        <option value="west-virginia">West Virginia</option>
+                        <option value="wisconsin">Wisconsin</option>
+                        <option value="wyoming">Wyoming</option>
+                        <option value="washington-dc">Washington DC</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="stateSearch" class="form-label fw-bold">
+                        <i class="fas fa-search me-2"></i>Or Search
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="stateSearch" 
+                           placeholder="Type to filter states...">
+                </div>
             </div>
         </div>
     </div>
@@ -1468,10 +1529,40 @@ function saveRegistrationStatus() {
     .catch(err => alert('Network error. Please try again.'));
 }
 
+// Scroll to selected state from dropdown
+function scrollToState(stateValue) {
+    if (!stateValue) return;
+    
+    const stateCard = document.querySelector(`.state-card[data-state="${stateValue}"]`);
+    if (stateCard) {
+        // Clear search filter first
+        document.getElementById('stateSearch').value = '';
+        document.querySelectorAll('.state-card').forEach(card => card.classList.remove('hidden'));
+        
+        // Highlight and scroll
+        stateCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Flash effect
+        stateCard.style.transition = 'all 0.3s ease';
+        stateCard.style.transform = 'scale(1.05)';
+        stateCard.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.6)';
+        
+        setTimeout(() => {
+            stateCard.style.transform = 'scale(1)';
+            stateCard.style.boxShadow = '';
+        }, 800);
+    }
+}
+
 // Search functionality
 document.getElementById('stateSearch').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const stateCards = document.querySelectorAll('.state-card');
+    
+    // Clear dropdown selection when typing
+    if (searchTerm) {
+        document.getElementById('stateDropdown').value = '';
+    }
     
     stateCards.forEach(card => {
         const stateName = card.getAttribute('data-state');
