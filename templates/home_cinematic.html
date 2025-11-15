@@ -1360,7 +1360,7 @@ section, .container, .row {
 
 .btn-partner-primary {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
+    color: #ffffff !important;
     padding: 15px 35px;
     border-radius: 50px;
     font-weight: 700;
@@ -1370,18 +1370,19 @@ section, .container, .row {
     transition: all 0.3s ease;
     box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     border: 2px solid transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .btn-partner-primary:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
-    color: white;
+    color: #ffffff !important;
     border-color: #ffd700;
 }
 
 .btn-partner-secondary {
-    background: rgba(255, 215, 0, 0.1);
-    color: #ffd700;
+    background: rgba(255, 215, 0, 0.15);
+    color: #ffffff !important;
     padding: 15px 35px;
     border-radius: 50px;
     font-weight: 700;
@@ -1389,14 +1390,15 @@ section, .container, .row {
     display: inline-flex;
     align-items: center;
     transition: all 0.3s ease;
-    border: 2px solid rgba(255, 215, 0, 0.3);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .btn-partner-secondary:hover {
-    background: rgba(255, 215, 0, 0.2);
+    background: rgba(255, 215, 0, 0.25);
     transform: translateY(-3px);
     border-color: #ffd700;
-    color: #ffd700;
+    color: #ffffff !important;
     box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
 }
 
@@ -1887,6 +1889,37 @@ section[class*="section"] span {
 .scroll-indicator,
 .scroll-indicator i,
 .scroll-indicator span {
+    color: #ffffff !important;
+}
+
+/* ALL BUTTONS - Force white text for maximum visibility */
+.btn-cinematic,
+.btn-primary-glow,
+.btn-dark-outline,
+.btn-ai-glow,
+.btn-primary-solid,
+.btn-cta-large,
+.btn-service-residential,
+.btn-service-commercial,
+.btn-partner-primary,
+.btn-partner-secondary,
+a.btn-cinematic,
+a[class*="btn-"] {
+    color: #ffffff !important;
+}
+
+.btn-cinematic:hover,
+.btn-primary-glow:hover,
+.btn-dark-outline:hover,
+.btn-ai-glow:hover,
+.btn-primary-solid:hover,
+.btn-cta-large:hover,
+.btn-service-residential:hover,
+.btn-service-commercial:hover,
+.btn-partner-primary:hover,
+.btn-partner-secondary:hover,
+a.btn-cinematic:hover,
+a[class*="btn-"]:hover {
     color: #ffffff !important;
 }
 </style>
