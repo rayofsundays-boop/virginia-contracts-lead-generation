@@ -478,17 +478,8 @@ small, .small {
     color: #111111 !important;
 }
 
-/* Buttons: dark background with white text for readability */
-button, .btn {
-    color: #ffffff !important;
-    background-color: #1c1c1c !important;
-    border-color: #1c1c1c !important;
-}
-button:hover, .btn:hover {
-    background-color: #000000 !important;
-    border-color: #000000 !important;
-}
-/* Keep warning buttons readable */
+/* Buttons: preserve variant colors; ensure readability only where needed */
+/* Keep warning buttons readable on yellow */
 .btn-warning { color: #1c1c1c !important; }
 
 /* Inputs and placeholders */
@@ -525,6 +516,50 @@ a:not(.btn):hover { color: #0b5ed7 !important; }
 
 /* Hover state readability in cards */
 .card:hover .card-title, .card:hover .card-text { color: #1c1c1c !important; }
+
+/* Subscribe Now CTA (sales banner) → green */
+.sales-banner-cta {
+    background-color: #10b981 !important; /* emerald */
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+}
+.sales-banner-cta:hover {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+}
+
+/* State procurement portal card buttons: enforce three distinct colors */
+.state-card .btn-success {
+    background-color: #10b981 !important; /* AI search - green */
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+}
+.state-card .btn-success:hover { background-color: #059669 !important; border-color: #059669 !important; }
+
+.state-card .btn-primary {
+    background-color: #2563eb !important; /* State portal - blue */
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+.state-card .btn-primary:hover { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; }
+
+.state-card .btn-outline-primary {
+    border-color: #2563eb !important;
+    color: #2563eb !important;
+    background-color: transparent !important;
+}
+.state-card .btn-outline-primary:hover {
+    background-color: rgba(37, 99, 235, 0.1) !important;
+}
+
+.state-card .btn-outline-secondary {
+    border-color: #6b7280 !important; /* gray */
+    color: #374151 !important;
+    background-color: transparent !important;
+}
+.state-card .btn-outline-secondary:hover {
+    background-color: rgba(107, 114, 128, 0.1) !important;
+}
 
 
 /* Home page: ensure card subtitles/descriptions have strong contrast */
