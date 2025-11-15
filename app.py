@@ -22277,6 +22277,7 @@ def quick_wins():
                 return redirect(url_for('pricing_guide'))
         
         # Get filter parameters from URL
+        state_filter = request.args.get('state', '')
         city_filter = request.args.get('city', '')
         min_value_filter = request.args.get('min_value', '')
         page = 1  # Single page showing all results
@@ -22508,6 +22509,10 @@ def quick_wins():
         
         # Apply filters if provided
         filtered_leads = all_quick_wins
+        
+        # Filter by state if requested
+        if state_filter:
+            filtered_leads = [l for l in filtered_leads if l.get('state', '').upper() == state_filter.upper()]
         
         # Filter by city if requested
         if city_filter:

@@ -29,24 +29,74 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <form method="GET" action="{{ url_for('quick_wins') }}" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-bold">
-                        <i class="fas fa-map-marker-alt text-primary me-2"></i>Filter by City (Optional)
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i>Filter by State
                     </label>
-                    <select class="form-select form-select-lg" name="city">
-                        <option value="">🌎 All US Cities (Nationwide)</option>
-                        <option value="Hampton" {% if request.args.get('city') == 'Hampton' %}selected{% endif %}>Hampton, VA</option>
-                        <option value="Newport News" {% if request.args.get('city') == 'Newport News' %}selected{% endif %}>Newport News, VA</option>
-                        <option value="Virginia Beach" {% if request.args.get('city') == 'Virginia Beach' %}selected{% endif %}>Virginia Beach, VA</option>
-                        <option value="Suffolk" {% if request.args.get('city') == 'Suffolk' %}selected{% endif %}>Suffolk, VA</option>
-                        <option value="Williamsburg" {% if request.args.get('city') == 'Williamsburg' %}selected{% endif %}>Williamsburg, VA</option>
-                        <option value="Norfolk" {% if request.args.get('city') == 'Norfolk' %}selected{% endif %}>Norfolk, VA</option>
-                        <option value="Chesapeake" {% if request.args.get('city') == 'Chesapeake' %}selected{% endif %}>Chesapeake, VA</option>
-                        <option value="Portsmouth" {% if request.args.get('city') == 'Portsmouth' %}selected{% endif %}>Portsmouth, VA</option>
+                    <select class="form-select form-select-lg" name="state">
+                        <option value="">🌎 All States (Nationwide)</option>
+                        <option value="AL" {% if request.args.get('state') == 'AL' %}selected{% endif %}>Alabama</option>
+                        <option value="AK" {% if request.args.get('state') == 'AK' %}selected{% endif %}>Alaska</option>
+                        <option value="AZ" {% if request.args.get('state') == 'AZ' %}selected{% endif %}>Arizona</option>
+                        <option value="AR" {% if request.args.get('state') == 'AR' %}selected{% endif %}>Arkansas</option>
+                        <option value="CA" {% if request.args.get('state') == 'CA' %}selected{% endif %}>California</option>
+                        <option value="CO" {% if request.args.get('state') == 'CO' %}selected{% endif %}>Colorado</option>
+                        <option value="CT" {% if request.args.get('state') == 'CT' %}selected{% endif %}>Connecticut</option>
+                        <option value="DE" {% if request.args.get('state') == 'DE' %}selected{% endif %}>Delaware</option>
+                        <option value="FL" {% if request.args.get('state') == 'FL' %}selected{% endif %}>Florida</option>
+                        <option value="GA" {% if request.args.get('state') == 'GA' %}selected{% endif %}>Georgia</option>
+                        <option value="HI" {% if request.args.get('state') == 'HI' %}selected{% endif %}>Hawaii</option>
+                        <option value="ID" {% if request.args.get('state') == 'ID' %}selected{% endif %}>Idaho</option>
+                        <option value="IL" {% if request.args.get('state') == 'IL' %}selected{% endif %}>Illinois</option>
+                        <option value="IN" {% if request.args.get('state') == 'IN' %}selected{% endif %}>Indiana</option>
+                        <option value="IA" {% if request.args.get('state') == 'IA' %}selected{% endif %}>Iowa</option>
+                        <option value="KS" {% if request.args.get('state') == 'KS' %}selected{% endif %}>Kansas</option>
+                        <option value="KY" {% if request.args.get('state') == 'KY' %}selected{% endif %}>Kentucky</option>
+                        <option value="LA" {% if request.args.get('state') == 'LA' %}selected{% endif %}>Louisiana</option>
+                        <option value="ME" {% if request.args.get('state') == 'ME' %}selected{% endif %}>Maine</option>
+                        <option value="MD" {% if request.args.get('state') == 'MD' %}selected{% endif %}>Maryland</option>
+                        <option value="MA" {% if request.args.get('state') == 'MA' %}selected{% endif %}>Massachusetts</option>
+                        <option value="MI" {% if request.args.get('state') == 'MI' %}selected{% endif %}>Michigan</option>
+                        <option value="MN" {% if request.args.get('state') == 'MN' %}selected{% endif %}>Minnesota</option>
+                        <option value="MS" {% if request.args.get('state') == 'MS' %}selected{% endif %}>Mississippi</option>
+                        <option value="MO" {% if request.args.get('state') == 'MO' %}selected{% endif %}>Missouri</option>
+                        <option value="MT" {% if request.args.get('state') == 'MT' %}selected{% endif %}>Montana</option>
+                        <option value="NE" {% if request.args.get('state') == 'NE' %}selected{% endif %}>Nebraska</option>
+                        <option value="NV" {% if request.args.get('state') == 'NV' %}selected{% endif %}>Nevada</option>
+                        <option value="NH" {% if request.args.get('state') == 'NH' %}selected{% endif %}>New Hampshire</option>
+                        <option value="NJ" {% if request.args.get('state') == 'NJ' %}selected{% endif %}>New Jersey</option>
+                        <option value="NM" {% if request.args.get('state') == 'NM' %}selected{% endif %}>New Mexico</option>
+                        <option value="NY" {% if request.args.get('state') == 'NY' %}selected{% endif %}>New York</option>
+                        <option value="NC" {% if request.args.get('state') == 'NC' %}selected{% endif %}>North Carolina</option>
+                        <option value="ND" {% if request.args.get('state') == 'ND' %}selected{% endif %}>North Dakota</option>
+                        <option value="OH" {% if request.args.get('state') == 'OH' %}selected{% endif %}>Ohio</option>
+                        <option value="OK" {% if request.args.get('state') == 'OK' %}selected{% endif %}>Oklahoma</option>
+                        <option value="OR" {% if request.args.get('state') == 'OR' %}selected{% endif %}>Oregon</option>
+                        <option value="PA" {% if request.args.get('state') == 'PA' %}selected{% endif %}>Pennsylvania</option>
+                        <option value="RI" {% if request.args.get('state') == 'RI' %}selected{% endif %}>Rhode Island</option>
+                        <option value="SC" {% if request.args.get('state') == 'SC' %}selected{% endif %}>South Carolina</option>
+                        <option value="SD" {% if request.args.get('state') == 'SD' %}selected{% endif %}>South Dakota</option>
+                        <option value="TN" {% if request.args.get('state') == 'TN' %}selected{% endif %}>Tennessee</option>
+                        <option value="TX" {% if request.args.get('state') == 'TX' %}selected{% endif %}>Texas</option>
+                        <option value="UT" {% if request.args.get('state') == 'UT' %}selected{% endif %}>Utah</option>
+                        <option value="VT" {% if request.args.get('state') == 'VT' %}selected{% endif %}>Vermont</option>
+                        <option value="VA" {% if request.args.get('state') == 'VA' %}selected{% endif %}>Virginia</option>
+                        <option value="WA" {% if request.args.get('state') == 'WA' %}selected{% endif %}>Washington</option>
+                        <option value="WV" {% if request.args.get('state') == 'WV' %}selected{% endif %}>West Virginia</option>
+                        <option value="WI" {% if request.args.get('state') == 'WI' %}selected{% endif %}>Wisconsin</option>
+                        <option value="WY" {% if request.args.get('state') == 'WY' %}selected{% endif %}>Wyoming</option>
+                        <option value="DC" {% if request.args.get('state') == 'DC' %}selected{% endif %}>Washington DC</option>
                     </select>
                     <small class="text-muted">Showing opportunities from all 50 states. Filter to narrow results.</small>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-map-marker-alt text-info me-2"></i>Filter by City (Optional)
+                    </label>
+                    <input type="text" class="form-select form-select-lg" name="city" placeholder="Enter city name" value="{{ request.args.get('city', '') }}" style="height: 48px;">
+                    <small class="text-muted">🌎 All US Cities (Nationwide)</small>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-dollar-sign text-success me-2"></i>Min Value
                     </label>
@@ -58,7 +108,8 @@
                         <option value="100000">$100,000+</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold d-block">&nbsp;</label>
                     <button type="submit" class="btn btn-primary btn-lg w-100">
                         <i class="fas fa-search me-2"></i>Filter Results
                     </button>
