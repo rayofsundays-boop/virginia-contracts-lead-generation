@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Send External Email - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-paper-plane"></i> Send External Email</h2>
+                    <p class="text-muted">Send emails to external addresses with tracking</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('external_emails') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-inbox"></i> View Sent Emails
+                    </a>
+                </div>
+            </div>
+
+            <!-- Email Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form id="externalEmailForm">
+                        <!-- Message Type -->
+                        <div class="mb-3">
+                            <label for="messageType" class="form-label">
+                                <i class="fas fa-tag"></i> Message Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="messageType" name="message_type" required>
+                                <option value="general">General Communication</option>
+                                <option value="support">Customer Support</option>
+                                <option value="marketing">Marketing/Promotional</option>
+                                <option value="notification">System Notification</option>
+                                <option value="followup">Follow-up</option>
+                                <option value="announcement">Announcement</option>
+                            </select>
+                        </div>
+
+                        <!-- Recipient Email -->
+                        <div class="mb-3">
+                            <label for="recipientEmail" class="form-label">
+                                <i class="fas fa-envelope"></i> Recipient Email Address <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="recipientEmail" 
+                                name="to_email" 
+                                placeholder="user@example.com"
+                                required
+                            >
+                            <div class="form-text">Enter a valid external email address</div>
+                        </div>
+
+                        <!-- Recipient Name (Optional) -->
+                        <div class="mb-3">
+                            <label for="recipientName" class="form-label">
+                                <i class="fas fa-user"></i> Recipient Name (Optional)
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="recipientName" 
+                                name="recipient_name" 
+                                placeholder="John Doe"
+                            >
+                        </div>
+
+                        <!-- Subject -->
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">
+                                <i class="fas fa-heading"></i> Subject <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="subject" 
+                                name="subject" 
+                                placeholder="Enter email subject"
+                                required
+                            >
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                <i class="fas fa-exclamation-circle"></i> Priority
+                            </label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+
+                        <!-- Message Body (Plain Text) -->
+                        <div class="mb-3">
+                            <label for="messageBody" class="form-label">
+                                <i class="fas fa-align-left"></i> Message Body (Plain Text) <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="messageBody" 
+                                name="message_body" 
+                                rows="6"
+                                placeholder="Enter your message here..."
+                                required
+                            ></textarea>
+                            <div class="form-text">This version will be sent to email clients that don't support HTML</div>
+                        </div>
+
+                        <!-- Message HTML (Optional) -->
+                        <div class="mb-3">
+                            <label for="messageHtml" class="form-label">
+                                <i class="fas fa-code"></i> Message Body (HTML - Optional)
+                            </label>
+                            <textarea 
+                                class="form-control font-monospace" 
+                                id="messageHtml" 
+                                name="message_html" 
+                                rows="8"
+                                placeholder="<p>Enter HTML formatted message here...</p>"
+                            ></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Use HTML for rich formatting (bold, links, images, etc.)
+                            </div>
+                        </div>
+
+                        <!-- Preview Button -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-secondary" id="previewBtn">
+                                <i class="fas fa-eye"></i> Preview HTML
+                            </button>
+                        </div>
+
+                        <!-- Alert Container -->
+                        <div id="alertContainer"></div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i> Send Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Admin Badge Info -->
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-shield-alt"></i> <strong>Admin Badge:</strong> All emails sent through this system are automatically marked with an "Admin" badge in the sent folder.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HTML Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Email HTML Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- HTML content will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('externalEmailForm');
+    const sendBtn = document.getElementById('sendBtn');
+    const alertContainer = document.getElementById('alertContainer');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+
+    // Preview HTML
+    previewBtn.addEventListener('click', function() {
+        const html = document.getElementById('messageHtml').value;
+        if (!html.trim()) {
+            showAlert('No HTML content to preview', 'warning');
+            return;
+        }
+        document.getElementById('previewContent').innerHTML = html;
+        previewModal.show();
+    });
+
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Disable button and show sending state
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        alertContainer.innerHTML = '';
+
+        // Get form data
+        const formData = {
+            to_email: document.getElementById('recipientEmail').value.trim(),
+            subject: document.getElementById('subject').value.trim(),
+            message_body: document.getElementById('messageBody').value.trim(),
+            message_html: document.getElementById('messageHtml').value.trim() || null,
+            message_type: document.getElementById('messageType').value,
+            recipient_name: document.getElementById('recipientName').value.trim() || null,
+            priority: document.getElementById('priority').value
+        };
+
+        // Validate
+        if (!formData.to_email) {
+            showAlert('Email address is required', 'danger');
+            resetButton();
+            return;
+        }
+
+        if (!formData.subject) {
+            showAlert('Subject is required', 'danger');
+            resetButton();
+            return;
+        }
+
+        if (!formData.message_body) {
+            showAlert('Message body is required', 'danger');
+            resetButton();
+            return;
+        }
+
+        try {
+            // Send API request
+            const response = await fetch('/send-external-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert(`✅ Message sent successfully! Email ID: ${result.email_id}`, 'success');
+                form.reset();
+                
+                // Redirect to sent emails after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/external-emails';
+                }, 2000);
+            } else {
+                showAlert(`❌ Failed to send email: ${result.message}`, 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('❌ Network error. Please check your connection and try again.', 'danger');
+        } finally {
+            resetButton();
+        }
+    });
+
+    function showAlert(message, type) {
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+
+    function resetButton() {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email';
+    }
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+</style>
+{% endblock %}

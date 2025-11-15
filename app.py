@@ -25153,6 +25153,190 @@ def send_message_to_admin():
     # GET - show the form
     return render_template('send_message.html')
 
+
+# ============================================================================
+# EXTERNAL EMAIL API - Admin-only email sending to external addresses
+# ============================================================================
+
+# Rate limiting tracker (in-memory for simplicity, use Redis for production)
+from collections import defaultdict
+from datetime import timedelta
+email_rate_limits = defaultdict(list)
+
+def check_rate_limit(user_id: int, limit: int = 10, window_minutes: int = 60) -> bool:
+    """Check if user has exceeded rate limit"""
+    now = datetime.utcnow()
+    cutoff = now - timedelta(minutes=window_minutes)
+    
+    # Clean old entries
+    email_rate_limits[user_id] = [
+        timestamp for timestamp in email_rate_limits[user_id]
+        if timestamp > cutoff
+    ]
+    
+    # Check limit
+    if len(email_rate_limits[user_id]) >= limit:
+        return False
+    
+    # Add current request
+    email_rate_limits[user_id].append(now)
+    return True
+
+
+@app.route('/send-external-email', methods=['POST'])
+@login_required
+def send_external_email_route():
+    """
+    Admin endpoint to send external emails.
+    
+    Request JSON:
+        {
+            "to_email": "user@example.com",
+            "subject": "Email subject",
+            "message_body": "Plain text message",
+            "message_html": "<p>HTML version</p>",  // optional
+            "message_type": "support",  // general, support, marketing, notification
+            "recipient_name": "John Doe",  // optional
+            "priority": "normal"  // normal, high, low
+        }
+    
+    Response JSON:
+        {
+            "success": true|false,
+            "message": "Description",
+            "email_id": 123  // if successful
+        }
+    """
+    try:
+        # Admin-only check
+        if not session.get('is_admin'):
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized: Admin access required'
+            }), 403
+        
+        # Rate limiting
+        user_id = session.get('user_id')
+        if not check_rate_limit(user_id, limit=50, window_minutes=60):
+            log_admin_action('external_email_rate_limit', f'Rate limit exceeded by user {user_id}')
+            return jsonify({
+                'success': False,
+                'message': 'Rate limit exceeded. Please wait before sending more emails.'
+            }), 429
+        
+        # Get JSON data
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid request: JSON body required'
+            }), 400
+        
+        # Extract and validate fields
+        to_email = data.get('to_email', '').strip()
+        subject = data.get('subject', '').strip()
+        message_body = data.get('message_body', '').strip()
+        message_html = data.get('message_html')
+        message_type = data.get('message_type', 'general')
+        recipient_name = data.get('recipient_name')
+        priority = data.get('priority', 'normal')
+        
+        # Validation
+        if not to_email:
+            return jsonify({
+                'success': False,
+                'message': 'Email address is required'
+            }), 400
+        
+        if not subject:
+            return jsonify({
+                'success': False,
+                'message': 'Subject cannot be empty'
+            }), 400
+        
+        if not message_body:
+            return jsonify({
+                'success': False,
+                'message': 'Message body cannot be empty'
+            }), 400
+        
+        # Get sender info from session
+        sender_username = session.get('username')
+        sender_email = session.get('email')
+        
+        # Import email service
+        from external_email_service import send_external_email
+        
+        # Send email
+        result = send_external_email(
+            to_email=to_email,
+            subject=subject,
+            message_body=message_body,
+            message_html=message_html,
+            sender_user_id=user_id,
+            sender_username=sender_username,
+            sender_email=sender_email,
+            message_type=message_type,
+            recipient_name=recipient_name,
+            priority=priority,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        
+        # Log admin action
+        if result['success']:
+            log_admin_action(
+                'external_email_sent',
+                f'Sent {message_type} email to {to_email}: "{subject}" (ID: {result["email_id"]})'
+            )
+        else:
+            log_admin_action(
+                'external_email_failed',
+                f'Failed to send email to {to_email}: {result["message"]}'
+            )
+        
+        # Return response
+        status_code = 200 if result['success'] else 500
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        log_admin_action('external_email_error', f'Exception: {str(e)}')
+        
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+
+@app.route('/external-emails', methods=['GET'])
+@login_required
+def view_external_emails():
+    """Admin page to view sent external emails"""
+    if not session.get('is_admin'):
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        # Get all sent external emails
+        emails = db.session.execute(text("""
+            SELECT id, recipient_email, recipient_name, subject, message_type,
+                   status, sent_at, delivery_error, sender_username, is_admin_sender,
+                   created_at
+            FROM external_emails
+            ORDER BY created_at DESC
+            LIMIT 100
+        """)).fetchall()
+        
+        return render_template('admin_external_emails.html', emails=emails)
+        
+    except Exception as e:
+        print(f"Error fetching external emails: {e}")
+        flash('Error loading sent emails', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/my-messages')
 @login_required
 def my_messages():

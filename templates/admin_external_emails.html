@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Sent External Emails - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-inbox"></i> Sent External Emails</h2>
+            <p class="text-muted">View all emails sent to external addresses</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_send_external_email') }}" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Send New Email
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-muted">Total Sent</h5>
+                    <h2>{{ emails|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-muted">Successful</h5>
+                    <h2 class="text-success">{{ emails|selectattr('status', 'equalto', 'sent')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-muted">Failed</h5>
+                    <h2 class="text-danger">{{ emails|selectattr('status', 'equalto', 'failed')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-muted">Pending</h5>
+                    <h2 class="text-warning">{{ emails|selectattr('status', 'equalto', 'pending')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emails Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if emails %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="emailsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Recipient</th>
+                            <th>Subject</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Sender</th>
+                            <th>Sent Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for email in emails %}
+                        <tr>
+                            <td><code>#{{ email.id }}</code></td>
+                            <td>
+                                <div>
+                                    <strong>{{ email.recipient_email }}</strong>
+                                    {% if email.recipient_name %}
+                                    <br><small class="text-muted">{{ email.recipient_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>{{ email.subject }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ email.message_type }}</span>
+                            </td>
+                            <td>
+                                {% if email.status == 'sent' %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Sent</span>
+                                {% elif email.status == 'failed' %}
+                                <span class="badge bg-danger"><i class="fas fa-times"></i> Failed</span>
+                                {% elif email.status == 'pending' %}
+                                <span class="badge bg-warning"><i class="fas fa-clock"></i> Pending</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ email.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if email.is_admin_sender %}
+                                <span class="badge bg-primary"><i class="fas fa-shield-alt"></i> Admin</span>
+                                {% endif %}
+                                <br><small>{{ email.sender_username }}</small>
+                            </td>
+                            <td>
+                                {% if email.sent_at %}
+                                {{ email.sent_at.strftime('%Y-%m-%d %H:%M') if email.sent_at else 'N/A' }}
+                                {% else %}
+                                <small class="text-muted">Not sent yet</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="viewEmail({{ email.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if email.delivery_error %}
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="showError('{{ email.delivery_error }}')">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4>No External Emails Sent Yet</h4>
+                <p class="text-muted">Start sending emails to external addresses</p>
+                <a href="{{ url_for('admin_send_external_email') }}" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send Your First Email
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- View Email Modal -->
+<div class="modal fade" id="viewEmailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Email Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="emailDetailsContent">
+                <!-- Content loaded via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Delivery Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="errorContent">
+                <!-- Error content -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable if available
+$(document).ready(function() {
+    if ($.fn.DataTable) {
+        $('#emailsTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 25,
+            responsive: true
+        });
+    }
+});
+
+function viewEmail(emailId) {
+    // In a real implementation, fetch email details via API
+    // For now, show placeholder
+    const modal = new bootstrap.Modal(document.getElementById('viewEmailModal'));
+    document.getElementById('emailDetailsContent').innerHTML = `
+        <p><strong>Email ID:</strong> #${emailId}</p>
+        <p>Full email details would be loaded here via API call.</p>
+        <p><em>API endpoint: /api/external-emails/${emailId}</em></p>
+    `;
+    modal.show();
+}
+
+function showError(error) {
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    document.getElementById('errorContent').innerHTML = `<pre class="text-danger">${error}</pre>`;
+    modal.show();
+}
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.35em 0.65em;
+    }
+</style>
+{% endblock %}
