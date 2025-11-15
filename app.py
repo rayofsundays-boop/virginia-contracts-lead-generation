@@ -7895,9 +7895,13 @@ WEBPAGE TEXT:
         
         print(f"🎉 Discovery complete: {len(discovered_rfps)} RFPs found across {len(cities[:5])} cities")
         
+        # Include cities checked for better user feedback
+        cities_checked = [city.get('city_name', '') for city in cities[:5]]
+        
         return jsonify({
             'success': True,
             'message': f'Found {len(discovered_rfps)} RFPs in {state_name}',
+            'cities_checked': cities_checked,
             'rfps': discovered_rfps,
             'cities_searched': len(cities[:5]),
             'state': state_name

@@ -1306,7 +1306,7 @@ function findCityRFPs(stateName, stateCode) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            displayCityRFPs(data.rfps, stateName, data.message);
+            displayCityRFPs(data.rfps, stateName, data.message, data.cities_checked);
         } else {
             displayError(data.error || 'Failed to find city RFPs');
         }
@@ -1318,7 +1318,7 @@ function findCityRFPs(stateName, stateCode) {
 }
 
 // Display found city RFPs in modal
-function displayCityRFPs(rfps, stateName, message) {
+function displayCityRFPs(rfps, stateName, message, citiesChecked) {
     let rfpsHtml = '';
     
     if (rfps && rfps.length > 0) {
@@ -1344,10 +1344,24 @@ function displayCityRFPs(rfps, stateName, message) {
             </div>
         `).join('');
     } else {
+        // Show which cities were checked
+        const citiesList = citiesChecked && citiesChecked.length > 0 
+            ? citiesChecked.map(c => `<span class="badge bg-light text-dark me-1 mb-1">${c}</span>`).join('')
+            : '';
+        
         rfpsHtml = `
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No active cleaning/janitorial RFPs found at this time. Try checking the state portal directly or check back later.
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-info-circle me-2"></i>No Active RFPs Found</h6>
+                <p class="mb-2">Our AI checked major cities but didn't find active cleaning/janitorial RFPs at this time.</p>
+                ${citiesList ? `<p class="mb-2"><strong>Cities Checked:</strong><br>${citiesList}</p>` : ''}
+                <hr>
+                <p class="mb-0 small"><strong>Suggestions:</strong></p>
+                <ul class="small mb-0">
+                    <li>Check the official state portal directly (button below)</li>
+                    <li>Try again in a few days - RFPs are posted regularly</li>
+                    <li>Consider registering on the state's vendor portal for notifications</li>
+                    <li>Contact city procurement offices directly for upcoming opportunities</li>
+                </ul>
             </div>
         `;
     }
