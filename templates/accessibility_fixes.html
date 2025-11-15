@@ -460,6 +460,11 @@ small, .small {
 }
 
 /* Navbar and sidebar contrast */
+/* Force navbar-brand to be white on all pages */
+.navbar-brand, .navbar-brand:hover, .navbar-brand:focus {
+    color: #ffffff !important;
+}
+
 .navbar-light .navbar-nav .nav-link, .navbar .nav-link {
     color: #1c1c1c !important;
 }
@@ -736,6 +741,25 @@ nav[style*="background: linear-gradient"] .nav-link {
 .hero-cinematic .navbar .nav-link:hover,
 .hero-cinematic .navbar .nav-link:focus {
     color: #f3f4f6 !important;
+}
+
+/* Ensure navbar-brand (logo) is ALWAYS white on ALL pages */
+.navbar .navbar-brand,
+.navbar-brand,
+a.navbar-brand,
+header .navbar-brand,
+nav .navbar-brand {
+    color: #ffffff !important;
+}
+
+.navbar .navbar-brand:hover,
+.navbar-brand:hover,
+a.navbar-brand:hover,
+.navbar .navbar-brand:focus,
+.navbar-brand:focus,
+a.navbar-brand:focus {
+    color: #ffffff !important;
+    opacity: 0.9;
 }
 
 /* Hero points/lists on dark backgrounds */
