@@ -1275,10 +1275,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load registration status from backend
 function loadRegistrationStatus() {
-    fetch('/api/portal-registration-status')
-        .then(r => r.json())
+    fetch('/api/portal-registration-status', {
+        headers: { 'Accept': 'application/json' }
+    })
+        .then(async (r) => {
+            const ct = r.headers.get('content-type') || '';
+            if (r.redirected || ct.includes('text/html')) {
+                // Not logged in; silently skip registration coloring
+                return { success: false, registrations: {} };
+            }
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 userRegistrations = data.registrations;
                 updateCardColors();
             }
@@ -1361,15 +1371,19 @@ function findCityRFPs(stateName, stateCode) {
     
     fetch('/api/find-city-rfps', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
             state_name: stateName,
             state_code: stateCode
         }),
         signal: controller.signal
     })
-    .then(r => {
+    .then(async r => {
         clearTimeout(timeoutId);
+        const ct = r.headers.get('content-type') || '';
+        if (r.redirected || ct.includes('text/html')) {
+            throw new Error('Sign-in required to use AI search. Please sign in and try again.');
+        }
         if (!r.ok) {
             throw new Error(`HTTP ${r.status}: ${r.statusText}`);
         }
@@ -1388,7 +1402,12 @@ function findCityRFPs(stateName, stateCode) {
         if (err.name === 'AbortError') {
             displayError('Request timeout (90s). The AI is still processing - results may appear in your account shortly. Try refreshing the page.');
         } else {
-            displayError(`Network error: ${err.message}. Please check your connection and try again.`);
+            // Special case: auth-required UX
+            if ((err.message || '').toLowerCase().includes('sign-in required')) {
+                displayError('You must be signed in to use AI City RFP Finder. Please sign in and try again.');
+            } else {
+                displayError(`Network error: ${err.message}. Please check your connection and try again.`);
+            }
         }
     });
 }
