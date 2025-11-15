@@ -22207,6 +22207,38 @@ def aviation_cleaning_leads():
     - Cargo airlines
     """
     
+    # Ensure table exists (safety check for production)
+    try:
+        db.session.execute(text('''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
+                     (id SERIAL PRIMARY KEY,
+                      company_name TEXT NOT NULL,
+                      company_type TEXT NOT NULL,
+                      aircraft_types TEXT,
+                      fleet_size INTEGER,
+                      city TEXT NOT NULL,
+                      state TEXT NOT NULL,
+                      address TEXT,
+                      contact_name TEXT,
+                      contact_title TEXT,
+                      contact_email TEXT,
+                      contact_phone TEXT,
+                      website_url TEXT,
+                      services_needed TEXT,
+                      estimated_monthly_value TEXT,
+                      current_contract_status TEXT,
+                      notes TEXT,
+                      data_source TEXT,
+                      discovered_via TEXT DEFAULT 'ai_scraper',
+                      discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      last_verified TIMESTAMP,
+                      is_active BOOLEAN DEFAULT TRUE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      UNIQUE(company_name, city, state))'''))
+        db.session.commit()
+    except Exception as table_error:
+        print(f"⚠️  Table creation check: {table_error}")
+        db.session.rollback()
+    
     try:
         # Get filters from query params
         state_filter = request.args.get('state', '')
