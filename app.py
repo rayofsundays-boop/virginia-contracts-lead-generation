@@ -18429,11 +18429,15 @@ def api_dashboard_stats():
         # Get user's leads accessed (from session or database)
         leads_accessed = session.get('lead_clicks_used', 0)
         
-        # Calculate total contract value from federal contracts
-        total_value_result = db.session.execute(text(
-            "SELECT SUM(CAST(REGEXP_REPLACE(COALESCE(value, '0'), '[^0-9]', '', 'g') AS BIGINT)) FROM federal_contracts WHERE value IS NOT NULL"
-        )).fetchone()
-        total_value = total_value_result[0] if total_value_result and total_value_result[0] else 0
+        # Calculate total contract value from federal contracts (simplified for compatibility)
+        try:
+            total_value_result = db.session.execute(text(
+                "SELECT SUM(CAST(REGEXP_REPLACE(COALESCE(value, '0'), '[^0-9]', '', 'g') AS BIGINT)) FROM federal_contracts WHERE value IS NOT NULL"
+            )).fetchone()
+            total_value = total_value_result[0] if total_value_result and total_value_result[0] else 0
+        except:
+            # Fallback for databases without regex support (SQLite)
+            total_value = 0
         
         return jsonify({
             'success': True,
