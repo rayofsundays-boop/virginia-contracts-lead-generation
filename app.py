@@ -13547,10 +13547,10 @@ def admin_enhanced():
             context['expired_federal_count'] = expired_federal
             print(f"📊 Federal contracts: {active_federal} active, {total_federal} total, {expired_federal} expired")
 
-            # Recent users (fallback to empty list if failure)
+            # Recent users (include admin users like admin2)
             try:
                 context['recent_users'] = db.session.execute(text(
-                    "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT 10"
+                    "SELECT * FROM leads ORDER BY created_at DESC LIMIT 10"
                 )).fetchall()
             except Exception as e:
                 print(f"[admin_enhanced] recent_users failed: {e}")
@@ -13575,18 +13575,18 @@ def admin_enhanced():
             context['growth_data'] = [row.count for row in growth_data]
         
         elif section == 'all-leads':
-            # Pagination for all leads
+            # Pagination for all leads (include admin users)
             per_page = 20
             offset = (page - 1) * per_page
             
             total_count = db.session.execute(text(
-                "SELECT COUNT(*) FROM leads WHERE is_admin = FALSE"
+                "SELECT COUNT(*) FROM leads"
             )).scalar() or 0
             
             total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
             
             context['all_leads'] = db.session.execute(text(
-                "SELECT * FROM leads WHERE is_admin = FALSE ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+                "SELECT * FROM leads ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
             ), {'limit': per_page, 'offset': offset}).fetchall()
             
             context['total_pages'] = total_pages
@@ -13599,12 +13599,12 @@ def admin_enhanced():
             per_page = 20
             offset = (page - 1) * per_page
             
-            # Build query
-            where_conditions = ["is_admin = FALSE"]
+            # Build query - Include ALL users (both admin and non-admin)
+            where_conditions = ["1=1"]  # Changed from is_admin = FALSE to show all users
             params = {}
             
             if search:
-                where_conditions.append("(email ILIKE :search OR company_name ILIKE :search)")
+                where_conditions.append("(email ILIKE :search OR company_name ILIKE :search OR username ILIKE :search)")
                 params['search'] = f'%{search}%'
             
             if status:
@@ -13687,12 +13687,12 @@ def admin_enhanced():
             per_page = 20
             offset = (page - 1) * per_page
             
-            # Build query
-            where_conditions = ["is_admin = FALSE"]
+            # Build query - Include ALL users (including admins like admin2)
+            where_conditions = ["1=1"]  # Changed from is_admin = FALSE to show all users
             params = {}
             
             if search_query:
-                where_conditions.append("(company_name ILIKE :search OR contact_name ILIKE :search OR email ILIKE :search OR phone ILIKE :search)")
+                where_conditions.append("(company_name ILIKE :search OR contact_name ILIKE :search OR email ILIKE :search OR phone ILIKE :search OR username ILIKE :search)")
                 params['search'] = f'%{search_query}%'
             
             if status_filter:
