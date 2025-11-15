@@ -22313,6 +22313,49 @@ def construction_cleanup_leads():
 @app.route('/aviation-cleaning-leads')
 @login_required
 def aviation_cleaning_leads():
+    
+
+# ========================================
+# AVIATION LEADS DIAGNOSTIC ROUTE
+# ========================================
+@app.route('/api/aviation-health')
+@login_required
+def api_aviation_health():
+    """Temporary diagnostic endpoint to check aviation data layer"""
+    try:
+        if is_postgres():
+            active_clause = 'is_active = TRUE'
+        else:
+            active_clause = 'is_active = 1'
+
+        query = (
+            "SELECT id, company_name, company_type, aircraft_types, fleet_size, "
+            "city, state, address, contact_name, contact_title, contact_email, contact_phone, "
+            "website_url, services_needed, estimated_monthly_value, current_contract_status, "
+            "notes, data_source, is_active "
+            "FROM aviation_cleaning_leads WHERE " + active_clause + " ORDER BY state, city, company_name"
+        )
+        
+        rows = db.session.execute(text(query)).fetchall()
+        
+        leads = [{
+            'id': r[0], 'company_name': r[1], 'company_type': r[2], 'city': r[5], 'state': r[6]
+        } for r in rows]
+
+        return jsonify({
+            'success': True,
+            'status': 'OK',
+            'total_leads': len(leads),
+            'sample_leads': leads[:5]
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'status': 'ERROR',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
     """Aviation cleaning opportunities: Airlines, Private Jets, FBOs, Aircraft Maintenance
     
     Includes:
