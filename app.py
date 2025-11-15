@@ -33,10 +33,10 @@ except Exception:
 try:
     # Optional OpenAI SDK: guard import so non-AI features work without the package
     try:
-        import openai  # type: ignore
+        from openai import OpenAI  # type: ignore - new API (openai >= 1.0.0)
         _OPENAI_SDK_AVAILABLE = True
     except Exception:
-        openai = None  # type: ignore
+        OpenAI = None  # type: ignore
         _OPENAI_SDK_AVAILABLE = False
 except Exception:
     openai = None  # type: ignore
@@ -236,11 +236,17 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 # --- Restored global configuration constants ---
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '').strip()
-OPENAI_AVAILABLE = bool(openai and OPENAI_API_KEY)
+OPENAI_AVAILABLE = bool(_OPENAI_SDK_AVAILABLE and OPENAI_API_KEY)
 
 def is_openai_configured():
     """Return True if OpenAI features can be used."""
     return OPENAI_AVAILABLE
+
+def get_openai_client():
+    """Get OpenAI client instance (new API >= 1.0.0)"""
+    if not OPENAI_AVAILABLE or not OpenAI:
+        return None
+    return OpenAI(api_key=OPENAI_API_KEY)
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')  # Must be set explicitly
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')  # Must be set explicitly
@@ -759,16 +765,20 @@ def _ai_generate_quote_and_proposal(parsed_text: str, sector: str) -> dict:
             'disclaimer': disclaimer + ' (OpenAI not configured)'
         }
     try:
+        client = get_openai_client()
+        if not client:
+            raise Exception("OpenAI client not available")
+        
         prompt = (
             "Given a janitorial/services capability statement, produce (1) a concise quote outline (no pricing) and (2) a structured RFP response draft with sections: Executive Summary, Technical Approach, Staffing & Training, Quality Assurance, Past Performance, Differentiators. Limit output to ~900 words. Neutral professional tone.\n\nCapability Statement:\n" + parsed_text[:6000]
         )
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=os.getenv('OPENAI_MODEL', 'gpt-4'),
             messages=[{"role": "system", "content": "You are a proposal assistant."}, {"role": "user", "content": prompt}],
             temperature=0.3,
             max_tokens=1200
         )
-        content = response['choices'][0]['message']['content']
+        content = response.choices[0].message.content
         first_block = content.split('\n\n')[0]
         quote = first_block[:1200]
         proposal = content[len(first_block):].strip()
@@ -7713,7 +7723,9 @@ def find_city_rfps():
         if not openai_key:
             return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
         
-        openai.api_key = openai_key
+        # Initialize OpenAI client (new API)
+        from openai import OpenAI
+        client = OpenAI(api_key=openai_key)
         user_email = session.get('user_email')
         
         print(f"🤖 Finding city RFPs for {state_name} using AI...")
@@ -7734,7 +7746,7 @@ Return ONLY valid JSON array format, no explanations:
 ]"""
 
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": city_prompt}],
                 temperature=0.3,
@@ -7802,7 +7814,7 @@ Return ONLY a JSON array, no explanations. If no relevant RFPs found, return emp
 WEBPAGE TEXT:
 {page_text}"""
 
-                rfp_response = openai.ChatCompletion.create(
+                rfp_response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[{"role": "user", "content": rfp_prompt}],
                     temperature=0.2,
@@ -15717,7 +15729,11 @@ Respond with a JSON array of objects with these fields:
 Only respond with the JSON array, no other text."""
 
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        client = get_openai_client()
+        if not client:
+            return jsonify({'success': False, 'message': 'OpenAI client initialization failed'}), 500
+        
+        response = client.chat.completions.create(
             model="gpt-4",  # or gpt-3.5-turbo for cost savings
             messages=[
                 {"role": "system", "content": "You are a data validation expert specializing in government contract URLs."},
@@ -15728,7 +15744,7 @@ Only respond with the JSON array, no other text."""
         )
         
         # Parse AI response
-        ai_content = response['choices'][0]['message']['content']
+        ai_content = response.choices[0].message.content
         
         # Extract JSON from response (handle markdown code blocks)
         if '```json' in ai_content:
