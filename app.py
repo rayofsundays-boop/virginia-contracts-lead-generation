@@ -8562,7 +8562,32 @@ def find_city_rfps():
                              'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NV', 'NM', 'ND', 'OH', 
                              'OK', 'OR', 'SC', 'TN', 'TX', 'UT', 'WA', 'WI']
             
-            if state_code in symphony_states:
+            # Arizona gets special treatment (Symphony blocks requests)
+            if state_code == 'AZ':
+                print(f"  🎯 Using Arizona state portal scraper")
+                try:
+                    from national_scrapers.arizona_scraper import ArizonaScraper
+                    az_scraper = ArizonaScraper()
+                    az_contracts = az_scraper.scrape()
+                    
+                    for contract in az_contracts:
+                        discovered_rfps.append({
+                            'city_name': contract.get('agency', 'Arizona State'),
+                            'rfp_title': contract['title'],
+                            'rfp_number': contract.get('solicitation_number', 'N/A'),
+                            'description': contract.get('title', ''),
+                            'deadline': contract.get('due_date', 'Not specified'),
+                            'estimated_value': 'TBD',
+                            'department': contract.get('agency', 'State Agency'),
+                            'contact_email': '',
+                            'contact_phone': '',
+                            'rfp_url': contract.get('link', '')
+                        })
+                    print(f"  ✅ Arizona state portal found {len(az_contracts)} opportunities")
+                except Exception as e:
+                    print(f"  ⚠️  Arizona scraper error: {e}")
+            
+            elif state_code in symphony_states:
                 print(f"  🎯 Using Symphony scraper for {state_code}")
                 scraper = SymphonyScraper()
                 symphony_contracts = scraper.scrape(states=[state_code])

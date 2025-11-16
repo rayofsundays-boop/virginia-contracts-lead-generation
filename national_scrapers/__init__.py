@@ -1,5 +1,5 @@
 """
-National Procurement Scrapers - 7-Source System
+National Procurement Scrapers - 8-Source System
 Covers 30-40 states + thousands of local governments
 """
 
@@ -10,6 +10,7 @@ from .commbuys_scraper import COMBUYSScraper
 from .emaryland_scraper import EMarylandScraper
 from .newhampshire_scraper import NewHampshireScraper
 from .rhodeisland_scraper import RhodeIslandScraper
+from .arizona_scraper import ArizonaScraper
 
 __all__ = [
     'SymphonyScraper',
@@ -19,4 +20,5 @@ __all__ = [
     'EMarylandScraper',
     'NewHampshireScraper',
     'RhodeIslandScraper',
+    'ArizonaScraper',
 ]
