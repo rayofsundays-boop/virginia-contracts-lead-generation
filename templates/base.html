@@ -539,6 +539,55 @@
             color: white;
         }
         
+        /* Tablet/iPad specific styles (768px - 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                max-width: 100%;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                margin: 5px;
+            }
+            
+            /* Fix dropdown menus on tablets */
+            .dropdown-menu {
+                position: absolute !important;
+                max-width: 90vw;
+            }
+            
+            /* Adjust card layouts for tablets */
+            .card {
+                margin-bottom: 20px;
+            }
+            
+            .row > [class*='col-'] {
+                margin-bottom: 15px;
+            }
+            
+            /* Fix table overflow on tablets */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Adjust font sizes for better readability */
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.75rem; }
+            h3 { font-size: 1.5rem; }
+            
+            /* Fix button groups on tablets */
+            .btn-group {
+                flex-wrap: wrap;
+            }
+        }
+        
         @media (max-width: 768px) {
             .cookie-content {
                 flex-direction: column;
@@ -552,6 +601,12 @@
             
             .cookie-btn {
                 width: 100%;
+            }
+            
+            /* Mobile specific fixes */
+            .navbar-collapse {
+                max-height: 80vh;
+                overflow-y: auto;
             }
         }
     </style>

@@ -6686,7 +6686,8 @@ def api_get_saved_searches():
 def api_save_lead():
     """Bookmark/save a lead for later"""
     try:
-        user_email = session.get('user_email')
+        # Check both user_email and email (for admin compatibility)
+        user_email = session.get('user_email') or session.get('email')
         data = request.get_json()
         
         lead_type = data.get('lead_type')
@@ -12571,14 +12572,15 @@ def api_toggle_save_lead():
     """Toggle save/unsave lead (authentication handled by checking session)"""
     try:
         data = request.get_json()
-        user_email = session.get('user_email')
+        # Check both user_email and email (for admin compatibility)
+        user_email = session.get('user_email') or session.get('email')
         
         # Debug: Log session info
-        print(f"DEBUG toggle-save-lead: session keys={list(session.keys())}, user_email={user_email}")
+        print(f"DEBUG toggle-save-lead: session keys={list(session.keys())}, user_email={user_email}, is_admin={session.get('is_admin')}")
         
-        # Check if user is logged in
+        # Check if user is logged in (regular user or admin)
         if not user_email:
-            print(f"DEBUG: No user_email in session. Full session: {dict(session)}")
+            print(f"DEBUG: No email found in session. Full session: {dict(session)}")
             return jsonify({'success': False, 'message': 'Please sign in to save leads', 'requiresAuth': True}), 401
         
         action = data.get('action', 'save')
