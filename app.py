@@ -6285,6 +6285,8 @@ def client_dashboard():
             db.session.rollback()  # Rollback to prevent cascade
 
         all_leads = []
+        print(f"🔍 Building all_leads from: gov={len(government_leads)}, supply={len(supply_leads)}, commercial_opps={len(commercial_opps)}, commercial_req={len(commercial_requests)}, residential={len(residential_requests)}")
+        
         for lead in government_leads:
             app_url = lead[9] if lead[9] and str(lead[9]).startswith(('http://','https://')) else None
             all_leads.append({
@@ -6330,6 +6332,11 @@ def client_dashboard():
             })
 
         total_leads = len(all_leads)
+        print(f"✅ Total leads aggregated for dashboard: {total_leads}")
+        
+        # If no leads found, log it clearly
+        if total_leads == 0:
+            print("⚠️ WARNING: No leads found in any table! Client dashboard will show 'No Leads Found' message.")
         try:
             emergency_count = db.session.execute(text("SELECT COUNT(*) FROM commercial_lead_requests WHERE urgency='emergency' AND status='open'")).scalar() or 0
         except Exception:
