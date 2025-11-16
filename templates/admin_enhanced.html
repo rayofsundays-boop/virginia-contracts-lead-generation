@@ -253,9 +253,17 @@ body {
                     <a class="nav-link {% if section == 'send-email' %}active{% endif %}" href="{{ url_for('admin_enhanced', section='send-email') }}">
                         <i class="fas fa-envelope"></i>Bulk Email
                     </a>
-                    <a class="nav-link" href="{{ url_for('logout') }}">
-                        <i class="fas fa-sign-out-alt"></i>Logout
+                    
+                    <!-- Logout - Always Visible -->
+                    <div class="sidebar-heading mt-4">
+                        Session
+                    </div>
+                    <a class="nav-link" href="{{ url_for('logout') }}" style="background: rgba(239, 68, 68, 0.2); border-left-color: #ef4444 !important;">
+                        <i class="fas fa-sign-out-alt" style="color: #ef4444 !important;"></i>Logout
                     </a>
+                    
+                    <!-- Bottom Padding for Scrolling -->
+                    <div style="height: 80px;"></div>
                 </nav>
             </div>
         </div>
@@ -481,6 +489,46 @@ body {
             
             {% elif section == 'all-contracts' %}
             {% include 'admin_sections/all_contracts.html' %}
+            
+            {% elif section == 'add-commercial' %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Commercial Lead</h4>
+                </div>
+                <div class="card-body">
+                    <iframe src="{{ url_for('admin_add_commercial_lead') }}" style="width: 100%; height: 800px; border: none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+            
+            {% elif section == 'review-commercial' %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-double me-2"></i>Review Commercial Leads</h4>
+                </div>
+                <div class="card-body">
+                    <iframe src="{{ url_for('admin_review_commercial_leads') }}" style="width: 100%; height: 800px; border: none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+            
+            {% elif section == 'url-automation' %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-robot me-2"></i>URL Automation Status</h4>
+                </div>
+                <div class="card-body">
+                    <iframe src="{{ url_for('admin_url_automation_log') }}" style="width: 100%; height: 800px; border: none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+            
+            {% elif section == 'send-email' %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>Bulk Email Campaign</h4>
+                </div>
+                <div class="card-body">
+                    <iframe src="{{ url_for('admin_send_external_email') }}" style="width: 100%; height: 800px; border: none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
             
             {% endif %}
         </div>
