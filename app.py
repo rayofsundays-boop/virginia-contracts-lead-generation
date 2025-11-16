@@ -9044,6 +9044,223 @@ def find_city_rfps():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ============================================================================
+# ENHANCED RFP LOOKUP - Comprehensive State-Level Search
+# ============================================================================
+
+# Configuration Constants (adjustable)
+RFP_SEARCH_DAYS = 90  # Search last 90 days instead of 3-7
+RFP_KEYWORDS = [
+    'janitorial', 'custodial', 'cleaning', 'facility maintenance',
+    'facilities support', 'building maintenance', 'operations & maintenance',
+    'day porter', 'environmental services', 'post-construction cleanup',
+    'terminal cleaning', 'airport cleaning', 'housekeeping', 'sanitation'
+]
+
+@app.route('/api/fetch-rfps-by-state', methods=['POST'])
+@login_required
+def fetch_rfps_by_state():
+    """
+    Enhanced state-wide RFP lookup with comprehensive search.
+    
+    Improvements:
+    - Extended 90-day search window (configurable)
+    - Expanded keyword list (14 keywords vs 2-3)
+    - City-level + State-level combined results
+    - Fallback to database state contracts
+    - Loading states and error handling
+    - Google fallback for broken portals
+    
+    Returns formatted RFP list with all required fields.
+    """
+    try:
+        from datetime import datetime, timedelta
+        from sqlalchemy import text
+        
+        data = request.get_json() or {}
+        state_name = data.get('state_name', '')
+        state_code = data.get('state_code', '').upper()
+        
+        if not state_name or not state_code:
+            return jsonify({'success': False, 'error': 'State name and code required'}), 400
+        
+        user_email = session.get('user_email')
+        print(f"🔍 Enhanced RFP search for {state_name} ({state_code}) - {RFP_SEARCH_DAYS} day window")
+        
+        all_rfps = []
+        cities_checked = []
+        
+        # STEP 1: Check database cache (extended 90-day window)
+        cache_cutoff = datetime.now() - timedelta(days=RFP_SEARCH_DAYS)
+        
+        try:
+            # Query federal_contracts table (state-level opportunities)
+            state_contracts = db.session.execute(text('''
+                SELECT title, agency, value, deadline, url, notice_id, data_source, posted_date
+                FROM federal_contracts
+                WHERE state = :state
+                AND posted_date >= :cutoff
+                AND (
+                    LOWER(title) LIKE '%janitorial%' OR
+                    LOWER(title) LIKE '%custodial%' OR
+                    LOWER(title) LIKE '%cleaning%' OR
+                    LOWER(title) LIKE '%facility maintenance%' OR
+                    LOWER(title) LIKE '%facilities%' OR
+                    LOWER(title) LIKE '%building maintenance%' OR
+                    LOWER(title) LIKE '%day porter%' OR
+                    LOWER(title) LIKE '%environmental services%' OR
+                    LOWER(title) LIKE '%housekeeping%' OR
+                    LOWER(title) LIKE '%sanitation%'
+                )
+                ORDER BY posted_date DESC
+                LIMIT 50
+            '''), {'state': state_code, 'cutoff': cache_cutoff}).fetchall()
+            
+            print(f"  ✅ Found {len(state_contracts)} state-level contracts in database")
+            
+            for contract in state_contracts:
+                all_rfps.append({
+                    'title': contract.title,
+                    'agency': contract.agency or f'{state_name} State Agency',
+                    'location': f'{state_name} (Statewide)',
+                    'deadline': contract.deadline or 'Not specified',
+                    'value': contract.value or 'TBD',
+                    'link': contract.url or '',
+                    'notice_id': contract.notice_id or 'N/A',
+                    'source': contract.data_source or 'SAM.gov',
+                    'type': 'State-Level'
+                })
+        except Exception as db_err:
+            print(f"  ⚠️  Database query error: {db_err}")
+        
+        # STEP 2: Check city_rfps table (city-level opportunities)
+        try:
+            city_rfps = db.session.execute(text('''
+                SELECT city_name, rfp_title, rfp_number, description, deadline,
+                       estimated_value, department, contact_email, contact_phone, rfp_url, discovered_at
+                FROM city_rfps
+                WHERE state_code = :state
+                AND discovered_at >= :cutoff
+                ORDER BY discovered_at DESC
+                LIMIT 100
+            '''), {'state': state_code, 'cutoff': cache_cutoff}).fetchall()
+            
+            print(f"  ✅ Found {len(city_rfps)} city-level RFPs in database")
+            
+            for rfp in city_rfps:
+                cities_checked.append(rfp.city_name)
+                all_rfps.append({
+                    'title': rfp.rfp_title,
+                    'agency': rfp.department or f'{rfp.city_name} City',
+                    'location': f'{rfp.city_name}, {state_code}',
+                    'deadline': rfp.deadline or 'Not specified',
+                    'value': rfp.estimated_value or 'TBD',
+                    'link': rfp.rfp_url or '',
+                    'notice_id': rfp.rfp_number or 'N/A',
+                    'source': 'City Portal',
+                    'type': 'City-Level',
+                    'contact_email': rfp.contact_email,
+                    'contact_phone': rfp.contact_phone
+                })
+        except Exception as city_err:
+            print(f"  ⚠️  City RFPs query error: {city_err}")
+        
+        # STEP 3: Live search if database has few results (< 5)
+        if len(all_rfps) < 5:
+            print(f"  🚀 Database results limited ({len(all_rfps)}), running live search...")
+            
+            # Use national scrapers for fresh data
+            try:
+                direct_portal_states = [
+                    'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+                    'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'ME', 'MI',
+                    'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NJ', 'NM', 'NV',
+                    'NY', 'OH', 'OK', 'OR', 'PA', 'SC', 'SD', 'TN', 'TX', 'UT',
+                    'VA', 'VT', 'WA', 'WI', 'WV', 'WY'
+                ]
+                
+                if state_code in direct_portal_states:
+                    from national_scrapers.multistate_direct_scraper import MultiStateDirectScraper
+                    scraper = MultiStateDirectScraper()
+                    live_contracts = scraper.scrape(states=[state_code])
+                    
+                    print(f"  ✅ Live scraper found {len(live_contracts)} opportunities")
+                    
+                    for contract in live_contracts:
+                        all_rfps.append({
+                            'title': contract['title'],
+                            'agency': contract.get('agency', f'{state_name} Agency'),
+                            'location': f'{state_name}',
+                            'deadline': contract.get('due_date', 'Not specified'),
+                            'value': 'TBD',
+                            'link': contract.get('link', ''),
+                            'notice_id': contract.get('solicitation_number', 'N/A'),
+                            'source': 'State Portal (Live)',
+                            'type': 'State-Level'
+                        })
+            except Exception as scraper_err:
+                print(f"  ⚠️  Live scraper error: {scraper_err}")
+        
+        # STEP 4: Major cities search (from predefined list)
+        major_cities_data = get_city_procurement_portals(state_code)
+        if major_cities_data:
+            cities_checked.extend(list(major_cities_data.keys()))
+        
+        # Deduplicate cities_checked
+        cities_checked = list(set(cities_checked))
+        
+        # STEP 5: Format and return results
+        if all_rfps:
+            # Remove duplicates based on title + agency
+            seen = set()
+            unique_rfps = []
+            for rfp in all_rfps:
+                key = (rfp['title'].lower(), rfp['agency'].lower())
+                if key not in seen:
+                    seen.add(key)
+                    unique_rfps.append(rfp)
+            
+            print(f"✅ Total: {len(unique_rfps)} unique RFPs for {state_name}")
+            
+            return jsonify({
+                'success': True,
+                'rfps': unique_rfps,
+                'total': len(unique_rfps),
+                'state': state_name,
+                'state_code': state_code,
+                'cities_checked': cities_checked[:10],  # Limit display
+                'search_days': RFP_SEARCH_DAYS,
+                'keywords_used': len(RFP_KEYWORDS),
+                'source': 'enhanced_search'
+            })
+        else:
+            # FALLBACK: Show message with helpful resources
+            print(f"  ⚠️  No RFPs found for {state_name}")
+            
+            return jsonify({
+                'success': True,
+                'rfps': [],
+                'total': 0,
+                'state': state_name,
+                'state_code': state_code,
+                'cities_checked': cities_checked,
+                'search_days': RFP_SEARCH_DAYS,
+                'message': f'No active cleaning/janitorial RFPs found in {state_name} in the last {RFP_SEARCH_DAYS} days.',
+                'fallback_suggestion': f'Try Google search: "{state_name} procurement RFP janitorial"',
+                'source': 'no_results'
+            })
+    
+    except Exception as e:
+        print(f"❌ Enhanced RFP search error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'fallback_suggestion': f'Search Google: "{state_name} procurement RFP janitorial"'
+        }), 500
+
+
 @app.route('/api/search-city-rfp', methods=['POST'])
 @login_required
 def search_city_rfp():

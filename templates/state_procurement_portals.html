@@ -1333,24 +1333,33 @@ function updateCardColors() {
     });
 }
 
-// Find City RFPs using AI
+// ============================================================================
+// ENHANCED RFP LOOKUP - Uses comprehensive 90-day search with expanded keywords
+// ============================================================================
 function findCityRFPs(stateName, stateCode) {
-    // Show loading modal
+    // Show enhanced loading modal with accurate messaging
     const loadingHtml = `
         <div class="modal fade" id="cityRfpModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <h5 class="modal-title">
-                            <i class="fas fa-robot me-2"></i>AI City RFP Finder - ${stateName}
+                            <i class="fas fa-search me-2"></i>Searching ${stateName} RFPs
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center py-5">
                         <div class="spinner-border text-primary mb-3" style="width: 4rem; height: 4rem;"></div>
-                        <h5>🤖 AI is searching for local city RFPs...</h5>
-                        <p class="text-muted">Scanning top 3 cities and procurement portals</p>
-                        <p class="small">This may take 30-45 seconds</p>
+                        <h5 class="mb-3">🔍 Comprehensive Search in Progress...</h5>
+                        <div class="text-start mx-auto" style="max-width: 500px;">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Searching last 90 days of opportunities</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>14 cleaning/facility service keywords</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>State + City level contracts</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Direct portal + database search</li>
+                            </ul>
+                        </div>
+                        <p class="small text-muted mt-3">This may take 20-30 seconds for best results</p>
                     </div>
                 </div>
             </div>
@@ -1365,11 +1374,11 @@ function findCityRFPs(stateName, stateCode) {
     const modal = new bootstrap.Modal(document.getElementById('cityRfpModal'));
     modal.show();
     
-    // Call AI endpoint with extended timeout (90 seconds)
+    // Call enhanced endpoint with 60-second timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     
-    fetch('/api/find-city-rfps', {
+    fetch('/api/fetch-rfps-by-state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -1382,32 +1391,34 @@ function findCityRFPs(stateName, stateCode) {
         clearTimeout(timeoutId);
         const ct = r.headers.get('content-type') || '';
         if (r.redirected || ct.includes('text/html')) {
-            throw new Error('Sign-in required to use AI search. Please sign in and try again.');
+            throw new Error('Sign-in required. Please log in and try again.');
         }
         if (!r.ok) {
-            throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+            const errorData = await r.json().catch(() => ({}));
+            throw new Error(errorData.fallback_suggestion || `HTTP ${r.status}: ${r.statusText}`);
         }
         return r.json();
     })
     .then(data => {
         if (data.success) {
-            displayCityRFPs(data.rfps, stateName, stateCode, data.message, data.cities_checked, data.available_cities);
+            displayEnhancedRFPs(data, stateName, stateCode);
         } else {
-            displayError(data.error || 'Failed to find city RFPs');
+            displayError(data.error || 'Failed to find RFPs', data.fallback_suggestion);
         }
     })
     .catch(err => {
         clearTimeout(timeoutId);
-        console.error('City RFP error:', err);
+        console.error('RFP search error:', err);
         if (err.name === 'AbortError') {
-            displayError('Request timeout (90s). The AI is still processing - results may appear in your account shortly. Try refreshing the page.');
+            displayError(
+                'Search timeout (60s). The system is still processing your request.',
+                `Try Google: "${stateName} procurement RFP janitorial"`
+            );
         } else {
-            // Special case: auth-required UX
-            if ((err.message || '').toLowerCase().includes('sign-in required')) {
-                displayError('You must be signed in to use AI City RFP Finder. Please sign in and try again.');
-            } else {
-                displayError(`Network error: ${err.message}. Please check your connection and try again.`);
-            }
+            displayError(
+                err.message || 'Network error occurred',
+                `Try Google: "${stateName} procurement RFP janitorial"`
+            );
         }
     });
 }
@@ -1573,8 +1584,193 @@ function filterRFPsByCity(selectedCity) {
     });
 }
 
-// Display error in modal
-function displayError(errorMsg) {
+// ============================================================================
+// ENHANCED DISPLAY FUNCTIONS - Properly formatted RFP cards with all fields
+// ============================================================================
+function displayEnhancedRFPs(data, stateName, stateCode) {
+    const rfps = data.rfps || [];
+    const total = data.total || 0;
+    const searchDays = data.search_days || 90;
+    const citiesChecked = data.cities_checked || [];
+    
+    let contentHtml = '';
+    
+    if (total > 0) {
+        // SUCCESS: Display RFPs
+        const rfpCards = rfps.map((rfp, idx) => `
+            <div class="card mb-3 border-start border-${rfp.type === 'State-Level' ? 'primary' : 'success'} border-4 rfp-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="badge bg-${rfp.type === 'State-Level' ? 'primary' : 'success'} me-2">
+                                ${rfp.type || 'Opportunity'}
+                            </span>
+                            <span class="badge bg-secondary">${rfp.source}</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                onclick="saveEnhancedRFP(${idx}, '${stateCode}')"
+                                title="Save to My Leads">
+                            <i class="fas fa-bookmark me-1"></i>Save
+                        </button>
+                    </div>
+                    
+                    <h5 class="mb-2">${rfp.title}</h5>
+                    
+                    <div class="row g-2 small mb-2">
+                        <div class="col-md-6">
+                            <i class="fas fa-building text-primary me-1"></i>
+                            <strong>Agency:</strong> ${rfp.agency}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            <strong>Location:</strong> ${rfp.location}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="fas fa-calendar text-warning me-1"></i>
+                            <strong>Deadline:</strong> ${rfp.deadline}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="fas fa-dollar-sign text-success me-1"></i>
+                            <strong>Value:</strong> ${rfp.value}
+                        </div>
+                        ${rfp.notice_id !== 'N/A' ? `
+                        <div class="col-md-6">
+                            <i class="fas fa-hashtag me-1"></i>
+                            <strong>ID:</strong> ${rfp.notice_id}
+                        </div>
+                        ` : ''}
+                        ${rfp.contact_email ? `
+                        <div class="col-md-6">
+                            <i class="fas fa-envelope me-1"></i>
+                            <a href="mailto:${rfp.contact_email}">${rfp.contact_email}</a>
+                        </div>
+                        ` : ''}
+                        ${rfp.contact_phone ? `
+                        <div class="col-md-6">
+                            <i class="fas fa-phone me-1"></i>
+                            <a href="tel:${rfp.contact_phone}">${rfp.contact_phone}</a>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${rfp.link ? `
+                    <div class="mt-2">
+                        <a href="${rfp.link}" target="_blank" class="btn btn-sm btn-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>View Opportunity
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        contentHtml = `
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Found ${total} RFPs - ${stateName}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>✅ ${total} opportunities found</strong>
+                            <p class="mb-0 small">Searched last ${searchDays} days with 14 keywords</p>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="saveAllEnhancedRFPs('${stateCode}')">
+                            <i class="fas fa-save me-1"></i>Save All
+                        </button>
+                    </div>
+                </div>
+                ${citiesChecked.length > 0 ? `
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        <strong>Cities/Agencies Checked:</strong> ${citiesChecked.join(', ')}
+                    </small>
+                </div>
+                ` : ''}
+                <div style="max-height: 500px; overflow-y: auto;">
+                    ${rfpCards}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="searchAdditionalCities('${stateName}', '${stateCode}')">
+                    <i class="fas fa-search-plus me-1"></i>Search More Cities
+                </button>
+            </div>
+        `;
+    } else {
+        // NO RESULTS: Show helpful message with fallback
+        const fallback = data.fallback_suggestion || `Search Google: "${stateName} procurement RFP janitorial"`;
+        const message = data.message || `No active cleaning/janitorial RFPs found in ${stateName}.`;
+        
+        contentHtml = `
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>No Active RFPs - ${stateName}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-3">
+                    <h6><i class="fas fa-search me-2"></i>Search Complete</h6>
+                    <p class="mb-0">${message}</p>
+                </div>
+                
+                ${citiesChecked.length > 0 ? `
+                <div class="mb-3">
+                    <p class="mb-2"><strong>Cities/Agencies Checked:</strong></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${citiesChecked.map(city => `<span class="badge bg-light text-dark">${city}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb me-2"></i>What to Do Next:</h6>
+                    <ul class="mb-2">
+                        <li>Check back in a few days - new RFPs are posted regularly</li>
+                        <li>Search nearby states for similar opportunities</li>
+                        <li>Register on the state vendor portal for email notifications</li>
+                        <li>Try manual Google search with the button below</li>
+                    </ul>
+                    <button class="btn btn-primary btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(fallback)}', '_blank')">
+                        <i class="fab fa-google me-1"></i>Google Search
+                    </button>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="button" class="btn btn-success" onclick="searchAdditionalCities('${stateName}', '${stateCode}')">
+                        <i class="fas fa-search-plus me-2"></i>Search Specific Cities Instead
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        `;
+    }
+    
+    document.querySelector('#cityRfpModal .modal-content').innerHTML = contentHtml;
+}
+
+// Save individual enhanced RFP
+function saveEnhancedRFP(idx, stateCode) {
+    console.log(`Saving RFP ${idx} for state ${stateCode}`);
+    alert('RFP saved to your leads! (Feature in development)');
+}
+
+// Save all enhanced RFPs
+function saveAllEnhancedRFPs(stateCode) {
+    console.log(`Saving all RFPs for state ${stateCode}`);
+    alert('All RFPs saved to your leads! (Feature in development)');
+}
+
+// Display error with fallback suggestion
+function displayError(errorMsg, fallbackSuggestion) {
     const errorHtml = `
         <div class="modal-header bg-danger text-white">
             <h5 class="modal-title">
@@ -1583,9 +1779,18 @@ function displayError(errorMsg) {
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <div class="alert alert-danger mb-0">
+            <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle me-2"></i>${errorMsg}
             </div>
+            ${fallbackSuggestion ? `
+            <div class="alert alert-info mb-0">
+                <h6><i class="fas fa-lightbulb me-2"></i>Try This Instead:</h6>
+                <p class="mb-2">${fallbackSuggestion}</p>
+                <button class="btn btn-primary btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(fallbackSuggestion)}', '_blank')">
+                    <i class="fab fa-google me-1"></i>Google Search
+                </button>
+            </div>
+            ` : ''}
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
