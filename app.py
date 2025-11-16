@@ -3495,7 +3495,18 @@ def init_postgres_db():
                       notes TEXT,
                       status TEXT DEFAULT 'saved',
                       saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(user_email, lead_type, lead_id))'''))
+        
+        # Add updated_at column if it doesn't exist (migration for existing tables)
+        try:
+            db.session.execute(text('''
+                ALTER TABLE saved_leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            '''))
+            db.session.commit()
+        except Exception as e:
+            print(f"Note: updated_at column may already exist in saved_leads: {e}")
+            db.session.rollback()
         
         db.session.commit()
         
@@ -6683,20 +6694,44 @@ def api_save_lead():
         lead_title = data.get('lead_title', 'Untitled Lead')
         notes = data.get('notes', '')
         
-        db.session.execute(text('''
-            INSERT INTO saved_leads (user_email, lead_type, lead_id, lead_title, notes, status, lead_data)
-            VALUES (:email, :type, :id, :title, :notes, 'saved', :data)
-            ON CONFLICT (user_email, lead_type, lead_id) 
-            DO UPDATE SET lead_title = :title, notes = :notes, updated_at = CURRENT_TIMESTAMP
-        '''), {
-            'email': user_email,
-            'type': lead_type,
-            'id': lead_id,
-            'title': lead_title,
-            'notes': notes,
-            'data': json.dumps(data)
-        })
-        db.session.commit()
+        try:
+            db.session.execute(text('''
+                INSERT INTO saved_leads (user_email, lead_type, lead_id, lead_title, notes, status, lead_data, saved_at)
+                VALUES (:email, :type, :id, :title, :notes, 'saved', :data, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_email, lead_type, lead_id) 
+                DO UPDATE SET lead_title = EXCLUDED.lead_title, 
+                              notes = EXCLUDED.notes, 
+                              updated_at = CURRENT_TIMESTAMP
+            '''), {
+                'email': user_email,
+                'type': lead_type,
+                'id': lead_id,
+                'title': lead_title,
+                'notes': notes,
+                'data': json.dumps(data)
+            })
+            db.session.commit()
+        except Exception as insert_error:
+            db.session.rollback()
+            print(f"❌ Save-lead insert error: {insert_error}")
+            # Fallback for SQLite
+            try:
+                db.session.execute(text('''
+                    INSERT OR REPLACE INTO saved_leads (user_email, lead_type, lead_id, lead_title, notes, status, lead_data, saved_at)
+                    VALUES (:email, :type, :id, :title, :notes, 'saved', :data, CURRENT_TIMESTAMP)
+                '''), {
+                    'email': user_email,
+                    'type': lead_type,
+                    'id': lead_id,
+                    'title': lead_title,
+                    'notes': notes,
+                    'data': json.dumps(data)
+                })
+                db.session.commit()
+            except Exception as fallback_error:
+                db.session.rollback()
+                print(f"❌ Fallback save-lead error: {fallback_error}")
+                raise
         
         print(f"✅ Lead saved via /api/save-lead: {lead_title} for user {user_email}")
         
@@ -12551,20 +12586,44 @@ def api_toggle_save_lead():
         
         if action == 'save':
             # Save the lead
-            db.session.execute(text('''
-                INSERT INTO saved_leads 
-                (user_email, lead_type, lead_id, lead_title, lead_data, status)
-                VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved')
-                ON CONFLICT (user_email, lead_type, lead_id) 
-                DO UPDATE SET lead_title = :lead_title, lead_data = :lead_data, updated_at = CURRENT_TIMESTAMP
-            '''), {
-                'user_email': user_email,
-                'lead_type': data.get('lead_type'),
-                'lead_id': data.get('lead_id'),
-                'lead_title': lead_title,
-                'lead_data': json.dumps(data)
-            })
-            db.session.commit()
+            try:
+                db.session.execute(text('''
+                    INSERT INTO saved_leads 
+                    (user_email, lead_type, lead_id, lead_title, lead_data, status, saved_at)
+                    VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved', CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_email, lead_type, lead_id) 
+                    DO UPDATE SET lead_title = EXCLUDED.lead_title, 
+                                  lead_data = EXCLUDED.lead_data, 
+                                  updated_at = CURRENT_TIMESTAMP
+                '''), {
+                    'user_email': user_email,
+                    'lead_type': data.get('lead_type'),
+                    'lead_id': data.get('lead_id'),
+                    'lead_title': lead_title,
+                    'lead_data': json.dumps(data)
+                })
+                db.session.commit()
+            except Exception as insert_error:
+                db.session.rollback()
+                print(f"❌ Insert error: {insert_error}")
+                # Try simple insert without ON CONFLICT for databases that don't support it
+                try:
+                    db.session.execute(text('''
+                        INSERT OR REPLACE INTO saved_leads 
+                        (user_email, lead_type, lead_id, lead_title, lead_data, status, saved_at)
+                        VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved', CURRENT_TIMESTAMP)
+                    '''), {
+                        'user_email': user_email,
+                        'lead_type': data.get('lead_type'),
+                        'lead_id': data.get('lead_id'),
+                        'lead_title': lead_title,
+                        'lead_data': json.dumps(data)
+                    })
+                    db.session.commit()
+                except Exception as fallback_error:
+                    db.session.rollback()
+                    print(f"❌ Fallback insert error: {fallback_error}")
+                    raise
             
             print(f"✅ Lead saved: {lead_title} for user {user_email}")
             
