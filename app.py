@@ -12585,6 +12585,9 @@ def api_toggle_save_lead():
         lead_title = data.get('lead_title', 'Untitled Lead')
         
         if action == 'save':
+            # Save the lead - convert lead_id to string for consistency
+            lead_id_str = str(data.get('lead_id', ''))
+            
             # Save the lead
             try:
                 db.session.execute(text('''
@@ -12598,7 +12601,7 @@ def api_toggle_save_lead():
                 '''), {
                     'user_email': user_email,
                     'lead_type': data.get('lead_type'),
-                    'lead_id': data.get('lead_id'),
+                    'lead_id': lead_id_str,
                     'lead_title': lead_title,
                     'lead_data': json.dumps(data)
                 })
@@ -12623,9 +12626,11 @@ def api_toggle_save_lead():
                 except Exception as fallback_error:
                     db.session.rollback()
                     print(f"❌ Fallback insert error: {fallback_error}")
+                    import traceback
+                    traceback.print_exc()
                     raise
             
-            print(f"✅ Lead saved: {lead_title} for user {user_email}")
+            print(f"✅ Lead saved: {lead_title} (ID: {lead_id_str}) for user {user_email}")
             
             # Log activity
             try:
@@ -12639,7 +12644,9 @@ def api_toggle_save_lead():
                 'action': 'saved'
             })
         else:
-            # Unsave the lead
+            # Unsave the lead - convert lead_id to string for consistency
+            lead_id_str = str(data.get('lead_id', ''))
+            
             db.session.execute(text('''
                 DELETE FROM saved_leads 
                 WHERE user_email = :user_email 
@@ -12648,11 +12655,11 @@ def api_toggle_save_lead():
             '''), {
                 'user_email': user_email,
                 'lead_type': data.get('lead_type'),
-                'lead_id': data.get('lead_id')
+                'lead_id': lead_id_str
             })
             db.session.commit()
             
-            print(f"✅ Lead removed: {lead_title} for user {user_email}")
+            print(f"✅ Lead removed: {lead_title} (ID: {lead_id_str}) for user {user_email}")
             
             return jsonify({
                 'success': True, 
