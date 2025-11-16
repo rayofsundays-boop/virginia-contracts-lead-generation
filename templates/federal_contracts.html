@@ -486,6 +486,7 @@ function toggleBookmark(btn, leadType, leadId, title) {
                     body: JSON.stringify({
                         lead_type: leadType,
                         lead_id: leadId,
+                        lead_title: title,
                         notes: `Saved from ${leadType} page`
                     })
                 })

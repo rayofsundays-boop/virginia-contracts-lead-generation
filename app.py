@@ -6680,42 +6680,40 @@ def api_save_lead():
         
         lead_type = data.get('lead_type')
         lead_id = data.get('lead_id')
-        notes = data.get('notes', '')
         lead_title = data.get('lead_title', 'Untitled Lead')
-        
-        # Check if already saved
-        existing = db.session.execute(text('''
-            SELECT id FROM saved_leads 
-            WHERE user_email = :email AND lead_type = :type AND lead_id = :id
-        '''), {
-            'email': user_email,
-            'type': lead_type,
-            'id': lead_id
-        }).fetchone()
+        notes = data.get('notes', '')
         
         db.session.execute(text('''
-            INSERT INTO saved_leads (user_email, lead_type, lead_id, lead_title, notes, status)
-            VALUES (:email, :type, :id, :title, :notes, 'saved')
+            INSERT INTO saved_leads (user_email, lead_type, lead_id, lead_title, notes, status, lead_data)
+            VALUES (:email, :type, :id, :title, :notes, 'saved', :data)
             ON CONFLICT (user_email, lead_type, lead_id) 
-            DO UPDATE SET notes = :notes, lead_title = :title, saved_at = CURRENT_TIMESTAMP
+            DO UPDATE SET lead_title = :title, notes = :notes, updated_at = CURRENT_TIMESTAMP
         '''), {
             'email': user_email,
             'type': lead_type,
             'id': lead_id,
             'title': lead_title,
-            'notes': notes
+            'notes': notes,
+            'data': json.dumps(data)
         })
         db.session.commit()
         
-        log_user_activity(user_email, 'saved_lead', lead_type, lead_id)
+        print(f"✅ Lead saved via /api/save-lead: {lead_title} for user {user_email}")
         
-        msg = '✅ Lead already saved - updated!' if existing else '✅ Lead saved to My Leads!'
-        print(f"✅ Saved lead for {user_email}: {lead_title} (ID: {lead_id})")
+        try:
+            log_user_activity(user_email, 'saved_lead', lead_type, lead_id)
+        except:
+            pass  # Don't fail if logging fails
         
-        return jsonify({'success': True, 'message': msg, 'wasExisting': bool(existing)})
+        return jsonify({
+            'success': True, 
+            'message': f'"{lead_title}" saved to My Leads!'
+        })
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error saving lead: {e}")
+        print(f"❌ Error in api_save_lead: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/unsave-lead/<int:saved_id>', methods=['DELETE'])
@@ -12549,45 +12547,41 @@ def api_toggle_save_lead():
             return jsonify({'success': False, 'message': 'Please sign in to save leads', 'requiresAuth': True}), 401
         
         action = data.get('action', 'save')
+        lead_title = data.get('lead_title', 'Untitled Lead')
         
         if action == 'save':
-            # Check if already saved
-            existing = db.session.execute(text('''
-                SELECT id FROM saved_leads 
-                WHERE user_email = :user_email AND lead_type = :lead_type AND lead_id = :lead_id
-            '''), {
-                'user_email': user_email,
-                'lead_type': data.get('lead_type'),
-                'lead_id': data.get('lead_id')
-            }).fetchone()
-            
             # Save the lead
             db.session.execute(text('''
                 INSERT INTO saved_leads 
                 (user_email, lead_type, lead_id, lead_title, lead_data, status)
                 VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved')
                 ON CONFLICT (user_email, lead_type, lead_id) 
-                DO UPDATE SET lead_title = :lead_title, lead_data = :lead_data, saved_at = CURRENT_TIMESTAMP
+                DO UPDATE SET lead_title = :lead_title, lead_data = :lead_data, updated_at = CURRENT_TIMESTAMP
             '''), {
                 'user_email': user_email,
                 'lead_type': data.get('lead_type'),
                 'lead_id': data.get('lead_id'),
-                'lead_title': data.get('lead_title'),
+                'lead_title': lead_title,
                 'lead_data': json.dumps(data)
             })
             db.session.commit()
             
+            print(f"✅ Lead saved: {lead_title} for user {user_email}")
+            
             # Log activity
-            log_activity(user_email, 'saved_lead', f'Saved lead: {data.get("lead_title")}', data.get('lead_id'), data.get('lead_type'))
+            try:
+                log_activity(user_email, 'saved_lead', f'Saved lead: {lead_title}', data.get('lead_id'), data.get('lead_type'))
+            except:
+                pass  # Don't fail if logging fails
             
-            # Return appropriate message
-            msg = '✅ Lead already saved - updated timestamp' if existing else '✅ Lead saved successfully! View in My Leads'
-            print(f"✅ Saved lead for {user_email}: {data.get('lead_title')}")
-            
-            return jsonify({'success': True, 'message': msg, 'action': 'saved', 'wasExisting': bool(existing)})
+            return jsonify({
+                'success': True, 
+                'message': f'"{lead_title}" saved to My Leads!', 
+                'action': 'saved'
+            })
         else:
             # Unsave the lead
-            result = db.session.execute(text('''
+            db.session.execute(text('''
                 DELETE FROM saved_leads 
                 WHERE user_email = :user_email 
                 AND lead_type = :lead_type 
@@ -12599,13 +12593,19 @@ def api_toggle_save_lead():
             })
             db.session.commit()
             
-            print(f"🗑️ Removed saved lead for {user_email}: {data.get('lead_title')}")
+            print(f"✅ Lead removed: {lead_title} for user {user_email}")
             
-            return jsonify({'success': True, 'message': '🗑️ Lead removed from My Leads', 'action': 'unsaved'})
+            return jsonify({
+                'success': True, 
+                'message': f'"{lead_title}" removed from My Leads', 
+                'action': 'unsaved'
+            })
     except Exception as e:
         db.session.rollback()
-        print(f"Error in api_toggle_save_lead: {e}")
-        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+        print(f"❌ Error in api_toggle_save_lead: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': 'An error occurred. Please try again.'}), 500
 
 @app.route('/branding-materials')
 @login_required
