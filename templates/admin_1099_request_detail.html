@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Request {{ request.request_id }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header with Back Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="fas fa-file-alt me-2"></i>Request {{ request.request_id }}
+        </h2>
+        <a href="/admin/1099-cleaner-requests" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Request Details Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Request Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Status Badge -->
+                    <div class="mb-4 text-center">
+                        {% if request.status == 'pending_review' %}
+                        <span class="badge bg-warning text-dark fs-5 px-4 py-2">
+                            <i class="fas fa-clock me-2"></i>PENDING REVIEW
+                        </span>
+                        {% elif request.status == 'approved' %}
+                        <span class="badge bg-success fs-5 px-4 py-2">
+                            <i class="fas fa-check-circle me-2"></i>APPROVED
+                        </span>
+                        {% elif request.status == 'denied' %}
+                        <span class="badge bg-danger fs-5 px-4 py-2">
+                            <i class="fas fa-times-circle me-2"></i>DENIED
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Company Information -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-building me-2 text-primary"></i>Company Information
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Company Name</label>
+                            <p class="fw-bold mb-0">{{ request.company_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Contact Person</label>
+                            <p class="fw-bold mb-0">{{ request.contact_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Email</label>
+                            <p class="mb-0">
+                                <a href="mailto:{{ request.email }}">{{ request.email }}</a>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Phone</label>
+                            <p class="mb-0">
+                                <a href="tel:{{ request.phone }}">{{ request.phone }}</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Job Details -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-briefcase me-2 text-success"></i>Job Details
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Location</label>
+                            <p class="fw-bold mb-0">{{ request.city }}, {{ request.state }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Service Category</label>
+                            <p class="mb-0">
+                                <span class="badge bg-info">{{ request.service_category }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Pay Rate</label>
+                            <p class="fw-bold mb-0">{{ request.pay_rate }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Start Date</label>
+                            <p class="fw-bold mb-0">{{ request.start_date }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Urgency</label>
+                            <p class="mb-0">
+                                {% if request.urgency == 'urgent' %}
+                                <span class="badge bg-danger">🔴 Urgent - ASAP</span>
+                                {% elif request.urgency == 'high' %}
+                                <span class="badge bg-warning text-dark">🟡 High - Within 1 Week</span>
+                                {% else %}
+                                <span class="badge bg-success">🟢 Normal - 2-4 Weeks</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Requirements -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-clipboard-check me-2 text-warning"></i>Requirements
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Background Check Required</label>
+                            <p class="mb-0">
+                                {% if request.background_check_required == 'yes' %}
+                                <span class="badge bg-danger">Yes - Required</span>
+                                {% else %}
+                                <span class="badge bg-success">No - Not Required</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Equipment/Supplies</label>
+                            <p class="mb-0">
+                                {% if request.equipment_required == 'yes' %}
+                                <span class="badge bg-success">Provided by Company</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Cleaner Must Provide</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-align-left me-2 text-secondary"></i>Job Description
+                    </h5>
+                    <div class="alert alert-light border">
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ request.description }}</p>
+                    </div>
+
+                    <!-- Denial Reason (if denied) -->
+                    {% if request.status == 'denied' and request.denial_reason %}
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>Denial Reason
+                    </h5>
+                    <div class="alert alert-danger">
+                        <p class="mb-0">{{ request.denial_reason }}</p>
+                        <small class="text-muted">Denied by {{ request.denied_by }} on {{ request.denied_at[:10] }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Admin Notes Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sticky-note me-2 text-warning"></i>Internal Admin Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="addNoteForm" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="noteMessage" placeholder="Add internal note..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Note
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="notesContainer">
+                        {% if notes|length == 0 %}
+                        <p class="text-muted text-center py-3">No notes yet</p>
+                        {% else %}
+                        {% for note in notes %}
+                        <div class="alert alert-info mb-2">
+                            <small class="text-muted">{{ note.admin_email }} - {{ note.created_at[:16] }}</small>
+                            <p class="mb-0 mt-1">{{ note.message }}</p>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-lg-4">
+            <!-- Action Buttons Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if request.status == 'pending_review' %}
+                    <!-- Approve Button -->
+                    <button class="btn btn-success w-100 mb-3" data-bs-toggle="modal" data-bs-target="#approveModal">
+                        <i class="fas fa-check-circle me-2"></i>Approve Request
+                    </button>
+
+                    <!-- Deny Button -->
+                    <button class="btn btn-danger w-100 mb-3" data-bs-toggle="modal" data-bs-target="#denyModal">
+                        <i class="fas fa-times-circle me-2"></i>Deny Request
+                    </button>
+                    {% elif request.status == 'approved' %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Request Approved</strong><br>
+                        <small>Posted to Community Forum</small>
+                    </div>
+                    {% elif request.status == 'denied' %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Request Denied</strong><br>
+                        <small>Company notified</small>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <!-- Timeline -->
+                    <h6 class="mb-3"><i class="fas fa-history me-2"></i>Timeline</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-primary small me-2"></i>
+                            <small>Created: {{ request.created_at[:16] }}</small>
+                        </li>
+                        {% if request.approved_at %}
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-success small me-2"></i>
+                            <small>Approved: {{ request.approved_at[:16] }}</small>
+                        </li>
+                        {% endif %}
+                        {% if request.denied_at %}
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-danger small me-2"></i>
+                            <small>Denied: {{ request.denied_at[:16] }}</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Approve Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve this 1099 cleaner request?</p>
+                <p class="mb-0"><strong>This will:</strong></p>
+                <ul>
+                    <li>Send approval email to {{ request.company_name }}</li>
+                    <li>Post the listing to the Community Forum</li>
+                    <li>Make it visible to all subscribers</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="approveRequest()">
+                    <i class="fas fa-check-circle me-2"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deny Modal -->
+<div class="modal fade" id="denyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Deny Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Please provide a reason for denying this request:</p>
+                <textarea class="form-control" id="denialReason" rows="4" placeholder="Reason for denial..." required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="denyRequest()">
+                    <i class="fas fa-times-circle me-2"></i>Deny Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const requestId = '{{ request.request_id }}';
+
+// Add Internal Note
+document.getElementById('addNoteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = document.getElementById('noteMessage').value;
+    
+    fetch(`/api/admin/1099-cleaner-requests/${requestId}/notes`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error adding note: ' + data.error);
+        }
+    });
+});
+
+// Approve Request
+function approveRequest() {
+    fetch(`/api/admin/1099-cleaner-requests/${requestId}/approve`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Request approved successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+
+// Deny Request
+function denyRequest() {
+    const reason = document.getElementById('denialReason').value;
+    if (!reason.trim()) {
+        alert('Please provide a reason for denial');
+        return;
+    }
+    
+    fetch(`/api/admin/1099-cleaner-requests/${requestId}/deny`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({reason})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Request denied');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+</script>
+{% endblock %}

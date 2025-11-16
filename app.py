@@ -112,6 +112,13 @@ def too_many_twofa_attempts(user_id: int, limit=5):
 # Flask application setup (reconstructed after accidental removal)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+
+# Session cookie configuration for production
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True only if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days
+
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if DATABASE_URL:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
@@ -8199,42 +8206,50 @@ def find_city_rfps():
         discovered_rfps = []
         cities_checked = []
         
-        # Major cities by state with known procurement portals
-        CITY_PORTALS = get_city_procurement_portals(state_code)
-        
-        if CITY_PORTALS:
-            print(f"📍 Found {len(CITY_PORTALS)} known portals for {state_name}")
-            discovered_rfps, cities_checked = scrape_city_portals(CITY_PORTALS, state_code, state_name)
-        
-        # If direct scraping found results, return them
-        if discovered_rfps:
-            print(f"✅ Direct scraping found {len(discovered_rfps)} RFPs")
-            return jsonify({
-                'success': True,
-                'message': f'Found {len(discovered_rfps)} active RFPs in {state_name}',
-                'rfps': discovered_rfps,
-                'cities_checked': cities_checked,
-                'cities_searched': len(cities_checked),
-                'state': state_name,
-                'source': 'direct_scraping'
-            })
-        
-        # TIER 3: OpenAI fallback (if API key available)
-        client = get_openai_client()
-        if client:
-            print("🤖 Attempting OpenAI-powered discovery...")
-            openai_rfps, openai_cities = find_rfps_with_openai(client, state_name, state_code)
-            if openai_rfps:
-                print(f"✅ OpenAI found {len(openai_rfps)} RFPs")
+        try:
+            # Major cities by state with known procurement portals
+            CITY_PORTALS = get_city_procurement_portals(state_code)
+            
+            if CITY_PORTALS:
+                print(f"📍 Found {len(CITY_PORTALS)} known portals for {state_name}")
+                discovered_rfps, cities_checked = scrape_city_portals(CITY_PORTALS, state_code, state_name)
+            
+            # If direct scraping found results, return them
+            if discovered_rfps:
+                print(f"✅ Direct scraping found {len(discovered_rfps)} RFPs")
                 return jsonify({
                     'success': True,
-                    'message': f'Found {len(openai_rfps)} RFPs in {state_name}',
-                    'rfps': openai_rfps,
-                    'cities_checked': openai_cities,
-                    'cities_searched': len(openai_cities),
+                    'message': f'Found {len(discovered_rfps)} active RFPs in {state_name}',
+                    'rfps': discovered_rfps,
+                    'cities_checked': cities_checked,
+                    'cities_searched': len(cities_checked),
                     'state': state_name,
-                    'source': 'openai_gpt4'
+                    'source': 'direct_scraping'
                 })
+        except Exception as scraping_error:
+            print(f"⚠️  Web scraping error: {scraping_error}")
+            # Continue to fallback methods
+        
+        # TIER 3: OpenAI fallback (if API key available)
+        try:
+            client = get_openai_client()
+            if client:
+                print("🤖 Attempting OpenAI-powered discovery...")
+                openai_rfps, openai_cities = find_rfps_with_openai(client, state_name, state_code)
+                if openai_rfps:
+                    print(f"✅ OpenAI found {len(openai_rfps)} RFPs")
+                    return jsonify({
+                        'success': True,
+                        'message': f'Found {len(openai_rfps)} RFPs in {state_name}',
+                        'rfps': openai_rfps,
+                        'cities_checked': openai_cities,
+                        'cities_searched': len(openai_cities),
+                        'state': state_name,
+                        'source': 'openai_gpt4'
+                    })
+        except Exception as openai_error:
+            print(f"⚠️  OpenAI error: {openai_error}")
+            # Continue to no results message
         
         # No RFPs found through any method
         print(f"⚠️  No RFPs found for {state_name} through any method")
@@ -12423,8 +12438,12 @@ def api_toggle_save_lead():
         data = request.get_json()
         user_email = session.get('user_email')
         
+        # Debug: Log session info
+        print(f"DEBUG toggle-save-lead: session keys={list(session.keys())}, user_email={user_email}")
+        
         # Check if user is logged in
         if not user_email:
+            print(f"DEBUG: No user_email in session. Full session: {dict(session)}")
             return jsonify({'success': False, 'message': 'Please sign in to save leads', 'requiresAuth': True}), 401
         
         action = data.get('action', 'save')
@@ -28527,6 +28546,654 @@ def run_industry_days_scraper():
             'success': False,
             'message': f'Error running scraper: {str(e)}'
         }), 500
+
+# ============================================
+# 1099 CLEANER REQUESTS FEATURE
+# ============================================
+
+@app.route('/request-1099-cleaners')
+def request_1099_cleaners():
+    """Public form for submitting 1099 cleaner requests (no authentication required)"""
+    return render_template('request_1099_cleaners.html')
+
+@app.route('/api/1099-cleaner-requests/create', methods=['POST'])
+def api_create_1099_cleaner_request():
+    """API endpoint to create a new 1099 cleaner request"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = [
+            'companyName', 'contactName', 'email', 'phone', 'city', 'state',
+            'serviceCategory', 'description', 'payRate', 'startDate', 'urgency',
+            'backgroundCheckRequired', 'equipmentRequired'
+        ]
+        
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({
+                'success': False,
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
+        
+        # Validate email format
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, data.get('email')):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid email address format'
+            }), 400
+        
+        # Validate phone format (basic check)
+        phone = re.sub(r'[^\d]', '', data.get('phone', ''))
+        if len(phone) < 10:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid phone number. Must be at least 10 digits.'
+            }), 400
+        
+        # Generate unique request ID
+        timestamp = datetime.now().strftime('%Y%m%d')
+        random_suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        request_id = f"REQ-{timestamp}-{random_suffix}"
+        
+        # Insert into database
+        db.session.execute(text('''
+            INSERT INTO cleaner_requests (
+                request_id, company_name, contact_name, email, phone, city, state,
+                service_category, description, pay_rate, start_date, urgency,
+                background_check_required, equipment_required, status, created_at
+            ) VALUES (
+                :request_id, :company_name, :contact_name, :email, :phone, :city, :state,
+                :service_category, :description, :pay_rate, :start_date, :urgency,
+                :background_check_required, :equipment_required, 'pending_review', :created_at
+            )
+        '''), {
+            'request_id': request_id,
+            'company_name': data.get('companyName'),
+            'contact_name': data.get('contactName'),
+            'email': data.get('email'),
+            'phone': data.get('phone'),
+            'city': data.get('city'),
+            'state': data.get('state'),
+            'service_category': data.get('serviceCategory'),
+            'description': data.get('description'),
+            'pay_rate': data.get('payRate'),
+            'start_date': data.get('startDate'),
+            'urgency': data.get('urgency'),
+            'background_check_required': data.get('backgroundCheckRequired'),
+            'equipment_required': data.get('equipmentRequired'),
+            'created_at': datetime.now().isoformat()
+        })
+        db.session.commit()
+        
+        # Send email notification to admin
+        try:
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@contractlink.ai')
+            if Mail and hasattr(app, 'extensions') and 'mail' in app.extensions:
+                msg = Message(
+                    subject=f'New 1099 Cleaner Request - {request_id}',
+                    sender=os.getenv('MAIL_DEFAULT_SENDER', admin_email),
+                    recipients=[admin_email]
+                )
+                msg.html = f'''
+                <h2>New 1099 Cleaner Request Received</h2>
+                <p><strong>Request ID:</strong> {request_id}</p>
+                <p><strong>Company:</strong> {data.get('companyName')}</p>
+                <p><strong>Contact:</strong> {data.get('contactName')} ({data.get('email')})</p>
+                <p><strong>Location:</strong> {data.get('city')}, {data.get('state')}</p>
+                <p><strong>Service:</strong> {data.get('serviceCategory')}</p>
+                <p><strong>Pay Rate:</strong> {data.get('payRate')}</p>
+                <p><strong>Start Date:</strong> {data.get('startDate')}</p>
+                <p><strong>Urgency:</strong> {data.get('urgency').upper()}</p>
+                <hr>
+                <p><strong>Description:</strong></p>
+                <p>{data.get('description')}</p>
+                <hr>
+                <p><a href="https://virginia-contracts-lead-generation.onrender.com/admin/1099-cleaner-requests/{request_id}" style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review Request</a></p>
+                '''
+                mail.send(msg)
+        except Exception as e:
+            print(f"Error sending admin email notification: {e}")
+        
+        # Send confirmation email to company
+        try:
+            if Mail and hasattr(app, 'extensions') and 'mail' in app.extensions:
+                msg = Message(
+                    subject='Your 1099 Cleaner Request Has Been Submitted',
+                    sender=os.getenv('MAIL_DEFAULT_SENDER', admin_email),
+                    recipients=[data.get('email')]
+                )
+                msg.html = f'''
+                <h2>Thank You for Your Submission!</h2>
+                <p>Dear {data.get('contactName')},</p>
+                <p>Your 1099 cleaner request has been successfully submitted and is now under review by our team.</p>
+                
+                <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #667eea;">
+                    <p><strong>Request ID:</strong> {request_id}</p>
+                    <p><strong>Company:</strong> {data.get('companyName')}</p>
+                    <p><strong>Service Category:</strong> {data.get('serviceCategory')}</p>
+                    <p><strong>Location:</strong> {data.get('city')}, {data.get('state')}</p>
+                </div>
+                
+                <h3>What's Next?</h3>
+                <ol>
+                    <li>Our admin team will review your request within <strong>24 hours</strong></li>
+                    <li>Once approved, your posting will be published in our <strong>Community Forum</strong></li>
+                    <li>Qualified 1099 cleaners will be able to view and respond to your listing</li>
+                    <li>You'll receive email notifications when cleaners express interest</li>
+                </ol>
+                
+                <p>If you have any questions, please reply to this email or contact our support team.</p>
+                
+                <p>Best regards,<br>
+                ContractLink.ai Team</p>
+                '''
+                mail.send(msg)
+        except Exception as e:
+            print(f"Error sending confirmation email: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Request submitted successfully',
+            'request_id': request_id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating 1099 cleaner request: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'An error occurred while processing your request. Please try again.'
+        }), 500
+
+# Admin routes for 1099 Cleaner Requests
+@app.route('/admin/1099-cleaner-requests')
+@login_required
+@admin_required
+def admin_1099_cleaner_requests():
+    """Admin view of all 1099 cleaner requests with filters"""
+    try:
+        # Get filter parameters
+        status_filter = request.args.get('status', '')
+        urgency_filter = request.args.get('urgency', '')
+        search_query = request.args.get('search', '')
+        
+        # Base query
+        query = 'SELECT * FROM cleaner_requests WHERE 1=1'
+        params = {}
+        
+        # Apply filters
+        if status_filter:
+            query += ' AND status = :status'
+            params['status'] = status_filter
+        
+        if urgency_filter:
+            query += ' AND urgency = :urgency'
+            params['urgency'] = urgency_filter
+        
+        if search_query:
+            query += ' AND (company_name LIKE :search OR email LIKE :search)'
+            params['search'] = f'%{search_query}%'
+        
+        query += ' ORDER BY created_at DESC'
+        
+        # Execute query
+        requests_result = db.session.execute(text(query), params).fetchall()
+        
+        # Get stats
+        stats = {
+            'pending': db.session.execute(text("SELECT COUNT(*) FROM cleaner_requests WHERE status = 'pending_review'")).scalar() or 0,
+            'approved': db.session.execute(text("SELECT COUNT(*) FROM cleaner_requests WHERE status = 'approved'")).scalar() or 0,
+            'denied': db.session.execute(text("SELECT COUNT(*) FROM cleaner_requests WHERE status = 'denied'")).scalar() or 0,
+            'total': db.session.execute(text("SELECT COUNT(*) FROM cleaner_requests")).scalar() or 0
+        }
+        
+        return render_template('admin_1099_requests.html',
+                             requests=requests_result,
+                             stats=stats,
+                             status_filter=status_filter,
+                             urgency_filter=urgency_filter,
+                             search_query=search_query)
+    except Exception as e:
+        print(f"Error loading admin 1099 requests: {e}")
+        flash('Error loading requests', 'danger')
+        return redirect(url_for('admin_enhanced'))
+
+@app.route('/admin/1099-cleaner-requests/<request_id>')
+@login_required
+@admin_required
+def admin_1099_request_detail(request_id):
+    """Admin detail view of a single 1099 cleaner request"""
+    try:
+        # Get request details
+        req = db.session.execute(text('''
+            SELECT * FROM cleaner_requests WHERE request_id = :request_id
+        '''), {'request_id': request_id}).fetchone()
+        
+        if not req:
+            flash('Request not found', 'danger')
+            return redirect(url_for('admin_1099_cleaner_requests'))
+        
+        # Get admin notes
+        notes = db.session.execute(text('''
+            SELECT * FROM cleaner_request_notes 
+            WHERE request_id = :request_id 
+            ORDER BY created_at DESC
+        '''), {'request_id': request_id}).fetchall()
+        
+        return render_template('admin_1099_request_detail.html',
+                             request=req,
+                             notes=notes)
+    except Exception as e:
+        print(f"Error loading request detail: {e}")
+        flash('Error loading request details', 'danger')
+        return redirect(url_for('admin_1099_cleaner_requests'))
+
+@app.route('/api/admin/1099-cleaner-requests/<request_id>/notes', methods=['POST'])
+@login_required
+@admin_required
+def api_add_1099_request_note(request_id):
+    """Add internal admin note to a request"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return jsonify({'success': False, 'error': 'Note message is required'}), 400
+        
+        # Generate unique note_id
+        note_id = f"NOTE-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        admin_email = session.get('user_email')
+        
+        # Insert note
+        db.session.execute(text('''
+            INSERT INTO cleaner_request_notes (note_id, request_id, admin_email, message, created_at)
+            VALUES (:note_id, :request_id, :admin_email, :message, :created_at)
+        '''), {
+            'note_id': note_id,
+            'request_id': request_id,
+            'admin_email': admin_email,
+            'message': message,
+            'created_at': datetime.now().isoformat()
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Note added successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding note: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/1099-cleaner-requests/<request_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def api_approve_1099_request(request_id):
+    """Approve a 1099 cleaner request and post to forum"""
+    try:
+        admin_email = session.get('user_email')
+        
+        # Get request details
+        req = db.session.execute(text('''
+            SELECT * FROM cleaner_requests WHERE request_id = :request_id
+        '''), {'request_id': request_id}).fetchone()
+        
+        if not req:
+            return jsonify({'success': False, 'error': 'Request not found'}), 404
+        
+        if req.status != 'pending_review':
+            return jsonify({'success': False, 'error': 'Request is not pending review'}), 400
+        
+        # Update request status
+        db.session.execute(text('''
+            UPDATE cleaner_requests 
+            SET status = 'approved', 
+                approved_at = :approved_at, 
+                approved_by = :approved_by,
+                updated_at = :updated_at
+            WHERE request_id = :request_id
+        '''), {
+            'approved_at': datetime.now().isoformat(),
+            'approved_by': admin_email,
+            'updated_at': datetime.now().isoformat(),
+            'request_id': request_id
+        })
+        
+        # Generate unique post_id for forum
+        post_id = f"POST-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        
+        # Create forum post
+        db.session.execute(text('''
+            INSERT INTO cleaner_request_forum_posts (
+                post_id, request_id, title, city, state, service_category,
+                pay_rate, description, urgency, background_check_required,
+                equipment_required, contact_email, contact_phone, company_name,
+                published, views, responses, created_at
+            ) VALUES (
+                :post_id, :request_id, :title, :city, :state, :service_category,
+                :pay_rate, :description, :urgency, :background_check_required,
+                :equipment_required, :contact_email, :contact_phone, :company_name,
+                1, 0, 0, :created_at
+            )
+        '''), {
+            'post_id': post_id,
+            'request_id': request_id,
+            'title': f"{req.service_category} in {req.city}, {req.state}",
+            'city': req.city,
+            'state': req.state,
+            'service_category': req.service_category,
+            'pay_rate': req.pay_rate,
+            'description': req.description[:500],  # Truncate if needed
+            'urgency': req.urgency,
+            'background_check_required': req.background_check_required,
+            'equipment_required': req.equipment_required,
+            'contact_email': req.email,
+            'contact_phone': req.phone,
+            'company_name': req.company_name,
+            'created_at': datetime.now().isoformat()
+        })
+        db.session.commit()
+        
+        # Send approval email to company
+        try:
+            if Mail and hasattr(app, 'extensions') and 'mail' in app.extensions:
+                msg = Message(
+                    subject='Your 1099 Cleaner Request Has Been Approved!',
+                    sender=os.getenv('MAIL_DEFAULT_SENDER', os.getenv('ADMIN_EMAIL', 'admin@contractlink.ai')),
+                    recipients=[req.email]
+                )
+                msg.html = f'''
+                <h2>🎉 Great News! Your Request Has Been Approved</h2>
+                <p>Dear {req.contact_name},</p>
+                <p>Your 1099 cleaner request has been approved and is now live in our Community Forum!</p>
+                
+                <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #28a745;">
+                    <p><strong>Request ID:</strong> {request_id}</p>
+                    <p><strong>Posted As:</strong> {req.service_category} in {req.city}, {req.state}</p>
+                    <p><strong>Forum Post ID:</strong> {post_id}</p>
+                </div>
+                
+                <h3>What Happens Next?</h3>
+                <ul>
+                    <li>Your listing is now visible to all subscribers in our Community Forum</li>
+                    <li>Qualified 1099 cleaners can view your posting and respond</li>
+                    <li>You'll receive email notifications when cleaners express interest</li>
+                    <li>You can message interested cleaners through our platform</li>
+                </ul>
+                
+                <p><a href="https://virginia-contracts-lead-generation.onrender.com/forum/1099-cleaners" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Your Forum Post</a></p>
+                
+                <p>Best regards,<br>
+                ContractLink.ai Team</p>
+                '''
+                mail.send(msg)
+        except Exception as e:
+            print(f"Error sending approval email: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Request approved and posted to forum',
+            'post_id': post_id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error approving request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/1099-cleaner-requests/<request_id>/deny', methods=['POST'])
+@login_required
+@admin_required
+def api_deny_1099_request(request_id):
+    """Deny a 1099 cleaner request with reason"""
+    try:
+        data = request.get_json()
+        reason = data.get('reason', '').strip()
+        
+        if not reason:
+            return jsonify({'success': False, 'error': 'Denial reason is required'}), 400
+        
+        admin_email = session.get('user_email')
+        
+        # Get request details for email
+        req = db.session.execute(text('''
+            SELECT * FROM cleaner_requests WHERE request_id = :request_id
+        '''), {'request_id': request_id}).fetchone()
+        
+        if not req:
+            return jsonify({'success': False, 'error': 'Request not found'}), 404
+        
+        # Update request status
+        db.session.execute(text('''
+            UPDATE cleaner_requests 
+            SET status = 'denied',
+                denial_reason = :denial_reason,
+                denied_at = :denied_at,
+                denied_by = :denied_by,
+                updated_at = :updated_at
+            WHERE request_id = :request_id
+        '''), {
+            'denial_reason': reason,
+            'denied_at': datetime.now().isoformat(),
+            'denied_by': admin_email,
+            'updated_at': datetime.now().isoformat(),
+            'request_id': request_id
+        })
+        db.session.commit()
+        
+        # Send denial email to company
+        try:
+            if Mail and hasattr(app, 'extensions') and 'mail' in app.extensions:
+                msg = Message(
+                    subject='Update on Your 1099 Cleaner Request',
+                    sender=os.getenv('MAIL_DEFAULT_SENDER', os.getenv('ADMIN_EMAIL', 'admin@contractlink.ai')),
+                    recipients=[req.email]
+                )
+                msg.html = f'''
+                <h2>Update on Your 1099 Cleaner Request</h2>
+                <p>Dear {req.contact_name},</p>
+                <p>Thank you for submitting your 1099 cleaner request (ID: {request_id}).</p>
+                
+                <p>After careful review, we are unable to approve your request at this time for the following reason:</p>
+                
+                <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                    <p style="margin: 0;"><strong>Reason:</strong> {reason}</p>
+                </div>
+                
+                <p>If you believe this was in error or would like to resubmit with modifications, please feel free to submit a new request or contact our support team.</p>
+                
+                <p>Best regards,<br>
+                ContractLink.ai Team</p>
+                '''
+                mail.send(msg)
+        except Exception as e:
+            print(f"Error sending denial email: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Request denied and company notified'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error denying request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Community Forum for 1099 Cleaners
+@app.route('/forum/1099-cleaners')
+def forum_1099_cleaners():
+    """Public forum displaying approved 1099 cleaner job postings"""
+    try:
+        # Check if user is subscriber
+        is_subscriber = False
+        if 'user_email' in session:
+            user_email = session.get('user_email')
+            subscription_result = db.session.execute(text('''
+                SELECT status FROM subscriptions 
+                WHERE email = :email AND status = 'active'
+            '''), {'email': user_email}).fetchone()
+            is_subscriber = subscription_result is not None
+        
+        # Get filter parameters
+        state_filter = request.args.get('state', '')
+        category_filter = request.args.get('category', '')
+        urgency_filter = request.args.get('urgency', '')
+        
+        # Base query - only show approved posts
+        query = '''
+            SELECT * FROM cleaner_request_forum_posts 
+            WHERE published = 1
+        '''
+        params = {}
+        
+        # Apply filters
+        if state_filter:
+            query += ' AND state = :state'
+            params['state'] = state_filter
+        
+        if category_filter:
+            query += ' AND service_category = :category'
+            params['category'] = category_filter
+        
+        if urgency_filter:
+            query += ' AND urgency = :urgency'
+            params['urgency'] = urgency_filter
+        
+        query += ' ORDER BY created_at DESC'
+        
+        # Get posts
+        posts = db.session.execute(text(query), params).fetchall()
+        
+        # Get unique states and categories for filters
+        states = db.session.execute(text('''
+            SELECT DISTINCT state FROM cleaner_request_forum_posts 
+            WHERE published = 1 
+            ORDER BY state
+        ''')).fetchall()
+        states = [s[0] for s in states]
+        
+        categories = db.session.execute(text('''
+            SELECT DISTINCT service_category FROM cleaner_request_forum_posts 
+            WHERE published = 1 
+            ORDER BY service_category
+        ''')).fetchall()
+        categories = [c[0] for c in categories]
+        
+        states_count = len(states)
+        
+        return render_template('forum_1099_cleaners.html',
+                             posts=posts,
+                             states=states,
+                             categories=categories,
+                             states_count=states_count,
+                             is_subscriber=is_subscriber,
+                             state_filter=state_filter,
+                             category_filter=category_filter,
+                             urgency_filter=urgency_filter)
+    except Exception as e:
+        print(f"Error loading forum: {e}")
+        flash('Error loading forum posts', 'danger')
+        return redirect(url_for('home'))
+
+@app.route('/api/forum/1099-cleaners/<post_id>/view', methods=['POST'])
+def api_track_forum_view(post_id):
+    """Track view count for a forum post"""
+    try:
+        db.session.execute(text('''
+            UPDATE cleaner_request_forum_posts 
+            SET views = views + 1 
+            WHERE post_id = :post_id
+        '''), {'post_id': post_id})
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error tracking view: {e}")
+        return jsonify({'success': False}), 500
+
+# Browse Page (Subscription-Gated)
+@app.route('/browse-1099-cleaners')
+def browse_1099_cleaners():
+    """Browse page for 1099 cleaner opportunities (subscription required for contact info)"""
+    try:
+        # Check subscription status
+        is_subscriber = False
+        if 'user_email' in session:
+            user_email = session.get('user_email')
+            subscription_result = db.session.execute(text('''
+                SELECT status FROM subscriptions 
+                WHERE email = :email AND status = 'active'
+            '''), {'email': user_email}).fetchone()
+            is_subscriber = subscription_result is not None
+        
+        if not is_subscriber:
+            # Show subscription gate
+            return render_template('browse_1099_cleaners.html',
+                                 is_subscriber=False,
+                                 opportunities=[])
+        
+        # Subscriber: Get filter parameters
+        state_filter = request.args.get('state', '')
+        category_filter = request.args.get('category', '')
+        urgency_filter = request.args.get('urgency', '')
+        
+        # Base query
+        query = '''
+            SELECT * FROM cleaner_request_forum_posts 
+            WHERE published = 1
+        '''
+        params = {}
+        
+        # Apply filters
+        if state_filter:
+            query += ' AND state = :state'
+            params['state'] = state_filter
+        
+        if category_filter:
+            query += ' AND service_category = :category'
+            params['category'] = category_filter
+        
+        if urgency_filter:
+            query += ' AND urgency = :urgency'
+            params['urgency'] = urgency_filter
+        
+        query += ' ORDER BY created_at DESC'
+        
+        # Get opportunities
+        opportunities = db.session.execute(text(query), params).fetchall()
+        
+        # Get unique states and categories for filters
+        states = db.session.execute(text('''
+            SELECT DISTINCT state FROM cleaner_request_forum_posts 
+            WHERE published = 1 
+            ORDER BY state
+        ''')).fetchall()
+        states = [s[0] for s in states]
+        
+        categories = db.session.execute(text('''
+            SELECT DISTINCT service_category FROM cleaner_request_forum_posts 
+            WHERE published = 1 
+            ORDER BY service_category
+        ''')).fetchall()
+        categories = [c[0] for c in categories]
+        
+        return render_template('browse_1099_cleaners.html',
+                             is_subscriber=True,
+                             opportunities=opportunities,
+                             states=states,
+                             categories=categories,
+                             state_filter=state_filter,
+                             category_filter=category_filter,
+                             urgency_filter=urgency_filter)
+    except Exception as e:
+        print(f"Error loading browse page: {e}")
+        flash('Error loading opportunities', 'danger')
+        return redirect(url_for('home'))
+
+# ============================================
+# END 1099 CLEANER REQUESTS
+# ============================================
 
 if __name__ == '__main__':
     init_db()
