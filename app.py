@@ -4095,7 +4095,19 @@ def init_postgres_db():
                           last_verified TIMESTAMP,
                           is_active BOOLEAN DEFAULT TRUE,
                           data_source TEXT,
+                          created_at TIMESTAMPTZ DEFAULT NOW(),
                           UNIQUE(state_code, city_name, rfp_number))'''))
+            
+            # Add created_at column if it doesn't exist (for existing databases)
+            try:
+                db.session.execute(text('''ALTER TABLE city_rfps 
+                                           ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()'''))
+                db.session.commit()
+            except Exception as alter_err:
+                db.session.rollback()
+                # Column might already exist, continue
+                if 'already exists' not in str(alter_err).lower():
+                    print(f"⚠️  Could not add city_rfps.created_at: {alter_err}")
             
             db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_state 
                                        ON city_rfps(state_code)'''))
@@ -4103,6 +4115,8 @@ def init_postgres_db():
                                        ON city_rfps(city_name)'''))
             db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_active 
                                        ON city_rfps(is_active)'''))
+            db.session.execute(text('''CREATE INDEX IF NOT EXISTS idx_city_rfps_created 
+                                       ON city_rfps(created_at)'''))
             db.session.commit()
             print("✅ City RFPs table created successfully")
         except Exception as city_rfps_err:
@@ -4560,11 +4574,25 @@ def init_db():
                       last_verified TIMESTAMP,
                       is_active BOOLEAN DEFAULT 1,
                       data_source TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       UNIQUE(state_code, city_name, rfp_number))''')
+        
+        # Add created_at column if it doesn't exist (for existing SQLite databases)
+        try:
+            c.execute('SELECT created_at FROM city_rfps LIMIT 1')
+        except Exception:
+            # Column doesn't exist, add it
+            try:
+                c.execute('ALTER TABLE city_rfps ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
+                conn.commit()
+            except Exception as e:
+                # Ignore if column already exists
+                pass
         
         c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_state ON city_rfps(state_code)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_city ON city_rfps(city_name)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_active ON city_rfps(is_active)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_city_rfps_created ON city_rfps(created_at)')
         
         # Create aviation cleaning leads table for airline, private jet, and aircraft cleaning opportunities
         c.execute('''CREATE TABLE IF NOT EXISTS aviation_cleaning_leads
@@ -8181,14 +8209,42 @@ def find_city_rfps():
         
         # TIER 1: Check database cache (< 7 days old)
         cache_cutoff = datetime.now() - timedelta(days=7)
-        cached_rfps = db.session.execute(text(
-            '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
-                      estimated_value, department, contact_email, contact_phone, rfp_url
-               FROM city_rfps 
-               WHERE state_code = :sc 
-               AND created_at >= :cutoff
-               ORDER BY created_at DESC'''
-        ), {'sc': state_code, 'cutoff': cache_cutoff}).fetchall()
+        
+        # Try to query with created_at, fallback if column doesn't exist
+        try:
+            cached_rfps = db.session.execute(text(
+                '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                          estimated_value, department, contact_email, contact_phone, rfp_url
+                   FROM city_rfps 
+                   WHERE state_code = :sc 
+                   AND created_at >= :cutoff
+                   ORDER BY created_at DESC'''
+            ), {'sc': state_code, 'cutoff': cache_cutoff}).fetchall()
+        except Exception as e:
+            # Fallback: created_at column might not exist (old database)
+            if 'created_at' in str(e).lower() or 'column' in str(e).lower():
+                print(f"⚠️  created_at column not found, using discovered_at fallback")
+                try:
+                    cached_rfps = db.session.execute(text(
+                        '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                                  estimated_value, department, contact_email, contact_phone, rfp_url
+                           FROM city_rfps 
+                           WHERE state_code = :sc 
+                           AND discovered_at >= :cutoff
+                           ORDER BY discovered_at DESC'''
+                    ), {'sc': state_code, 'cutoff': cache_cutoff}).fetchall()
+                except Exception:
+                    # Last resort: no timestamp filtering
+                    cached_rfps = db.session.execute(text(
+                        '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                                  estimated_value, department, contact_email, contact_phone, rfp_url
+                           FROM city_rfps 
+                           WHERE state_code = :sc 
+                           ORDER BY id DESC
+                           LIMIT 50'''
+                    ), {'sc': state_code}).fetchall()
+            else:
+                raise  # Re-raise if it's a different error
         
         if cached_rfps:
             print(f"✅ Found {len(cached_rfps)} cached RFPs (< 7 days old)")
