@@ -1593,6 +1593,10 @@ function displayEnhancedRFPs(data, stateName, stateCode) {
     const searchDays = data.search_days || 90;
     const citiesChecked = data.cities_checked || [];
     
+    // Store RFPs globally for save functions
+    window.currentEnhancedRFPs = rfps;
+    window.currentStateCode = stateCode;
+    
     let contentHtml = '';
     
     if (total > 0) {
@@ -1760,13 +1764,183 @@ function displayEnhancedRFPs(data, stateName, stateCode) {
 // Save individual enhanced RFP
 function saveEnhancedRFP(idx, stateCode) {
     console.log(`Saving RFP ${idx} for state ${stateCode}`);
-    alert('RFP saved to your leads! (Feature in development)');
+    
+    // Get RFP from global array
+    if (!window.currentEnhancedRFPs || !window.currentEnhancedRFPs[idx]) {
+        showToast('Error', 'RFP data not found', 'danger');
+        return;
+    }
+    
+    const rfp = window.currentEnhancedRFPs[idx];
+    
+    // Disable button to prevent double-clicks
+    const btn = event.target.closest('button');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    }
+    
+    // POST to save endpoint
+    fetch('/api/save-enhanced-rfp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(rfp)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Success!', `${rfp.title} saved to your leads`, 'success');
+            // Update button to show it's saved
+            if (btn) {
+                btn.classList.remove('btn-outline-warning');
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Saved';
+            }
+        } else if (data.duplicate) {
+            showToast('Already Saved', data.error, 'warning');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bookmark me-1"></i>Save';
+            }
+        } else {
+            showToast('Error', data.error || 'Failed to save RFP', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bookmark me-1"></i>Save';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        showToast('Error', 'Network error - please try again', 'danger');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bookmark me-1"></i>Save';
+        }
+    });
 }
 
 // Save all enhanced RFPs
 function saveAllEnhancedRFPs(stateCode) {
     console.log(`Saving all RFPs for state ${stateCode}`);
-    alert('All RFPs saved to your leads! (Feature in development)');
+    
+    // Get RFPs from global array
+    if (!window.currentEnhancedRFPs || window.currentEnhancedRFPs.length === 0) {
+        showToast('Error', 'No RFPs to save', 'warning');
+        return;
+    }
+    
+    const rfps = window.currentEnhancedRFPs;
+    
+    // Disable button to prevent double-clicks
+    const btn = event.target.closest('button');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving All...';
+    }
+    
+    // POST to batch save endpoint
+    fetch('/api/save-all-enhanced-rfps', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rfps: rfps })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const message = data.message || `Saved ${data.saved} RFPs`;
+            showToast('Success!', message, 'success');
+            
+            // Update all Save buttons to show they're saved
+            const saveButtons = document.querySelectorAll('.rfp-card .btn-outline-warning');
+            saveButtons.forEach(button => {
+                button.classList.remove('btn-outline-warning');
+                button.classList.add('btn-success');
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Saved';
+                button.disabled = true;
+            });
+            
+            if (btn) {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                btn.innerHTML = '<i class="fas fa-check-double me-1"></i>All Saved';
+            }
+        } else {
+            showToast('Error', data.error || 'Failed to save RFPs', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i>Save All';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Batch save error:', error);
+        showToast('Error', 'Network error - please try again', 'danger');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save me-1"></i>Save All';
+        }
+    });
+}
+
+// Helper function to show Bootstrap toast notifications
+function showToast(title, message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Map type to Bootstrap color
+    const bgColor = {
+        'success': 'bg-success',
+        'danger': 'bg-danger',
+        'warning': 'bg-warning',
+        'info': 'bg-info'
+    }[type] || 'bg-info';
+    
+    const icon = {
+        'success': 'fa-check-circle',
+        'danger': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    }[type] || 'fa-info-circle';
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgColor} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas ${icon} me-2"></i><strong>${title}:</strong> ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Show toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 4000
+    });
+    toast.show();
+    
+    // Remove from DOM after hiding
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
 }
 
 // Display error with fallback suggestion

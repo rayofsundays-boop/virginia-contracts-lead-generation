@@ -9261,6 +9261,215 @@ def fetch_rfps_by_state():
         }), 500
 
 
+# ===== ENHANCED RFP SAVE SYSTEM (Global - No Login Required) =====
+
+@app.route('/api/save-enhanced-rfp', methods=['POST'])
+def save_enhanced_rfp():
+    """
+    Save a single enhanced RFP to the global saved_leads table.
+    No user authentication required - saves globally for all users.
+    Deduplicates by title + agency (case-insensitive).
+    """
+    try:
+        data = request.get_json() or {}
+        
+        # Extract RFP fields
+        title = data.get('title', 'Untitled RFP')
+        agency = data.get('agency', 'Unknown Agency')
+        location = data.get('location', 'Unknown Location')
+        deadline = data.get('deadline', 'Not Specified')
+        value = data.get('value', 'Not Specified')
+        link = data.get('link', '')
+        notice_id = data.get('notice_id', 'N/A')
+        source = data.get('source', 'Enhanced Search')
+        rfp_type = data.get('type', 'Opportunity')
+        contact_email = data.get('contact_email', '')
+        contact_phone = data.get('contact_phone', '')
+        
+        # Validate required fields
+        if not title or not agency:
+            return jsonify({
+                'success': False,
+                'error': 'Title and agency are required'
+            }), 400
+        
+        # Check for duplicates (case-insensitive title + agency)
+        try:
+            existing = db.session.execute(text(
+                '''SELECT id FROM saved_leads 
+                   WHERE LOWER(title) = LOWER(:title) 
+                   AND LOWER(agency) = LOWER(:agency)
+                   LIMIT 1'''
+            ), {'title': title, 'agency': agency}).fetchone()
+            
+            if existing:
+                return jsonify({
+                    'success': False,
+                    'error': 'This RFP is already saved',
+                    'duplicate': True
+                }), 409  # Conflict status code
+        except Exception as e:
+            print(f"⚠️  Duplicate check error: {e}")
+            # Continue with save if duplicate check fails
+        
+        # Insert into saved_leads
+        try:
+            db.session.execute(text(
+                '''INSERT INTO saved_leads 
+                   (title, agency, location, deadline, value, link, notice_id, 
+                    source, type, contact_email, contact_phone, date_saved)
+                   VALUES 
+                   (:title, :agency, :location, :deadline, :value, :link, :notice_id,
+                    :source, :type, :contact_email, :contact_phone, :date_saved)'''
+            ), {
+                'title': title,
+                'agency': agency,
+                'location': location,
+                'deadline': deadline,
+                'value': value,
+                'link': link or '#',
+                'notice_id': notice_id,
+                'source': source,
+                'type': rfp_type,
+                'contact_email': contact_email or '',
+                'contact_phone': contact_phone or '',
+                'date_saved': datetime.now()
+            })
+            db.session.commit()
+            
+            print(f"✅ Saved RFP: {title[:50]}... from {agency}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'RFP saved successfully',
+                'title': title
+            }), 200
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Database insert error: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Database error: {str(e)}'
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Save enhanced RFP error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/save-all-enhanced-rfps', methods=['POST'])
+def save_all_enhanced_rfps():
+    """
+    Save multiple enhanced RFPs to the global saved_leads table.
+    No user authentication required - saves globally for all users.
+    Skips duplicates silently.
+    """
+    try:
+        data = request.get_json() or {}
+        rfps = data.get('rfps', [])
+        
+        if not rfps or not isinstance(rfps, list):
+            return jsonify({
+                'success': False,
+                'error': 'No RFPs provided or invalid format'
+            }), 400
+        
+        saved_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for idx, rfp in enumerate(rfps):
+            try:
+                # Extract fields with safe defaults
+                title = rfp.get('title', f'Untitled RFP #{idx + 1}')
+                agency = rfp.get('agency', 'Unknown Agency')
+                location = rfp.get('location', 'Unknown Location')
+                deadline = rfp.get('deadline', 'Not Specified')
+                value = rfp.get('value', 'Not Specified')
+                link = rfp.get('link', '')
+                notice_id = rfp.get('notice_id', 'N/A')
+                source = rfp.get('source', 'Enhanced Search')
+                rfp_type = rfp.get('type', 'Opportunity')
+                contact_email = rfp.get('contact_email', '')
+                contact_phone = rfp.get('contact_phone', '')
+                
+                # Check for duplicates
+                try:
+                    existing = db.session.execute(text(
+                        '''SELECT id FROM saved_leads 
+                           WHERE LOWER(title) = LOWER(:title) 
+                           AND LOWER(agency) = LOWER(:agency)
+                           LIMIT 1'''
+                    ), {'title': title, 'agency': agency}).fetchone()
+                    
+                    if existing:
+                        skipped_count += 1
+                        continue  # Skip duplicate
+                except:
+                    pass  # If duplicate check fails, try to insert anyway
+                
+                # Insert into saved_leads
+                db.session.execute(text(
+                    '''INSERT INTO saved_leads 
+                       (title, agency, location, deadline, value, link, notice_id, 
+                        source, type, contact_email, contact_phone, date_saved)
+                       VALUES 
+                       (:title, :agency, :location, :deadline, :value, :link, :notice_id,
+                        :source, :type, :contact_email, :contact_phone, :date_saved)'''
+                ), {
+                    'title': title,
+                    'agency': agency,
+                    'location': location,
+                    'deadline': deadline,
+                    'value': value,
+                    'link': link or '#',
+                    'notice_id': notice_id,
+                    'source': source,
+                    'type': rfp_type,
+                    'contact_email': contact_email or '',
+                    'contact_phone': contact_phone or '',
+                    'date_saved': datetime.now()
+                })
+                
+                saved_count += 1
+                
+            except Exception as e:
+                errors.append(f"RFP {idx + 1}: {str(e)}")
+                print(f"⚠️  Error saving RFP {idx + 1}: {e}")
+                continue  # Continue with next RFP even if one fails
+        
+        # Commit all successful inserts
+        try:
+            db.session.commit()
+            print(f"✅ Batch save complete: {saved_count} saved, {skipped_count} skipped")
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Batch commit error: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Database commit error: {str(e)}'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'saved': saved_count,
+            'skipped': skipped_count,
+            'errors': errors if errors else None,
+            'message': f'Saved {saved_count} RFPs, skipped {skipped_count} duplicates'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Save all enhanced RFPs error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/search-city-rfp', methods=['POST'])
 @login_required
 def search_city_rfp():
