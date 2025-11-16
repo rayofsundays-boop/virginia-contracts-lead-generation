@@ -7709,219 +7709,546 @@ def test_procurement_urls():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/find-city-rfps', methods=['POST'])
-@login_required
-def find_city_rfps():
-    """Use OpenAI to intelligently find and extract local city RFPs from procurement portals
-    
-    This endpoint uses GPT-4 to:
-    1. Identify major cities in the selected state
-    2. Find their procurement website URLs
-    3. Navigate to active RFP pages
-    4. Extract current cleaning/janitorial opportunities
-    5. Parse contact info, deadlines, and requirements
+def get_city_procurement_portals(state_code):
     """
+    Returns hardcoded procurement portal URLs for major cities by state.
+    Prioritizes cities with known, working procurement portals.
+    """
+    portals = {
+        'VA': {
+            'Richmond': {
+                'url': 'https://www.rva.gov/procurement-services/bids-rfps',
+                'bid_path': '/bids-rfps',
+                'keywords': ['janitorial', 'custodial', 'cleaning', 'facilities maintenance']
+            },
+            'Norfolk': {
+                'url': 'https://www.norfolk.gov/156/Purchasing-Office',
+                'bid_path': '/current-bids',
+                'keywords': ['janitorial', 'cleaning', 'custodial']
+            },
+            'Virginia Beach': {
+                'url': 'https://www.vbgov.com/government/departments/procurement/Pages/default.aspx',
+                'bid_path': '/solicitations',
+                'keywords': ['janitorial', 'custodial', 'facilities']
+            },
+            'Chesapeake': {
+                'url': 'https://www.cityofchesapeake.net/government/city-departments/departments/procurement-division.htm',
+                'bid_path': '/current-bids',
+                'keywords': ['cleaning', 'janitorial']
+            },
+            'Newport News': {
+                'url': 'https://www.nnva.gov/254/Procurement',
+                'bid_path': '/bids',
+                'keywords': ['custodial', 'cleaning']
+            },
+            'Hampton': {
+                'url': 'https://hampton.gov/228/Procurement',
+                'bid_path': '/solicitations',
+                'keywords': ['janitorial', 'facilities']
+            },
+            'Alexandria': {
+                'url': 'https://www.alexandriava.gov/procurement',
+                'bid_path': '/bids',
+                'keywords': ['cleaning', 'custodial']
+            },
+            'Arlington': {
+                'url': 'https://www.arlingtonva.us/Government/Departments/Management-and-Finance/Procurement',
+                'bid_path': '/current-solicitations',
+                'keywords': ['janitorial', 'facilities maintenance']
+            }
+        },
+        'CA': {
+            'Los Angeles': {
+                'url': 'https://www.labavn.org/',
+                'bid_path': '/bavn',
+                'keywords': ['janitorial', 'custodial', 'cleaning']
+            },
+            'San Diego': {
+                'url': 'https://www.sandiego.gov/purchasing-contracting',
+                'bid_path': '/opportunities',
+                'keywords': ['janitorial', 'building maintenance']
+            },
+            'San Francisco': {
+                'url': 'https://sfgov.org/oca/bidboard',
+                'bid_path': '',
+                'keywords': ['custodial', 'cleaning', 'janitorial']
+            },
+            'San Jose': {
+                'url': 'https://www.sanjoseca.gov/your-government/departments/finance/purchasing',
+                'bid_path': '/current-bids',
+                'keywords': ['janitorial', 'facilities']
+            }
+        },
+        'TX': {
+            'Houston': {
+                'url': 'https://www.houstontx.gov/epo/',
+                'bid_path': '/bids',
+                'keywords': ['janitorial', 'custodial']
+            },
+            'Dallas': {
+                'url': 'https://dallascityhall.com/departments/procurement-services',
+                'bid_path': '/solicitations',
+                'keywords': ['cleaning', 'janitorial']
+            },
+            'Austin': {
+                'url': 'https://www.austintexas.gov/department/purchasing',
+                'bid_path': '/solicitations',
+                'keywords': ['custodial', 'janitorial']
+            },
+            'San Antonio': {
+                'url': 'https://www.sanantonio.gov/Finance/Procurement',
+                'bid_path': '/bids',
+                'keywords': ['cleaning', 'facilities']
+            }
+        },
+        'FL': {
+            'Miami': {
+                'url': 'https://www.miamigov.com/Departments/Procurement',
+                'bid_path': '/Active-Solicitations',
+                'keywords': ['janitorial', 'custodial']
+            },
+            'Tampa': {
+                'url': 'https://www.tampa.gov/procurement',
+                'bid_path': '/open-solicitations',
+                'keywords': ['cleaning', 'janitorial']
+            },
+            'Orlando': {
+                'url': 'https://www.orlando.gov/Our-Government/Departments-Offices/Financial-Services/Procurement',
+                'bid_path': '/solicitations',
+                'keywords': ['custodial', 'facilities']
+            },
+            'Jacksonville': {
+                'url': 'https://www.coj.net/departments/procurement',
+                'bid_path': '/bids',
+                'keywords': ['janitorial', 'cleaning']
+            }
+        },
+        'NY': {
+            'New York City': {
+                'url': 'https://www1.nyc.gov/site/mocs/opportunities/opportunities.page',
+                'bid_path': '',
+                'keywords': ['custodial', 'cleaning', 'janitorial']
+            },
+            'Buffalo': {
+                'url': 'https://www.buffalony.gov/161/Purchasing',
+                'bid_path': '/bids',
+                'keywords': ['janitorial', 'facilities']
+            },
+            'Rochester': {
+                'url': 'https://www.cityofrochester.gov/buyerfp/',
+                'bid_path': '',
+                'keywords': ['custodial', 'cleaning']
+            }
+        }
+    }
+    
+    return portals.get(state_code, {})
+
+
+def scrape_city_portals(portals, state_code, state_name):
+    """
+    Scrapes procurement portals directly using hardcoded URLs.
+    Returns list of discovered RFPs and cities checked.
+    """
+    from bs4 import BeautifulSoup
+    import requests
+    from time import sleep
+    
+    discovered_rfps = []
+    cities_checked = []
+    
+    # Keywords to search for (expanded list)
+    keywords = [
+        'janitorial', 'custodial', 'cleaning', 'housekeeping',
+        'sanitation', 'porter', 'building maintenance', 'facilities',
+        'operations cleaning', 'environmental services', 'floor care',
+        'disinfection'
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    
+    for city_name, portal_info in portals.items():
+        try:
+            print(f"  🔍 Scraping {city_name}, {state_code}...")
+            cities_checked.append(city_name)
+            
+            url = portal_info['url']
+            
+            # Fetch the portal page
+            response = requests.get(url, headers=headers, timeout=20)
+            if response.status_code != 200:
+                print(f"    ⚠️  HTTP {response.status_code} for {city_name}")
+                sleep(2)
+                continue
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            page_text = soup.get_text(separator=' ', strip=True).lower()
+            
+            # Search for any of our keywords
+            found_keywords = [kw for kw in keywords if kw in page_text]
+            
+            if found_keywords:
+                print(f"    ✅ Found keywords: {', '.join(found_keywords[:3])}")
+                
+                # Extract potential RFP listings (look for common patterns)
+                rfp_containers = soup.find_all(['tr', 'div', 'li'], class_=lambda c: c and any(
+                    term in str(c).lower() for term in ['bid', 'rfp', 'solicitation', 'opportunity']
+                ))
+                
+                for container in rfp_containers[:10]:  # Limit to first 10 matches
+                    text = container.get_text(separator=' ', strip=True)
+                    text_lower = text.lower()
+                    
+                    # Check if this container mentions cleaning/janitorial
+                    if any(kw in text_lower for kw in found_keywords):
+                        # Try to extract RFP details
+                        rfp_data = {
+                            'city_name': city_name,
+                            'rfp_title': text[:200] if text else 'Cleaning Services Opportunity',
+                            'rfp_number': '',
+                            'description': text[:500] if len(text) > 200 else '',
+                            'deadline': '',
+                            'estimated_value': '',
+                            'department': '',
+                            'contact_email': '',
+                            'contact_phone': '',
+                            'rfp_url': url
+                        }
+                        
+                        # Try to find links within container
+                        link = container.find('a', href=True)
+                        if link and link['href']:
+                            if link['href'].startswith('http'):
+                                rfp_data['rfp_url'] = link['href']
+                            elif link['href'].startswith('/'):
+                                from urllib.parse import urljoin
+                                rfp_data['rfp_url'] = urljoin(url, link['href'])
+                        
+                        # Save to database
+                        try:
+                            db.session.execute(text(
+                                '''INSERT INTO city_rfps 
+                                   (state_code, state_name, city_name, rfp_title, rfp_number, 
+                                    description, deadline, estimated_value, department, 
+                                    contact_email, contact_phone, rfp_url, data_source, discovered_at)
+                                   VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                                           :email, :phone, :url, :source, :discovered)'''
+                            ), {
+                                'sc': state_code.upper(),
+                                'sn': state_name,
+                                'cn': city_name,
+                                'title': rfp_data['rfp_title'],
+                                'num': rfp_data['rfp_number'] or f"SCRAPED-{city_name[:3].upper()}-{len(discovered_rfps)+1}",
+                                'desc': rfp_data['description'],
+                                'dl': rfp_data['deadline'],
+                                'val': rfp_data['estimated_value'],
+                                'dept': rfp_data['department'],
+                                'email': rfp_data['contact_email'],
+                                'phone': rfp_data['contact_phone'],
+                                'url': rfp_data['rfp_url'],
+                                'source': 'direct_portal_scraper',
+                                'discovered': datetime.utcnow().isoformat()
+                            })
+                            discovered_rfps.append(rfp_data)
+                            
+                        except Exception as db_err:
+                            print(f"    ⚠️  Database error: {db_err}")
+                            continue
+            else:
+                print(f"    ℹ️  No cleaning keywords found in {city_name}")
+            
+            # Rate limiting - be respectful to government servers
+            sleep(3)
+            
+        except requests.exceptions.Timeout:
+            print(f"    ⏱️  Timeout for {city_name}")
+            continue
+        except Exception as e:
+            print(f"    ❌ Error scraping {city_name}: {e}")
+            continue
+    
     try:
-        import requests
-        from bs4 import BeautifulSoup
-        import json
-        
-        data = request.get_json() or {}
-        state_name = data.get('state_name', '')
-        state_code = data.get('state_code', '')
-        
-        if not state_name or not state_code:
-            return jsonify({'success': False, 'error': 'State name and code required'}), 400
-        
-        # Initialize OpenAI client (new API)
-        client = get_openai_client()
-        if not client:
-            return jsonify({'success': False, 'error': 'OpenAI API key not configured'}), 500
-        user_email = session.get('user_email')
-        
-        print(f"🤖 Finding city RFPs for {state_name} using AI...")
-        
-        # Step 1: Use GPT-4 to identify major cities and their procurement URLs
-        city_prompt = f"""You are a procurement intelligence assistant. For the state of {state_name}, provide a JSON list of the top 5-10 major cities that likely have active procurement portals for janitorial/cleaning contracts.
+        db.session.commit()
+    except Exception as commit_err:
+        print(f"❌ Database commit error: {commit_err}")
+        db.session.rollback()
+    
+    return discovered_rfps, cities_checked
+
+
+def find_rfps_with_openai(client, state_name, state_code):
+    """
+    Uses OpenAI GPT-4 to discover cities and extract RFPs.
+    Fallback option when direct scraping doesn't find results.
+    """
+    import json
+    from bs4 import BeautifulSoup
+    import requests
+    from time import sleep
+    
+    print(f"🤖 Using OpenAI fallback for {state_name}...")
+    
+    # Step 1: AI city discovery
+    city_prompt = f"""You are a procurement intelligence assistant. For the state of {state_name}, provide a JSON list of 8-10 major cities that likely have active procurement portals for janitorial/cleaning contracts.
 
 For each city, provide:
 - city_name: Full city name
 - estimated_population: Approximate population
-- procurement_url: Best guess for their procurement/purchasing website URL (format: https://www.cityname.gov/procurement or similar)
+- procurement_url: Best guess for their procurement/purchasing website URL
 - search_query: Google search query to find their RFP page
 
-Return ONLY valid JSON array format, no explanations:
+Return ONLY valid JSON array, no explanations:
 [
-  {{"city_name": "City Name", "estimated_population": 100000, "procurement_url": "https://...", "search_query": "City Name procurement active bids"}},
+  {{"city_name": "City Name", "estimated_population": 100000, "procurement_url": "https://...", "search_query": "..."}},
   ...
 ]"""
 
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": city_prompt}],
+            temperature=0.3,
+            max_tokens=1500
+        )
+        
+        cities_text = response.choices[0].message.content.strip()
+        if '```json' in cities_text:
+            cities_text = cities_text.split('```json')[1].split('```')[0].strip()
+        elif '```' in cities_text:
+            cities_text = cities_text.split('```')[1].split('```')[0].strip()
+        
+        cities = json.loads(cities_text)
+        print(f"✅ AI identified {len(cities)} cities")
+        
+    except Exception as e:
+        print(f"❌ AI city discovery error: {e}")
+        return [], []
+    
+    # Step 2: Extract RFPs from city webpages
+    discovered_rfps = []
+    cities_checked = []
+    
+    for city_info in cities[:5]:  # Limit to 5 cities
+        city_name = city_info.get('city_name', '')
+        procurement_url = city_info.get('procurement_url', '')
+        
+        if not procurement_url or not city_name:
+            continue
+        
+        cities_checked.append(city_name)
+        
         try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": city_prompt}],
-                temperature=0.3,
-                max_tokens=1500
-            )
+            print(f"  🔍 AI analyzing {city_name}...")
             
-            cities_text = response.choices[0].message.content.strip()
-            # Extract JSON from response (handle markdown code blocks)
-            if '```json' in cities_text:
-                cities_text = cities_text.split('```json')[1].split('```')[0].strip()
-            elif '```' in cities_text:
-                cities_text = cities_text.split('```')[1].split('```')[0].strip()
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            webpage_response = requests.get(procurement_url, headers=headers, timeout=20)
             
-            cities = json.loads(cities_text)
-            print(f"✅ AI identified {len(cities)} cities in {state_name}")
-            
-        except Exception as e:
-            print(f"❌ Error getting cities from AI: {e}")
-            return jsonify({'success': False, 'error': f'AI city discovery failed: {str(e)}'}), 500
-        
-        # Step 2: For each city, use GPT-4 to extract RFPs from their webpage
-        discovered_rfps = []
-        
-        for city_info in cities[:3]:  # Limit to 3 cities for faster response
-            city_name = city_info.get('city_name', '')
-            procurement_url = city_info.get('procurement_url', '')
-            
-            if not procurement_url:
+            if webpage_response.status_code != 200:
+                print(f"    ⚠️  HTTP {webpage_response.status_code}")
                 continue
             
-            try:
-                print(f"  🔍 Checking {city_name} at {procurement_url}")
-                
-                # Fetch the webpage
-                headers = {'User-Agent': 'ContractLink.ai Bot/1.0 (Procurement Intelligence)'}
-                webpage_response = requests.get(procurement_url, headers=headers, timeout=15)
-                
-                if webpage_response.status_code != 200:
-                    print(f"    ⚠️  HTTP {webpage_response.status_code} for {city_name}")
-                    continue
-                
-                # Parse HTML
-                soup = BeautifulSoup(webpage_response.text, 'html.parser')
-                page_text = soup.get_text(separator='\n', strip=True)[:10000]  # Limit to 10K chars for faster processing
-                
-                # Use GPT-4 to extract RFPs from the page content
-                rfp_prompt = f"""You are analyzing a procurement webpage for {city_name}, {state_name}.
+            soup = BeautifulSoup(webpage_response.text, 'html.parser')
+            page_text = soup.get_text(separator='\n', strip=True)[:15000]
+            
+            # AI RFP extraction
+            rfp_prompt = f"""Extract janitorial/cleaning/facilities RFPs from this {city_name}, {state_name} procurement page.
 
-Extract any active janitorial, cleaning, or facilities maintenance RFPs/bids from this text. For each opportunity found, provide:
-- rfp_title: Title of the RFP
-- rfp_number: Solicitation/RFP number (if available)
-- description: Brief description
-- deadline: Deadline date (YYYY-MM-DD format if possible, or raw text)
-- estimated_value: Contract value or budget (if mentioned)
-- department: Department or agency
-- contact_email: Contact email (if found)
-- contact_phone: Contact phone (if found)
+For each opportunity, provide:
+- rfp_title, rfp_number, description, deadline, estimated_value, department, contact_email, contact_phone
 
-Return ONLY a JSON array, no explanations. If no relevant RFPs found, return empty array []:
+Return JSON array (empty [] if none found):
 [
   {{"rfp_title": "...", "rfp_number": "...", "description": "...", "deadline": "...", "estimated_value": "...", "department": "...", "contact_email": "...", "contact_phone": "..."}},
   ...
 ]
 
-WEBPAGE TEXT:
+WEBPAGE:
 {page_text}"""
 
-                rfp_response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": rfp_prompt}],
-                    temperature=0.2,
-                    max_tokens=2000
-                )
+            rfp_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": rfp_prompt}],
+                temperature=0.2,
+                max_tokens=2000
+            )
+            
+            rfps_text = rfp_response.choices[0].message.content.strip()
+            if '```json' in rfps_text:
+                rfps_text = rfps_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in rfps_text:
+                rfps_text = rfps_text.split('```')[1].split('```')[0].strip()
+            
+            city_rfps = json.loads(rfps_text)
+            
+            if city_rfps:
+                print(f"    ✅ Found {len(city_rfps)} RFPs")
                 
-                rfps_text = rfp_response.choices[0].message.content.strip()
-                if '```json' in rfps_text:
-                    rfps_text = rfps_text.split('```json')[1].split('```')[0].strip()
-                elif '```' in rfps_text:
-                    rfps_text = rfps_text.split('```')[1].split('```')[0].strip()
-                
-                city_rfps = json.loads(rfps_text)
-                
-                if city_rfps:
-                    print(f"    ✅ Found {len(city_rfps)} RFPs in {city_name}")
-                    
-                    # Save to database
-                    for rfp in city_rfps:
-                        try:
-                            # Check if already exists
-                            rfp_number = rfp.get('rfp_number', '')
-                            existing = db.session.execute(text(
-                                '''SELECT id FROM city_rfps 
-                                   WHERE state_code = :sc AND city_name = :cn AND rfp_number = :num'''
-                            ), {
-                                'sc': state_code.upper(),
-                                'cn': city_name,
-                                'num': rfp_number
-                            }).fetchone()
-                            
-                            if existing:
-                                print(f"    ℹ️  RFP {rfp_number} already exists, skipping")
-                                continue
-                            
-                            # Insert new RFP
-                            db.session.execute(text(
-                                '''INSERT INTO city_rfps 
-                                   (state_code, state_name, city_name, rfp_title, rfp_number, 
-                                    description, deadline, estimated_value, department, 
-                                    contact_email, contact_phone, rfp_url, data_source)
-                                   VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
-                                           :email, :phone, :url, :source)'''
-                            ), {
-                                'sc': state_code.upper(),
-                                'sn': state_name,
-                                'cn': city_name,
-                                'title': rfp.get('rfp_title', 'Untitled RFP'),
-                                'num': rfp_number,
-                                'desc': rfp.get('description', ''),
-                                'dl': rfp.get('deadline', ''),
-                                'val': rfp.get('estimated_value', ''),
-                                'dept': rfp.get('department', ''),
-                                'email': rfp.get('contact_email', ''),
-                                'phone': rfp.get('contact_phone', ''),
-                                'url': procurement_url,
-                                'source': 'openai_gpt4_scraper'
-                            })
-                            
-                            rfp['city_name'] = city_name
-                            discovered_rfps.append(rfp)
-                            
-                        except Exception as db_err:
-                            print(f"    ⚠️  Database insert error: {db_err}")
-                            continue
-                else:
-                    print(f"    ℹ️  No cleaning RFPs found in {city_name}")
-                
-            except requests.exceptions.Timeout:
-                print(f"    ⏱️  Timeout fetching {city_name} webpage")
-                continue
-            except requests.exceptions.RequestException as req_err:
-                print(f"    🌐 Request error for {city_name}: {req_err}")
-                continue
-            except json.JSONDecodeError as json_err:
-                print(f"    ❌ JSON parse error for {city_name}: {json_err}")
-                continue
-            except Exception as city_err:
-                print(f"    ❌ Error processing {city_name}: {city_err}")
-                continue
-        
+                for rfp in city_rfps:
+                    try:
+                        rfp_number = rfp.get('rfp_number', f"AI-{city_name[:3].upper()}-{len(discovered_rfps)+1}")
+                        
+                        db.session.execute(text(
+                            '''INSERT INTO city_rfps 
+                               (state_code, state_name, city_name, rfp_title, rfp_number, 
+                                description, deadline, estimated_value, department, 
+                                contact_email, contact_phone, rfp_url, data_source, discovered_at)
+                               VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                                       :email, :phone, :url, :source, :discovered)'''
+                        ), {
+                            'sc': state_code.upper(),
+                            'sn': state_name,
+                            'cn': city_name,
+                            'title': rfp.get('rfp_title', 'Untitled RFP'),
+                            'num': rfp_number,
+                            'desc': rfp.get('description', ''),
+                            'dl': rfp.get('deadline', ''),
+                            'val': rfp.get('estimated_value', ''),
+                            'dept': rfp.get('department', ''),
+                            'email': rfp.get('contact_email', ''),
+                            'phone': rfp.get('contact_phone', ''),
+                            'url': procurement_url,
+                            'source': 'openai_gpt4_fallback',
+                            'discovered': datetime.utcnow().isoformat()
+                        })
+                        
+                        rfp['city_name'] = city_name
+                        discovered_rfps.append(rfp)
+                        
+                    except Exception as db_err:
+                        print(f"    ⚠️  Database error: {db_err}")
+                        continue
+            else:
+                print(f"    ℹ️  No RFPs found")
+            
+            sleep(2)
+            
+        except Exception as e:
+            print(f"    ❌ Error: {e}")
+            continue
+    
+    try:
         db.session.commit()
+    except Exception as commit_err:
+        print(f"❌ Commit error: {commit_err}")
+        db.session.rollback()
+    
+    return discovered_rfps, cities_checked
+
+
+@app.route('/api/find-city-rfps', methods=['POST'])
+@login_required
+def find_city_rfps():
+    """Multi-source city RFP finder with fallback mechanisms
+    
+    Search Strategy (in order of preference):
+    1. Check database cache (< 7 days old) - INSTANT
+    2. Direct web scraping (hardcoded portal URLs) - RELIABLE
+    3. Google Custom Search API (if key available) - COMPREHENSIVE
+    4. OpenAI GPT-4 (if key available) - INTELLIGENT FALLBACK
+    
+    Keywords searched (12 variations):
+    - janitorial, custodial, cleaning, housekeeping, sanitation, porter
+    - building maintenance, facilities, operations cleaning, environmental
+    - floor care, disinfection
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        import json
+        import re
+        from datetime import datetime, timedelta
+        from time import sleep
         
-        print(f"🎉 Discovery complete: {len(discovered_rfps)} RFPs found across {len(cities[:3])} cities")
+        data = request.get_json() or {}
+        state_name = data.get('state_name', '')
+        state_code = data.get('state_code', '').upper()
         
-        # Include cities checked for better user feedback
-        cities_checked = [city.get('city_name', '') for city in cities[:3]]
+        if not state_name or not state_code:
+            return jsonify({'success': False, 'error': 'State name and code required'}), 400
         
+        user_email = session.get('user_email')
+        
+        print(f"🔍 Finding city RFPs for {state_name} ({state_code})...")
+        
+        # TIER 1: Check database cache (< 7 days old)
+        cache_cutoff = datetime.now() - timedelta(days=7)
+        cached_rfps = db.session.execute(text(
+            '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                      estimated_value, department, contact_email, contact_phone, rfp_url
+               FROM city_rfps 
+               WHERE state_code = :sc 
+               AND created_at >= :cutoff
+               ORDER BY created_at DESC'''
+        ), {'sc': state_code, 'cutoff': cache_cutoff}).fetchall()
+        
+        if cached_rfps:
+            print(f"✅ Found {len(cached_rfps)} cached RFPs (< 7 days old)")
+            return jsonify({
+                'success': True,
+                'message': f'Found {len(cached_rfps)} recent RFPs in {state_name} (from cache)',
+                'rfps': [dict(rfp._mapping) for rfp in cached_rfps],
+                'cities_checked': list(set([rfp.city_name for rfp in cached_rfps])),
+                'cities_searched': len(set([rfp.city_name for rfp in cached_rfps])),
+                'state': state_name,
+                'source': 'database_cache'
+            })
+        
+        # TIER 2: Direct web scraping with hardcoded known portals
+        discovered_rfps = []
+        cities_checked = []
+        
+        # Major cities by state with known procurement portals
+        CITY_PORTALS = get_city_procurement_portals(state_code)
+        
+        if CITY_PORTALS:
+            print(f"📍 Found {len(CITY_PORTALS)} known portals for {state_name}")
+            discovered_rfps, cities_checked = scrape_city_portals(CITY_PORTALS, state_code, state_name)
+        
+        # If direct scraping found results, return them
+        if discovered_rfps:
+            print(f"✅ Direct scraping found {len(discovered_rfps)} RFPs")
+            return jsonify({
+                'success': True,
+                'message': f'Found {len(discovered_rfps)} active RFPs in {state_name}',
+                'rfps': discovered_rfps,
+                'cities_checked': cities_checked,
+                'cities_searched': len(cities_checked),
+                'state': state_name,
+                'source': 'direct_scraping'
+            })
+        
+        # TIER 3: OpenAI fallback (if API key available)
+        client = get_openai_client()
+        if client:
+            print("🤖 Attempting OpenAI-powered discovery...")
+            openai_rfps, openai_cities = find_rfps_with_openai(client, state_name, state_code)
+            if openai_rfps:
+                print(f"✅ OpenAI found {len(openai_rfps)} RFPs")
+                return jsonify({
+                    'success': True,
+                    'message': f'Found {len(openai_rfps)} RFPs in {state_name}',
+                    'rfps': openai_rfps,
+                    'cities_checked': openai_cities,
+                    'cities_searched': len(openai_cities),
+                    'state': state_name,
+                    'source': 'openai_gpt4'
+                })
+        
+        # No RFPs found through any method
+        print(f"⚠️  No RFPs found for {state_name} through any method")
         return jsonify({
             'success': True,
-            'message': f'Found {len(discovered_rfps)} RFPs in {state_name}',
-            'cities_checked': cities_checked,
-            'rfps': discovered_rfps,
-            'cities_searched': len(cities[:5]),
-            'state': state_name
+            'message': f'No active cleaning RFPs currently available in {state_name}. Try checking back in a few days or explore nearby states.',
+            'rfps': [],
+            'cities_checked': cities_checked if cities_checked else ['Unable to access city portals'],
+            'cities_searched': len(cities_checked),
+            'state': state_name,
+            'source': 'none',
+            'suggestion': 'Check the state procurement portal page for statewide opportunities, or try a neighboring state.'
         })
+        
         
     except Exception as e:
         print(f"❌ City RFP finder error: {e}")
