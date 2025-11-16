@@ -1,0 +1,3 @@
+# Procfile for Celery worker process
+worker: celery -A contractlink_backend worker --loglevel=info
+beat: celery -A contractlink_backend beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler

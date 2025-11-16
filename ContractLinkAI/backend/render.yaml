@@ -1,0 +1,87 @@
+services:
+  # Main Django web service
+  - type: web
+    name: contractlink-web
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --no-input
+      python manage.py migrate
+    startCommand: gunicorn contractlink_backend.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: contractlink-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: contractlink-redis
+          type: redis
+          property: connectionString
+  
+  # Celery worker service
+  - type: worker
+    name: contractlink-worker
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A contractlink_backend worker --loglevel=info --concurrency=2
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: contractlink-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: contractlink-redis
+          type: redis
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+  
+  # Celery beat scheduler service
+  - type: worker
+    name: contractlink-scheduler
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A contractlink_backend beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: contractlink-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: contractlink-redis
+          type: redis
+          property: connectionString
+  
+  # Redis instance for Celery
+  - type: redis
+    name: contractlink-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
+# PostgreSQL database
+databases:
+  - name: contractlink-db
+    plan: starter
+    region: oregon

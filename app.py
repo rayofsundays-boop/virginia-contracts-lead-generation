@@ -65,6 +65,21 @@ except ImportError as e:
     stop_scheduler = None
     _EMAIL_NOTIFICATIONS_AVAILABLE = False
 
+# Transactional email functions
+try:
+    from email_notifications import (
+        send_password_reset_email,
+        send_admin_consultation_notification,
+        send_proposal_review_notification
+    )
+    TRANSACTIONAL_EMAIL_ENABLED = True
+except ImportError:
+    print("⚠️ email_notifications module not found. Transactional email features disabled.")
+    TRANSACTIONAL_EMAIL_ENABLED = False
+    send_password_reset_email = None
+    send_admin_consultation_notification = None
+    send_proposal_review_notification = None
+
 # In-memory tracking for 2FA attempts (user_id -> timestamps)
 TWOFA_ATTEMPTS = {}
 FORCE_ADMIN_2FA = os.getenv('FORCE_ADMIN_2FA', '').lower() in ('1','true','yes','on')
@@ -12946,12 +12961,10 @@ def api_toggle_save_lead():
         # Check both user_email and email (for admin compatibility)
         user_email = session.get('user_email') or session.get('email')
         
-        # Debug: Log session info
-        print(f"DEBUG toggle-save-lead: session keys={list(session.keys())}, user_email={user_email}, is_admin={session.get('is_admin')}")
-        
         # Check if user is logged in (regular user or admin)
         if not user_email:
-            print(f"DEBUG: No email found in session. Full session: {dict(session)}")
+            if AUTH_DEBUG:
+                print(f"Auth failed in toggle-save-lead: session={dict(session)}")
             return jsonify({'success': False, 'message': 'Please sign in to save leads', 'requiresAuth': True}), 401
         
         action = data.get('action', 'save')
@@ -13801,13 +13814,22 @@ def admin_reset_password_api():
         )
         db.session.commit()
         
-        # TODO: Send email to user with new password
-        # For now, return the password to admin
+        # Send email notification to user
+        email_sent = False
+        if TRANSACTIONAL_EMAIL_ENABLED and send_password_reset_email:
+            try:
+                admin_email = session.get('email', 'admin@contractlink.ai')
+                email_sent = send_password_reset_email(email, new_password, admin_email)
+                if email_sent:
+                    print(f"Password reset email sent to {email}")
+            except Exception as e:
+                print(f"Error sending password reset email: {e}")
         
         return jsonify({
             'success': True, 
             'new_password': new_password,
-            'message': f'Password reset for {email}'
+            'message': f'Password reset for {email}',
+            'email_sent': email_sent
         })
         
     except Exception as e:
@@ -15417,10 +15439,6 @@ def admin_enhanced():
         # Get cached stats (5-minute cache buckets)
         cache_timestamp = int(datetime.now().timestamp() / 300)  # Round to 5-minute intervals
         stats_result = get_admin_stats_cached(cache_timestamp)
-        
-        # Debug: Check what type stats_result is
-        print(f"DEBUG: stats_result type: {type(stats_result)}")
-        print(f"DEBUG: stats_result value: {stats_result}")
         
         # Handle both Row objects and tuple fallbacks
         if stats_result and hasattr(stats_result, 'paid_subscribers'):
@@ -25517,7 +25535,22 @@ def consultation_request():
         })
         db.session.commit()
         
-        # TODO: Send notification email to admin/proposal specialists
+        # Send notification email to admin
+        if TRANSACTIONAL_EMAIL_ENABLED and send_admin_consultation_notification:
+            try:
+                admin_email = os.getenv('ADMIN_EMAIL', 'admin@contractlink.ai')
+                consultation_data = {
+                    'name': data.get('fullName'),
+                    'email': data.get('email'),
+                    'phone': data.get('phone'),
+                    'company': data.get('companyName'),
+                    'service_level': data.get('serviceLevel', ''),
+                    'message': data.get('description', 'No message provided')
+                }
+                send_admin_consultation_notification(admin_email, consultation_data)
+                print(f"Consultation notification sent to {admin_email}")
+            except Exception as e:
+                print(f"Error sending consultation notification: {e}")
         
         return jsonify({'success': True, 'message': 'Consultation request received'})
         
