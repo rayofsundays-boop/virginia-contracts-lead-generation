@@ -8223,21 +8223,111 @@ WEBPAGE:
     return discovered_rfps, cities_checked
 
 
+def search_sam_gov_by_city(city_name, state_code):
+    """Search SAM.gov for city-specific opportunities"""
+    try:
+        SAM_API_KEY = os.getenv('SAM_GOV_API_KEY')
+        if not SAM_API_KEY:
+            return []
+        
+        # Search SAM.gov for opportunities mentioning the city
+        url = 'https://api.sam.gov/opportunities/v2/search'
+        params = {
+            'api_key': SAM_API_KEY,
+            'postedFrom': (datetime.now() - timedelta(days=90)).strftime('%m/%d/%Y'),
+            'postedTo': datetime.now().strftime('%m/%d/%Y'),
+            'ptype': 'p,k,o',  # Presolicitation, Combined Synopsis, Solicitation
+            'limit': 20,
+            'offset': 0
+        }
+        
+        # Search for city name in title or description
+        params['q'] = f'({city_name} OR {state_code}) AND (janitorial OR custodial OR cleaning OR housekeeping OR sanitation)'
+        
+        response = requests.get(url, params=params, timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            opportunities = data.get('opportunitiesData', [])
+            
+            city_rfps = []
+            for opp in opportunities:
+                # Filter for opportunities that mention the city
+                title = opp.get('title', '').lower()
+                description = opp.get('description', '').lower()
+                if city_name.lower() in title or city_name.lower() in description:
+                    city_rfps.append({
+                        'city_name': city_name,
+                        'rfp_title': opp.get('title', 'Untitled'),
+                        'rfp_number': opp.get('solicitationNumber', 'N/A'),
+                        'description': opp.get('description', '')[:500],
+                        'deadline': opp.get('responseDeadLine', 'Not specified'),
+                        'estimated_value': 'See SAM.gov',
+                        'department': opp.get('department', {}).get('name', 'Unknown'),
+                        'contact_email': opp.get('pointOfContact', [{}])[0].get('email', ''),
+                        'contact_phone': opp.get('pointOfContact', [{}])[0].get('phone', ''),
+                        'rfp_url': f"https://sam.gov/opp/{opp.get('noticeId', '')}"
+                    })
+            
+            print(f"  SAM.gov: Found {len(city_rfps)} opportunities for {city_name}")
+            return city_rfps
+    except Exception as e:
+        print(f"  SAM.gov search error for {city_name}: {e}")
+    
+    return []
+
+def search_demandstar_by_city(city_name, state_code):
+    """Search DemandStar for city opportunities"""
+    try:
+        # DemandStar public RSS feed approach
+        url = f"https://www.demandstar.com/supplier/rss/{state_code.lower()}"
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.content, 'xml')
+            items = soup.find_all('item')
+            
+            city_rfps = []
+            for item in items:
+                title = item.find('title').text if item.find('title') else ''
+                description = item.find('description').text if item.find('description') else ''
+                
+                # Check if city is mentioned and it's a cleaning-related opportunity
+                if city_name.lower() in (title + description).lower():
+                    if any(keyword in (title + description).lower() for keyword in ['janitorial', 'custodial', 'cleaning', 'housekeeping']):
+                        city_rfps.append({
+                            'city_name': city_name,
+                            'rfp_title': title,
+                            'rfp_number': 'See DemandStar',
+                            'description': description[:500],
+                            'deadline': item.find('pubDate').text if item.find('pubDate') else 'Not specified',
+                            'estimated_value': 'TBD',
+                            'department': 'See listing',
+                            'contact_email': '',
+                            'contact_phone': '',
+                            'rfp_url': item.find('link').text if item.find('link') else ''
+                        })
+            
+            print(f"  DemandStar: Found {len(city_rfps)} opportunities for {city_name}")
+            return city_rfps[:5]  # Limit to 5
+    except Exception as e:
+        print(f"  DemandStar search error for {city_name}: {e}")
+    
+    return []
+
 @app.route('/api/find-city-rfps', methods=['POST'])
 @login_required
 def find_city_rfps():
-    """Multi-source city RFP finder with fallback mechanisms
+    """Enhanced multi-source city RFP finder
     
-    Search Strategy (in order of preference):
-    1. Check database cache (< 7 days old) - INSTANT
-    2. Direct web scraping (hardcoded portal URLs) - RELIABLE
-    3. Google Custom Search API (if key available) - COMPREHENSIVE
-    4. OpenAI GPT-4 (if key available) - INTELLIGENT FALLBACK
+    NEW Search Strategy (priority order):
+    1. Database cache (< 3 days) - INSTANT
+    2. SAM.gov API (federal opportunities by city) - RELIABLE ✅ NEW
+    3. DemandStar RSS feeds (municipal opportunities) - RELIABLE ✅ NEW
+    4. Direct portal scraping (known city portals) - MODERATE
+    5. Show helpful resources if nothing found
     
-    Keywords searched (12 variations):
-    - janitorial, custodial, cleaning, housekeeping, sanitation, porter
-    - building maintenance, facilities, operations cleaning, environmental
-    - floor care, disinfection
+    This approach is much more efficient than AI-based searching.
     """
     try:
         import requests
@@ -8258,8 +8348,8 @@ def find_city_rfps():
         
         print(f"🔍 Finding city RFPs for {state_name} ({state_code})...")
         
-        # TIER 1: Check database cache (< 7 days old)
-        cache_cutoff = datetime.now() - timedelta(days=7)
+        # TIER 1: Check database cache (< 3 days old for fresher results)
+        cache_cutoff = datetime.now() - timedelta(days=3)
         
         # Try to query with created_at, fallback if column doesn't exist
         try:
@@ -8297,65 +8387,129 @@ def find_city_rfps():
             else:
                 raise  # Re-raise if it's a different error
         
+        # Get major cities for the state (before cache check so we can return available cities)
+        CITY_PORTALS = get_city_procurement_portals(state_code)
+        major_cities = list(CITY_PORTALS.keys()) if CITY_PORTALS else []
+        
+        # If no predefined cities, use common major cities by state
+        if not major_cities:
+            common_cities = {
+                'CA': ['Los Angeles', 'San Diego', 'San Francisco', 'San Jose', 'Sacramento'],
+                'TX': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'],
+                'FL': ['Miami', 'Tampa', 'Orlando', 'Jacksonville', 'St Petersburg'],
+                'NY': ['New York', 'Buffalo', 'Rochester', 'Syracuse', 'Albany'],
+                'VA': ['Richmond', 'Norfolk', 'Virginia Beach', 'Chesapeake', 'Newport News'],
+                'AK': ['Anchorage', 'Fairbanks', 'Juneau', 'Sitka', 'Ketchikan']
+            }
+            major_cities = common_cities.get(state_code, [])[:5]  # Limit to 5 cities
+        
         if cached_rfps:
-            print(f"✅ Found {len(cached_rfps)} cached RFPs (< 7 days old)")
+            print(f"✅ Found {len(cached_rfps)} cached RFPs (< 3 days old)")
             return jsonify({
                 'success': True,
                 'message': f'Found {len(cached_rfps)} recent RFPs in {state_name} (from cache)',
                 'rfps': [dict(rfp._mapping) for rfp in cached_rfps],
                 'cities_checked': list(set([rfp.city_name for rfp in cached_rfps])),
                 'cities_searched': len(set([rfp.city_name for rfp in cached_rfps])),
+                'available_cities': major_cities,  # NEW: Cities user can search
                 'state': state_name,
                 'source': 'database_cache'
             })
         
-        # TIER 2: Direct web scraping with hardcoded known portals
+        # TIER 2: Search SAM.gov and DemandStar for major cities
         discovered_rfps = []
         cities_checked = []
         
+        print(f"🔎 Searching SAM.gov and DemandStar for {len(major_cities)} major cities...")
+        
+        for city_name in major_cities[:5]:  # Search top 5 cities
+            cities_checked.append(city_name)
+            
+            # Search SAM.gov
+            sam_rfps = search_sam_gov_by_city(city_name, state_code)
+            discovered_rfps.extend(sam_rfps)
+            
+            # Search DemandStar
+            demandstar_rfps = search_demandstar_by_city(city_name, state_code)
+            discovered_rfps.extend(demandstar_rfps)
+            
+            # Save to database for caching
+            for rfp in (sam_rfps + demandstar_rfps):
+                try:
+                    db.session.execute(text('''
+                        INSERT INTO city_rfps 
+                        (state_code, state_name, city_name, rfp_title, rfp_number, 
+                         description, deadline, estimated_value, department, 
+                         contact_email, contact_phone, rfp_url, data_source, discovered_at, created_at)
+                        VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                                :email, :phone, :url, :source, :discovered, :created)
+                        ON CONFLICT (state_code, city_name, rfp_number) DO NOTHING
+                    '''), {
+                        'sc': state_code,
+                        'sn': state_name,
+                        'cn': rfp['city_name'],
+                        'title': rfp['rfp_title'],
+                        'num': rfp['rfp_number'],
+                        'desc': rfp['description'],
+                        'dl': rfp['deadline'],
+                        'val': rfp['estimated_value'],
+                        'dept': rfp['department'],
+                        'email': rfp['contact_email'],
+                        'phone': rfp['contact_phone'],
+                        'url': rfp['rfp_url'],
+                        'source': 'sam_gov' if 'sam.gov' in rfp['rfp_url'] else 'demandstar',
+                        'discovered': datetime.utcnow(),
+                        'created': datetime.utcnow()
+                    })
+                except Exception as db_err:
+                    print(f"  DB save error: {db_err}")
+        
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        
+        if discovered_rfps:
+            print(f"✅ Found {len(discovered_rfps)} RFPs from SAM.gov and DemandStar")
+            return jsonify({
+                'success': True,
+                'message': f'Found {len(discovered_rfps)} active RFPs in {state_name}',
+                'rfps': discovered_rfps,
+                'cities_checked': cities_checked,
+                'cities_searched': len(cities_checked),
+                'available_cities': major_cities,  # NEW: Cities user can search
+                'state': state_name,
+                'source': 'sam_gov_demandstar'
+            })
+        
+        # TIER 3: Try direct portal scraping as fallback
+        print(f"📍 Attempting direct portal scraping...")
+        portals_discovered_rfps = []
+        portals_cities_checked = []
+        
         try:
             # Major cities by state with known procurement portals
-            CITY_PORTALS = get_city_procurement_portals(state_code)
+            CITY_PORTALS_FOR_SCRAPING = get_city_procurement_portals(state_code)
             
-            if CITY_PORTALS:
-                print(f"📍 Found {len(CITY_PORTALS)} known portals for {state_name}")
-                discovered_rfps, cities_checked = scrape_city_portals(CITY_PORTALS, state_code, state_name)
+            if CITY_PORTALS_FOR_SCRAPING:
+                print(f"📍 Found {len(CITY_PORTALS_FOR_SCRAPING)} known portals for {state_name}")
+                portals_discovered_rfps, portals_cities_checked = scrape_city_portals(CITY_PORTALS_FOR_SCRAPING, state_code, state_name)
             
             # If direct scraping found results, return them
-            if discovered_rfps:
-                print(f"✅ Direct scraping found {len(discovered_rfps)} RFPs")
+            if portals_discovered_rfps:
+                print(f"✅ Direct scraping found {len(portals_discovered_rfps)} RFPs")
                 return jsonify({
                     'success': True,
-                    'message': f'Found {len(discovered_rfps)} active RFPs in {state_name}',
-                    'rfps': discovered_rfps,
-                    'cities_checked': cities_checked,
-                    'cities_searched': len(cities_checked),
+                    'message': f'Found {len(portals_discovered_rfps)} active RFPs in {state_name}',
+                    'rfps': portals_discovered_rfps,
+                    'cities_checked': portals_cities_checked,
+                    'cities_searched': len(portals_cities_checked),
+                    'available_cities': major_cities,  # NEW: Cities user can search
                     'state': state_name,
                     'source': 'direct_scraping'
                 })
         except Exception as scraping_error:
             print(f"⚠️  Web scraping error: {scraping_error}")
-            # Continue to fallback methods
-        
-        # TIER 3: OpenAI fallback (if API key available)
-        try:
-            client = get_openai_client()
-            if client:
-                print("🤖 Attempting OpenAI-powered discovery...")
-                openai_rfps, openai_cities = find_rfps_with_openai(client, state_name, state_code)
-                if openai_rfps:
-                    print(f"✅ OpenAI found {len(openai_rfps)} RFPs")
-                    return jsonify({
-                        'success': True,
-                        'message': f'Found {len(openai_rfps)} RFPs in {state_name}',
-                        'rfps': openai_rfps,
-                        'cities_checked': openai_cities,
-                        'cities_searched': len(openai_cities),
-                        'state': state_name,
-                        'source': 'openai_gpt4'
-                    })
-        except Exception as openai_error:
-            print(f"⚠️  OpenAI error: {openai_error}")
             # Continue to no results message
         
         # No RFPs found through any method
@@ -8366,6 +8520,7 @@ def find_city_rfps():
             'rfps': [],
             'cities_checked': cities_checked if cities_checked else ['Unable to access city portals'],
             'cities_searched': len(cities_checked),
+            'available_cities': major_cities,  # NEW: Cities user can search
             'state': state_name,
             'source': 'none',
             'suggestion': 'Check the state procurement portal page for statewide opportunities, or try a neighboring state.'
@@ -8377,6 +8532,126 @@ def find_city_rfps():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/search-city-rfp', methods=['POST'])
+@login_required
+def search_city_rfp():
+    """Search for RFPs in a specific city (when user clicks on a city)"""
+    try:
+        data = request.get_json() or {}
+        city_name = data.get('city_name', '')
+        state_code = data.get('state_code', '').upper()
+        state_name = data.get('state_name', '')
+        
+        if not city_name or not state_code:
+            return jsonify({'success': False, 'error': 'City name and state code required'}), 400
+        
+        print(f"🏙️  Searching RFPs for {city_name}, {state_code}...")
+        
+        # Check database cache first (< 3 days)
+        cache_cutoff = datetime.now() - timedelta(days=3)
+        try:
+            cached_city_rfps = db.session.execute(text(
+                '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                          estimated_value, department, contact_email, contact_phone, rfp_url
+                   FROM city_rfps 
+                   WHERE state_code = :sc AND city_name = :city
+                   AND created_at >= :cutoff
+                   ORDER BY created_at DESC'''
+            ), {'sc': state_code, 'city': city_name, 'cutoff': cache_cutoff}).fetchall()
+        except:
+            # Fallback without timestamp
+            cached_city_rfps = db.session.execute(text(
+                '''SELECT city_name, rfp_title, rfp_number, description, deadline, 
+                          estimated_value, department, contact_email, contact_phone, rfp_url
+                   FROM city_rfps 
+                   WHERE state_code = :sc AND city_name = :city
+                   ORDER BY id DESC LIMIT 20'''
+            ), {'sc': state_code, 'city': city_name}).fetchall()
+        
+        if cached_city_rfps:
+            print(f"✅ Found {len(cached_city_rfps)} cached RFPs for {city_name}")
+            return jsonify({
+                'success': True,
+                'message': f'Found {len(cached_city_rfps)} RFPs in {city_name}',
+                'rfps': [dict(rfp._mapping) for rfp in cached_city_rfps],
+                'city': city_name,
+                'state': state_name,
+                'source': 'database_cache'
+            })
+        
+        # Search SAM.gov for this specific city
+        sam_rfps = search_sam_gov_by_city(city_name, state_code)
+        
+        # Search DemandStar for this specific city
+        demandstar_rfps = search_demandstar_by_city(city_name, state_code)
+        
+        # Combine results
+        all_city_rfps = sam_rfps + demandstar_rfps
+        
+        # Save to database
+        for rfp in all_city_rfps:
+            try:
+                db.session.execute(text('''
+                    INSERT INTO city_rfps 
+                    (state_code, state_name, city_name, rfp_title, rfp_number, 
+                     description, deadline, estimated_value, department, 
+                     contact_email, contact_phone, rfp_url, data_source, discovered_at, created_at)
+                    VALUES (:sc, :sn, :cn, :title, :num, :desc, :dl, :val, :dept, 
+                            :email, :phone, :url, :source, :discovered, :created)
+                    ON CONFLICT (state_code, city_name, rfp_number) DO NOTHING
+                '''), {
+                    'sc': state_code,
+                    'sn': state_name,
+                    'cn': rfp['city_name'],
+                    'title': rfp['rfp_title'],
+                    'num': rfp['rfp_number'],
+                    'desc': rfp['description'],
+                    'dl': rfp['deadline'],
+                    'val': rfp['estimated_value'],
+                    'dept': rfp['department'],
+                    'email': rfp['contact_email'],
+                    'phone': rfp['contact_phone'],
+                    'url': rfp['rfp_url'],
+                    'source': 'sam_gov' if 'sam.gov' in rfp['rfp_url'] else 'demandstar',
+                    'discovered': datetime.utcnow(),
+                    'created': datetime.utcnow()
+                })
+            except Exception as db_err:
+                print(f"  DB save error: {db_err}")
+        
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        
+        if all_city_rfps:
+            print(f"✅ Found {len(all_city_rfps)} RFPs for {city_name}")
+            return jsonify({
+                'success': True,
+                'message': f'Found {len(all_city_rfps)} RFPs in {city_name}',
+                'rfps': all_city_rfps,
+                'city': city_name,
+                'state': state_name,
+                'source': 'sam_gov_demandstar'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': f'No active cleaning RFPs found in {city_name} at this time',
+                'rfps': [],
+                'city': city_name,
+                'state': state_name,
+                'source': 'none'
+            })
+    
+    except Exception as e:
+        print(f"❌ City-specific search error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/api/portal-registration-status', methods=['GET', 'POST'])
 @login_required

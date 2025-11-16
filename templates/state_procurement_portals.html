@@ -1391,7 +1391,7 @@ function findCityRFPs(stateName, stateCode) {
     })
     .then(data => {
         if (data.success) {
-            displayCityRFPs(data.rfps, stateName, stateCode, data.message, data.cities_checked);
+            displayCityRFPs(data.rfps, stateName, stateCode, data.message, data.cities_checked, data.available_cities);
         } else {
             displayError(data.error || 'Failed to find city RFPs');
         }
@@ -1413,9 +1413,31 @@ function findCityRFPs(stateName, stateCode) {
 }
 
 // Display found city RFPs in modal
-function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked) {
+function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked, availableCities) {
     let rfpsHtml = '';
     let dropdownHtml = '';
+    let cityButtonsHtml = '';
+    
+    // Show available cities as clickable badges (NEW FEATURE)
+    if (availableCities && availableCities.length > 0) {
+        cityButtonsHtml = `
+            <div class="mb-3 p-3 bg-light rounded">
+                <h6 class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Available Cities to Search:</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    ${availableCities.map(city => `
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                onclick="searchSpecificCity('${city}', '${stateCode}', '${stateName}')"
+                                title="Click to search ${city} for RFPs">
+                            <i class="fas fa-search me-1"></i>${city}
+                        </button>
+                    `).join('')}
+                </div>
+                <p class="small text-muted mt-2 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>Click any city to search for opportunities
+                </p>
+            </div>
+        `;
+    }
     
     if (rfps && rfps.length > 0) {
         // Extract unique cities for dropdown
@@ -1439,14 +1461,22 @@ function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked) {
             `;
         }
         
-        rfpsHtml = rfps.map(rfp => `
+        rfpsHtml = rfps.map((rfp, idx) => `
             <div class="card mb-3 border-start border-success border-4 rfp-card" data-city="${rfp.city_name}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="mb-0">
                             <i class="fas fa-building text-primary me-2"></i>${rfp.city_name}
                         </h6>
-                        ${rfp.estimated_value ? `<span class="badge bg-success">${rfp.estimated_value}</span>` : ''}
+                        <div>
+                            ${rfp.estimated_value ? `<span class="badge bg-success me-2">${rfp.estimated_value}</span>` : ''}
+                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                    onclick="bookmarkCityRFP('${rfp.city_name}', '${stateCode}', '${encodeURIComponent(rfp.rfp_title)}', '${encodeURIComponent(JSON.stringify(rfp).replace(/'/g, "\\'"))}', ${idx})"
+                                    id="bookmark-btn-${idx}"
+                                    title="Save to My Leads">
+                                <i class="fas fa-bookmark me-1"></i>Save
+                            </button>
+                        </div>
                     </div>
                     <h5 class="mb-2">${rfp.rfp_title}</h5>
                     ${rfp.rfp_number ? `<p class="text-muted small mb-2"><strong>RFP #:</strong> ${rfp.rfp_number}</p>` : ''}
@@ -1457,6 +1487,13 @@ function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked) {
                         ${rfp.contact_email ? `<div class="col-md-6"><i class="fas fa-envelope me-1"></i> ${rfp.contact_email}</div>` : ''}
                         ${rfp.contact_phone ? `<div class="col-md-6"><i class="fas fa-phone me-1"></i> ${rfp.contact_phone}</div>` : ''}
                     </div>
+                    ${rfp.rfp_url ? `
+                        <div class="mt-2">
+                            <a href="${rfp.rfp_url}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View RFP
+                            </a>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `).join('');
@@ -1499,12 +1536,16 @@ function displayCityRFPs(rfps, stateName, stateCode, message, citiesChecked) {
             <div class="alert alert-success mb-3">
                 <strong>✅ ${message}</strong>
             </div>
+            ${cityButtonsHtml}
             ${dropdownHtml}
             <div style="max-height: 500px; overflow-y: auto;" id="rfpsList">
                 ${rfpsHtml}
             </div>
             ${rfps && rfps.length > 0 ? `
-                <div class="mt-3">
+                <div class="mt-3 d-flex gap-2">
+                    <button type="button" class="btn btn-success" onclick="saveAllSearchResults('${stateName}', '${stateCode}', ${JSON.stringify(rfps).replace(/'/g, "\\'")})">
+                        <i class="fas fa-save me-2"></i>Save All Results
+                    </button>
                     <button type="button" class="btn btn-outline-primary" onclick="searchAdditionalCities('${stateName}', '${stateCode}')">
                         <i class="fas fa-search-plus me-2"></i>Search More Cities
                     </button>
@@ -2120,5 +2161,177 @@ function showStateDetails(stateKey) {
         </div>
     </div>
 </div>
+
+<script>
+// NEW: Search specific city when user clicks city button
+function searchSpecificCity(cityName, stateCode, stateName) {
+    console.log(`🏙️ Searching specific city: ${cityName}, ${stateCode}`);
+    
+    // Show loading in modal
+    document.querySelector('#cityRfpModal .modal-body').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5>Searching ${cityName}...</h5>
+            <p class="text-muted">Finding cleaning RFPs in ${cityName}, ${stateName}</p>
+        </div>
+    `;
+    
+    fetch('/api/search-city-rfp', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            city_name: cityName,
+            state_code: stateCode,
+            state_name: stateName
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Display results for this specific city
+            displayCityRFPs(data.rfps, stateName, stateCode, data.message, [cityName], null);
+        } else {
+            displayError(data.error || 'Failed to search city');
+        }
+    })
+    .catch(err => {
+        console.error('City search error:', err);
+        displayError(`Error searching ${cityName}: ${err.message}`);
+    });
+}
+
+// NEW: Bookmark individual city RFP
+function bookmarkCityRFP(cityName, stateCode, rfpTitle, rfpDataStr, btnIdx) {
+    const btn = document.getElementById(`bookmark-btn-${btnIdx}`);
+    if (!btn) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    
+    try {
+        const rfpData = JSON.parse(decodeURIComponent(rfpDataStr));
+        
+        fetch('/api/toggle-save-lead', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                action: 'save',
+                lead_type: 'city_rfp',
+                lead_id: `${stateCode}-${cityName}-${rfpData.rfp_number || Date.now()}`,
+                lead_title: decodeURIComponent(rfpTitle),
+                lead_data: JSON.stringify(rfpData)
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Saved!';
+                btn.classList.remove('btn-outline-warning');
+                btn.classList.add('btn-success');
+                
+                // Show toast notification
+                showToast('✅ RFP Saved', `"${decodeURIComponent(rfpTitle)}" saved to your leads!`, 'success');
+            } else {
+                throw new Error(data.message || 'Failed to save');
+            }
+        })
+        .catch(err => {
+            console.error('Bookmark error:', err);
+            btn.innerHTML = '<i class="fas fa-bookmark me-1"></i>Save';
+            btn.disabled = false;
+            showToast('Error', 'Failed to save RFP: ' + err.message, 'danger');
+        });
+    } catch (parseErr) {
+        console.error('Parse error:', parseErr);
+        btn.innerHTML = '<i class="fas fa-bookmark me-1"></i>Save';
+        btn.disabled = false;
+        showToast('Error', 'Failed to save RFP data', 'danger');
+    }
+}
+
+// NEW: Save all search results at once
+function saveAllSearchResults(stateName, stateCode, rfpsData) {
+    const rfps = typeof rfpsData === 'string' ? JSON.parse(rfpsData) : rfpsData;
+    
+    if (!rfps || rfps.length === 0) {
+        showToast('Info', 'No results to save', 'info');
+        return;
+    }
+    
+    showToast('Saving', `Saving ${rfps.length} RFPs to your leads...`, 'info');
+    
+    let savedCount = 0;
+    let errorCount = 0;
+    
+    // Save each RFP
+    const savePromises = rfps.map((rfp, idx) => {
+        return fetch('/api/toggle-save-lead', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                action: 'save',
+                lead_type: 'city_rfp',
+                lead_id: `${stateCode}-${rfp.city_name}-${rfp.rfp_number || idx}`,
+                lead_title: rfp.rfp_title,
+                lead_data: JSON.stringify(rfp)
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) savedCount++;
+            else errorCount++;
+        })
+        .catch(() => errorCount++);
+    });
+    
+    Promise.all(savePromises).then(() => {
+        if (savedCount > 0) {
+            showToast('✅ Success', `Saved ${savedCount} RFPs to My Leads! ${errorCount > 0 ? `(${errorCount} failed)` : ''}`, 'success');
+        } else {
+            showToast('Error', 'Failed to save results', 'danger');
+        }
+    });
+}
+
+// Toast notification helper
+function showToast(title, message, type = 'info') {
+    // Create toast container if doesn't exist
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning' : 'bg-info';
+    
+    const toastHtml = `
+        <div class="toast align-items-center text-white ${bgClass} border-0" role="alert" data-bs-autohide="true" data-bs-delay="3000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    const toastEl = document.createElement('div');
+    toastEl.innerHTML = toastHtml;
+    toastContainer.appendChild(toastEl.firstElementChild);
+    
+    const toast = new bootstrap.Toast(toastEl.firstElementChild);
+    toast.show();
+    
+    // Remove after hidden
+    toastEl.firstElementChild.addEventListener('hidden.bs.toast', () => {
+        toastEl.firstElementChild.remove();
+    });
+}
+</script>
 
 {% endblock %}
