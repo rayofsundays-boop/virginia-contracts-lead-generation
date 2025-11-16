@@ -8397,6 +8397,35 @@ def portal_registration_status():
         print(f"Portal registration status error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/get-state-cities/<state_code>', methods=['GET'])
+@login_required
+def get_state_cities(state_code):
+    """Return list of available cities with known procurement portals for a state"""
+    try:
+        state_code = state_code.upper()
+        portals = get_city_procurement_portals(state_code)
+        
+        if not portals:
+            return jsonify({
+                'success': True,
+                'cities': [],
+                'message': f'No predefined cities for {state_code}'
+            })
+        
+        # Extract city names from portal dictionary
+        cities = sorted(list(portals.keys()))
+        
+        return jsonify({
+            'success': True,
+            'cities': cities,
+            'state_code': state_code,
+            'count': len(cities)
+        })
+    
+    except Exception as e:
+        print(f"Get state cities error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/find-city-rfps-custom', methods=['POST'])
 @login_required
 def find_city_rfps_custom():

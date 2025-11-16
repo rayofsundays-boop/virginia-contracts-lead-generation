@@ -1566,14 +1566,29 @@ function searchAdditionalCities(stateName, stateCode) {
         <div class="modal-body">
             <div class="alert alert-info mb-3">
                 <i class="fas fa-lightbulb me-2"></i>
-                <strong>Enter specific city names to search for RFPs</strong>
-                <p class="mb-0 mt-2 small">Separate multiple cities with commas (e.g., "Flagstaff, Glendale, Scottsdale")</p>
+                <strong>Choose from available cities or enter your own</strong>
+                <p class="mb-0 mt-2 small">Select cities from the dropdown, or manually enter others separated by commas</p>
             </div>
             
             <div class="mb-3">
-                <label for="customCityInput" class="form-label fw-bold">City Names:</label>
+                <label for="cityDropdown" class="form-label fw-bold">
+                    <i class="fas fa-list me-1"></i>Select Available Cities:
+                </label>
+                <select class="form-select" id="cityDropdown" multiple size="6" 
+                        onchange="updateCityInputFromDropdown('${stateCode}')">
+                    <option disabled class="text-muted">Loading cities...</option>
+                </select>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>Hold Ctrl (Windows) or Cmd (Mac) to select multiple cities
+                </small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="customCityInput" class="form-label fw-bold">
+                    <i class="fas fa-edit me-1"></i>Or Enter Custom Cities:
+                </label>
                 <textarea class="form-control" id="customCityInput" rows="3" 
-                          placeholder="Enter city names separated by commas..."></textarea>
+                          placeholder="Enter additional city names separated by commas..."></textarea>
                 <small class="form-text text-muted">Example: Springfield, Columbus, Austin</small>
             </div>
             
@@ -1590,6 +1605,62 @@ function searchAdditionalCities(stateName, stateCode) {
     `;
     
     document.querySelector('#cityRfpModal .modal-content').innerHTML = additionalCitiesHtml;
+    
+    // Load available cities for this state
+    loadStateCities(stateCode);
+}
+
+// Load available cities from backend
+function loadStateCities(stateCode) {
+    fetch(`/api/get-state-cities/${stateCode}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.cities && data.cities.length > 0) {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.innerHTML = data.cities.map(city => 
+                `<option value="${city}">${city}</option>`
+            ).join('');
+        } else {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.innerHTML = '<option disabled class="text-muted">No predefined cities available - enter custom cities below</option>';
+        }
+    })
+    .catch(err => {
+        console.error('Load cities error:', err);
+        const dropdown = document.getElementById('cityDropdown');
+        dropdown.innerHTML = '<option disabled class="text-danger">Error loading cities - enter custom cities below</option>';
+    });
+}
+
+// Update text input when dropdown selection changes
+function updateCityInputFromDropdown(stateCode) {
+    const dropdown = document.getElementById('cityDropdown');
+    const textInput = document.getElementById('customCityInput');
+    
+    // Get selected options
+    const selectedCities = Array.from(dropdown.selectedOptions).map(opt => opt.value);
+    
+    if (selectedCities.length > 0) {
+        // Get existing text input value
+        const existingCities = textInput.value.trim();
+        
+        // Combine dropdown selections with manual entries
+        if (existingCities) {
+            const allCities = existingCities.split(',').map(c => c.trim()).filter(c => c.length > 0);
+            // Add selected cities if not already present
+            selectedCities.forEach(city => {
+                if (!allCities.includes(city)) {
+                    allCities.push(city);
+                }
+            });
+            textInput.value = allCities.join(', ');
+        } else {
+            textInput.value = selectedCities.join(', ');
+        }
+    }
 }
 
 // Execute custom city search
@@ -1597,15 +1668,15 @@ function executeCustomCitySearch(stateName, stateCode) {
     const cityInput = document.getElementById('customCityInput').value.trim();
     
     if (!cityInput) {
-        alert('⚠️ Please enter at least one city name');
+        alert('⚠️ Please select cities from the dropdown or enter at least one city name in the text field');
         return;
     }
     
-    // Parse cities (split by comma, clean up)
-    const cities = cityInput.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    // Parse cities (split by comma, clean up, remove duplicates)
+    const cities = [...new Set(cityInput.split(',').map(c => c.trim()).filter(c => c.length > 0))];
     
     if (cities.length === 0) {
-        alert('⚠️ No valid city names entered');
+        alert('⚠️ No valid city names entered. Please select from dropdown or enter manually.');
         return;
     }
     
