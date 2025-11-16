@@ -8557,10 +8557,14 @@ def find_city_rfps():
             # Determine which scraper covers this state
             scrapers_to_run = []
             
-            # States with direct portal access (Symphony blocks, so use direct)
-            direct_portal_states = ['AZ', 'CA', 'CO', 'CT', 'GA', 'HI', 'ID', 'IL', 'KS', 'KY', 
-                                   'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NV', 'NM', 'ND', 'OH', 
-                                   'OK', 'OR', 'SC', 'TN', 'TX', 'UT', 'WA', 'WI']
+            # States with direct portal access (covers 47 states now!)
+            direct_portal_states = [
+                'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
+                'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'ME', 'MI', 
+                'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NJ', 'NM', 'NV', 
+                'NY', 'OH', 'OK', 'OR', 'PA', 'SC', 'SD', 'TN', 'TX', 'UT', 
+                'VA', 'VT', 'WA', 'WI', 'WV', 'WY'
+            ]
             
             # Use direct state portal scraper (bypasses Symphony 403 blocks)
             if state_code in direct_portal_states:
@@ -8929,6 +8933,47 @@ def search_city_rfp():
                 'source': 'sam_gov_demandstar'
             })
         else:
+            # No city-specific RFPs found - check for state-level opportunities
+            print(f"⚠️  No city-specific RFPs for {city_name}. Checking state-level opportunities...")
+            
+            try:
+                state_rfps = db.session.execute(text(
+                    '''SELECT title, agency, value, deadline, url, notice_id, data_source
+                       FROM federal_contracts 
+                       WHERE state = :state 
+                       AND naics_code IN ('561720', '561790', '236220', '238990')
+                       ORDER BY posted_date DESC LIMIT 10'''
+                ), {'state': state_code}).fetchall()
+                
+                if state_rfps:
+                    state_opportunities = [{
+                        'rfp_title': rfp.title,
+                        'rfp_number': rfp.notice_id or 'N/A',
+                        'description': f"{rfp.agency} - State-level opportunity",
+                        'deadline': rfp.deadline,
+                        'estimated_value': rfp.value or 'Not specified',
+                        'department': rfp.agency,
+                        'contact_email': None,
+                        'contact_phone': None,
+                        'rfp_url': rfp.url,
+                        'city_name': f'{state_name} (Statewide)',
+                        'data_source': rfp.data_source or 'State Portal'
+                    } for rfp in state_rfps]
+                    
+                    print(f"✅ Found {len(state_opportunities)} state-level opportunities for {state_name}")
+                    return jsonify({
+                        'success': True,
+                        'message': f'No city-specific RFPs in {city_name}, but found {len(state_opportunities)} state-level opportunities',
+                        'rfps': state_opportunities,
+                        'city': city_name,
+                        'state': state_name,
+                        'source': 'state_level_fallback',
+                        'is_state_level': True
+                    })
+            except Exception as state_err:
+                print(f"  State-level search error: {state_err}")
+            
+            # Truly no opportunities found
             return jsonify({
                 'success': True,
                 'message': f'No active cleaning RFPs found in {city_name} at this time',

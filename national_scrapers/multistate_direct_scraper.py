@@ -153,6 +153,96 @@ class MultiStateDirectScraper(BaseScraper):
             'name': 'Connecticut',
             'url': 'https://portal.ct.gov/DAS/Procurement/Bidders-Guide',
             'type': 'html'
+        },
+        'AK': {
+            'name': 'Alaska',
+            'url': 'https://aws.state.ak.us/OASysContracts/Contracts/search.aspx',
+            'type': 'html'
+        },
+        'AL': {
+            'name': 'Alabama',
+            'url': 'https://www.alabamabids.alabama.gov/',
+            'type': 'html'
+        },
+        'AR': {
+            'name': 'Arkansas',
+            'url': 'https://www.dfa.arkansas.gov/offices/procurement/procurement-services/',
+            'type': 'html'
+        },
+        'DE': {
+            'name': 'Delaware',
+            'url': 'https://bids.delaware.gov/',
+            'type': 'html'
+        },
+        'FL': {
+            'name': 'Florida',
+            'url': 'https://vendor.myfloridamarketplace.com/search/bids',
+            'type': 'html'
+        },
+        'IN': {
+            'name': 'Indiana',
+            'url': 'https://www.in.gov/idoa/procurement/',
+            'type': 'html'
+        },
+        'IA': {
+            'name': 'Iowa',
+            'url': 'https://das.iowa.gov/procurement',
+            'type': 'html'
+        },
+        'LA': {
+            'name': 'Louisiana',
+            'url': 'https://wwwcfprd.doa.louisiana.gov/osp/lapac/vendor/vsspBidList.cfm',
+            'type': 'html'
+        },
+        'NE': {
+            'name': 'Nebraska',
+            'url': 'https://das.nebraska.gov/materiel/purchasing.html',
+            'type': 'html'
+        },
+        'NJ': {
+            'name': 'New Jersey',
+            'url': 'https://www.njstart.gov/bso/',
+            'type': 'html'
+        },
+        'NC': {
+            'name': 'North Carolina',
+            'url': 'https://www.ips.state.nc.us/ips/',
+            'type': 'html'
+        },
+        'PA': {
+            'name': 'Pennsylvania',
+            'url': 'https://www.emarketplace.state.pa.us/EP_Default.aspx',
+            'type': 'html'
+        },
+        'SD': {
+            'name': 'South Dakota',
+            'url': 'https://boa.sd.gov/procurement-management/',
+            'type': 'html'
+        },
+        'VT': {
+            'name': 'Vermont',
+            'url': 'https://bgs.vermont.gov/purchasing-contracting/forms',
+            'type': 'html'
+        },
+        'WV': {
+            'name': 'West Virginia',
+            'url': 'https://purchasing.wv.gov/vendor/Pages/default.aspx',
+            'type': 'html'
+        },
+        'WY': {
+            'name': 'Wyoming',
+            'url': 'https://ai.wyo.gov/divisions/procurement-and-property',
+            'type': 'html'
+        },
+        'NY': {
+            'name': 'New York',
+            'url': 'https://www.ogs.ny.gov/procurement/',
+            'type': 'html'
+        },
+        'VA': {
+            'name': 'Virginia',
+            'url': 'https://eva.virginia.gov/',
+            'type': 'html'
         }
     }
     
