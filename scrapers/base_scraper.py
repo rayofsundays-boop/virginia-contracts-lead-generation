@@ -1,6 +1,6 @@
 """
-Base Scraper Class
-Foundation for all procurement portal scrapers
+Base Scraper Class - MODERNIZED 2025
+Foundation for all procurement portal scrapers with robust error handling
 """
 
 import requests
@@ -8,8 +8,10 @@ from bs4 import BeautifulSoup
 import time
 import re
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import logging
+import socket
+from urllib.parse import urljoin, urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,70 +24,167 @@ class ScraperError(Exception):
 
 
 class BaseScraper:
-    """Base class for all government procurement scrapers"""
+    """Base class for all government procurement scrapers - MODERNIZED"""
     
-    def __init__(self, name: str, base_url: str, rate_limit: float = 2.0):
+    # Standard headers for all requests
+    DEFAULT_HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
+    }
+    
+    def __init__(self, name: str, base_url: str, rate_limit: float = 2.0, max_retries: int = 3):
         """
-        Initialize base scraper
+        Initialize base scraper with modern error handling
         
         Args:
-            name: Scraper name for logging
-            base_url: Base URL of the portal
-            rate_limit: Seconds to wait between requests (default 2.0)
+            name: Scraper identifier
+            base_url: Base URL for portal
+            rate_limit: Seconds between requests
+            max_retries: Maximum retry attempts for failed requests
         """
         self.name = name
         self.base_url = base_url
         self.rate_limit = rate_limit
+        self.max_retries = max_retries
+        self._last_request_time = 0
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'ContractLink AI Bot/1.0 (Government Contract Aggregator; +https://contractlink.ai)'
-        })
-        self.last_request_time = 0
+        self.session.headers.update(self.DEFAULT_HEADERS)
     
     def _rate_limit_delay(self):
         """Enforce rate limiting between requests"""
-        elapsed = time.time() - self.last_request_time
+        elapsed = time.time() - self._last_request_time
         if elapsed < self.rate_limit:
             time.sleep(self.rate_limit - elapsed)
-        self.last_request_time = time.time()
+        self._last_request_time = time.time()
     
-    def fetch_page(self, url: str, max_retries: int = 3) -> Optional[requests.Response]:
+    def fetch_page(self, url: str, method: str = 'GET', data: Dict = None, 
+                   headers: Dict = None, max_retries: int = None) -> Optional[str]:
         """
-        Fetch a web page with retry logic
+        Fetch a web page with robust error handling - MODERNIZED 2025
+        
+        Handles:
+        - 403 Forbidden (retries with different headers)
+        - 404 Not Found (logs and returns None)
+        - DNS failures (catches socket errors)
+        - Timeouts (30s default)
+        - JS-rendered sites (detects and warns)
         
         Args:
             url: URL to fetch
-            max_retries: Maximum number of retry attempts
+            method: HTTP method ('GET' or 'POST')
+            data: POST data (form or JSON)
+            headers: Additional headers to merge
+            max_retries: Override default retry count
             
         Returns:
-            Response object or None if failed
+            HTML content string or None if failed
         """
+        if max_retries is None:
+            max_retries = self.max_retries
+        
+        # Merge custom headers with defaults
+        request_headers = self.DEFAULT_HEADERS.copy()
+        if headers:
+            request_headers.update(headers)
+        
         for attempt in range(max_retries):
             try:
                 self._rate_limit_delay()
                 
-                logger.info(f"[{self.name}] Fetching: {url} (attempt {attempt + 1}/{max_retries})")
+                logger.info(f"[{self.name}] {method} {url} (attempt {attempt + 1}/{max_retries})")
                 
-                response = self.session.get(url, timeout=30)
+                if method.upper() == 'POST':
+                    response = self.session.post(url, data=data, headers=request_headers, 
+                                                timeout=30, allow_redirects=True)
+                else:
+                    response = self.session.get(url, headers=request_headers, 
+                                               timeout=30, allow_redirects=True)
+                
+                # Handle specific status codes
+                if response.status_code == 403:
+                    logger.warning(f"[{self.name}] ⚠️  403 Forbidden - may need authentication or different headers")
+                    if attempt < max_retries - 1:
+                        # Try with more aggressive headers
+                        request_headers["Referer"] = self.base_url
+                        request_headers["Origin"] = self.base_url
+                        wait_time = (attempt + 1) * 5
+                        logger.info(f"[{self.name}] Retrying in {wait_time}s with enhanced headers...")
+                        time.sleep(wait_time)
+                        continue
+                    return None
+                
+                elif response.status_code == 404:
+                    logger.error(f"[{self.name}] ❌ 404 Not Found - URL may have changed: {url}")
+                    return None
+                
+                elif response.status_code == 429:
+                    logger.warning(f"[{self.name}] ⚠️  429 Rate Limited")
+                    if attempt < max_retries - 1:
+                        wait_time = 30  # Wait longer for rate limits
+                        logger.info(f"[{self.name}] Waiting {wait_time}s before retry...")
+                        time.sleep(wait_time)
+                        continue
+                    return None
+                
                 response.raise_for_status()
                 
-                logger.info(f"[{self.name}] ✅ Success: {url} ({len(response.content)} bytes)")
-                return response
+                html = response.text
+                
+                # Detect JS-rendered sites
+                if self._is_js_rendered(html):
+                    logger.warning(f"[{self.name}] ⚠️  JS-RENDERED SITE DETECTED - May need Playwright/Selenium")
+                
+                logger.info(f"[{self.name}] ✅ Success ({len(html)} chars, {response.status_code})")
+                return html
+                
+            except socket.gaierror as e:
+                logger.error(f"[{self.name}] ❌ DNS_ERROR: {e} - Domain may be dead")
+                return None
+                
+            except requests.Timeout:
+                logger.warning(f"[{self.name}] ⚠️  Timeout after 30s")
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 5
+                    time.sleep(wait_time)
+                    continue
+                return None
+                
+            except requests.ConnectionError as e:
+                logger.warning(f"[{self.name}] ⚠️  Connection error: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 10
+                    time.sleep(wait_time)
+                    continue
+                return None
                 
             except requests.RequestException as e:
-                logger.warning(f"[{self.name}] ⚠️  Attempt {attempt + 1} failed: {e}")
-                
+                logger.warning(f"[{self.name}] ⚠️  Request failed: {e}")
                 if attempt < max_retries - 1:
-                    wait_time = (attempt + 1) * 5  # Exponential backoff
-                    logger.info(f"[{self.name}] Retrying in {wait_time} seconds...")
+                    wait_time = (attempt + 1) * 5
                     time.sleep(wait_time)
-                else:
-                    logger.error(f"[{self.name}] ❌ Failed after {max_retries} attempts")
-                    return None
+                    continue
+                return None
         
+        logger.error(f"[{self.name}] ❌ Failed after {max_retries} attempts")
         return None
     
-    def parse_html(self, html: str) -> BeautifulSoup:
+    def _is_js_rendered(self, html: str) -> bool:
+        """Detect if site requires JavaScript rendering"""
+        js_indicators = [
+            'ng-app',  # Angular
+            'react-root',  # React
+            'vue-app',  # Vue
+            '__NEXT_DATA__',  # Next.js
+            'Please enable JavaScript',
+            'This site requires JavaScript'
+        ]
+        return any(indicator in html for indicator in js_indicators)
+    
+    def parse_html(self, html: str) -> Optional[BeautifulSoup]:
         """
         Parse HTML content with BeautifulSoup
         
@@ -93,9 +192,58 @@ class BaseScraper:
             html: HTML content string
             
         Returns:
-            BeautifulSoup object
+            BeautifulSoup object or None if parsing fails
         """
-        return BeautifulSoup(html, 'html.parser')
+        if not html:
+            return None
+        try:
+            return BeautifulSoup(html, 'html.parser')
+        except Exception as e:
+            logger.error(f"[{self.name}] Failed to parse HTML: {e}")
+            return None
+    
+    def standardize_contract(self, state: str, title: str, solicitation_number: str = '',
+                            due_date: str = '', link: str = '', agency: str = '',
+                            **kwargs) -> Dict[str, Any]:
+        """
+        Standardize contract data format for all scrapers
+        
+        Required format:
+        {
+            "state": "XX",
+            "title": "...",
+            "solicitation_number": "...",
+            "due_date": "...",
+            "link": "...",
+            "agency": "..."
+        }
+        
+        Args:
+            state: Two-letter state code
+            title: Contract title
+            solicitation_number: Unique identifier
+            due_date: Deadline (any format, will be normalized)
+            link: Full URL to opportunity
+            agency: Agency name
+            **kwargs: Additional fields (description, value, etc.)
+            
+        Returns:
+            Standardized contract dictionary
+        """
+        contract = {
+            "state": state.upper() if state else '',
+            "title": title.strip() if title else '',
+            "solicitation_number": solicitation_number.strip() if solicitation_number else '',
+            "due_date": self.parse_date(due_date) if due_date else '',
+            "link": urljoin(self.base_url, link) if link else '',
+            "agency": agency.strip() if agency else ''
+        }
+        
+        # Add optional fields
+        if kwargs:
+            contract.update(kwargs)
+        
+        return contract
     
     def extract_text(self, element, selector: str, default: str = '') -> str:
         """
