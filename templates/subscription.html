@@ -418,4 +418,109 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- Stripe Payment Links Section -->
+<section class="pricing">
+  <h2>Subscribe to Lead Generation Contracts</h2>
+
+  <div class="pricing-options">
+
+    <!-- Monthly Plan -->
+    <div class="plan-card">
+      <h3>$99/month</h3>
+      <p>Access all state portals, city RFPs, federal leads, AI tools, and more.</p>
+      <a class="pay-btn" href="https://buy.stripe.com/eVa3chcco2BEbkW000" target="_blank">
+        Subscribe Monthly
+      </a>
+    </div>
+
+    <!-- Yearly Plan -->
+    <div class="plan-card">
+      <h3>$950/year</h3>
+      <p>Save $238 annually. Best for agencies and professional cleaners.</p>
+      <a class="pay-btn" href="https://buy.stripe.com/eVqdR9ccodgi3SugrL" target="_blank">
+        Subscribe Yearly
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<style>
+.pricing {
+  max-width: 800px;
+  margin: 40px auto;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+.pricing h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+.pricing-options {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+.plan-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px 25px;
+  width: 45%;
+  min-width: 300px;
+  background: #fff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+}
+.plan-card h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #635bff;
+  margin-bottom: 15px;
+}
+.plan-card p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.pay-btn {
+  display: inline-block;
+  background: #635bff;
+  color: white;
+  padding: 14px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 15px;
+  transition: background 0.3s ease;
+}
+.pay-btn:hover {
+  background: #5145cd;
+  color: white;
+  text-decoration: none;
+}
+.pay-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .pricing-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  .plan-card {
+    width: 90%;
+  }
+}
+</style>
+
 {% endblock %}
