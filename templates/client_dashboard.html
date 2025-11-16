@@ -158,35 +158,37 @@
   <div class="row mb-4 g-4">
     <!-- Daily Streak Card -->
     <div class="col-lg-3 col-md-6">
-      <div class="card h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); border: none;">
+      <div class="card h-100" style="background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3); border: 2px solid #c7d2fe;">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0" style="font-weight: 700; font-size: 1.1rem; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-fire me-1"></i> Daily Streak</h6>
-            <span class="badge bg-white text-dark pulse-badge" style="font-size: 1.2rem; padding: 0.4rem 0.6rem;">🔥</span>
+            <h6 class="mb-0" style="font-weight: 700; font-size: 1.1rem; color: #4338ca; text-shadow: 0 1px 1px rgba(255,255,255,0.5);"><i class="fas fa-fire me-1"></i> Daily Streak</h6>
+            <span class="badge bg-primary pulse-badge" style="font-size: 1.2rem; padding: 0.4rem 0.6rem;">🔥</span>
           </div>
-          <div class="display-3 fw-bold mb-1" id="streakCount" style="color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 3.5rem;">{{ streak_days|default(1) }}</div>
-          <small style="opacity: 0.95; font-size: 0.95rem; color: #ffffff; font-weight: 600;">days active this week</small>
-          <div class="progress mt-2" style="height: 8px; background: rgba(255,255,255,0.3); border-radius: 10px;">
-            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (streak_days|default(1) / 7 * 100)|int }}%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+          <div class="display-3 fw-bold mb-1" id="streakCount" style="color: #312e81; text-shadow: 0 1px 2px rgba(255,255,255,0.3); font-size: 3.5rem;">{{ streak_days|default(1) }}</div>
+          <small style="font-size: 0.95rem; color: #4338ca; font-weight: 600;">days active this week</small>
+          <div class="progress mt-2" style="height: 8px; background: rgba(99, 102, 241, 0.2); border-radius: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ (streak_days|default(1) / 7 * 100)|int }}%; background: linear-gradient(90deg, #6366f1, #4f46e5); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
           </div>
-          <small style="opacity: 0.9; margin-top: 0.5rem; display: block; color: #ffffff; font-weight: 500;">Next milestone: 7 days 🎯</small>
+          <small style="margin-top: 0.5rem; display: block; color: #6366f1; font-weight: 500;">Next milestone: 7 days 🎯</small>
         </div>
       </div>
     </div>
 
     <!-- Quick Actions Card -->
     <div class="col-lg-3 col-md-6">
-      <div class="card h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);">
+      <div class="card h-100" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #6ee7b7; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0" style="color: #ffffff; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-bolt me-1"></i> Hot Opportunities</h6>
-            <span class="badge bg-danger blink-badge" style="font-size: 0.95rem; padding: 0.4rem 0.6rem; font-weight: 700;">{{ emergency_count|default(0) }} NEW</span>
+            <h6 class="mb-0" style="color: #065f46; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 1px rgba(255,255,255,0.5);"><i class="fas fa-bolt me-1"></i> Hot Opportunities</h6>
+            {% if (emergency_count|default(0)) + (urgent_count|default(0)) > 0 %}
+            <span class="badge bg-danger blink-badge" style="font-size: 0.95rem; padding: 0.4rem 0.6rem; font-weight: 700;">NEW</span>
+            {% endif %}
           </div>
           <div class="d-flex align-items-end mb-2">
-            <span class="display-3 fw-bold me-2" style="color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 3.5rem;">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
-            <span class="mb-2" style="color: rgba(255,255,255,0.9); font-weight: 600; font-size: 0.95rem;">urgent leads</span>
+            <span class="display-3 fw-bold me-2" style="color: #064e3b; text-shadow: 0 1px 2px rgba(255,255,255,0.3); font-size: 3.5rem;">{{ (emergency_count|default(0)) + (urgent_count|default(0)) }}</span>
+            <span class="mb-2" style="color: #047857; font-weight: 600; font-size: 0.95rem;">urgent leads</span>
           </div>
-          <button class="btn btn-light btn-sm w-100" onclick="quickFilter(document.querySelector('[data-filter=urgent]'), 'urgent')" style="font-weight: 700; color: #059669; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+          <button class="btn btn-success btn-sm w-100" onclick="quickFilter(document.querySelector('[data-filter=urgent]'), 'urgent')" style="font-weight: 700; color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
             <i class="fas fa-rocket me-1"></i> View Now
           </button>
         </div>
@@ -195,44 +197,44 @@
 
     <!-- Activity Score Card -->
     <div class="col-lg-3 col-md-6">
-      <div class="card h-100" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);">
+      <div class="card h-100" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #93c5fd; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0" style="color: #ffffff; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-chart-line me-1"></i> Your Score</h6>
-            <span class="badge bg-white" id="userLevel" style="color: #2563eb; font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.7rem;">Level {{ user_level|default(1) }}</span>
+            <h6 class="mb-0" style="color: #1e40af; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 1px rgba(255,255,255,0.5);"><i class="fas fa-chart-line me-1"></i> Your Score</h6>
+            <span class="badge bg-primary" id="userLevel" style="color: #ffffff; font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.7rem;">Level {{ user_level|default(1) }}</span>
           </div>
           <div class="d-flex align-items-end mb-2">
-            <span class="display-3 fw-bold me-2" id="activityScore" style="color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 3.5rem;">{{ activity_score|default(0) }}</span>
-            <span class="mb-2" style="color: #fbbf24; font-weight: 700; font-size: 0.95rem;">+{{ points_today|default(0) }} today</span>
+            <span class="display-3 fw-bold me-2" id="activityScore" style="color: #1e3a8a; text-shadow: 0 1px 2px rgba(255,255,255,0.3); font-size: 3.5rem;">{{ activity_score|default(0) }}</span>
+            <span class="mb-2" style="color: #d97706; font-weight: 700; font-size: 0.95rem;">+{{ points_today|default(0) }} today</span>
           </div>
-          <div class="progress mb-1" style="height: 10px; background: rgba(255,255,255,0.3); border-radius: 10px;">
+          <div class="progress mb-1" style="height: 10px; background: rgba(59, 130, 246, 0.2); border-radius: 10px;">
             <div class="progress-bar" role="progressbar" style="width: {{ progress_to_next_level|default(0) }}%; background: linear-gradient(90deg, #fbbf24, #f59e0b); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
           </div>
-          <small style="color: rgba(255,255,255,0.95); font-weight: 600; font-size: 0.9rem;">{{ points_to_next_level|default(100) }} pts to Level {{ (user_level|default(1)) + 1 }} 🏆</small>
+          <small style="color: #2563eb; font-weight: 600; font-size: 0.9rem;">{{ points_to_next_level|default(100) }} pts to Level {{ (user_level|default(1)) + 1 }} 🏆</small>
         </div>
       </div>
     </div>
 
     <!-- Recent Activity Card -->
     <div class="col-lg-3 col-md-6">
-      <div class="card h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);">
+      <div class="card h-100" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fcd34d; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0" style="color: #ffffff; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);"><i class="fas fa-star me-1"></i> Today's Actions</h6>
-            <span class="badge bg-white" id="todayActionsCount" style="color: #d97706; font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.7rem;">{{ actions_today|default(0) }}</span>
+            <h6 class="mb-0" style="color: #92400e; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 1px rgba(255,255,255,0.5);"><i class="fas fa-star me-1"></i> Today's Actions</h6>
+            <span class="badge bg-warning" id="todayActionsCount" style="color: #1f2937; font-weight: 700; font-size: 0.9rem; padding: 0.4rem 0.7rem;">{{ actions_today|default(0) }}</span>
           </div>
           <ul class="list-unstyled mb-0" style="font-size: 1rem;">
-            <li class="d-flex justify-content-between mb-2" style="color: #ffffff; font-weight: 600;">
+            <li class="d-flex justify-content-between mb-2" style="color: #78350f; font-weight: 600;">
               <span>✓ Leads viewed:</span>
-              <strong id="viewedCount" style="font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">{{ leads_viewed_today|default(0) }}</strong>
+              <strong id="viewedCount" style="font-size: 1.2rem; text-shadow: 0 1px 1px rgba(255,255,255,0.3); color: #451a03;">{{ leads_viewed_today|default(0) }}</strong>
             </li>
-            <li class="d-flex justify-content-between mb-2" style="color: #ffffff; font-weight: 600;">
+            <li class="d-flex justify-content-between mb-2" style="color: #78350f; font-weight: 600;">
               <span>★ Leads saved:</span>
-              <strong id="savedCount" style="font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">{{ leads_saved_today|default(0) }}</strong>
+              <strong id="savedCount" style="font-size: 1.2rem; text-shadow: 0 1px 1px rgba(255,255,255,0.3); color: #451a03;">{{ leads_saved_today|default(0) }}</strong>
             </li>
-            <li class="d-flex justify-content-between" style="color: #ffffff; font-weight: 600;">
+            <li class="d-flex justify-content-between" style="color: #78350f; font-weight: 600;">
               <span>✉ Inquiries sent:</span>
-              <strong id="inquiriesCount" style="font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">{{ inquiries_today|default(0) }}</strong>
+              <strong id="inquiriesCount" style="font-size: 1.2rem; text-shadow: 0 1px 1px rgba(255,255,255,0.3); color: #451a03;">{{ inquiries_today|default(0) }}</strong>
             </li>
           </ul>
         </div>
@@ -399,9 +401,9 @@
     <div class="col-12">
       <div class="card text-center p-5" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border: 2px dashed #9ca3af;">
         <div class="card-body">
-          <i class="fas fa-inbox fa-4x text-primary mb-4" style="opacity: 0.6;"></i>
-          <h4 class="mb-3" style="color: #1f2937; font-weight: 700;">No Leads Available Yet</h4>
-          <p class="text-muted mb-4" style="font-size: 1.1rem;">New opportunities are being added daily. Check back soon or explore our other lead sources:</p>
+          <i class="fas fa-bookmark fa-4x text-primary mb-4" style="opacity: 0.6;"></i>
+          <h4 class="mb-3" style="color: #1f2937; font-weight: 700;">My Leads</h4>
+          <p class="text-muted mb-4" style="font-size: 1.1rem;">Save leads that match your business profile to view them here. Explore our lead sources to find opportunities:</p>
           <div class="d-flex justify-content-center gap-3 flex-wrap">
             <a href="{{ url_for('contracts') }}" class="btn btn-primary btn-lg" style="border-radius: 50px; padding: 0.8rem 2rem; font-weight: 600;">
               <i class="fas fa-landmark me-2"></i>Browse Government Contracts
@@ -412,9 +414,12 @@
             <a href="{{ url_for('commercial_contracts') }}" class="btn btn-info btn-lg" style="border-radius: 50px; padding: 0.8rem 2rem; font-weight: 600;">
               <i class="fas fa-building me-2"></i>Commercial Leads
             </a>
+            <a href="{{ url_for('saved_leads') }}" class="btn btn-warning btn-lg" style="border-radius: 50px; padding: 0.8rem 2rem; font-weight: 600;">
+              <i class="fas fa-star me-2"></i>My Saved Leads
+            </a>
           </div>
           <div class="mt-4 pt-4" style="border-top: 1px solid #d1d5db;">
-            <p class="text-muted mb-0"><i class="fas fa-info-circle me-2"></i>Dashboard aggregates leads from multiple sources. Visit individual pages above to see all available opportunities.</p>
+            <p class="text-muted mb-0"><i class="fas fa-lightbulb me-2"></i>Tip: Click the bookmark icon on any lead to save it to your personal collection for easy access.</p>
           </div>
         </div>
       </div>
@@ -650,25 +655,9 @@ function viewLeadDetails(leadId, leadType) {
 function toggleSaveLead(btn, leadType, leadId, leadTitle) {
     const icon = btn.querySelector('i');
     const isSaved = icon.classList.contains('fas');
+    const action = isSaved ? 'unsave' : 'save';
     
-    if (isSaved) {
-        // Unsave
-        icon.classList.remove('fas', 'saved');
-        icon.classList.add('far');
-    } else {
-        // Save
-        icon.classList.remove('far');
-        icon.classList.add('fas', 'saved');
-        updateActivityScore(10, 'saving lead');
-        
-        const savedEl = document.getElementById('savedCount');
-        if (savedEl) {
-            let count = parseInt(savedEl.textContent) || 0;
-            savedEl.textContent = count + 1;
-        }
-    }
-    
-    // Make API call to save/unsave
+    // Make API call to save/unsave FIRST to check authentication
     fetch('/api/toggle-save-lead', {
         method: 'POST',
         headers: {
@@ -678,15 +667,79 @@ function toggleSaveLead(btn, leadType, leadId, leadTitle) {
             lead_type: leadType,
             lead_id: leadId,
             lead_title: leadTitle,
-            action: isSaved ? 'unsave' : 'save'
+            action: action
         })
-    }).then(response => response.json())
-      .then(data => {
-          console.log('Save status updated:', data);
-      })
-      .catch(error => {
-          console.error('Error saving lead:', error);
-      });
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to save lead');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update UI only after successful API call
+            if (action === 'save') {
+                icon.classList.remove('far');
+                icon.classList.add('fas', 'saved');
+                updateActivityScore(10, 'saving lead');
+                
+                const savedEl = document.getElementById('savedCount');
+                if (savedEl) {
+                    let count = parseInt(savedEl.textContent) || 0;
+                    savedEl.textContent = count + 1;
+                }
+                
+                // Show success message
+                showToast('Lead saved successfully!', 'success');
+            } else {
+                icon.classList.remove('fas', 'saved');
+                icon.classList.add('far');
+                showToast('Lead removed from saved', 'info');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error saving lead:', error);
+        // Show error to user
+        if (error.message.includes('sign in')) {
+            showToast('Please sign in to save leads', 'error');
+            // Redirect to login after short delay
+            setTimeout(() => {
+                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+            }, 1500);
+        } else {
+            showToast(error.message || 'Failed to save lead', 'error');
+        }
+    });
+}
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show`;
+    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    toastContainer.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+    return container;
 }
 
 // Contact info modal

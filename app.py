@@ -12089,6 +12089,60 @@ def unsave_lead():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/toggle-save-lead', methods=['POST'])
+def api_toggle_save_lead():
+    """Toggle save/unsave lead (authentication handled by checking session)"""
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        
+        # Check if user is logged in
+        if not user_email:
+            return jsonify({'success': False, 'message': 'Please sign in to save leads', 'requiresAuth': True}), 401
+        
+        action = data.get('action', 'save')
+        
+        if action == 'save':
+            # Save the lead
+            db.session.execute(text('''
+                INSERT INTO saved_leads 
+                (user_email, lead_type, lead_id, lead_title, lead_data, status)
+                VALUES (:user_email, :lead_type, :lead_id, :lead_title, :lead_data, 'saved')
+                ON CONFLICT (user_email, lead_type, lead_id) 
+                DO UPDATE SET lead_title = :lead_title, lead_data = :lead_data, updated_at = CURRENT_TIMESTAMP
+            '''), {
+                'user_email': user_email,
+                'lead_type': data.get('lead_type'),
+                'lead_id': data.get('lead_id'),
+                'lead_title': data.get('lead_title'),
+                'lead_data': json.dumps(data)
+            })
+            db.session.commit()
+            
+            # Log activity
+            log_activity(user_email, 'saved_lead', f'Saved lead: {data.get("lead_title")}', data.get('lead_id'), data.get('lead_type'))
+            
+            return jsonify({'success': True, 'message': 'Lead saved successfully', 'action': 'saved'})
+        else:
+            # Unsave the lead
+            db.session.execute(text('''
+                DELETE FROM saved_leads 
+                WHERE user_email = :user_email 
+                AND lead_type = :lead_type 
+                AND lead_id = :lead_id
+            '''), {
+                'user_email': user_email,
+                'lead_type': data.get('lead_type'),
+                'lead_id': data.get('lead_id')
+            })
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Lead removed from saved', 'action': 'unsaved'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in api_toggle_save_lead: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+
 @app.route('/branding-materials')
 @login_required
 def branding_materials():
