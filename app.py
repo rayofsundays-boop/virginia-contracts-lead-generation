@@ -80,6 +80,15 @@ except ImportError:
     send_admin_consultation_notification = None
     send_proposal_review_notification = None
 
+# Scraper system imports
+try:
+    from scrapers.scraper_manager import get_scraper_manager
+    SCRAPERS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Scraper system not available: {e}")
+    get_scraper_manager = None
+    SCRAPERS_AVAILABLE = False
+
 # In-memory tracking for 2FA attempts (user_id -> timestamps)
 TWOFA_ATTEMPTS = {}
 FORCE_ADMIN_2FA = os.getenv('FORCE_ADMIN_2FA', '').lower() in ('1','true','yes','on')
@@ -15859,6 +15868,38 @@ def admin_enhanced():
             
             context['revenue_chart_labels'] = [row.date.strftime('%m/%d') if hasattr(row.date, 'strftime') else str(row.date) for row in revenue_chart_raw]
             context['revenue_chart_data'] = [float(row.revenue) for row in revenue_chart_raw]
+        
+        elif section == 'scrapers':
+            # Scraper management section
+            if SCRAPERS_AVAILABLE:
+                try:
+                    scraper_manager = get_scraper_manager('leads.db')
+                    
+                    # Get scraper statistics
+                    stats = scraper_manager.get_scraper_stats()
+                    context['scraper_stats'] = stats
+                    
+                    # Get recent logs (last 50)
+                    logs = scraper_manager.get_scraper_logs(limit=50)
+                    context['scraper_logs'] = logs
+                    
+                    # Get contract counts by source
+                    try:
+                        by_source = db.session.execute(text("""
+                            SELECT data_source, COUNT(*) as count
+                            FROM contracts
+                            WHERE data_source IN ('EVA Virginia', 'State Portal', 'City/County')
+                            GROUP BY data_source
+                        """)).fetchall()
+                        context['contracts_by_source'] = {row.data_source: row.count for row in by_source}
+                    except:
+                        context['contracts_by_source'] = {}
+                    
+                except Exception as e:
+                    print(f"Error loading scraper data: {e}")
+                    context['scraper_error'] = str(e)
+            else:
+                context['scraper_error'] = "Scraper system not available"
             
         return render_template('admin_enhanced.html', **context)
     
@@ -21786,6 +21827,96 @@ def api_admin_datagov_status():
             'sam_total': sam_total,
             'last_fetch': last_fetch
         })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/admin/scrapers/run', methods=['POST'])
+@login_required
+@admin_required
+def api_run_scraper():
+    """API endpoint to run a specific scraper"""
+    if not SCRAPERS_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Scraper system not available'}), 503
+    
+    try:
+        data = request.get_json()
+        scraper_name = data.get('scraper')
+        
+        if not scraper_name:
+            return jsonify({'success': False, 'error': 'Scraper name required'}), 400
+        
+        scraper_manager = get_scraper_manager('leads.db')
+        
+        # Valid scraper names
+        valid_scrapers = ['eva_virginia', 'state_portals', 'city_county', 'all']
+        
+        if scraper_name not in valid_scrapers:
+            return jsonify({'success': False, 'error': f'Invalid scraper. Choose from: {", ".join(valid_scrapers)}'}), 400
+        
+        # Run scraper
+        if scraper_name == 'all':
+            result = scraper_manager.run_all_scrapers(save_to_db=True)
+        else:
+            result = scraper_manager.run_scraper(scraper_name, save_to_db=True)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error running scraper: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/admin/scrapers/logs', methods=['GET'])
+@login_required
+@admin_required
+def api_scraper_logs():
+    """API endpoint to get scraper logs"""
+    if not SCRAPERS_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Scraper system not available'}), 503
+    
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        scraper_manager = get_scraper_manager('leads.db')
+        logs = scraper_manager.get_scraper_logs(limit=limit)
+        
+        # Convert to dict for JSON serialization
+        logs_dict = []
+        for log in logs:
+            logs_dict.append({
+                'id': log['id'],
+                'scraper_name': log['scraper_name'],
+                'started_at': str(log['started_at']),
+                'completed_at': str(log['completed_at']) if log['completed_at'] else None,
+                'status': log['status'],
+                'contracts_found': log['contracts_found'],
+                'contracts_saved': log['contracts_saved'],
+                'error_message': log['error_message'],
+                'created_at': str(log['created_at'])
+            })
+        
+        return jsonify({'success': True, 'logs': logs_dict})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/admin/scrapers/stats', methods=['GET'])
+@login_required
+@admin_required
+def api_scraper_stats():
+    """API endpoint to get scraper statistics"""
+    if not SCRAPERS_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Scraper system not available'}), 503
+    
+    try:
+        scraper_manager = get_scraper_manager('leads.db')
+        stats = scraper_manager.get_scraper_stats()
+        
+        return jsonify({'success': True, 'stats': stats})
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -29795,6 +29926,16 @@ def browse_1099_cleaners():
 if __name__ == '__main__':
     init_db()
     ensure_twofa_columns()
+    
+    # Initialize scraper manager and schedule daily scraping
+    if SCRAPERS_AVAILABLE:
+        try:
+            scraper_manager = get_scraper_manager('leads.db')
+            # Schedule daily scraping at 2:00 AM
+            scraper_manager.schedule_daily_scrape(hour=2, minute=0)
+            print("✅ Scraper system initialized with daily 2:00 AM schedule")
+        except Exception as e:
+            print(f"⚠️  Scraper initialization error: {e}")
     
     # Auto-import aviation leads if table is empty
     try:
