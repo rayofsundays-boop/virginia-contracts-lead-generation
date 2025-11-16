@@ -776,6 +776,262 @@ function clearAllFilters() {
     }
 }
 </script>
+
+<!-- PERMANENT TEXT CONTRAST RULES - DO NOT REMOVE -->
+<style>
+/* ========================================
+   CLIENT DASHBOARD CONTRAST OVERRIDE
+   Hardcoded text color rules for WCAG compliance
+   ======================================== */
+
+/* RULE 1: All text on dark backgrounds must be white */
+[style*="background: linear-gradient(135deg, #667eea"],
+[style*="background: linear-gradient(135deg, #10b981"],
+[style*="background: linear-gradient(135deg, #3b82f6"],
+[style*="background: linear-gradient(135deg, #f59e0b"],
+[style*="background: linear-gradient(180deg, #2c3e50"],
+.portal-header-band,
+.sidebar-sticky,
+.admin-sidebar,
+.card[style*="background: linear-gradient(135deg, #667eea"],
+.card[style*="background: linear-gradient(135deg, #10b981"],
+.card[style*="background: linear-gradient(135deg, #3b82f6"],
+.card[style*="background: linear-gradient(135deg, #f59e0b"] {
+    color: #ffffff !important;
+}
+
+/* RULE 2: All headings on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] h1,
+[style*="background: linear-gradient(135deg, #667eea"] h2,
+[style*="background: linear-gradient(135deg, #667eea"] h3,
+[style*="background: linear-gradient(135deg, #667eea"] h4,
+[style*="background: linear-gradient(135deg, #667eea"] h5,
+[style*="background: linear-gradient(135deg, #667eea"] h6,
+[style*="background: linear-gradient(135deg, #10b981"] h1,
+[style*="background: linear-gradient(135deg, #10b981"] h2,
+[style*="background: linear-gradient(135deg, #10b981"] h3,
+[style*="background: linear-gradient(135deg, #10b981"] h4,
+[style*="background: linear-gradient(135deg, #10b981"] h5,
+[style*="background: linear-gradient(135deg, #10b981"] h6,
+[style*="background: linear-gradient(135deg, #3b82f6"] h1,
+[style*="background: linear-gradient(135deg, #3b82f6"] h2,
+[style*="background: linear-gradient(135deg, #3b82f6"] h3,
+[style*="background: linear-gradient(135deg, #3b82f6"] h4,
+[style*="background: linear-gradient(135deg, #3b82f6"] h5,
+[style*="background: linear-gradient(135deg, #3b82f6"] h6,
+[style*="background: linear-gradient(135deg, #f59e0b"] h1,
+[style*="background: linear-gradient(135deg, #f59e0b"] h2,
+[style*="background: linear-gradient(135deg, #f59e0b"] h3,
+[style*="background: linear-gradient(135deg, #f59e0b"] h4,
+[style*="background: linear-gradient(135deg, #f59e0b"] h5,
+[style*="background: linear-gradient(135deg, #f59e0b"] h6,
+.portal-header-band h1,
+.portal-header-band h2,
+.portal-header-band h3,
+.portal-header-band h4,
+.portal-header-band h5,
+.portal-header-band h6,
+.sidebar-heading {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* RULE 3: All paragraphs and spans on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] p,
+[style*="background: linear-gradient(135deg, #667eea"] span:not(.badge),
+[style*="background: linear-gradient(135deg, #10b981"] p,
+[style*="background: linear-gradient(135deg, #10b981"] span:not(.badge),
+[style*="background: linear-gradient(135deg, #3b82f6"] p,
+[style*="background: linear-gradient(135deg, #3b82f6"] span:not(.badge),
+[style*="background: linear-gradient(135deg, #f59e0b"] p,
+[style*="background: linear-gradient(135deg, #f59e0b"] span:not(.badge),
+.portal-header-band p,
+.portal-header-band span:not(.badge) {
+    color: #ffffff !important;
+}
+
+/* RULE 4: List items on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] li,
+[style*="background: linear-gradient(135deg, #10b981"] li,
+[style*="background: linear-gradient(135deg, #3b82f6"] li,
+[style*="background: linear-gradient(135deg, #f59e0b"] li {
+    color: #ffffff !important;
+}
+
+/* RULE 5: Links on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] a:not(.btn),
+[style*="background: linear-gradient(135deg, #10b981"] a:not(.btn),
+[style*="background: linear-gradient(135deg, #3b82f6"] a:not(.btn),
+[style*="background: linear-gradient(135deg, #f59e0b"] a:not(.btn),
+.sidebar-sticky .nav-link,
+.admin-sidebar .nav-link {
+    color: #ffffff !important;
+}
+
+/* RULE 6: Icons on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] i,
+[style*="background: linear-gradient(135deg, #10b981"] i,
+[style*="background: linear-gradient(135deg, #3b82f6"] i,
+[style*="background: linear-gradient(135deg, #f59e0b"] i,
+.portal-header-band i,
+.sidebar-sticky .nav-link i,
+.admin-sidebar .nav-link i {
+    color: #ffffff !important;
+}
+
+/* RULE 7: Small text on dark backgrounds */
+[style*="background: linear-gradient(135deg, #667eea"] small,
+[style*="background: linear-gradient(135deg, #10b981"] small,
+[style*="background: linear-gradient(135deg, #3b82f6"] small,
+[style*="background: linear-gradient(135deg, #f59e0b"] small {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* RULE 8: Dark text on light backgrounds (cards, modals, forms) */
+.card:not([style*="background: linear-gradient"]),
+.modal-body,
+.form-control,
+.form-label,
+.card-body:not([style*="background: linear-gradient"]),
+.alert:not([style*="background: linear-gradient"]) {
+    color: #1f2937 !important;
+}
+
+/* RULE 9: Card headers and titles on white backgrounds */
+.card:not([style*="background: linear-gradient"]) .card-title,
+.card:not([style*="background: linear-gradient"]) h1,
+.card:not([style*="background: linear-gradient"]) h2,
+.card:not([style*="background: linear-gradient"]) h3,
+.card:not([style*="background: linear-gradient"]) h4,
+.card:not([style*="background: linear-gradient"]) h5,
+.card:not([style*="background: linear-gradient"]) h6 {
+    color: #111827 !important;
+}
+
+/* RULE 10: Text muted should remain visible on light backgrounds */
+.text-muted:not([style*="background: linear-gradient"]) {
+    color: #6b7280 !important;
+}
+
+/* RULE 11: Stat pills on dark purple header band */
+.stat-pill {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.stat-pill i {
+    color: #ffffff !important;
+}
+
+/* RULE 12: Filter buttons on light backgrounds */
+.filter-pill {
+    color: #374151 !important;
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+}
+
+.filter-pill.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #ffffff !important;
+    border-color: #667eea !important;
+}
+
+/* RULE 13: Badge text visibility */
+.badge.bg-white {
+    color: #667eea !important;
+}
+
+.badge.bg-primary,
+.badge.bg-success,
+.badge.bg-danger,
+.badge.bg-warning,
+.badge.bg-info {
+    color: #ffffff !important;
+}
+
+.badge.bg-warning {
+    color: #1f2937 !important;
+}
+
+/* RULE 14: Activity ticker text */
+.activity-ticker span {
+    color: #111827 !important;
+}
+
+/* RULE 15: Form elements text */
+.form-select,
+.form-control {
+    color: #111827 !important;
+}
+
+.form-label {
+    color: #374151 !important;
+    font-weight: 600 !important;
+}
+
+/* RULE 16: Lead card content */
+.lead-card .card-body {
+    color: #1f2937 !important;
+}
+
+.lead-card .card-title {
+    color: #111827 !important;
+}
+
+.lead-card .text-muted {
+    color: #6b7280 !important;
+}
+
+/* RULE 17: Ensure no opacity reduces readability */
+[style*="background: linear-gradient"] * {
+    opacity: 1 !important;
+}
+
+/* RULE 18: Button text colors */
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-info {
+    color: #ffffff !important;
+}
+
+.btn-warning {
+    color: #1f2937 !important;
+}
+
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-danger,
+.btn-outline-warning,
+.btn-outline-info {
+    color: inherit !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-danger:hover,
+.btn-outline-info:hover {
+    color: #ffffff !important;
+}
+
+.btn-outline-warning:hover {
+    color: #1f2937 !important;
+}
+
+/* RULE 19: No Leads Found section */
+.card[style*="background: linear-gradient(135deg, #f3f4f6"] h4,
+.card[style*="background: linear-gradient(135deg, #f3f4f6"] p {
+    color: #1f2937 !important;
+}
+
+/* RULE 20: Progress bar text */
+.progress {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* END OF CONTRAST RULES */
+</style>
+
 <!-- Shared gamification script -->
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 {% endblock %}
