@@ -1,0 +1,480 @@
+/* =============================================================================
+   CUMULATIVE LAYOUT SHIFT (CLS) PREVENTION - GLOBAL FIXES
+   Prevents page jumping during load, font rendering, and dynamic content
+   ============================================================================= */
+
+/* =============================================================================
+   1. FONT LOADING OPTIMIZATION - Prevent FOIT/FOUT
+   ============================================================================= */
+
+/* Preload critical fonts with font-display: swap */
+@font-face {
+    font-family: 'Inter-Fallback';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: local('Arial'), local('Helvetica'), local('sans-serif');
+    size-adjust: 100%;
+    ascent-override: 90%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+}
+
+/* Apply fallback font with same metrics as Inter */
+body {
+    font-family: 'Inter', 'Inter-Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+}
+
+/* Font awesome icon stability */
+.fas, .far, .fab, .fa {
+    width: 1em;
+    display: inline-block;
+    text-align: center;
+}
+
+/* =============================================================================
+   2. BANNER STABILITY - Fixed positioning to prevent layout push
+   ============================================================================= */
+
+/* Sales Banner (WIN50) - Use transform instead of display to prevent reflow */
+.sales-banner {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    min-height: 52px; /* Fixed height */
+    transform: translateY(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.sales-banner.hidden {
+    transform: translateY(-100%) !important;
+    pointer-events: none;
+}
+
+/* Reserve space for sales banner when visible */
+body.has-sales-banner {
+    padding-top: 52px;
+}
+
+/* Navbar - Account for sales banner */
+nav.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    min-height: 64px; /* Fixed height */
+}
+
+body.has-sales-banner nav.navbar {
+    top: 52px; /* Position below sales banner */
+}
+
+/* Cookie Banner - Use transform to prevent layout shift */
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    min-height: 90px; /* Fixed minimum height */
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.cookie-consent-banner.show {
+    transform: translateY(0);
+}
+
+.cookie-consent-banner.hidden {
+    transform: translateY(100%) !important;
+    pointer-events: none;
+}
+
+/* =============================================================================
+   3. CONTENT SKELETON & PLACEHOLDER LOADING
+   ============================================================================= */
+
+/* Loading skeleton base */
+.skeleton-loader {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e0e0 50%,
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Card skeleton */
+.skeleton-card {
+    min-height: 280px;
+    margin-bottom: 1rem;
+    padding: 1.5rem;
+}
+
+.skeleton-card .skeleton-line {
+    height: 16px;
+    margin-bottom: 12px;
+    background: #e0e0e0;
+    border-radius: 4px;
+}
+
+.skeleton-card .skeleton-line:last-child {
+    width: 60%;
+}
+
+/* =============================================================================
+   4. MODAL & DYNAMIC CONTENT STABILITY
+   ============================================================================= */
+
+/* Modal base stability */
+.modal {
+    will-change: opacity;
+}
+
+.modal-dialog {
+    min-height: 300px; /* Prevent collapse */
+    margin: 1.75rem auto;
+}
+
+.modal-body {
+    min-height: 200px; /* Reserve space before content loads */
+}
+
+/* Loading spinner container - fixed dimensions */
+.spinner-container {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =============================================================================
+   5. RFP/CONTRACT CARD CONTAINERS - Fixed heights
+   ============================================================================= */
+
+/* Search results container */
+.rfp-results-container {
+    min-height: 400px; /* Prevent collapse during load */
+    position: relative;
+}
+
+/* Individual RFP card */
+.rfp-card,
+.contract-card {
+    min-height: 200px;
+    contain: layout style paint; /* CSS containment for better performance */
+}
+
+/* State card grid */
+.state-card-container {
+    min-height: 300px;
+}
+
+/* City card */
+.city-card {
+    min-height: 250px;
+}
+
+/* =============================================================================
+   6. NO RESULTS / EMPTY STATE - Fixed dimensions
+   ============================================================================= */
+
+/* Empty state alert */
+.alert-no-results {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* =============================================================================
+   7. IMAGE STABILITY - Aspect ratio preservation
+   ============================================================================= */
+
+/* Responsive images with aspect ratio */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Logo images */
+.navbar-brand img {
+    width: auto;
+    height: 40px; /* Fixed height */
+    display: block;
+}
+
+/* Card images */
+.card-img-top {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+/* =============================================================================
+   8. PREVENT CONDITIONAL RENDERING SHIFT
+   ============================================================================= */
+
+/* Hide elements without layout shift */
+.invisible-but-present {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    /* Does NOT use display:none - preserves layout space */
+}
+
+/* Show with fade transition */
+.fade-in {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* =============================================================================
+   9. BUTTON & INTERACTIVE ELEMENT STABILITY
+   ============================================================================= */
+
+/* Fixed button dimensions */
+.btn {
+    min-height: 38px;
+    padding: 0.375rem 0.75rem;
+}
+
+.btn-lg {
+    min-height: 48px;
+    padding: 0.5rem 1rem;
+}
+
+.btn-sm {
+    min-height: 32px;
+    padding: 0.25rem 0.5rem;
+}
+
+/* =============================================================================
+   10. FORM FIELD STABILITY
+   ============================================================================= */
+
+/* Input fields with fixed heights */
+.form-control,
+.form-select {
+    min-height: 38px;
+}
+
+.form-control-lg,
+.form-select-lg {
+    min-height: 48px;
+}
+
+.form-control-sm,
+.form-select-sm {
+    min-height: 32px;
+}
+
+/* Textarea minimum height */
+textarea.form-control {
+    min-height: 80px;
+}
+
+/* =============================================================================
+   11. NAVIGATION STABILITY
+   ============================================================================= */
+
+/* Navbar items fixed spacing */
+.navbar-nav .nav-item {
+    min-width: fit-content;
+}
+
+.navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* Dropdown menu stability */
+.dropdown-menu {
+    min-width: 160px;
+    will-change: transform, opacity;
+}
+
+/* =============================================================================
+   12. ACCORDION & COLLAPSIBLE CONTENT
+   ============================================================================= */
+
+/* Accordion stability */
+.accordion-item {
+    contain: layout style;
+}
+
+.accordion-collapse {
+    will-change: height;
+}
+
+/* Smooth transitions without layout shift */
+.collapse {
+    transition: height 0.35s ease;
+}
+
+/* =============================================================================
+   13. HERO SECTION STABILITY
+   ============================================================================= */
+
+.hero-section {
+    min-height: 200px;
+    contain: layout style paint;
+}
+
+/* =============================================================================
+   14. FOOTER STABILITY
+   ============================================================================= */
+
+footer {
+    min-height: 200px;
+    contain: layout style;
+}
+
+/* =============================================================================
+   15. RESPONSIVE BREAKPOINT STABILITY
+   ============================================================================= */
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .modal-dialog {
+        min-height: 400px;
+    }
+    
+    .rfp-results-container {
+        min-height: 500px;
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+    .sales-banner {
+        min-height: 60px; /* Slightly taller on mobile */
+    }
+    
+    body.has-sales-banner {
+        padding-top: 60px;
+    }
+    
+    .cookie-consent-banner {
+        min-height: 120px; /* More space for stacked buttons */
+    }
+    
+    .modal-dialog {
+        min-height: 300px;
+    }
+}
+
+/* =============================================================================
+   16. ANIMATION PERFORMANCE
+   ============================================================================= */
+
+/* Only animate transform and opacity for 60fps */
+* {
+    will-change: auto; /* Reset excessive will-change usage */
+}
+
+.smooth-transition {
+    transition-property: opacity, transform;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-in-out;
+}
+
+/* =============================================================================
+   17. PREVENT TEXT REFLOW ON FONT LOAD
+   ============================================================================= */
+
+/* Match Inter font metrics with system fonts */
+h1, h2, h3, h4, h5, h6 {
+    font-synthesis: none; /* Prevent fake bold/italic */
+}
+
+/* Prevent invisible text during font load */
+.wf-loading {
+    visibility: visible;
+    font-family: 'Inter-Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* =============================================================================
+   18. GRID & FLEX LAYOUT STABILITY
+   ============================================================================= */
+
+/* Grid containers with minimum dimensions */
+.row {
+    min-height: 0; /* Prevent flex-basis issues */
+}
+
+.col, [class*="col-"] {
+    min-width: 0; /* Prevent flex-basis overflow */
+}
+
+/* Card grid stability */
+.card-deck,
+.card-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+/* =============================================================================
+   19. SCROLL BEHAVIOR OPTIMIZATION
+   ============================================================================= */
+
+/* Smooth scroll without layout shift */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 120px; /* Account for fixed headers */
+}
+
+/* Prevent scroll-triggered repaints */
+* {
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================================
+   20. CRITICAL RENDERING PATH
+   ============================================================================= */
+
+/* Reserve space for above-the-fold content */
+.above-fold-container {
+    min-height: 100vh;
+}
+
+/* Lazy-loaded content placeholder */
+[loading="lazy"] {
+    min-height: 200px; /* Prevent jump when image loads */
+    background: #f0f0f0;
+}
+
+/* =============================================================================
+   21. ACCESSIBILITY - NO LAYOUT SHIFT ON FOCUS
+   ============================================================================= */
+
+/* Focus styles that don't change dimensions */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    /* Use box-shadow instead of border to avoid layout shift */
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
