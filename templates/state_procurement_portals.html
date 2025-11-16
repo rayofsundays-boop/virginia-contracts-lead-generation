@@ -1564,13 +1564,12 @@ function searchAdditionalCities(stateName, stateCode) {
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <div class="alert alert-info mb-3">
+            <div class="alert alert-info mb-3" id="citySearchInfoAlert">
                 <i class="fas fa-lightbulb me-2"></i>
-                <strong>Choose from available cities or enter your own</strong>
-                <p class="mb-0 mt-2 small">Select cities from the dropdown, or manually enter others separated by commas</p>
+                <strong>Loading available cities...</strong>
             </div>
             
-            <div class="mb-3">
+            <div class="mb-3" id="cityDropdownContainer" style="display: none;">
                 <label for="cityDropdown" class="form-label fw-bold">
                     <i class="fas fa-list me-1"></i>Select Available Cities:
                 </label>
@@ -1585,11 +1584,11 @@ function searchAdditionalCities(stateName, stateCode) {
             
             <div class="mb-3">
                 <label for="customCityInput" class="form-label fw-bold">
-                    <i class="fas fa-edit me-1"></i>Or Enter Custom Cities:
+                    <i class="fas fa-edit me-1"></i><span id="cityInputLabel">Enter City Names:</span>
                 </label>
                 <textarea class="form-control" id="customCityInput" rows="3" 
-                          placeholder="Enter additional city names separated by commas..."></textarea>
-                <small class="form-text text-muted">Example: Springfield, Columbus, Austin</small>
+                          placeholder="Enter city names separated by commas..."></textarea>
+                <small class="form-text text-muted">Example: Anchorage, Fairbanks, Juneau</small>
             </div>
             
             <div class="alert alert-warning small mb-0">
@@ -1612,6 +1611,10 @@ function searchAdditionalCities(stateName, stateCode) {
 
 // Load available cities from backend
 function loadStateCities(stateCode) {
+    const infoAlert = document.getElementById('citySearchInfoAlert');
+    const dropdownContainer = document.getElementById('cityDropdownContainer');
+    const inputLabel = document.getElementById('cityInputLabel');
+    
     fetch(`/api/get-state-cities/${stateCode}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
@@ -1619,19 +1622,42 @@ function loadStateCities(stateCode) {
     .then(r => r.json())
     .then(data => {
         if (data.success && data.cities && data.cities.length > 0) {
+            // Cities available - show dropdown
             const dropdown = document.getElementById('cityDropdown');
             dropdown.innerHTML = data.cities.map(city => 
                 `<option value="${city}">${city}</option>`
             ).join('');
+            
+            // Update UI
+            infoAlert.innerHTML = `
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Choose from ${data.cities.length} available cities or enter your own</strong>
+                <p class="mb-0 mt-2 small">Select cities from the dropdown below, or manually enter others separated by commas</p>
+            `;
+            dropdownContainer.style.display = 'block';
+            inputLabel.textContent = 'Or Enter Additional Cities:';
         } else {
-            const dropdown = document.getElementById('cityDropdown');
-            dropdown.innerHTML = '<option disabled class="text-muted">No predefined cities available - enter custom cities below</option>';
+            // No cities available - hide dropdown
+            infoAlert.innerHTML = `
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Enter city names to search for RFPs</strong>
+                <p class="mb-0 mt-2 small">Enter specific city names separated by commas (e.g., "Anchorage, Fairbanks, Juneau")</p>
+            `;
+            dropdownContainer.style.display = 'none';
+            inputLabel.textContent = 'City Names:';
         }
     })
     .catch(err => {
         console.error('Load cities error:', err);
-        const dropdown = document.getElementById('cityDropdown');
-        dropdown.innerHTML = '<option disabled class="text-danger">Error loading cities - enter custom cities below</option>';
+        // Hide dropdown on error
+        infoAlert.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Enter city names manually</strong>
+            <p class="mb-0 mt-2 small">Separate multiple cities with commas</p>
+        `;
+        infoAlert.className = 'alert alert-warning mb-3';
+        dropdownContainer.style.display = 'none';
+        inputLabel.textContent = 'City Names:';
     });
 }
 
