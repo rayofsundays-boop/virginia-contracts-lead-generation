@@ -8536,11 +8536,179 @@ def find_city_rfps():
                 'source': 'database_cache'
             })
         
-        # TIER 2: Search SAM.gov and DemandStar for major cities
+        # TIER 2: Use National Procurement Scrapers + SAM.gov/DemandStar APIs
         discovered_rfps = []
         cities_checked = []
         
-        print(f"🔎 Searching SAM.gov and DemandStar for {len(major_cities)} major cities...")
+        print(f"🚀 Using National Procurement Engine for {state_name}...")
+        
+        # NEW: Use national scrapers for state-level opportunities
+        try:
+            from national_scrapers import (
+                SymphonyScraper,
+                DemandStarScraper,
+                BidExpressScraper,
+                COMBUYSScraper,
+                EMarylandScraper,
+                NewHampshireScraper,
+                RhodeIslandScraper
+            )
+            
+            # Determine which scraper covers this state
+            scrapers_to_run = []
+            
+            # Symphony/Periscope states
+            symphony_states = ['AZ', 'CA', 'CO', 'CT', 'GA', 'HI', 'ID', 'IL', 'KS', 'KY', 
+                             'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NV', 'NM', 'ND', 'OH', 
+                             'OK', 'OR', 'SC', 'TN', 'TX', 'UT', 'WA', 'WI']
+            
+            if state_code in symphony_states:
+                print(f"  🎯 Using Symphony scraper for {state_code}")
+                scraper = SymphonyScraper()
+                symphony_contracts = scraper.scrape(states=[state_code])
+                
+                # Convert to RFP format
+                for contract in symphony_contracts:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'Statewide'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('title', ''),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'State Government'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+                print(f"  ✅ Symphony found {len(symphony_contracts)} opportunities")
+            
+            # DemandStar (all states - local governments)
+            print(f"  🎯 Using DemandStar scraper (local governments)")
+            demandstar_scraper = DemandStarScraper()
+            demandstar_contracts = demandstar_scraper.scrape(limit=100)
+            
+            # Filter for this state
+            for contract in demandstar_contracts:
+                if contract.get('state') == state_code:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'Local Government'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('description', contract.get('title', '')),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'Municipal'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+            print(f"  ✅ DemandStar found {len([c for c in demandstar_contracts if c.get('state') == state_code])} opportunities")
+            
+            # State-specific scrapers
+            if state_code == 'MA':
+                print(f"  🎯 Using COMMBUYS scraper for Massachusetts")
+                commbuys = COMBUYSScraper()
+                ma_contracts = commbuys.scrape()
+                for contract in ma_contracts:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'Massachusetts'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('title', ''),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'State Agency'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+                print(f"  ✅ COMMBUYS found {len(ma_contracts)} opportunities")
+            
+            elif state_code == 'MD':
+                print(f"  🎯 Using eMaryland scraper")
+                emaryland = EMarylandScraper()
+                md_contracts = emaryland.scrape()
+                for contract in md_contracts:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'Maryland'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('title', ''),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'State Agency'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+                print(f"  ✅ eMaryland found {len(md_contracts)} opportunities")
+            
+            elif state_code == 'NH':
+                print(f"  🎯 Using New Hampshire scraper")
+                nh = NewHampshireScraper()
+                nh_contracts = nh.scrape()
+                for contract in nh_contracts:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'New Hampshire'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('title', ''),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'State Agency'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+                print(f"  ✅ New Hampshire found {len(nh_contracts)} opportunities")
+            
+            elif state_code == 'RI':
+                print(f"  🎯 Using Rhode Island scraper")
+                ri = RhodeIslandScraper()
+                ri_contracts = ri.scrape()
+                for contract in ri_contracts:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'Rhode Island'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('title', ''),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': contract.get('agency', 'State Agency'),
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+                print(f"  ✅ Rhode Island found {len(ri_contracts)} opportunities")
+            
+            # BidExpress (multi-state, try for all)
+            print(f"  🎯 Using BidExpress scraper")
+            bidexpress = BidExpressScraper()
+            bidexpress_contracts = bidexpress.scrape()
+            for contract in bidexpress_contracts:
+                if contract.get('state') == state_code:
+                    discovered_rfps.append({
+                        'city_name': contract.get('agency', 'DOT'),
+                        'rfp_title': contract['title'],
+                        'rfp_number': contract.get('solicitation_number', 'N/A'),
+                        'description': contract.get('description', contract.get('title', '')),
+                        'deadline': contract.get('due_date', 'Not specified'),
+                        'estimated_value': 'TBD',
+                        'department': 'Department of Transportation',
+                        'contact_email': '',
+                        'contact_phone': '',
+                        'rfp_url': contract.get('link', '')
+                    })
+            print(f"  ✅ BidExpress found {len([c for c in bidexpress_contracts if c.get('state') == state_code])} opportunities")
+            
+        except Exception as scraper_error:
+            print(f"  ⚠️  National scraper error: {scraper_error}")
+            import traceback
+            traceback.print_exc()
+        
+        # FALLBACK: Search SAM.gov and DemandStar APIs for major cities
+        print(f"🔎 Supplementing with SAM.gov/DemandStar city search for {len(major_cities)} major cities...")
         
         for city_name in major_cities[:5]:  # Search top 5 cities
             cities_checked.append(city_name)
@@ -8549,7 +8717,7 @@ def find_city_rfps():
             sam_rfps = search_sam_gov_by_city(city_name, state_code)
             discovered_rfps.extend(sam_rfps)
             
-            # Search DemandStar
+            # Search DemandStar (API fallback)
             demandstar_rfps = search_demandstar_by_city(city_name, state_code)
             discovered_rfps.extend(demandstar_rfps)
             
