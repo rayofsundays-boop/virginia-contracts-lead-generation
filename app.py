@@ -26,6 +26,14 @@ import string
 import random
 import re
 import uuid
+
+# Safe import for requests library (needed for API calls and web scraping)
+try:
+    import requests
+except ImportError:
+    requests = None  # Fallback if requests not installed
+    print("⚠️  WARNING: 'requests' library not available. API features will be limited.")
+
 try:
     import pyotp  # Time-based OTP for 2FA
 except Exception:
@@ -4230,6 +4238,46 @@ def init_postgres_db():
             db.session.rollback()
             print(f"⚠️  User documents table init: {doc_err}")
         
+        # User portal registrations table for tracking state procurement portal status
+        try:
+            # Create table with DO $$ block for production safety
+            db.session.execute(text('''
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_name = 'user_portal_registrations'
+                    ) THEN
+                        CREATE TABLE user_portal_registrations (
+                            id SERIAL PRIMARY KEY,
+                            user_email VARCHAR(255) NOT NULL,
+                            state_code VARCHAR(2) NOT NULL,
+                            state_name TEXT,
+                            portal_name TEXT,
+                            portal_url TEXT,
+                            registration_status VARCHAR(50) DEFAULT 'Not Started',
+                            vendor_id TEXT,
+                            registration_date TIMESTAMPTZ DEFAULT NOW(),
+                            notes TEXT,
+                            created_at TIMESTAMPTZ DEFAULT NOW(),
+                            UNIQUE(user_email, state_code)
+                        );
+                    END IF;
+                END$$;
+            '''))
+            
+            # Create index for faster queries
+            db.session.execute(text('''
+                CREATE INDEX IF NOT EXISTS idx_user_portal_reg_user_email 
+                ON user_portal_registrations(user_email)
+            '''))
+            
+            db.session.commit()
+            print("✅ User portal registrations table created successfully")
+        except Exception as portal_reg_err:
+            db.session.rollback()
+            print(f"⚠️  User portal registrations table init: {portal_reg_err}")
+        
         # NOTE: Sample data removed - real data will be fetched from SAM.gov API and local government scrapers
         print("✅ PostgreSQL database tables initialized successfully")
         if os.environ.get('FETCH_ON_INIT', '0') == '1':
@@ -8225,6 +8273,11 @@ WEBPAGE:
 
 def search_sam_gov_by_city(city_name, state_code):
     """Search SAM.gov for city-specific opportunities"""
+    # Guard: Check if requests library is available
+    if requests is None:
+        print("⚠️  SAM.gov search unavailable: requests library not installed")
+        return []
+    
     try:
         SAM_API_KEY = os.getenv('SAM_GOV_API_KEY')
         if not SAM_API_KEY:
@@ -8277,6 +8330,11 @@ def search_sam_gov_by_city(city_name, state_code):
 
 def search_demandstar_by_city(city_name, state_code):
     """Search DemandStar for city opportunities"""
+    # Guard: Check if requests library is available
+    if requests is None:
+        print("⚠️  DemandStar search unavailable: requests library not installed")
+        return []
+    
     try:
         # DemandStar public RSS feed approach
         url = f"https://www.demandstar.com/supplier/rss/{state_code.lower()}"
@@ -8330,7 +8388,14 @@ def find_city_rfps():
     This approach is much more efficient than AI-based searching.
     """
     try:
-        import requests
+        # Guard: Check if requests library is available (already imported at top)
+        if requests is None:
+            return jsonify({
+                'success': False, 
+                'error': 'API search unavailable. Please contact support.',
+                'message': 'The requests library is not available.'
+            }), 500
+        
         from bs4 import BeautifulSoup
         import json
         import re
