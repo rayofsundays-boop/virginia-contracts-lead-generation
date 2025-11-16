@@ -8557,22 +8557,22 @@ def find_city_rfps():
             # Determine which scraper covers this state
             scrapers_to_run = []
             
-            # Symphony/Periscope states
-            symphony_states = ['AZ', 'CA', 'CO', 'CT', 'GA', 'HI', 'ID', 'IL', 'KS', 'KY', 
-                             'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NV', 'NM', 'ND', 'OH', 
-                             'OK', 'OR', 'SC', 'TN', 'TX', 'UT', 'WA', 'WI']
+            # States with direct portal access (Symphony blocks, so use direct)
+            direct_portal_states = ['AZ', 'CA', 'CO', 'CT', 'GA', 'HI', 'ID', 'IL', 'KS', 'KY', 
+                                   'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NV', 'NM', 'ND', 'OH', 
+                                   'OK', 'OR', 'SC', 'TN', 'TX', 'UT', 'WA', 'WI']
             
-            # Arizona gets special treatment (Symphony blocks requests)
-            if state_code == 'AZ':
-                print(f"  🎯 Using Arizona state portal scraper")
+            # Use direct state portal scraper (bypasses Symphony 403 blocks)
+            if state_code in direct_portal_states:
+                print(f"  🎯 Using direct state portal for {state_code}")
                 try:
-                    from national_scrapers.arizona_scraper import ArizonaScraper
-                    az_scraper = ArizonaScraper()
-                    az_contracts = az_scraper.scrape()
+                    from national_scrapers.multistate_direct_scraper import MultiStateDirectScraper
+                    direct_scraper = MultiStateDirectScraper()
+                    state_contracts = direct_scraper.scrape(states=[state_code])
                     
-                    for contract in az_contracts:
+                    for contract in state_contracts:
                         discovered_rfps.append({
-                            'city_name': contract.get('agency', 'Arizona State'),
+                            'city_name': contract.get('agency', f'{state_code} State'),
                             'rfp_title': contract['title'],
                             'rfp_number': contract.get('solicitation_number', 'N/A'),
                             'description': contract.get('title', ''),
@@ -8583,30 +8583,9 @@ def find_city_rfps():
                             'contact_phone': '',
                             'rfp_url': contract.get('link', '')
                         })
-                    print(f"  ✅ Arizona state portal found {len(az_contracts)} opportunities")
+                    print(f"  ✅ Direct portal found {len(state_contracts)} opportunities for {state_code}")
                 except Exception as e:
-                    print(f"  ⚠️  Arizona scraper error: {e}")
-            
-            elif state_code in symphony_states:
-                print(f"  🎯 Using Symphony scraper for {state_code}")
-                scraper = SymphonyScraper()
-                symphony_contracts = scraper.scrape(states=[state_code])
-                
-                # Convert to RFP format
-                for contract in symphony_contracts:
-                    discovered_rfps.append({
-                        'city_name': contract.get('agency', 'Statewide'),
-                        'rfp_title': contract['title'],
-                        'rfp_number': contract.get('solicitation_number', 'N/A'),
-                        'description': contract.get('title', ''),
-                        'deadline': contract.get('due_date', 'Not specified'),
-                        'estimated_value': 'TBD',
-                        'department': contract.get('agency', 'State Government'),
-                        'contact_email': '',
-                        'contact_phone': '',
-                        'rfp_url': contract.get('link', '')
-                    })
-                print(f"  ✅ Symphony found {len(symphony_contracts)} opportunities")
+                    print(f"  ⚠️  Direct portal error for {state_code}: {e}")
             
             # DemandStar (all states - local governments)
             print(f"  🎯 Using DemandStar scraper (local governments)")
