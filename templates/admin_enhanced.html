@@ -5,96 +5,173 @@
 {% block content %}
 <style>
 :root {
-    --admin-bg: #f8f9fa;
-    --sidebar-bg: #2c3e50;
-    --sidebar-link-color: #ecf0f1;
-    --sidebar-link-hover-bg: #34495e;
-    --sidebar-link-active-bg: #3498db;
+    --admin-bg: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    --sidebar-bg: linear-gradient(180deg, #1a1f3a 0%, #2d3561 100%);
+    --sidebar-link-color: #ffffff;
+    --sidebar-link-hover-bg: rgba(102, 126, 234, 0.2);
+    --sidebar-link-active-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --sidebar-link-active-color: #ffffff;
-    --border-color: #1a252f;
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
 body {
-    background-color: var(--admin-bg);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    min-height: 100vh;
 }
 
 .admin-sidebar {
-    height: calc(100vh - 70px); /* Adjust for navbar height */
+    height: calc(100vh - 70px);
     position: sticky;
     top: 70px;
     overflow-y: auto;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    box-shadow: 2px 0 15px var(--shadow-color);
-    z-index: 1040; /* Ensure sidebar links remain clickable above fading overlays */
+    background: linear-gradient(180deg, #1a1f3a 0%, #2d3561 100%);
+    border-right: 2px solid rgba(102, 126, 234, 0.3);
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    border-radius: 0 15px 15px 0;
 }
 
 .admin-sidebar .nav-link {
-    color: var(--sidebar-link-color);
-    padding: 12px 20px;
-    border-left: 3px solid transparent;
+    color: #ffffff !important;
+    padding: 14px 20px;
+    border-left: 4px solid transparent;
     transition: all 0.3s ease;
     font-weight: 600;
     font-size: 15px;
     position: relative;
-    z-index: 1050; /* Keep individual link above accidental overlays */
+    z-index: 1050;
+    margin: 2px 10px;
+    border-radius: 8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .admin-sidebar .nav-link:hover {
-    background-color: var(--sidebar-link-hover-bg);
-    color: #ffffff;
-    border-left-color: #3498db;
+    background: rgba(102, 126, 234, 0.25);
+    color: #ffffff !important;
+    border-left-color: #667eea;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .admin-sidebar .nav-link.active {
-    color: var(--sidebar-link-active-color);
-    background-color: var(--sidebar-link-active-bg);
-    border-left-color: #2980b9;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-left-color: #fbbf24;
     font-weight: 700;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    transform: translateX(5px);
 }
 
 .admin-sidebar .nav-link i {
     width: 25px;
     margin-right: 12px;
-    color: #bdc3c7;
-    transition: color 0.3s ease;
+    color: #ffffff !important;
+    transition: color 0.3s ease, transform 0.3s ease;
     font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .admin-sidebar .nav-link.active i,
 .admin-sidebar .nav-link:hover i {
-    color: #ffffff;
+    color: #ffffff !important;
+    transform: scale(1.15);
 }
 
 .sidebar-heading {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #95a5a6;
-    padding: 15px 20px 5px;
-    background-color: #f8f9fa;
-    margin: 0 -10px;
+    letter-spacing: 1.5px;
+    color: #ffffff !important;
+    padding: 15px 20px 8px;
+    background: rgba(102, 126, 234, 0.15);
+    margin: 10px 10px 5px 10px;
+    border-radius: 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    border-left: 3px solid #667eea;
 }
 
 .stat-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
 }
 
 .badge-status {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 700;
     letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin panel header styling */
+.admin-sidebar .text-center {
+    background: rgba(102, 126, 234, 0.15);
+    border-bottom: 2px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+.admin-sidebar .text-center h5 {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.admin-sidebar .text-center small {
+    color: #ffffff !important;
+    opacity: 0.9;
+    font-weight: 600;
+}
+
+.admin-sidebar .text-primary {
+    color: #667eea !important;
+    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.5));
+}
+
+/* Card headers throughout admin */
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.card-header.bg-primary h4,
+.card-header.bg-primary h5 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar styling for modern look */
+.admin-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.6);
+    border-radius: 10px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.9);
 }
 </style>
 
