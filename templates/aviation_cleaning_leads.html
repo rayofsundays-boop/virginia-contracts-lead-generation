@@ -274,15 +274,57 @@
 
 <script>
 function saveToMyLeads(leadId, companyName) {
-    // TODO: Implement save to my leads functionality
-    alert(`Saving "${companyName}" to your leads...`);
-    // Make API call to save lead
+    // Call the proper bookmark function with aviation lead type
+    const btn = event.target;
+    fetch('/api/toggle-save-lead', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lead_type: 'aviation_cleaning',
+            lead_id: leadId,
+            lead_title: companyName,
+            action: 'save'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.requiresAuth) {
+            alert('Please sign in to save leads');
+            window.location.href = '/login';
+            return;
+        }
+        
+        if (data.success) {
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            showToast(data.message || 'Lead saved successfully!', 'success');
+        } else {
+            alert(data.error || 'Failed to save lead');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
 }
 
 function generateProposal(companyName, services) {
     // Redirect to AI proposal generator
     const url = `/ai-proposal-generator?lead_title=${encodeURIComponent(companyName + ' - ' + services)}`;
     window.location.href = url;
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 </script>
 

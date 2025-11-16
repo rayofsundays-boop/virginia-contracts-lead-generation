@@ -176,8 +176,12 @@
                         <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ college.vendor_portal }}'); alert('Vendor portal URL copied to clipboard!');">
                             <i class="fas fa-copy me-2"></i>Copy Portal URL
                         </button>
-                        <button class="btn btn-outline-success" onclick="alert('Bookmark feature coming soon!')">
-                            <i class="fas fa-bookmark me-2"></i>Save This Lead
+                        <button class="btn btn-outline-warning bookmark-btn" 
+                                data-lead-type="college_university" 
+                                data-lead-id="{{ college.id }}"
+                                onclick="toggleBookmark(this, 'college_university', {{ college.id }}, '{{ college.institution_name | replace("'", "\\'") }}')"
+                                title="Save to My Leads">
+                            <i class="fas fa-bookmark me-2"></i>Save to My Leads
                         </button>
                     </div>
                 </div>
@@ -221,6 +225,63 @@
     box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
 }
 </style>
+
+<script>
+function toggleBookmark(btn, leadType, leadId, title) {
+    fetch('/api/toggle-save-lead', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lead_type: leadType,
+            lead_id: leadId,
+            lead_title: title,
+            action: btn.classList.contains('btn-warning') ? 'unsave' : 'save'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.requiresAuth) {
+            alert('Please sign in to save leads');
+            window.location.href = '/login';
+            return;
+        }
+        
+        if (data.success) {
+            // Toggle button state
+            if (btn.classList.contains('btn-outline-warning')) {
+                btn.classList.remove('btn-outline-warning');
+                btn.classList.add('btn-warning');
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+            } else {
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                btn.innerHTML = '<i class="fas fa-bookmark me-2"></i>Save to My Leads';
+            }
+            
+            // Show success message
+            showToast(data.message || 'Lead saved successfully!', 'success');
+        } else {
+            alert(data.error || 'Failed to save lead');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
 
 {% endblock %}
 
