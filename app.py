@@ -6443,11 +6443,15 @@ def client_dashboard():
         # Saved stats
         try:
             saved_searches_count = db.session.execute(text("SELECT COUNT(*) FROM saved_searches WHERE user_email = :e"), {'e': user_email}).scalar() or 0
-        except Exception:
+        except Exception as saved_search_err:
+            print(f"Saved searches count error: {saved_search_err}")
+            db.session.rollback()
             saved_searches_count = 0
         try:
             saved_leads_count = db.session.execute(text("SELECT COUNT(*) FROM saved_leads WHERE user_email = :e"), {'e': user_email}).scalar() or 0
-        except Exception:
+        except Exception as saved_leads_err:
+            print(f"Saved leads count error: {saved_leads_err}")
+            db.session.rollback()
             saved_leads_count = 0
 
         # Gamification data
@@ -6457,16 +6461,16 @@ def client_dashboard():
             today = datetime.now().date()
             user_id = session.get('user_id')
             
-            # Get activity stats for today
+            # Get activity stats for today (using created_at instead of timestamp)
             leads_viewed_today = db.session.execute(text("""
                 SELECT COUNT(*) FROM user_activity 
-                WHERE user_email = :email AND activity_type = 'viewed_lead' 
-                AND DATE(timestamp) = :today
+                WHERE user_email = :email AND action_type = 'viewed_lead' 
+                AND DATE(created_at) = :today
             """), {'email': user_email, 'today': today}).scalar() or 0
             
             leads_saved_today = db.session.execute(text("""
                 SELECT COUNT(*) FROM saved_leads 
-                WHERE user_email = :email AND DATE(created_at) = :today
+                WHERE user_email = :email AND DATE(saved_at) = :today
             """), {'email': user_email, 'today': today}).scalar() or 0
             
             # Calculate activity score (simplified)
@@ -6488,6 +6492,8 @@ def client_dashboard():
             
         except Exception as e:
             print(f"Gamification data error: {e}")
+            import traceback
+            traceback.print_exc()
             db.session.rollback()  # Rollback failed transaction
             streak_days = 1
             user_level = 1
@@ -6524,9 +6530,34 @@ def client_dashboard():
                                inquiries_today=inquiries_today)
     except Exception as e:
         print(f"Unified client dashboard error: {e}")
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()  # Critical: rollback any failed transaction
         flash('Error loading client dashboard.', 'error')
-        return render_template('client_dashboard.html', all_leads=[], total_leads=0, emergency_count=0, urgent_count=0, stats={})
+        
+        # Return safe defaults for all template variables
+        return render_template('client_dashboard.html', 
+                             all_leads=[], 
+                             total_leads=0, 
+                             emergency_count=0, 
+                             urgent_count=0, 
+                             stats={},
+                             notifications=[],
+                             show_onboarding=False,
+                             recommended_leads=[],
+                             preferences={},
+                             saved_searches_count=0,
+                             saved_leads_count=0,
+                             streak_days=1,
+                             user_level=1,
+                             activity_score=0,
+                             points_today=0,
+                             progress_to_next_level=0,
+                             points_to_next_level=100,
+                             leads_viewed_today=0,
+                             leads_saved_today=0,
+                             actions_today=0,
+                             inquiries_today=0)
 
 @app.route('/customer-dashboard')
 @login_required
