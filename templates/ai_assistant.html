@@ -5,6 +5,18 @@
 {% block content %}
 <script>
 console.log('🚀 AI Assistant page loading...');
+// Test API endpoint on page load
+fetch('/api/ai-assistant-reply', {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    credentials: 'same-origin',
+    body: JSON.stringify({ message: 'test', role: '' })
+})
+.then(r => console.log('✅ API test - Status:', r.status, 'OK:', r.ok))
+.catch(e => console.error('❌ API test failed:', e.message));
 </script>
 <div class="container py-5">
     <!-- Hero Section -->
@@ -227,7 +239,11 @@ function sendMessage(event) {
     
     fetch('/api/ai-assistant-reply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
         body: JSON.stringify({ message, role })
     })
     .then(r => {
