@@ -3,6 +3,9 @@
 {% block title %}AI Proposal Assistant - Emergency Help - VA Contracts Lead Generation{% endblock %}
 
 {% block content %}
+<script>
+console.log('🚀 AI Assistant page loading...');
+</script>
 <div class="container py-5">
     <!-- Hero Section -->
     <div class="hero-section text-white py-5 px-4 rounded-3 mb-5" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
@@ -228,7 +231,14 @@ function sendMessage(event) {
         body: JSON.stringify({ message, role })
     })
     .then(r => {
-        console.log('📡 API response status:', r.status);
+        console.log('📡 API response status:', r.status, 'OK:', r.ok);
+        if (!r.ok) {
+            console.error('❌ HTTP Error:', r.status, r.statusText);
+            return r.text().then(text => {
+                console.error('❌ Response body:', text);
+                throw new Error(`HTTP ${r.status}: ${text}`);
+            });
+        }
         return r.json();
     })
     .then(data => {
@@ -242,14 +252,15 @@ function sendMessage(event) {
             appendMessage('ai', txt);
             console.log('✅ Displayed KB answer');
         } else {
-            console.log('⚠️ API returned error, using fallback');
+            console.log('⚠️ API returned error:', data.error || 'Unknown error');
             const aiResponse = generateAIResponse(message);
             appendMessage('ai', aiResponse);
         }
     })
     .then(() => { setTimeout(applySourceBadges, 60); })
     .catch(err => {
-        console.error('❌ API call failed:', err);
+        console.error('❌ API call failed with error:', err);
+        console.error('❌ Error details:', err.message, err.stack);
         hideTypingIndicator();
         const aiResponse = generateAIResponse(message);
         appendMessage('ai', aiResponse);
