@@ -30,6 +30,16 @@ fetch('/api/ai-assistant-reply', {
         </div>
     </div>
 
+    <!-- DEBUG TEST BUTTON -->
+    <div class="row mb-3">
+        <div class="col-lg-10 mx-auto text-center">
+            <button class="btn btn-danger btn-lg" onclick="testAPI()" style="font-size: 20px; padding: 15px 40px;">
+                🔧 CLICK TO TEST API
+            </button>
+            <div id="testResult" class="mt-3" style="font-family: monospace; background: #f8f9fa; padding: 15px; border-radius: 5px; display: none;"></div>
+        </div>
+    </div>
+
     <!-- Important Notice -->
     <div class="row mb-4">
         <div class="col-lg-10 mx-auto">
@@ -206,6 +216,40 @@ fetch('/api/ai-assistant-reply', {
 <script>
 console.log('✅ AI Assistant script loaded');
 let messageCount = 0;
+
+// TEST FUNCTION - Direct API call with detailed logging
+function testAPI() {
+    const resultDiv = document.getElementById('testResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '⏳ Testing API...';
+    
+    console.log('🔧 TEST: Starting direct API call');
+    
+    fetch('/api/ai-assistant-reply', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ message: 'test', role: '' })
+    })
+    .then(r => {
+        console.log('🔧 TEST: Response status:', r.status, 'OK:', r.ok);
+        resultDiv.innerHTML = `📡 Response: ${r.status} ${r.ok ? '✅' : '❌'}\n`;
+        return r.json();
+    })
+    .then(data => {
+        console.log('🔧 TEST: Data received:', data);
+        resultDiv.innerHTML += `📦 Success: ${data.success}\n`;
+        resultDiv.innerHTML += `📄 Answer: ${data.answer ? data.answer.substring(0, 100) : 'None'}...\n`;
+        resultDiv.innerHTML += `\n✅ API IS WORKING!`;
+    })
+    .catch(err => {
+        console.error('🔧 TEST: Error:', err);
+        resultDiv.innerHTML = `❌ ERROR: ${err.message}\n${err.stack}`;
+    });
+}
 
 function sendMessage(event) {
     console.log('📤 sendMessage called with:', event);
