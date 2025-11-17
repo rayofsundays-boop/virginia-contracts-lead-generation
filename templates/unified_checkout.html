@@ -4,6 +4,14 @@
 
 {% block content %}
 <div class="container py-5">
+    <!-- DEBUG TEST -->
+    <div class="row mb-3">
+        <div class="col-12 text-center">
+            <button class="btn btn-danger" onclick="testClick()">🔧 TEST CLICK</button>
+            <button class="btn btn-warning" onclick="selectPlan('monthly', 99.00)">🔧 TEST MONTHLY</button>
+        </div>
+    </div>
+
     <!-- Hero Section -->
     <div class="row mb-5">
         <div class="col-12 text-center">
@@ -291,32 +299,61 @@
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&vault=true&intent=subscription"></script>
 
 <script>
+console.log('✅ Checkout script loaded');
 let selectedPlan = null;
 let selectedPrice = 0;
 let promoApplied = false;
 let discountRate = 0;
 
+// Test function to verify clicks work
+window.testClick = function() {
+    alert('JavaScript is working!');
+    console.log('✅ Test click function called');
+};
+
 // Plan Selection
 function selectPlan(planType, price) {
+    console.log('🎯 selectPlan called:', planType, price);
     selectedPlan = planType;
     selectedPrice = price;
     
     // Visual feedback
+    console.log('🔄 Updating card selection...');
     document.querySelectorAll('.plan-card').forEach(card => {
         card.classList.remove('selected');
     });
-    document.getElementById(planType + '-plan').classList.add('selected');
+    const selectedCard = document.getElementById(planType + '-plan');
+    console.log('📌 Selected card element:', selectedCard);
+    if (selectedCard) {
+        selectedCard.classList.add('selected');
+        console.log('✅ Card marked as selected');
+    } else {
+        console.error('❌ Could not find card:', planType + '-plan');
+    }
     
     // Show promo and payment sections
-    document.getElementById('promo-section').style.display = 'block';
-    document.getElementById('payment-methods').style.display = 'block';
+    console.log('👁️ Showing promo and payment sections...');
+    const promoSection = document.getElementById('promo-section');
+    const paymentSection = document.getElementById('payment-methods');
+    console.log('Promo section:', promoSection, 'Payment section:', paymentSection);
+    
+    if (promoSection) {
+        promoSection.style.display = 'block';
+        console.log('✅ Promo section shown');
+    }
+    if (paymentSection) {
+        paymentSection.style.display = 'block';
+        console.log('✅ Payment section shown');
+    }
     
     // Update pricing displays
+    console.log('💰 Updating prices...');
     updatePriceDisplays();
     
     // Scroll to payment section
     setTimeout(() => {
-        document.getElementById('promo-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        promoSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        console.log('📜 Scrolled to promo section');
     }, 100);
 }
 
