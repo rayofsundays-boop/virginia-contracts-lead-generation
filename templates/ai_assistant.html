@@ -189,14 +189,20 @@
 </div>
 
 <script>
+console.log('✅ AI Assistant script loaded');
 let messageCount = 0;
 
 function sendMessage(event) {
+    console.log('📤 sendMessage called with:', event);
     event.preventDefault();
     const messageInput = document.getElementById('userMessage');
     const message = messageInput.value.trim();
     
-    if (!message) return;
+    console.log('📝 Message:', message);
+    if (!message) {
+        console.log('⚠️ Empty message, returning');
+        return;
+    }
     
     // Hide quick start buttons after first message
     if (messageCount === 0) {
@@ -214,13 +220,19 @@ function sendMessage(event) {
     
     // Call backend KB-powered API; if it fails, fall back to local generator
     const role = document.getElementById('assistantRole')?.value || '';
+    console.log('🔄 Calling API with message:', message, 'role:', role);
+    
     fetch('/api/ai-assistant-reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, role })
     })
-    .then(r => r.json())
+    .then(r => {
+        console.log('📡 API response status:', r.status);
+        return r.json();
+    })
     .then(data => {
+        console.log('✅ API data received:', data);
         hideTypingIndicator();
         if (data && data.success) {
             let txt = data.answer || '';
@@ -228,16 +240,20 @@ function sendMessage(event) {
                 txt += `\n\n<em>Related prompts:</em> ${escapeHtml(data.followups)}`;
             }
             appendMessage('ai', txt);
+            console.log('✅ Displayed KB answer');
         } else {
+            console.log('⚠️ API returned error, using fallback');
             const aiResponse = generateAIResponse(message);
             appendMessage('ai', aiResponse);
         }
     })
     .then(() => { setTimeout(applySourceBadges, 60); })
-    .catch(() => {
+    .catch(err => {
+        console.error('❌ API call failed:', err);
         hideTypingIndicator();
         const aiResponse = generateAIResponse(message);
         appendMessage('ai', aiResponse);
+        console.log('📝 Using fallback response');
     });
 }
 
