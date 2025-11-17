@@ -23557,7 +23557,12 @@ def ai_assistant_reply():
         
         if not user_message:
             print("❌ AI Assistant - Empty message received")
-            return jsonify({'success': False, 'error': 'Empty message'}), 400
+            err_resp = make_response(jsonify({'success': False, 'error': 'Empty message'}), 400)
+            err_resp.headers['Content-Type'] = 'application/json'
+            err_resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            err_resp.headers['Pragma'] = 'no-cache'
+            err_resp.headers['Expires'] = '0'
+            return err_resp
 
         # Lazy import to avoid circulars at startup
         try:
@@ -23569,7 +23574,7 @@ def ai_assistant_reply():
             traceback.print_exc()
             return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
 
-        result = get_kb_answer(user_message, role=role)
+    result = get_kb_answer(user_message, role=role)
         print(f"✅ AI Assistant - KB returned: source={result.get('source')}, answer_length={len(result.get('answer', ''))}")
 
         # Analytics logging (configured later if handler present)
@@ -23584,15 +23589,26 @@ def ai_assistant_reply():
         except Exception:
             pass  # Never block response on logging issues
 
-        return jsonify({
+        success_payload = {
             'success': True,
             'answer': result.get('answer', ''),
             'followups': result.get('followups', ''),
             'source': result.get('source', 'kb')
-        })
+        }
+        response = make_response(jsonify(success_payload))
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
     except Exception as e:
         print(f"AI assistant reply error: {e}")
-        return jsonify({'success': False, 'error': 'Unexpected server error'}), 500
+        err_resp = make_response(jsonify({'success': False, 'error': 'Unexpected server error'}), 500)
+        err_resp.headers['Content-Type'] = 'application/json'
+        err_resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        err_resp.headers['Pragma'] = 'no-cache'
+        err_resp.headers['Expires'] = '0'
+        return err_resp
 
 @app.route('/federal-coming-soon')
 def federal_coming_soon():
