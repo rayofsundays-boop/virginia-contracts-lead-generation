@@ -23574,7 +23574,8 @@ def ai_assistant_reply():
             traceback.print_exc()
             return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
 
-    result = get_kb_answer(user_message, role=role)
+        # Get KB answer
+        result = get_kb_answer(user_message, role=role)
         print(f"✅ AI Assistant - KB returned: source={result.get('source')}, answer_length={len(result.get('answer', ''))}")
 
         # Analytics logging (configured later if handler present)
