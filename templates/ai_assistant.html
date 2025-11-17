@@ -192,7 +192,10 @@ fetch('/api/ai-assistant-reply', {
                     <i class="fas fa-user-tie text-warning mb-3" style="font-size: 3rem;"></i>
                     <h5 class="card-title">Need Human Expert?</h5>
                     <p class="small mb-3">For complex proposals or guaranteed compliance review, connect with our proposal specialists.</p>
-                    <a href="{{ url_for('proposal_support') }}" class="btn btn-warning w-100">
+                    <a href="{{ url_for('proposal_support') }}" 
+                       id="consultationCTA"
+                       class="btn btn-warning w-100"
+                       onclick="console.log('🔗 Consultation CTA clicked, navigating to:', this.href); return true;">
                         <i class="fas fa-phone me-2"></i>Book Consultation
                     </a>
                     <small class="text-muted d-block mt-2">Starting at $299</small>
@@ -214,12 +217,66 @@ fetch('/api/ai-assistant-reply', {
 </div>
 
 <script>
-console.log('✅ AI Assistant script loaded');
+console.log('✅ AI Assistant script loaded at ' + new Date().toISOString());
 let messageCount = 0;
+
+// Wait for DOM to be fully ready
+if (document.readyState === 'loading') {
+    console.log('⏳ DOM still loading, waiting...');
+    document.addEventListener('DOMContentLoaded', initAIAssistant);
+} else {
+    console.log('✅ DOM already ready, initializing immediately');
+    initAIAssistant();
+}
+
+function initAIAssistant() {
+    console.log('🚀 Initializing AI Assistant...');
+    
+    // Bind form submit
+    const form = document.getElementById('chatForm');
+    if (form) {
+        console.log('✅ Form found');
+        form.addEventListener('submit', sendMessage);
+    } else {
+        console.error('❌ Form not found');
+    }
+    
+    // Bind Enter key
+    const input = document.getElementById('userMessage');
+    if (input) {
+        console.log('✅ Input found');
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                console.log('⌨️ Enter pressed');
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    }
+    
+    // Verify consultation CTA link
+    const consultationCTA = document.getElementById('consultationCTA');
+    if (consultationCTA) {
+        console.log('✅ Consultation CTA found');
+        console.log('   URL:', consultationCTA.href);
+        if (!consultationCTA.href || consultationCTA.href === window.location.href) {
+            console.error('❌ CTA has invalid href!');
+        }
+    } else {
+        console.error('❌ Consultation CTA not found');
+    }
+    
+    console.log('✅ AI Assistant initialized successfully');
+}
 
 // TEST FUNCTION - Direct API call with detailed logging
 function testAPI() {
     const resultDiv = document.getElementById('testResult');
+    if (!resultDiv) {
+        console.error('❌ Test result div not found');
+        return;
+    }
+    
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = '⏳ Testing API...';
     
@@ -444,33 +501,10 @@ function formatAIMessage(text) {
 
 // Scroll to bottom on load
 window.addEventListener('load', function() {
-    console.log('🚀 Window loaded, binding form...');
+    console.log('🚀 Window fully loaded');
     const chatMessages = document.getElementById('chatMessages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Bind form submit event (backup for inline onsubmit)
-    const form = document.getElementById('chatForm');
-    if (form) {
-        console.log('✅ Form found, binding submit event');
-        form.addEventListener('submit', function(e) {
-            console.log('📮 Form submit event fired!');
-            sendMessage(e);
-        });
-    } else {
-        console.error('❌ Form not found!');
-    }
-    
-    // Also bind Enter key on input
-    const messageInput = document.getElementById('userMessage');
-    if (messageInput) {
-        console.log('✅ Input found, binding Enter key');
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                console.log('⌨️ Enter key pressed!');
-                e.preventDefault();
-                sendMessage(e);
-            }
-        });
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });
 
