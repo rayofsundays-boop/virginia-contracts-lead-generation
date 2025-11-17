@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block title %}Subscribe - ContractLink.ai{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-crown text-warning"></i> Choose Your Plan
+            </h1>
+            <p class="lead text-muted">Get unlimited access to Virginia's best government contract opportunities</p>
+            <div class="mt-3">
+                <span class="badge bg-success px-4 py-2" style="font-size: 1rem;">
+                    <i class="fas fa-shield-alt"></i> 30-Day Money Back Guarantee
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Selection -->
+    <div class="row g-4 mb-5">
+        <!-- Monthly Plan -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow plan-card" id="monthly-plan" onclick="selectPlan('monthly', 99.00)">
+                <div class="card-body text-center p-4">
+                    <h3 class="mb-3">Monthly Plan</h3>
+                    <div class="mb-3">
+                        <span class="display-3 fw-bold text-primary">$99</span>
+                        <span class="fs-5 text-muted">/month</span>
+                    </div>
+                    <p class="text-muted mb-4">Billed monthly • Cancel anytime</p>
+                    
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Unlimited contract leads</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Full contact information</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Direct bid links</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> AI proposal generator</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Quick wins access</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Priority support</li>
+                    </ul>
+                    
+                    <button class="btn btn-outline-primary btn-lg w-100 select-plan-btn">
+                        Select Monthly
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annual Plan -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-lg border-warning border-3 plan-card" id="annual-plan" onclick="selectPlan('annual', 950.00)">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-warning text-dark px-4 py-2" style="font-size: 0.9rem;">
+                        <i class="fas fa-star"></i> SAVE $238
+                    </span>
+                </div>
+                <div class="card-body text-center p-4">
+                    <h3 class="mb-3">Annual Plan</h3>
+                    <div class="mb-3">
+                        <span class="display-3 fw-bold text-warning">$950</span>
+                        <span class="fs-5 text-muted">/year</span>
+                    </div>
+                    <p class="text-success mb-4"><strong>Save $238 vs monthly</strong></p>
+                    
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Everything in Monthly</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> 2 months FREE</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Better ROI for your business</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Annual revenue planning</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Priority feature access</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Dedicated account support</li>
+                    </ul>
+                    
+                    <button class="btn btn-warning btn-lg w-100 select-plan-btn">
+                        <i class="fas fa-star"></i> Select Annual
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Code Section -->
+    <div class="row mb-4" id="promo-section" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <label class="form-label mb-2"><i class="fas fa-tag text-warning"></i> Have a promo code?</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="promoCode" placeholder="Enter code (e.g., WIN50)">
+                                <button class="btn btn-outline-success" type="button" onclick="applyPromoCode()">
+                                    Apply
+                                </button>
+                            </div>
+                            <small id="promoMessage" class="text-muted"></small>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <div id="pricingDisplay">
+                                <h5 class="mb-0">Total Due</h5>
+                                <h3 class="text-primary mb-0" id="totalPrice">$99.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods Section -->
+    <div class="row" id="payment-methods" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0"><i class="fas fa-credit-card"></i> Choose Payment Method</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Payment Method Tabs -->
+                    <ul class="nav nav-pills nav-fill mb-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="stripe-tab" data-bs-toggle="pill" data-bs-target="#stripe-panel" type="button" role="tab">
+                                <i class="fab fa-cc-stripe fs-3 d-block mb-2"></i>
+                                <span class="d-block">Credit Card</span>
+                                <small class="text-muted d-block">Visa, Mastercard, Amex</small>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="paypal-tab" data-bs-toggle="pill" data-bs-target="#paypal-panel" type="button" role="tab">
+                                <i class="fab fa-paypal fs-3 d-block mb-2"></i>
+                                <span class="d-block">PayPal</span>
+                                <small class="text-muted d-block">Fast & Secure</small>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Stripe Panel -->
+                        <div class="tab-pane fade show active" id="stripe-panel" role="tabpanel">
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle"></i> Your payment is processed securely by Stripe. We never see or store your card details.
+                            </div>
+                            
+                            <form id="stripe-payment-form">
+                                <!-- Stripe Card Element will be inserted here -->
+                                <div id="card-element" class="form-control" style="height: 45px; padding-top: 12px;">
+                                    <!-- A Stripe Element will be inserted here. -->
+                                </div>
+                                
+                                <!-- Card errors will be displayed here -->
+                                <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+
+                                <div class="mt-4">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="terms-stripe" required>
+                                        <label class="form-check-label" for="terms-stripe">
+                                            I agree to the <a href="/terms" target="_blank">Terms of Service</a> and understand this is a recurring subscription.
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="stripe-submit">
+                                        <i class="fas fa-lock me-2"></i>Pay <span id="stripe-amount">$99.00</span> Now
+                                    </button>
+                                    
+                                    <div class="text-center mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-shield-alt text-success"></i> Secure 256-bit SSL encryption
+                                        </small>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- PayPal Panel -->
+                        <div class="tab-pane fade" id="paypal-panel" role="tabpanel">
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle"></i> You'll be redirected to PayPal to complete your purchase securely.
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="terms-paypal" required>
+                                <label class="form-check-label" for="terms-paypal">
+                                    I agree to the <a href="/terms" target="_blank">Terms of Service</a> and understand this is a recurring subscription.
+                                </label>
+                            </div>
+
+                            <!-- PayPal Button Container -->
+                            <div id="paypal-button-container" style="min-height: 150px;">
+                                <!-- PayPal button will render here -->
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt text-success"></i> PayPal Buyer Protection
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guarantee Section -->
+            <div class="text-center mt-4">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <h5 class="text-success mb-2">
+                            <i class="fas fa-check-circle"></i> 30-Day Money Back Guarantee
+                        </h5>
+                        <p class="mb-0">If you don't see results in 30 days, we'll refund your subscription completely. No questions asked.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">What You Get</h3>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="fas fa-bell fs-1 text-primary mb-3"></i>
+                        <h5>Early Notifications</h5>
+                        <p class="text-muted">Get 15-30 day advance notice on new contracts</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="fas fa-robot fs-1 text-success mb-3"></i>
+                        <h5>AI Proposal Help</h5>
+                        <p class="text-muted">Generate winning proposals with AI assistance</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="fas fa-chart-line fs-1 text-warning mb-3"></i>
+                        <h5>Win Analytics</h5>
+                        <p class="text-muted">Competitive analysis & win probability scoring</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.plan-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.plan-card.selected {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.select-plan-btn {
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link {
+    border: 2px solid #dee2e6;
+    padding: 1rem;
+    margin: 0 0.25rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#card-element {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+</style>
+
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- PayPal JS -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&vault=true&intent=subscription"></script>
+
+<script>
+let selectedPlan = null;
+let selectedPrice = 0;
+let promoApplied = false;
+let discountRate = 0;
+
+// Plan Selection
+function selectPlan(planType, price) {
+    selectedPlan = planType;
+    selectedPrice = price;
+    
+    // Visual feedback
+    document.querySelectorAll('.plan-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.getElementById(planType + '-plan').classList.add('selected');
+    
+    // Show promo and payment sections
+    document.getElementById('promo-section').style.display = 'block';
+    document.getElementById('payment-methods').style.display = 'block';
+    
+    // Update pricing displays
+    updatePriceDisplays();
+    
+    // Scroll to payment section
+    setTimeout(() => {
+        document.getElementById('promo-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+}
+
+// Promo Code Application
+function applyPromoCode() {
+    const code = document.getElementById('promoCode').value.toUpperCase().trim();
+    const messageEl = document.getElementById('promoMessage');
+    
+    if (code === 'WIN50') {
+        promoApplied = true;
+        discountRate = 0.5; // 50% off
+        messageEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> WIN50 applied! 50% off your subscription!</span>';
+        updatePriceDisplays();
+    } else if (code === '') {
+        messageEl.innerHTML = '<span class="text-danger">Please enter a promo code</span>';
+    } else {
+        messageEl.innerHTML = '<span class="text-danger">Invalid promo code</span>';
+        promoApplied = false;
+        discountRate = 0;
+    }
+}
+
+// Update Price Displays
+function updatePriceDisplays() {
+    const finalPrice = promoApplied ? (selectedPrice * (1 - discountRate)) : selectedPrice;
+    const priceStr = '$' + finalPrice.toFixed(2);
+    
+    document.getElementById('totalPrice').textContent = priceStr;
+    document.getElementById('stripe-amount').textContent = priceStr;
+    
+    if (promoApplied) {
+        document.getElementById('totalPrice').innerHTML = 
+            '<span class="text-decoration-line-through text-muted">$' + selectedPrice.toFixed(2) + '</span> ' + priceStr;
+    }
+}
+
+// Initialize Stripe
+const stripe = Stripe('{{ stripe_publishable_key }}');
+const elements = stripe.elements();
+const cardElement = elements.create('card', {
+    style: {
+        base: {
+            fontSize: '16px',
+            color: '#32325d',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        }
+    }
+});
+cardElement.mount('#card-element');
+
+// Handle Stripe form submission
+document.getElementById('stripe-payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!document.getElementById('terms-stripe').checked) {
+        alert('Please agree to the Terms of Service');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('stripe-submit');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    try {
+        // Create payment method with Stripe
+        const {error, paymentMethod} = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardElement,
+        });
+        
+        if (error) {
+            document.getElementById('card-errors').textContent = error.message;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Pay $' + (promoApplied ? (selectedPrice * 0.5).toFixed(2) : selectedPrice.toFixed(2)) + ' Now';
+            return;
+        }
+        
+        // Send to backend for subscription creation
+        const response = await fetch('/api/create-stripe-subscription', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                payment_method: paymentMethod.id,
+                plan_type: selectedPlan,
+                promo_code: promoApplied ? 'WIN50' : null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.location.href = '/subscription-success?payment=stripe';
+        } else {
+            alert('Payment failed: ' + result.error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Pay $' + (promoApplied ? (selectedPrice * 0.5).toFixed(2) : selectedPrice.toFixed(2)) + ' Now';
+        }
+    } catch (err) {
+        console.error('Error:', err);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+    }
+});
+
+// Initialize PayPal
+paypal.Buttons({
+    style: {
+        shape: 'rect',
+        color: 'gold',
+        layout: 'vertical',
+        label: 'subscribe'
+    },
+    createSubscription: function(data, actions) {
+        if (!document.getElementById('terms-paypal').checked) {
+            alert('Please agree to the Terms of Service');
+            return Promise.reject();
+        }
+        
+        const planId = selectedPlan === 'monthly' 
+            ? (promoApplied ? '{{ paypal_monthly_win50_plan_id }}' : '{{ paypal_monthly_plan_id }}')
+            : (promoApplied ? '{{ paypal_annual_win50_plan_id }}' : '{{ paypal_annual_plan_id }}');
+        
+        return actions.subscription.create({
+            'plan_id': planId
+        });
+    },
+    onApprove: function(data, actions) {
+        // Subscription was created successfully
+        return fetch('/api/paypal-subscription-success', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                subscription_id: data.subscriptionID,
+                plan_type: selectedPlan,
+                promo_code: promoApplied ? 'WIN50' : null
+            })
+        }).then(response => response.json())
+          .then(result => {
+              if (result.success) {
+                  window.location.href = '/subscription-success?payment=paypal';
+              } else {
+                  alert('Subscription created but activation failed. Please contact support.');
+              }
+          });
+    },
+    onError: function(err) {
+        console.error('PayPal error:', err);
+        alert('PayPal payment failed. Please try again or use a credit card.');
+    }
+}).render('#paypal-button-container');
+</script>
+{% endblock %}

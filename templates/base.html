@@ -658,7 +658,7 @@
                     <span class="sales-banner-emoji">🎉</span>
                     <strong>LIMITED TIME OFFER:</strong> Get 50% OFF Your Subscription!
                     <span class="sales-banner-code">Use Code: <span class="code-highlight">WIN50</span></span>
-                    <a href="{{ url_for('subscription') }}" class="btn btn-sm btn-light ms-3 sales-banner-cta">Subscribe Now →</a>
+                    <a href="{{ url_for('unified_checkout') }}" class="btn btn-sm btn-light ms-3 sales-banner-cta">Subscribe Now →</a>
                     <button class="sales-banner-close" onclick="closeSalesBanner()" aria-label="Close banner">×</button>
                 </div>
             </div>
@@ -951,7 +951,7 @@
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li><a href="{{ url_for('customer_leads') }}" class="text-light">Browse Leads</a></li>
-                        <li><a href="{{ url_for('payment') }}" class="text-light">Subscribe</a></li>
+                        <li><a href="{{ url_for('unified_checkout') }}" class="text-light">Subscribe</a></li>
                         <li><a href="{{ url_for('dashboard') }}" class="text-light">Dashboard</a></li>
                         <li><a href="{{ url_for('admin_login') }}" class="text-danger"><i class="fas fa-shield-alt me-1"></i>Admin Login</a></li>
                     </ul>
@@ -1274,7 +1274,7 @@
                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Global Search Access</li>
                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Personalized Suggestions</li>
                                     </ul>
-                                    <a href="/pricing" class="btn btn-warning btn-lg px-5">
+                                    <a href="{{ url_for('unified_checkout') }}" class="btn btn-warning btn-lg px-5">
                                         <i class="fas fa-crown me-2"></i>Subscribe Now
                                     </a>
                                 </div>

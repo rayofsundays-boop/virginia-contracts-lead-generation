@@ -122,7 +122,7 @@
                                 <button class="btn btn-outline-warning btn-sm" title="Save"><i class="fas fa-bookmark"></i></button>
                             </div>
                         {% else %}
-                            <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-sm w-100">Subscribe to View</a>
+                            <a href="{{ url_for('unified_checkout') }}" class="btn btn-warning btn-sm w-100">Subscribe to View</a>
                         {% endif %}
                     </div>
                 </div>
@@ -190,7 +190,7 @@
                 Get instant access to contact information, full requirements, and direct application links 
                 for all <strong>{{ total_count }}</strong> supply opportunities.
             </p>
-            <a href="{{ url_for('subscription') }}" class="btn btn-warning btn-lg">
+            <a href="{{ url_for('unified_checkout') }}" class="btn btn-warning btn-lg">
                 <i class="fas fa-arrow-up"></i> Upgrade to Premium - $29/month
             </a>
         </div>

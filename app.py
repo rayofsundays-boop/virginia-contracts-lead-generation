@@ -30818,3 +30818,167 @@ if __name__ == '__main__':
                             print(f"⚠️  Port {desired_port} in use. Starting on fallback port {port}.")
                             break
     app.run(host='0.0.0.0', port=port, debug=False)
+
+
+# ==============================================================================
+# UNIFIED CHECKOUT - CONSOLIDATED PAYMENT SYSTEM (STRIPE + PAYPAL)
+# ==============================================================================
+
+@app.route('/checkout')
+def unified_checkout():
+    """
+    Unified checkout page with both Stripe and PayPal payment options.
+    All subscribe buttons across the site should point here.
+    """
+    return render_template('unified_checkout.html',
+        stripe_publishable_key=os.getenv('STRIPE_PUBLISHABLE_KEY', ''),
+        paypal_client_id=os.getenv('PAYPAL_CLIENT_ID', ''),
+        paypal_monthly_plan_id=os.getenv('PAYPAL_MONTHLY_PLAN_ID', ''),
+        paypal_annual_plan_id=os.getenv('PAYPAL_ANNUAL_PLAN_ID', ''),
+        paypal_monthly_win50_plan_id=os.getenv('PAYPAL_MONTHLY_WIN50_PLAN_ID', ''),
+        paypal_annual_win50_plan_id=os.getenv('PAYPAL_ANNUAL_WIN50_PLAN_ID', '')
+    )
+
+
+@app.route('/api/create-stripe-subscription', methods=['POST'])
+def create_stripe_subscription():
+    """
+    Create a Stripe subscription for the user.
+    Handles both monthly and annual plans with optional promo codes.
+    """
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+    
+    data = request.get_json()
+    payment_method = data.get('payment_method')
+    plan_type = data.get('plan_type')  # 'monthly' or 'annual'
+    promo_code = data.get('promo_code')  # 'WIN50' or None
+    
+    if not payment_method or not plan_type:
+        return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+    
+    try:
+        # Import Stripe SDK
+        import stripe
+        stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+        
+        # Get user email from session
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'success': False, 'error': 'User not logged in'}), 401
+        
+        # Get or create Stripe customer
+        customers = stripe.Customer.list(email=user_email, limit=1)
+        if customers.data:
+            customer = customers.data[0]
+        else:
+            customer = stripe.Customer.create(
+                email=user_email,
+                payment_method=payment_method,
+                invoice_settings={'default_payment_method': payment_method}
+            )
+        
+        # Attach payment method to customer
+        stripe.PaymentMethod.attach(payment_method, customer=customer.id)
+        
+        # Determine price based on plan and promo
+        if plan_type == 'monthly':
+            if promo_code == 'WIN50':
+                price_id = os.getenv('STRIPE_MONTHLY_WIN50_PRICE_ID')
+                amount = 4950  # $49.50
+            else:
+                price_id = os.getenv('STRIPE_MONTHLY_PRICE_ID')
+                amount = 9900  # $99.00
+        else:  # annual
+            if promo_code == 'WIN50':
+                price_id = os.getenv('STRIPE_ANNUAL_WIN50_PRICE_ID')
+                amount = 47500  # $475.00
+            else:
+                price_id = os.getenv('STRIPE_ANNUAL_PRICE_ID')
+                amount = 95000  # $950.00
+        
+        # Create subscription
+        subscription = stripe.Subscription.create(
+            customer=customer.id,
+            items=[{'price': price_id}],
+            expand=['latest_invoice.payment_intent']
+        )
+        
+        # Update database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE leads 
+            SET subscription_status = 'paid',
+                stripe_customer_id = ?,
+                stripe_subscription_id = ?,
+                subscription_plan = ?,
+                subscription_start_date = ?
+            WHERE email = ?
+        """, (customer.id, subscription.id, plan_type, datetime.now(), user_email))
+        conn.commit()
+        conn.close()
+        
+        # Track promo usage
+        if promo_code:
+            session['promo_code_used'] = promo_code
+        
+        return jsonify({
+            'success': True,
+            'subscription_id': subscription.id,
+            'customer_id': customer.id
+        })
+        
+    except Exception as e:
+        print(f"Stripe subscription error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/paypal-subscription-success', methods=['POST'])
+def paypal_subscription_success():
+    """
+    Handle successful PayPal subscription creation.
+    Called after PayPal approval flow completes.
+    """
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+    
+    data = request.get_json()
+    subscription_id = data.get('subscription_id')
+    plan_type = data.get('plan_type')
+    promo_code = data.get('promo_code')
+    
+    if not subscription_id or not plan_type:
+        return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+    
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'success': False, 'error': 'User not logged in'}), 401
+        
+        # Update database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE leads 
+            SET subscription_status = 'paid',
+                paypal_subscription_id = ?,
+                subscription_plan = ?,
+                subscription_start_date = ?
+            WHERE email = ?
+        """, (subscription_id, plan_type, datetime.now(), user_email))
+        conn.commit()
+        conn.close()
+        
+        # Track promo usage
+        if promo_code:
+            session['promo_code_used'] = promo_code
+        
+        return jsonify({
+            'success': True,
+            'subscription_id': subscription_id
+        })
+        
+    except Exception as e:
+        print(f"PayPal subscription activation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
