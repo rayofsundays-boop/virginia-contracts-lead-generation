@@ -460,26 +460,52 @@
 </div>
 
 <script>
+console.log('✅ Proposal Support script loaded');
+
 // Global variables to store consultation data
 let consultationData = {};
 
 function selectServiceLevel(level) {
+    console.log('🎯 selectServiceLevel called with:', level);
     const serviceLevel = level;
     const serviceName = level === 'standard' ? 'Standard Review' : 'Premium Consultation';
     const basePrice = level === 'standard' ? 299 : 599;
     
+    console.log('📋 Service:', serviceName, 'Price:', basePrice);
+    
     // Set form values
-    document.getElementById('serviceLevel').value = serviceLevel;
-    document.getElementById('basePrice').value = basePrice;
+    const serviceLevelInput = document.getElementById('serviceLevel');
+    const basePriceInput = document.getElementById('basePrice');
+    
+    if (!serviceLevelInput || !basePriceInput) {
+        console.error('❌ Form inputs not found!');
+        return;
+    }
+    
+    serviceLevelInput.value = serviceLevel;
+    basePriceInput.value = basePrice;
+    console.log('✅ Form values set');
     
     // Show selected service
     const display = document.getElementById('selectedServiceDisplay');
+    if (!display) {
+        console.error('❌ Display div not found!');
+        return;
+    }
+    
     display.classList.remove('d-none');
     document.getElementById('selectedServiceName').textContent = serviceName;
     document.getElementById('selectedServicePrice').textContent = '$' + basePrice;
+    console.log('✅ Service display updated');
     
     // Scroll to form smoothly
     const formSection = document.getElementById('consultationFormSection');
+    if (!formSection) {
+        console.error('❌ Form section not found!');
+        return;
+    }
+    
+    console.log('📜 Scrolling to form...');
     formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     
     // Update total
