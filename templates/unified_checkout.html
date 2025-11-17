@@ -347,8 +347,18 @@
 }
 
 /* Ensure checkboxes are always clickable and visible */
-.form-check-input { position: relative; z-index: 1; }
-.form-check-label { cursor: pointer; }
+.form-check-input { position: relative; z-index: 10; pointer-events: auto !important; }
+.form-check-label { cursor: pointer; position: relative; z-index: 11; pointer-events: auto !important; }
+#stripe-panel .form-check, #paypal-panel .form-check { position: relative; }
+#stripe-panel .form-check::after, #paypal-panel .form-check::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5; /* Below input & label but above background */
+    pointer-events: none; /* Do NOT block clicks */
+}
+#stripe-panel .form-check-input:focus-visible, #paypal-panel .form-check-input:focus-visible { outline: 3px solid #2563eb !important; }
+#stripe-panel .form-check-input:active, #paypal-panel .form-check-input:active { box-shadow: 0 0 0 4px rgba(38,99,235,.2); }
 
 #card-element {
     border: 1px solid #ced4da;
@@ -610,6 +620,22 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         selectPlan('monthly', 99.00);
     } catch (e) { console.warn('Init selectPlan error:', e.message); }
+    // Checkbox diagnostics
+    const stripeCb = document.getElementById('terms-stripe');
+    const stripeLbl = document.querySelector('label[for="terms-stripe"]');
+    if (stripeCb) {
+        stripeCb.addEventListener('click', () => console.log('[Checkout] Stripe terms checkbox clicked. checked=', stripeCb.checked));
+    }
+    if (stripeLbl) {
+        stripeLbl.addEventListener('click', () => console.log('[Checkout] Stripe terms label clicked. checkbox now=', stripeCb ? stripeCb.checked : 'N/A'));
+    }
+    // Fallback manual toggling if native click fails
+    window.forceStripeTermsToggle = function(){
+        if(!stripeCb) return console.warn('Stripe checkbox not found');
+        stripeCb.checked = !stripeCb.checked;
+        stripeCb.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[Checkout] Forced toggle executed. checked=', stripeCb.checked);
+    };
 });
 </script>
 {% endblock %}
