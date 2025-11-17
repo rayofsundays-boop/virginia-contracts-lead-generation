@@ -190,9 +190,10 @@
                                         <label class="form-check-label" for="terms-stripe">
                                             I agree to the <a href="/terms" target="_blank">Terms of Service</a> and understand this is a recurring subscription.
                                         </label>
+                                        <span id="terms-stripe-status" class="badge bg-secondary ms-2" aria-live="polite">Agreement required</span>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="stripe-submit">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="stripe-submit" disabled aria-disabled="true">
                                         <i class="fas fa-lock me-2"></i>Pay <span id="stripe-amount">$99.00</span> Now
                                     </button>
                                     
@@ -216,6 +217,7 @@
                                 <label class="form-check-label" for="terms-paypal">
                                     I agree to the <a href="/terms" target="_blank">Terms of Service</a> and understand this is a recurring subscription.
                                 </label>
+                                <span id="terms-paypal-status" class="badge bg-secondary ms-2" aria-live="polite">Agreement required</span>
                             </div>
 
                             <!-- PayPal Button Container -->
@@ -359,6 +361,22 @@
 }
 #stripe-panel .form-check-input:focus-visible, #paypal-panel .form-check-input:focus-visible { outline: 3px solid #2563eb !important; }
 #stripe-panel .form-check-input:active, #paypal-panel .form-check-input:active { box-shadow: 0 0 0 4px rgba(38,99,235,.2); }
+
+/* Visual checked animation */
+.form-check-input {
+    transition: box-shadow .25s ease, background-color .2s ease, border-color .2s ease;
+}
+.form-check-input:checked {
+    background-color: #16a34a;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 6px rgba(22,163,74,.18);
+}
+
+/* Disable PayPal container when terms not accepted */
+#paypal-button-container.disabled {
+    pointer-events: none;
+    filter: grayscale(1) opacity(.55);
+}
 
 #card-element {
     border: 1px solid #ced4da;
@@ -623,8 +641,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Checkbox diagnostics
     const stripeCb = document.getElementById('terms-stripe');
     const stripeLbl = document.querySelector('label[for="terms-stripe"]');
+    const stripeBadge = document.getElementById('terms-stripe-status');
+    const stripeBtn = document.getElementById('stripe-submit');
     if (stripeCb) {
         stripeCb.addEventListener('click', () => console.log('[Checkout] Stripe terms checkbox clicked. checked=', stripeCb.checked));
+        stripeCb.addEventListener('change', () => updateStripeTermsUI());
     }
     if (stripeLbl) {
         stripeLbl.addEventListener('click', () => console.log('[Checkout] Stripe terms label clicked. checkbox now=', stripeCb ? stripeCb.checked : 'N/A'));
@@ -636,6 +657,40 @@ document.addEventListener('DOMContentLoaded', function() {
         stripeCb.dispatchEvent(new Event('change', { bubbles: true }));
         console.log('[Checkout] Forced toggle executed. checked=', stripeCb.checked);
     };
+
+    // PayPal terms handling
+    const paypalCb = document.getElementById('terms-paypal');
+    const paypalBadge = document.getElementById('terms-paypal-status');
+    const paypalContainer = document.getElementById('paypal-button-container');
+    if (paypalCb) {
+        paypalCb.addEventListener('change', () => updatePaypalTermsUI());
+    }
+
+    function updateStripeTermsUI(){
+        const ok = !!(stripeCb && stripeCb.checked);
+        if (stripeBtn) {
+            stripeBtn.disabled = !ok;
+            stripeBtn.setAttribute('aria-disabled', String(!ok));
+        }
+        if (stripeBadge){
+            stripeBadge.className = 'badge ms-2 ' + (ok ? 'bg-success' : 'bg-secondary');
+            stripeBadge.textContent = ok ? 'Ready to pay' : 'Agreement required';
+        }
+    }
+    function updatePaypalTermsUI(){
+        const ok = !!(paypalCb && paypalCb.checked);
+        if (paypalContainer){
+            paypalContainer.classList.toggle('disabled', !ok);
+        }
+        if (paypalBadge){
+            paypalBadge.className = 'badge ms-2 ' + (ok ? 'bg-success' : 'bg-secondary');
+            paypalBadge.textContent = ok ? 'Ready to subscribe' : 'Agreement required';
+        }
+    }
+
+    // Initialize states on load
+    updateStripeTermsUI();
+    updatePaypalTermsUI();
 });
 </script>
 {% endblock %}
