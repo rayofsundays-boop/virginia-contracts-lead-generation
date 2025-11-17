@@ -135,7 +135,7 @@ fetch('/api/ai-assistant-reply', {
                             <input type="text" class="form-control" id="userMessage" 
                                    placeholder="Ask me anything about your proposal..." 
                                    required autocomplete="off">
-                            <button class="btn btn-primary px-4" type="submit" id="sendButton">
+                            <button class="btn btn-primary px-4" type="submit" id="sendButton" onclick="console.log('🖱️ Send button clicked')">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
@@ -247,9 +247,9 @@ function initAIAssistant() {
         console.log('✅ Input found');
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
-                console.log('⌨️ Enter pressed');
+                console.log('⌨️ Enter pressed, submitting form');
                 e.preventDefault();
-                form.dispatchEvent(new Event('submit'));
+                sendMessage(e);
             }
         });
     }
