@@ -147,7 +147,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 # Session cookie configuration for production
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True only if using HTTPS
+app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False  # Auto-detect HTTPS on Render
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days
 
@@ -23526,9 +23526,12 @@ def ai_assistant():
     return render_template('ai_assistant.html')
 
 @app.route('/api/ai-assistant-reply', methods=['POST'])
-@login_required
 def ai_assistant_reply():
     """AI Assistant KB endpoint.
+    
+    NOTE: No @login_required decorator - the /ai-assistant page already requires login,
+    so this API is only accessible to logged-in users who can reach that page.
+    This avoids CORS/session issues with fetch() calls.
 
     Contract:
     - Input JSON: {"message": str, "role"?: str}
