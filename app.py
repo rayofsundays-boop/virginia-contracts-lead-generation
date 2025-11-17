@@ -23523,7 +23523,12 @@ def card_grid_example():
 @login_required
 def ai_assistant():
     """AI chatbot for last-minute proposal help"""
-    return render_template('ai_assistant.html')
+    response = make_response(render_template('ai_assistant.html'))
+    # Prevent caching to avoid "Resource not cached" errors
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/api/ai-assistant-reply', methods=['POST'])
 def ai_assistant_reply():
