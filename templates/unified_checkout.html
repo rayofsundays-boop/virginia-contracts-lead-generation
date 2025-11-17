@@ -27,10 +27,10 @@
         </div>
     </div>
 
-    <!-- Plan Selection -->
+    <!-- Plan Selection (3 tiers) -->
     <div class="row g-4 mb-5">
         <!-- Monthly Plan -->
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="card h-100 shadow plan-card" id="monthly-plan" onclick="selectPlan('monthly', 99.00)">
                 <div class="card-body text-center p-4">
                     <h3 class="mb-3">Monthly Plan</h3>
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Annual Plan -->
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="card h-100 shadow-lg border-warning border-3 plan-card" id="annual-plan" onclick="selectPlan('annual', 950.00)">
                 <div class="position-absolute top-0 start-50 translate-middle">
                     <span class="badge bg-warning text-dark px-4 py-2" style="font-size: 0.9rem;">
@@ -83,6 +83,30 @@
                     
                     <button class="btn btn-warning btn-lg w-100 select-plan-btn text-white" aria-label="Select Annual Plan (Save $238)">
                         <i class="fas fa-star"></i> Select Annual
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow plan-card" id="enterprise-plan" onclick="selectPlan('enterprise', 0)">
+                <div class="card-body text-center p-4">
+                    <h3 class="mb-3">Enterprise</h3>
+                    <div class="mb-3">
+                        <span class="display-6 fw-bold text-purple">Custom</span>
+                    </div>
+                    <p class="text-muted mb-4">For teams, agencies, and multi-state rollouts</p>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Everything in Annual</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Multiple team members</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> White-label options</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> API & custom integrations</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Dedicated account manager</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Priority phone support</li>
+                    </ul>
+                    <button class="btn btn-primary btn-lg w-100 select-plan-btn text-white" aria-label="Select Enterprise Plan (Contact Sales)">
+                        <i class="fas fa-phone"></i> Contact Sales
                     </button>
                 </div>
             </div>
@@ -117,7 +141,7 @@
         </div>
     </div>
 
-    <!-- Payment Methods Section -->
+    <!-- Payment Methods Section (hidden for Enterprise) -->
     <div class="row" id="payment-methods" style="display: none;">
         <div class="col-lg-8 mx-auto">
             <div class="card shadow-lg">
@@ -218,6 +242,35 @@
                         </h5>
                         <p class="mb-0">If you don't see results in 30 days, we'll refund your subscription completely. No questions asked.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enterprise Contact Section -->
+    <div class="row" id="enterprise-contact" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <h4 class="mb-0"><i class="fas fa-building me-2"></i>Enterprise Subscription</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="lead">Let’s tailor a plan for your team.</p>
+                    <ul class="mb-3">
+                        <li>Team seats and roles</li>
+                        <li>Multi-state coverage and onboarding</li>
+                        <li>Custom integrations and API access</li>
+                        <li>Dedicated account manager and SLAs</li>
+                    </ul>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="mailto:admin@vacontracts.com?subject=Enterprise%20Inquiry&body=Company%20name%3A%0ATeam%20size%3A%0AStates%20of%20interest%3A%0AUse%20cases%3A" class="btn btn-primary text-white">
+                            <i class="fas fa-envelope"></i> Email Sales
+                        </a>
+                        <a href="/proposal-support" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar"></i> Book a Call
+                        </a>
+                    </div>
+                    <small class="text-muted d-block mt-3">We respond within one business day.</small>
                 </div>
             </div>
         </div>
@@ -331,19 +384,22 @@ function selectPlan(planType, price) {
         console.error('❌ Could not find card:', planType + '-plan');
     }
     
-    // Show promo and payment sections
-    console.log('👁️ Showing promo and payment sections...');
+    // Toggle sections based on plan type
     const promoSection = document.getElementById('promo-section');
     const paymentSection = document.getElementById('payment-methods');
-    console.log('Promo section:', promoSection, 'Payment section:', paymentSection);
-    
-    if (promoSection) {
-        promoSection.style.display = 'block';
-        console.log('✅ Promo section shown');
-    }
-    if (paymentSection) {
-        paymentSection.style.display = 'block';
-        console.log('✅ Payment section shown');
+    const enterpriseSection = document.getElementById('enterprise-contact');
+
+    if (planType === 'enterprise') {
+        if (promoSection) promoSection.style.display = 'none';
+        if (paymentSection) paymentSection.style.display = 'none';
+        if (enterpriseSection) enterpriseSection.style.display = 'block';
+        console.log('🏢 Enterprise selected: showing contact section');
+        return; // Skip price updates and scrolling for enterprise
+    } else {
+        if (enterpriseSection) enterpriseSection.style.display = 'none';
+        if (promoSection) promoSection.style.display = 'block';
+        if (paymentSection) paymentSection.style.display = 'block';
+        console.log('✅ Showing promo and payment sections for plan:', planType);
     }
     
     // Update pricing displays
@@ -378,6 +434,7 @@ function applyPromoCode() {
 
 // Update Price Displays
 function updatePriceDisplays() {
+    if (selectedPlan === 'enterprise') return; // No pricing for enterprise
     const finalPrice = promoApplied ? (selectedPrice * (1 - discountRate)) : selectedPrice;
     const priceStr = '$' + finalPrice.toFixed(2);
     
