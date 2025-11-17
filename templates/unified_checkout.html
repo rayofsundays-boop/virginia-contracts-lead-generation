@@ -339,6 +339,17 @@
     border-color: #0d6efd;
 }
 
+/* Accessibility: ensure text remains visible on active payment tabs */
+.nav-pills .nav-link.active,
+.nav-pills .nav-link.active span,
+.nav-pills .nav-link.active small {
+    color: #ffffff !important;
+}
+
+/* Ensure checkboxes are always clickable and visible */
+.form-check-input { position: relative; z-index: 1; }
+.form-check-label { cursor: pointer; }
+
 #card-element {
     border: 1px solid #ced4da;
     border-radius: 0.375rem;
@@ -448,9 +459,20 @@ function updatePriceDisplays() {
 }
 
 // Initialize Stripe
-const stripe = Stripe('{{ stripe_publishable_key }}');
-const elements = stripe.elements();
-const cardElement = elements.create('card', {
+let stripe = null;
+let elements = null;
+let cardElement = null;
+try {
+    if (!window.Stripe) {
+        throw new Error('Stripe.js failed to load');
+    }
+    const pk = '{{ stripe_publishable_key }}';
+    if (!pk || pk === '' || pk === 'None') {
+        throw new Error('Stripe key missing. Please configure STRIPE_PUBLISHABLE_KEY.');
+    }
+    stripe = Stripe(pk);
+    elements = stripe.elements();
+    cardElement = elements.create('card', {
     style: {
         base: {
             fontSize: '16px',
@@ -460,8 +482,13 @@ const cardElement = elements.create('card', {
             }
         }
     }
-});
-cardElement.mount('#card-element');
+    });
+    cardElement.mount('#card-element');
+} catch (e) {
+    console.error('❌ Stripe init error:', e.message);
+    const err = document.getElementById('card-errors');
+    if (err) err.textContent = e.message;
+}
 
 // Handle Stripe form submission
 document.getElementById('stripe-payment-form').addEventListener('submit', async (e) => {
@@ -469,6 +496,14 @@ document.getElementById('stripe-payment-form').addEventListener('submit', async 
     
     if (!document.getElementById('terms-stripe').checked) {
         alert('Please agree to the Terms of Service');
+        return;
+    }
+    if (!stripe || !cardElement) {
+        alert('Payments are not available at the moment. Please try again shortly or use PayPal.');
+        return;
+    }
+    if (!selectedPlan) {
+        alert('Please select Monthly or Annual first.');
         return;
     }
     
@@ -494,6 +529,7 @@ document.getElementById('stripe-payment-form').addEventListener('submit', async 
         const response = await fetch('/api/create-stripe-subscription', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin',
             body: JSON.stringify({
                 payment_method: paymentMethod.id,
                 plan_type: selectedPlan,
@@ -530,6 +566,10 @@ paypal.Buttons({
             alert('Please agree to the Terms of Service');
             return Promise.reject();
         }
+        if (!selectedPlan) {
+            alert('Please select Monthly or Annual first.');
+            return Promise.reject();
+        }
         
         const planId = selectedPlan === 'monthly' 
             ? (promoApplied ? '{{ paypal_monthly_win50_plan_id }}' : '{{ paypal_monthly_plan_id }}')
@@ -544,6 +584,7 @@ paypal.Buttons({
         return fetch('/api/paypal-subscription-success', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin',
             body: JSON.stringify({
                 subscription_id: data.subscriptionID,
                 plan_type: selectedPlan,
@@ -563,5 +604,12 @@ paypal.Buttons({
         alert('PayPal payment failed. Please try again or use a credit card.');
     }
 }).render('#paypal-button-container');
+
+// Default selection to Monthly on load for clarity
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        selectPlan('monthly', 99.00);
+    } catch (e) { console.warn('Init selectPlan error:', e.message); }
+});
 </script>
 {% endblock %}
