@@ -1514,5 +1514,28 @@
     <script src="{{ url_for('static', filename='js/search-system.js') }}"></script>
     {% endif %}
     {{ build_comment|safe }}
+        <!-- Accessibility Fixes: Ensure checkboxes clickable site-wide -->
+        <style>
+            /* Force pointer events on checkboxes & labels if any overlay CSS interfered */
+            input[type=checkbox].form-check-input, .form-check-input, label.form-check-label { pointer-events: auto !important; }
+            label.form-check-label { cursor: pointer; }
+        </style>
+        <script>
+            // Defensive: if native label association fails, manually toggle related checkbox on label click
+            document.addEventListener('click', function(e){
+                const lbl = e.target.closest('label.form-check-label');
+                if(!lbl) return;
+                // Avoid double toggle when clicking directly on input inside label
+                if(e.target.tagName && e.target.tagName.toLowerCase() === 'input') return;
+                const id = lbl.getAttribute('for');
+                if(!id) return;
+                const cb = document.getElementById(id);
+                if(cb && !cb.disabled){
+                    cb.checked = !cb.checked;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log('[Accessibility] Forced toggle on checkbox #'+id+' -> '+cb.checked);
+                }
+            });
+        </script>
 </body>
 </html>
