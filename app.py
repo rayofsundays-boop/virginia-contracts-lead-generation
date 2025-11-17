@@ -23544,17 +23544,25 @@ def ai_assistant_reply():
         data = request.get_json(force=True, silent=True) or {}
         user_message = (data.get('message') or '').strip()
         role = (data.get('role') or '').strip() or None
+        
+        print(f"🤖 AI Assistant - Received message: '{user_message}' with role: '{role}'")
+        
         if not user_message:
+            print("❌ AI Assistant - Empty message received")
             return jsonify({'success': False, 'error': 'Empty message'}), 400
 
         # Lazy import to avoid circulars at startup
         try:
             from chatbot_kb import get_kb_answer
+            print("✅ AI Assistant - chatbot_kb imported successfully")
         except Exception as e:
-            print(f"KB import error: {e}")
+            print(f"❌ KB import error: {e}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'success': False, 'error': 'Knowledge base unavailable'}), 500
 
         result = get_kb_answer(user_message, role=role)
+        print(f"✅ AI Assistant - KB returned: source={result.get('source')}, answer_length={len(result.get('answer', ''))}")
 
         # Analytics logging (configured later if handler present)
         try:
