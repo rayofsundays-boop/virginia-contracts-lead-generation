@@ -217,57 +217,8 @@ fetch('/api/ai-assistant-reply', {
 </div>
 
 <script>
-console.log('✅ AI Assistant script loaded at ' + new Date().toISOString());
+console.log('✅ AI Assistant script loaded');
 let messageCount = 0;
-
-// Wait for DOM to be fully ready
-if (document.readyState === 'loading') {
-    console.log('⏳ DOM still loading, waiting...');
-    document.addEventListener('DOMContentLoaded', initAIAssistant);
-} else {
-    console.log('✅ DOM already ready, initializing immediately');
-    initAIAssistant();
-}
-
-function initAIAssistant() {
-    console.log('🚀 Initializing AI Assistant...');
-    
-    // Bind form submit
-    const form = document.getElementById('chatForm');
-    if (form) {
-        console.log('✅ Form found');
-        form.addEventListener('submit', sendMessage);
-    } else {
-        console.error('❌ Form not found');
-    }
-    
-    // Bind Enter key
-    const input = document.getElementById('userMessage');
-    if (input) {
-        console.log('✅ Input found');
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                console.log('⌨️ Enter pressed, submitting form');
-                e.preventDefault();
-                sendMessage(e);
-            }
-        });
-    }
-    
-    // Verify consultation CTA link
-    const consultationCTA = document.getElementById('consultationCTA');
-    if (consultationCTA) {
-        console.log('✅ Consultation CTA found');
-        console.log('   URL:', consultationCTA.href);
-        if (!consultationCTA.href || consultationCTA.href === window.location.href) {
-            console.error('❌ CTA has invalid href!');
-        }
-    } else {
-        console.error('❌ Consultation CTA not found');
-    }
-    
-    console.log('✅ AI Assistant initialized successfully');
-}
 
 // TEST FUNCTION - Direct API call with detailed logging
 function testAPI() {
