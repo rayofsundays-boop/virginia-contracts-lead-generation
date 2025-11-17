@@ -444,8 +444,34 @@ function formatAIMessage(text) {
 
 // Scroll to bottom on load
 window.addEventListener('load', function() {
+    console.log('🚀 Window loaded, binding form...');
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Bind form submit event (backup for inline onsubmit)
+    const form = document.getElementById('chatForm');
+    if (form) {
+        console.log('✅ Form found, binding submit event');
+        form.addEventListener('submit', function(e) {
+            console.log('📮 Form submit event fired!');
+            sendMessage(e);
+        });
+    } else {
+        console.error('❌ Form not found!');
+    }
+    
+    // Also bind Enter key on input
+    const messageInput = document.getElementById('userMessage');
+    if (messageInput) {
+        console.log('✅ Input found, binding Enter key');
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                console.log('⌨️ Enter key pressed!');
+                e.preventDefault();
+                sendMessage(e);
+            }
+        });
+    }
 });
 
 function applySourceBadges() {
