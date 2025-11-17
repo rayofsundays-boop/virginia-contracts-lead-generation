@@ -220,46 +220,8 @@ fetch('/api/ai-assistant-reply', {
 console.log('✅ AI Assistant script loaded');
 let messageCount = 0;
 
-// TEST FUNCTION - Direct API call with detailed logging
-function testAPI() {
-    const resultDiv = document.getElementById('testResult');
-    if (!resultDiv) {
-        console.error('❌ Test result div not found');
-        return;
-    }
-    
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '⏳ Testing API...';
-    
-    console.log('🔧 TEST: Starting direct API call');
-    
-    fetch('/api/ai-assistant-reply', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ message: 'test', role: '' })
-    })
-    .then(r => {
-        console.log('🔧 TEST: Response status:', r.status, 'OK:', r.ok);
-        resultDiv.innerHTML = `📡 Response: ${r.status} ${r.ok ? '✅' : '❌'}\n`;
-        return r.json();
-    })
-    .then(data => {
-        console.log('🔧 TEST: Data received:', data);
-        resultDiv.innerHTML += `📦 Success: ${data.success}\n`;
-        resultDiv.innerHTML += `📄 Answer: ${data.answer ? data.answer.substring(0, 100) : 'None'}...\n`;
-        resultDiv.innerHTML += `\n✅ API IS WORKING!`;
-    })
-    .catch(err => {
-        console.error('🔧 TEST: Error:', err);
-        resultDiv.innerHTML = `❌ ERROR: ${err.message}\n${err.stack}`;
-    });
-}
-
-function sendMessage(event) {
+// Declare sendMessage early so form can find it
+window.sendMessage = function(event) {
     alert('sendMessage function called!'); // DEBUGGING
     console.log('📤 sendMessage called with:', event);
     
@@ -285,7 +247,8 @@ function sendMessage(event) {
     
     // Hide quick start buttons after first message
     if (messageCount === 0) {
-        document.getElementById('quickStartButtons').style.display = 'none';
+        const quickStart = document.getElementById('quickStartButtons');
+        if (quickStart) quickStart.style.display = 'none';
     }
     
     messageCount++;
@@ -297,7 +260,7 @@ function sendMessage(event) {
     // Show typing indicator
     showTypingIndicator();
     
-    // Call backend KB-powered API; if it fails, fall back to local generator
+    // Call backend KB-powered API
     const role = document.getElementById('assistantRole')?.value || '';
     console.log('🔄 Calling API with message:', message, 'role:', role);
     
@@ -346,7 +309,51 @@ function sendMessage(event) {
         appendMessage('ai', aiResponse);
         console.log('📝 Using fallback response');
     });
+};
+
+console.log('✅ sendMessage defined as window.sendMessage');
+console.log('Type of sendMessage:', typeof window.sendMessage);
+
+// TEST FUNCTION - Direct API call with detailed logging
+function testAPI() {
+    const resultDiv = document.getElementById('testResult');
+    if (!resultDiv) {
+        console.error('❌ Test result div not found');
+        return;
+    }
+    
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '⏳ Testing API...';
+    
+    console.log('🔧 TEST: Starting direct API call');
+    
+    fetch('/api/ai-assistant-reply', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ message: 'test', role: '' })
+    })
+    .then(r => {
+        console.log('🔧 TEST: Response status:', r.status, 'OK:', r.ok);
+        resultDiv.innerHTML = `📡 Response: ${r.status} ${r.ok ? '✅' : '❌'}\n`;
+        return r.json();
+    })
+    .then(data => {
+        console.log('🔧 TEST: Data received:', data);
+        resultDiv.innerHTML += `📦 Success: ${data.success}\n`;
+        resultDiv.innerHTML += `📄 Answer: ${data.answer ? data.answer.substring(0, 100) : 'None'}...\n`;
+        resultDiv.innerHTML += `\n✅ API IS WORKING!`;
+    })
+    .catch(err => {
+        console.error('🔧 TEST: Error:', err);
+        resultDiv.innerHTML = `❌ ERROR: ${err.message}\n${err.stack}`;
+    });
 }
+
+// Removed duplicate sendMessage function - defined earlier as window.sendMessage
 
 function askQuestion(question) {
     document.getElementById('userMessage').value = question;
