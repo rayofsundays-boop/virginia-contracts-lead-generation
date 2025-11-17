@@ -260,14 +260,26 @@ function testAPI() {
 }
 
 function sendMessage(event) {
+    alert('sendMessage function called!'); // DEBUGGING
     console.log('📤 sendMessage called with:', event);
-    event.preventDefault();
+    
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+    
     const messageInput = document.getElementById('userMessage');
+    if (!messageInput) {
+        alert('ERROR: Could not find message input!');
+        console.error('❌ Message input not found!');
+        return;
+    }
+    
     const message = messageInput.value.trim();
     
     console.log('📝 Message:', message);
     if (!message) {
         console.log('⚠️ Empty message, returning');
+        alert('Please type a message first!');
         return;
     }
     
